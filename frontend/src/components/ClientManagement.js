@@ -10,7 +10,7 @@ import { Textarea } from './ui/textarea';
 import { toast } from 'sonner';
 import { UserPlus, Search } from 'lucide-react';
 
-const ClientManagement = () => {
+const ClientManagement = ({ isReadOnly = false }) => {
   const [clients, setClients] = useState([]);
   const [filteredClients, setFilteredClients] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
