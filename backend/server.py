@@ -526,7 +526,7 @@ async def login(login_data: UserLogin):
     if not user or not verify_password(login_data.password, user["password_hash"]):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
-    # Check if therapist is approved
+    # Check therapist account status (but allow login - will be read-only if expired)
     if user["role"] == "therapist":
         if user.get("status") != "approved":
             status = user.get("status", "pending_approval")
