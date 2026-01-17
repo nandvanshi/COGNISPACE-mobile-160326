@@ -1214,9 +1214,7 @@ class ClientCreate(BaseModel):
     emergency_contact_phone: Optional[str] = None
 
 @api_router.post("/clients", response_model=ClientProfile)
-async def create_client(client_data: ClientCreate, current_user: dict = Depends(get_current_user)):
-    if current_user["role"] != "therapist":
-        raise HTTPException(status_code=403, detail="Only therapists can create clients")
+async def create_client(client_data: ClientCreate, current_user: dict = Depends(require_active_therapist)):
     
     # Validate mobile number
     if not validate_mobile(client_data.mobile):
