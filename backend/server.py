@@ -340,6 +340,60 @@ async def get_me(current_user: dict = Depends(get_current_user)):
 
 # ============= CLIENT ENDPOINTS =============
 
+class ClientCreate(BaseModel):
+    email: EmailStr
+    full_name: str
+    password: str
+    intake_summary: Optional[str] = None
+    emergency_contact_name: Optional[str] = None
+    emergency_contact_phone: Optional[str] = None
+
+@api_router.post("/clients", response_model=ClientProfile)
+async def create_client(client_data: ClientCreate, current_user: dict = Depends(get_current_user)):
+    if current_user["role"] != "therapist":
+        raise HTTPException(status_code=403, detail="Only therapists can create clients")
+    
+    # Check if user exists
+    existing = await db.users.find_one({"email": client_data.email})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    client_id = str(uuid.uuid4())
+    user_doc = {
+        "id": client_id,
+        "email": client_data.email,
+        "password_hash": hash_password(client_data.password),
+        "full_name": client_data.full_name,
+        "role": "client",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.users.insert_one(user_doc)
+    
+    # Create client profile
+    profile_doc = {
+        "user_id": client_id,
+        "therapist_id": current_user["id"],
+        "intake_summary": client_data.intake_summary,
+        "emergency_contact_name": client_data.emergency_contact_name,
+        "emergency_contact_phone": client_data.emergency_contact_phone,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.client_profiles.insert_one(profile_doc)
+    await log_audit(current_user["id"], current_user["role"], "create", "client", client_id)
+    
+    return ClientProfile(
+        id=client_id,
+        therapist_id=current_user["id"],
+        email=client_data.email,
+        full_name=client_data.full_name,
+        intake_summary=client_data.intake_summary,
+        emergency_contact_name=client_data.emergency_contact_name,
+        emergency_contact_phone=client_data.emergency_contact_phone,
+        created_at=datetime.fromisoformat(user_doc["created_at"])
+    )
+
 @api_router.get("/clients", response_model=List[ClientProfile])
 async def get_clients(current_user: dict = Depends(get_current_user)):
     if current_user["role"] != "therapist":
