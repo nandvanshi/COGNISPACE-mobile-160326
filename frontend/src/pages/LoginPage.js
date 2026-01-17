@@ -12,12 +12,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 const LoginPage = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const [loginForm, setLoginForm] = useState({ email: '', password: '' });
+  const [loginForm, setLoginForm] = useState({ identifier: '', password: '' });
   const [registerForm, setRegisterForm] = useState({
-    email: '',
+    mobile: '',
     password: '',
     full_name: '',
     role: 'therapist',
+    email: '',
   });
   const [loading, setLoading] = useState(false);
 
