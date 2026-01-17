@@ -12,12 +12,20 @@ const Assessments = () => {
   const [assessments, setAssessments] = useState([]);
   const [clients, setClients] = useState([]);
   const [library, setLibrary] = useState({});
+  const [customAssessments, setCustomAssessments] = useState([]);
   const [showDialog, setShowDialog] = useState(false);
   const [showLibrary, setShowLibrary] = useState(false);
+  const [showCreateCustom, setShowCreateCustom] = useState(false);
   const [selectedAssessment, setSelectedAssessment] = useState(null);
   const [newAssignment, setNewAssignment] = useState({
     client_id: '',
     assessment_type: '',
+    is_custom: false,
+  });
+  const [newCustomAssessment, setNewCustomAssessment] = useState({
+    name: '',
+    description: '',
+    questions: [{ q: '', options: ['', ''] }],
   });
   const [loading, setLoading] = useState(true);
 
