@@ -321,8 +321,44 @@ class TherapistProfile(BaseModel):
     status: str  # pending_approval, approved, suspended, rejected
     subscription_status: Optional[str] = None
     subscription_plan: Optional[str] = None
+    subscription_end_date: Optional[datetime] = None
+    profile_photo: Optional[str] = None
     created_at: datetime
     approved_at: Optional[datetime] = None
+
+class ManualTherapistCreate(BaseModel):
+    mobile: str
+    email: EmailStr
+    full_name: str
+    password: str
+    credentials: str
+    specialization: Optional[str] = None
+    years_of_experience: Optional[int] = None
+
+class TherapistUpdate(BaseModel):
+    full_name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    credentials: Optional[str] = None
+    specialization: Optional[str] = None
+    years_of_experience: Optional[int] = None
+
+class ClientDetailResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    client_id: str
+    mobile: str
+    email: Optional[str] = None
+    full_name: str
+    age: Optional[int] = None
+    guardian_name: Optional[str] = None
+    address: Optional[str] = None
+    referred_by: Optional[str] = None
+    intake_summary: Optional[str] = None
+    emergency_contact_name: Optional[str] = None
+    emergency_contact_phone: Optional[str] = None
+    therapist_id: Optional[str] = None
+    therapist_name: Optional[str] = None
+    created_at: datetime
 
 # ============= UTILITY FUNCTIONS =============
 
