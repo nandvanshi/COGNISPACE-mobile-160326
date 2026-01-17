@@ -1,0 +1,151 @@
+{
+  "brand_identity": {
+    "name": "Haven",
+    "tagline": "Clinical clarity. Human connection.",
+    "tone": "Calm, Professional, Organic, Trustworthy",
+    "archetype": "The Caregiver meets The Architect",
+    "design_philosophy": "Fusion of 'Sanctuary' (Soft, Safe) and 'Lab' (Precise, Clean). Avoid sterile medical white; embrace warm, organic neutrals."
+  },
+  "colors": {
+    "palette": {
+      "primary": {
+        "name": "Deep Sage",
+        "hex": "#3A5A40",
+        "usage": "Primary buttons, active states, key branding elements",
+        "foreground": "#FFFFFF"
+      },
+      "secondary": {
+        "name": "Terracotta Clay",
+        "hex": "#D4A373",
+        "usage": "Accents, highlights, 'New' badges, soft alerts",
+        "foreground": "#000000"
+      },
+      "background": {
+        "name": "Warm Bone",
+        "hex": "#FDFCF8",
+        "usage": "Main app background (Never pure #FFFFFF)"
+      },
+      "surface": {
+        "name": "Mist Grey",
+        "hex": "#F2F4F3",
+        "usage": "Cards, sidebars, inputs"
+      },
+      "text": {
+        "primary": "#1A1C1A",
+        "secondary": "#4A4F4A",
+        "muted": "#8C968C"
+      },
+      "status": {
+        "success": "#588157",
+        "warning": "#E9C46A",
+        "error": "#BC4749",
+        "info": "#457B9D"
+      }
+    },
+    "gradients": {
+      "subtle_glow": "linear-gradient(135deg, #FDFCF8 0%, #F2F4F3 100%)",
+      "active_state": "linear-gradient(135deg, #3A5A40 0%, #344E41 100%)"
+    }
+  },
+  "typography": {
+    "font_family": {
+      "headings": "Young Serif, serif",
+      "body": "Manrope, sans-serif",
+      "mono": "JetBrains Mono, monospace"
+    },
+    "rules": {
+      "h1": "text-4xl md:text-5xl font-serif tracking-tight text-primary-900",
+      "h2": "text-3xl md:text-4xl font-serif tracking-tight",
+      "h3": "text-2xl font-serif tracking-normal",
+      "body_large": "text-lg font-sans leading-relaxed text-secondary-900",
+      "body_default": "text-base font-sans leading-relaxed text-secondary-800",
+      "caption": "text-sm font-sans tracking-wide text-muted-foreground uppercase"
+    },
+    "installation": "Import 'Young Serif' and 'Manrope' from Google Fonts in index.css"
+  },
+  "spacing": {
+    "scale": "2x Standard",
+    "philosophy": "Generous breathing room. If you think it's enough padding, double it.",
+    "container_padding": "p-6 md:p-12",
+    "section_gap": "gap-8 md:gap-16"
+  },
+  "layout": {
+    "grid_system": "Bento Grid",
+    "modes": {
+      "therapist_dashboard": {
+        "type": "High Density (Mode B)",
+        "columns": "grid-cols-1 md:grid-cols-4",
+        "gap": "gap-4",
+        "rules": "Dense data, no jagged bottoms, use h-full"
+      },
+      "client_dashboard": {
+        "type": "Tetris (Mode A)",
+        "columns": "grid-cols-1 md:grid-cols-12",
+        "gap": "gap-8",
+        "rules": "Asymmetry, visual tension, breathing room"
+      }
+    },
+    "containers": {
+      "card": "rounded-xl border border-border/40 bg-white/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300",
+      "main": "max-w-7xl mx-auto w-full"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-[#3A5A40] text-white hover:bg-[#344E41] rounded-full px-8 py-6 shadow-lg hover:shadow-xl transition-transform hover:-translate-y-0.5",
+      "secondary": "bg-[#F2F4F3] text-[#3A5A40] hover:bg-[#E8EAE6] rounded-full px-8 py-6 border border-[#3A5A40]/10",
+      "ghost": "text-[#4A4F4A] hover:bg-[#F2F4F3] hover:text-[#1A1C1A] rounded-lg px-4 py-2"
+    },
+    "inputs": {
+      "default": "bg-white/80 border-border/60 focus:border-[#3A5A40] focus:ring-[#3A5A40]/20 rounded-lg h-12 px-4"
+    },
+    "cards": {
+      "glass": "bg-white/70 backdrop-blur-xl border border-white/40 shadow-[0_8px_32px_rgba(0,0,0,0.04)]"
+    },
+    "overrides": {
+      "shadcn_calendar": "rounded-xl border-none shadow-lg bg-white p-4",
+      "shadcn_dialog": "rounded-2xl border-none shadow-2xl bg-[#FDFCF8]"
+    }
+  },
+  "visual_enhancers": {
+    "texture": "Add a subtle noise overlay (opacity 0.03) to the entire app to reduce digital sterility.",
+    "shadows": {
+      "soft": "0 4px 20px -2px rgba(58, 90, 64, 0.05)",
+      "deep": "0 20px 40px -4px rgba(58, 90, 64, 0.1)"
+    },
+    "borders": "1px solid rgba(58, 90, 64, 0.08)",
+    "radius": "rounded-xl (12px) for cards, rounded-full for buttons"
+  },
+  "images": {
+    "login_background": {
+      "url": "https://images.unsplash.com/photo-1753791913730-01c1d4d58fb5?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "alt": "Calm abstract lake at dusk",
+      "usage": "Full screen background for login/signup with overlay"
+    },
+    "mindfulness_widget": {
+      "url": "https://images.unsplash.com/photo-1761468720465-b518f89aa1de?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "alt": "Tree reflection in water",
+      "usage": "Background for 'Daily Reflection' or 'Mindfulness' card"
+    },
+    "therapist_placeholder": {
+      "url": "https://images.unsplash.com/photo-1733685318562-c726472bc1db?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "alt": "Professional therapist in session",
+      "usage": "Placeholder for therapist profile or 'Book Appointment' section"
+    }
+  },
+  "accessibility": {
+    "contrast": "Ensure all text meets APCA standards. Use #1A1C1A for body text on #FDFCF8.",
+    "focus_states": "Visible ring-2 ring-offset-2 ring-[#3A5A40]",
+    "reduced_motion": "Respect prefers-reduced-motion media query"
+  },
+  "universal_guidelines": [
+    "DO NOT use generic 'hospital blue' or 'alert red'. Use Earthy tones.",
+    "DO NOT use 'Inter' for headings. Use 'Young Serif'.",
+    "DO NOT center-align everything. Use asymmetry for interest.",
+    "ALWAYS add 'data-testid' to interactive elements.",
+    "ALWAYS use 'sonner' for toasts.",
+    "Use 'lucide-react' for icons.",
+    "Create a 'layout.js' that applies the global texture overlay."
+  ],
+  "instructions_to_main_agent": "You are building 'Haven'. Start by installing the fonts and setting up the tailwind.config.js with the 'Deep Sage' and 'Warm Bone' palette. Build the Therapist Dashboard first using the High Density Bento Grid. Use the provided image URLs for the login page and dashboard widgets. Ensure the 'Assessment' and 'Protocol' tools feel like professional instruments, not just forms."
+}
