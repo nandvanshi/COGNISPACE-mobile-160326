@@ -137,14 +137,27 @@ const LoginPage = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="register-email">Email</Label>
+                  <Label htmlFor="register-mobile">Mobile Number *</Label>
+                  <Input
+                    id="register-mobile"
+                    data-testid="register-mobile-input"
+                    value={registerForm.mobile}
+                    onChange={(e) => setRegisterForm({ ...registerForm, mobile: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+                    required
+                    className="mt-1"
+                    placeholder="10-digit mobile"
+                    maxLength={10}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Primary login ID</p>
+                </div>
+                <div>
+                  <Label htmlFor="register-email">Email (Optional)</Label>
                   <Input
                     id="register-email"
                     type="email"
                     data-testid="register-email-input"
                     value={registerForm.email}
                     onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
-                    required
                     className="mt-1"
                   />
                 </div>
