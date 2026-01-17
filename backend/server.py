@@ -537,10 +537,8 @@ async def login(login_data: UserLogin):
             elif status == "rejected":
                 raise HTTPException(status_code=403, detail="Your application was rejected")
         
-        # Check subscription status
-        subscription_status = user.get("subscription_status")
-        if subscription_status not in ["trial", "active"]:
-            raise HTTPException(status_code=403, detail="Your subscription has expired. Please contact support.")
+        # Note: We no longer block login for expired subscriptions
+        # Expired therapists can login but will be in read-only mode
     
     await log_audit(user["id"], user["role"], "login", "user", user["id"])
     
