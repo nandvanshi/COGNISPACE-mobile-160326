@@ -349,16 +349,26 @@ async def register(user_data: UserRegister):
 
 @api_router.post("/auth/login", response_model=TokenResponse)
 async def login(login_data: UserLogin):
-    user = await db.users.find_one({"email": login_data.email}, {"_id": 0})
+    # Try to find user by mobile or email
+    user = None
+    if validate_mobile(login_data.identifier):
+        # Login with mobile
+        user = await db.users.find_one({"mobile": login_data.identifier}, {"_id": 0})
+    else:
+        # Login with email
+        user = await db.users.find_one({"email": login_data.identifier}, {"_id": 0})
+    
     if not user or not verify_password(login_data.password, user["password_hash"]):
-        raise HTTPException(status_code=401, detail="Invalid email or password")
+        raise HTTPException(status_code=401, detail="Invalid credentials")
     
     await log_audit(user["id"], user["role"], "login", "user", user["id"])
     
-    token = create_token(user["id"], user["email"], user["role"])
+    token = create_token(user["id"], user["mobile"], user["role"])
     user_obj = User(
         id=user["id"],
-        email=user["email"],
+        client_id=user.get("client_id"),
+        mobile=user["mobile"],
+        email=user.get("email"),
         full_name=user["full_name"],
         role=user["role"],
         created_at=datetime.fromisoformat(user["created_at"])
