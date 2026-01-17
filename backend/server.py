@@ -756,7 +756,165 @@ async def reset_therapist_password(therapist_id: str, new_password: str, current
     
     return {"message": "Password reset successfully", "new_password": new_password}
 
-@api_router.get("/admin/clients")
+@api_router.post("/admin/therapists/create")
+async def create_therapist_manually(therapist_data: ManualTherapistCreate, current_user: dict = Depends(require_super_admin)):
+    """Manually create a therapist account without application process"""
+    # Validate mobile
+    if not validate_mobile(therapist_data.mobile):
+        raise HTTPException(status_code=400, detail="Mobile number must be exactly 10 digits")
+    
+    # Check if mobile or email already exists
+    existing_mobile = await db.users.find_one({"mobile": therapist_data.mobile})
+    if existing_mobile:
+        raise HTTPException(status_code=400, detail="Mobile number already registered")
+    
+    existing_email = await db.users.find_one({"email": therapist_data.email})
+    if existing_email:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    therapist_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc)
+    
+    user_doc = {
+        "id": therapist_id,
+        "mobile": therapist_data.mobile,
+        "email": therapist_data.email,
+        "password_hash": hash_password(therapist_data.password),
+        "full_name": therapist_data.full_name,
+        "credentials": therapist_data.credentials,
+        "specialization": therapist_data.specialization,
+        "years_of_experience": therapist_data.years_of_experience,
+        "role": "therapist",
+        "status": "approved",
+        "subscription_status": "trial",
+        "subscription_plan": "free_trial",
+        "profile_photo": None,
+        "created_at": now.isoformat()
+    }
+    
+    await db.users.insert_one(user_doc)
+    
+    # Create trial subscription (30 days)
+    subscription_doc = {
+        "id": str(uuid.uuid4()),
+        "therapist_id": therapist_id,
+        "plan_id": "free_trial",
+        "plan_name": "Free Trial",
+        "status": "trial",
+        "start_date": now.isoformat(),
+        "end_date": (now + timedelta(days=30)).isoformat(),
+        "coupon_code": None
+    }
+    await db.subscriptions.insert_one(subscription_doc)
+    
+    await log_audit(current_user["id"], current_user["role"], "create_manual", "therapist", therapist_id)
+    
+    return {"message": "Therapist created successfully", "therapist_id": therapist_id}
+
+@api_router.put("/admin/therapists/{therapist_id}")
+async def update_therapist(therapist_id: str, update_data: TherapistUpdate, current_user: dict = Depends(require_super_admin)):
+    """Update therapist details"""
+    therapist = await db.users.find_one({"id": therapist_id, "role": "therapist"}, {"_id": 0})
+    if not therapist:
+        raise HTTPException(status_code=404, detail="Therapist not found")
+    
+    update_fields = {k: v for k, v in update_data.model_dump().items() if v is not None}
+    
+    if not update_fields:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    
+    # Check email uniqueness if being updated
+    if "email" in update_fields:
+        existing = await db.users.find_one({"email": update_fields["email"], "id": {"$ne": therapist_id}})
+        if existing:
+            raise HTTPException(status_code=400, detail="Email already in use")
+    
+    await db.users.update_one({"id": therapist_id}, {"$set": update_fields})
+    
+    await log_audit(current_user["id"], current_user["role"], "update", "therapist", therapist_id, update_fields)
+    
+    return {"message": "Therapist updated successfully"}
+
+@api_router.post("/admin/therapists/{therapist_id}/photo")
+async def upload_therapist_photo(therapist_id: str, photo_url: str, current_user: dict = Depends(require_super_admin)):
+    """Update therapist profile photo URL"""
+    result = await db.users.update_one(
+        {"id": therapist_id, "role": "therapist"},
+        {"$set": {"profile_photo": photo_url}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Therapist not found")
+    
+    await log_audit(current_user["id"], current_user["role"], "update_photo", "therapist", therapist_id)
+    
+    return {"message": "Photo updated successfully"}
+
+@api_router.get("/admin/therapists/{therapist_id}")
+async def get_therapist_detail(therapist_id: str, current_user: dict = Depends(require_super_admin)):
+    """Get detailed therapist profile including subscription info"""
+    therapist = await db.users.find_one({"id": therapist_id, "role": "therapist"}, {"_id": 0, "password_hash": 0})
+    if not therapist:
+        raise HTTPException(status_code=404, detail="Therapist not found")
+    
+    # Get subscription details
+    subscription = await db.subscriptions.find_one(
+        {"therapist_id": therapist_id},
+        {"_id": 0},
+        sort=[("start_date", -1)]
+    )
+    
+    # Get application details
+    app = await db.therapist_applications.find_one({"mobile": therapist.get("mobile", "")}, {"_id": 0})
+    
+    # Get client count
+    client_count = await db.client_profiles.count_documents({"therapist_id": therapist_id})
+    
+    return {
+        "id": therapist["id"],
+        "mobile": therapist.get("mobile", ""),
+        "email": therapist.get("email"),
+        "full_name": therapist["full_name"],
+        "credentials": therapist.get("credentials") or (app.get("credentials", "N/A") if app else "N/A"),
+        "specialization": therapist.get("specialization") or (app.get("specialization") if app else None),
+        "years_of_experience": therapist.get("years_of_experience") or (app.get("years_of_experience") if app else None),
+        "status": therapist.get("status", "approved"),
+        "profile_photo": therapist.get("profile_photo"),
+        "subscription_status": therapist.get("subscription_status"),
+        "subscription_plan": therapist.get("subscription_plan"),
+        "subscription_end_date": subscription.get("end_date") if subscription else None,
+        "client_count": client_count,
+        "created_at": therapist["created_at"],
+        "approved_at": app.get("approved_at") if app else None
+    }
+
+@api_router.get("/admin/therapists/{therapist_id}/clients")
+async def get_therapist_clients(therapist_id: str, current_user: dict = Depends(require_super_admin)):
+    """Get all clients assigned to a therapist"""
+    therapist = await db.users.find_one({"id": therapist_id, "role": "therapist"}, {"_id": 0})
+    if not therapist:
+        raise HTTPException(status_code=404, detail="Therapist not found")
+    
+    # Find all client profiles for this therapist
+    client_profiles = await db.client_profiles.find({"therapist_id": therapist_id}, {"_id": 0}).to_list(1000)
+    
+    clients = []
+    for profile in client_profiles:
+        client = await db.users.find_one({"id": profile["user_id"]}, {"_id": 0, "password_hash": 0})
+        if client:
+            clients.append({
+                "id": client["id"],
+                "client_id": client.get("client_id", ""),
+                "mobile": client.get("mobile", "N/A"),
+                "email": client.get("email"),
+                "full_name": client["full_name"],
+                "age": profile.get("age"),
+                "created_at": client["created_at"]
+            })
+    
+    return clients
+
+@api_router.get("/admin/clients", response_model=List[ClientDetailResponse])
 async def get_all_clients(current_user: dict = Depends(require_super_admin)):
     clients = await db.users.find({"role": "client"}, {"_id": 0, "password_hash": 0}).to_list(1000)
     return clients
