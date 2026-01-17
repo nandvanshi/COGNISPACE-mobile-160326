@@ -39,7 +39,7 @@ const ClientManagement = () => {
 
   const fetchClients = async () => {
     try {
-      const response = await axios.get(`${API}/api/admin/clients`);
+      const response = await axios.get(`${API}/admin/clients`);
       setClients(response.data);
       setFilteredClients(response.data);
     } catch (error) {
