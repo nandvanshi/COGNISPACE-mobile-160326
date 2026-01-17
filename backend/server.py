@@ -1620,9 +1620,7 @@ async def get_assessment_library(current_user: dict = Depends(get_current_user))
     return ASSESSMENT_LIBRARY
 
 @api_router.post("/assessments/custom", response_model=CustomAssessment)
-async def create_custom_assessment(assessment_data: CustomAssessmentCreate, current_user: dict = Depends(get_current_user)):
-    if current_user["role"] != "therapist":
-        raise HTTPException(status_code=403, detail="Only therapists can create custom assessments")
+async def create_custom_assessment(assessment_data: CustomAssessmentCreate, current_user: dict = Depends(require_active_therapist)):
     
     assessment_id = str(uuid.uuid4())
     assessment_doc = {
