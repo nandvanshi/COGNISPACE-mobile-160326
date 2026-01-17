@@ -380,7 +380,9 @@ async def login(login_data: UserLogin):
 async def get_me(current_user: dict = Depends(get_current_user)):
     return User(
         id=current_user["id"],
-        email=current_user["email"],
+        client_id=current_user.get("client_id"),
+        mobile=current_user["mobile"],
+        email=current_user.get("email"),
         full_name=current_user["full_name"],
         role=current_user["role"],
         created_at=datetime.fromisoformat(current_user["created_at"])
