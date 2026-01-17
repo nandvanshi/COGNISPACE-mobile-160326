@@ -204,6 +204,14 @@ const Assessments = () => {
             View Library
           </Button>
           <Button
+            onClick={() => setShowCreateCustom(true)}
+            variant="outline"
+            data-testid="create-custom-button"
+          >
+            <Plus size={20} className="mr-2" />
+            Create Custom
+          </Button>
+          <Button
             onClick={() => setShowDialog(true)}
             className="bg-primary hover:bg-primary-700 rounded-full"
             data-testid="assign-assessment-button"
