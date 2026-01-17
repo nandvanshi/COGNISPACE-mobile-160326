@@ -114,6 +114,14 @@ const ClientManagement = () => {
           <h2 className="text-4xl font-serif text-primary mb-2">Client Management</h2>
           <p className="text-muted-foreground">Manage your client profiles</p>
         </div>
+        <Button
+          onClick={() => setShowAddDialog(true)}
+          className="bg-primary hover:bg-primary-700 rounded-full"
+          data-testid="add-client-button"
+        >
+          <UserPlus size={20} className="mr-2" />
+          Add Client
+        </Button>
       </div>
 
       {/* Search */}
