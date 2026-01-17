@@ -94,18 +94,27 @@ const ClientManagement = () => {
 
   const handleAddClient = async (e) => {
     e.preventDefault();
+    
+    // Validate mobile
+    if (!/^\d{10}$/.test(newClient.mobile)) {
+      toast.error('Mobile number must be exactly 10 digits');
+      return;
+    }
+    
     try {
       const clientData = {
         ...newClient,
         age: newClient.age ? parseInt(newClient.age) : null,
+        email: newClient.email || null,
       };
       await axios.post(`${API}/clients`, clientData);
       toast.success('Client added successfully');
       setShowAddDialog(false);
       setNewClient({
-        email: '',
+        mobile: '',
         full_name: '',
         password: '',
+        email: '',
         age: '',
         guardian_name: '',
         address: '',
