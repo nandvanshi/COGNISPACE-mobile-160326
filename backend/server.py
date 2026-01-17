@@ -1378,20 +1378,92 @@ async def update_client(client_id: str, update_data: ClientProfileUpdate, curren
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")
     
-    profile_data = update_data.model_dump(exclude_unset=True)
-    profile_data["therapist_id"] = current_user["id"]
-    profile_data["user_id"] = client_id
-    profile_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    update_dict = update_data.model_dump(exclude_unset=True)
     
+    # Separate user fields from profile fields
+    user_fields = {}
+    profile_fields = {}
+    
+    # User fields (stored in users collection)
+    if "full_name" in update_dict:
+        user_fields["full_name"] = update_dict.pop("full_name")
+    if "mobile" in update_dict:
+        new_mobile = update_dict.pop("mobile")
+        # Validate mobile format
+        if not validate_mobile(new_mobile):
+            raise HTTPException(status_code=400, detail="Mobile number must be exactly 10 digits")
+        # Check if mobile already exists (excluding current client)
+        existing = await db.users.find_one({"mobile": new_mobile, "id": {"$ne": client_id}})
+        if existing:
+            raise HTTPException(status_code=400, detail="Mobile number already in use by another account")
+        user_fields["mobile"] = new_mobile
+    if "email" in update_dict:
+        new_email = update_dict.pop("email")
+        if new_email:
+            # Check if email already exists (excluding current client)
+            existing = await db.users.find_one({"email": new_email, "id": {"$ne": client_id}})
+            if existing:
+                raise HTTPException(status_code=400, detail="Email already in use by another account")
+        user_fields["email"] = new_email
+    
+    # Profile fields (stored in client_profiles collection)
+    profile_fields = update_dict
+    profile_fields["therapist_id"] = current_user["id"]
+    profile_fields["user_id"] = client_id
+    profile_fields["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    # Update user document if there are user field changes
+    if user_fields:
+        await db.users.update_one({"id": client_id}, {"$set": user_fields})
+    
+    # Update profile document
     await db.client_profiles.update_one(
         {"user_id": client_id},
-        {"$set": profile_data},
+        {"$set": profile_fields},
         upsert=True
     )
     
-    await log_audit(current_user["id"], current_user["role"], "update", "client_profile", client_id, profile_data)
+    await log_audit(current_user["id"], current_user["role"], "update", "client_profile", client_id, {**user_fields, **profile_fields})
     
     return await get_client(client_id, current_user)
+
+@api_router.post("/clients/{client_id}/reset-password")
+async def reset_client_password_by_therapist(client_id: str, password_data: ClientPasswordReset, current_user: dict = Depends(require_active_therapist)):
+    """Reset client password (by their assigned therapist)"""
+    client = await db.users.find_one({"id": client_id, "role": "client"}, {"_id": 0})
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    # Verify the therapist is assigned to this client
+    profile = await db.client_profiles.find_one({"user_id": client_id}, {"_id": 0})
+    if profile and profile.get("therapist_id") != current_user["id"]:
+        raise HTTPException(status_code=403, detail="You can only reset passwords for your own clients")
+    
+    await db.users.update_one(
+        {"id": client_id},
+        {"$set": {"password_hash": hash_password(password_data.new_password)}}
+    )
+    
+    await log_audit(current_user["id"], current_user["role"], "reset_password", "client", client_id)
+    
+    return {"message": "Password reset successfully"}
+
+@api_router.post("/clients/{client_id}/photo")
+async def update_client_photo(client_id: str, photo_url: str, current_user: dict = Depends(require_active_therapist)):
+    """Update client profile photo URL"""
+    client = await db.users.find_one({"id": client_id, "role": "client"}, {"_id": 0})
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    await db.client_profiles.update_one(
+        {"user_id": client_id},
+        {"$set": {"profile_photo": photo_url, "updated_at": datetime.now(timezone.utc).isoformat()}},
+        upsert=True
+    )
+    
+    await log_audit(current_user["id"], current_user["role"], "update_photo", "client", client_id)
+    
+    return {"message": "Photo updated successfully"}
 
 # ============= APPOINTMENT ENDPOINTS =============
 
