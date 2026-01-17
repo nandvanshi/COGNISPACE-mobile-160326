@@ -35,7 +35,8 @@ const TherapistManagement = ({ onViewClients }) => {
     email: '',
     credentials: '',
     specialization: '',
-    years_of_experience: ''
+    years_of_experience: '',
+    profile_photo: ''
   });
 
   useEffect(() => {
