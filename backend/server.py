@@ -833,6 +833,34 @@ async def get_assessment_library(current_user: dict = Depends(get_current_user))
         raise HTTPException(status_code=403, detail="Only therapists can access this")
     return ASSESSMENT_LIBRARY
 
+@api_router.post("/assessments/custom", response_model=CustomAssessment)
+async def create_custom_assessment(assessment_data: CustomAssessmentCreate, current_user: dict = Depends(get_current_user)):
+    if current_user["role"] != "therapist":
+        raise HTTPException(status_code=403, detail="Only therapists can create custom assessments")
+    
+    assessment_id = str(uuid.uuid4())
+    assessment_doc = {
+        "id": assessment_id,
+        "therapist_id": current_user["id"],
+        "name": assessment_data.name,
+        "description": assessment_data.description,
+        "questions": assessment_data.questions,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.custom_assessments.insert_one(assessment_doc)
+    await log_audit(current_user["id"], current_user["role"], "create", "custom_assessment", assessment_id)
+    
+    return CustomAssessment(**{k: datetime.fromisoformat(v) if k == "created_at" else v for k, v in assessment_doc.items()})
+
+@api_router.get("/assessments/custom", response_model=List[CustomAssessment])
+async def get_custom_assessments(current_user: dict = Depends(get_current_user)):
+    if current_user["role"] != "therapist":
+        raise HTTPException(status_code=403, detail="Only therapists can access this")
+    
+    assessments = await db.custom_assessments.find({"therapist_id": current_user["id"]}, {"_id": 0}).to_list(1000)
+    return [CustomAssessment(**{k: datetime.fromisoformat(v) if k == "created_at" else v for k, v in assess.items()}) for assess in assessments]
+
 @api_router.post("/assessments", response_model=Assessment)
 async def assign_assessment(assessment_data: AssessmentCreate, current_user: dict = Depends(get_current_user)):
     if current_user["role"] != "therapist":
