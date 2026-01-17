@@ -1440,9 +1440,7 @@ async def create_session_note(note_data: SessionNoteCreate, current_user: dict =
     return SessionNote(**{k: datetime.fromisoformat(v) if k in ["created_at", "updated_at"] else v for k, v in note_doc.items()})
 
 @api_router.get("/session-notes", response_model=List[SessionNote])
-async def get_session_notes(client_id: Optional[str] = None, current_user: dict = Depends(get_current_user)):
-    if current_user["role"] != "therapist":
-        raise HTTPException(status_code=403, detail="Only therapists can view session notes")
+async def get_session_notes(client_id: Optional[str] = None, current_user: dict = Depends(require_therapist)):
     
     query = {"therapist_id": current_user["id"]}
     if client_id:
