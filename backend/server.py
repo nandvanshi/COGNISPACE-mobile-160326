@@ -1638,9 +1638,7 @@ async def create_custom_assessment(assessment_data: CustomAssessmentCreate, curr
     return CustomAssessment(**{k: datetime.fromisoformat(v) if k == "created_at" else v for k, v in assessment_doc.items()})
 
 @api_router.get("/assessments/custom", response_model=List[CustomAssessment])
-async def get_custom_assessments(current_user: dict = Depends(get_current_user)):
-    if current_user["role"] != "therapist":
-        raise HTTPException(status_code=403, detail="Only therapists can access this")
+async def get_custom_assessments(current_user: dict = Depends(require_therapist)):
     
     assessments = await db.custom_assessments.find({"therapist_id": current_user["id"]}, {"_id": 0}).to_list(1000)
     return [CustomAssessment(**{k: datetime.fromisoformat(v) if k == "created_at" else v for k, v in assess.items()}) for assess in assessments]
