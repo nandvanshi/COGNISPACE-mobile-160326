@@ -152,7 +152,8 @@ class TestTherapistManagement:
     @pytest.fixture
     def test_therapist(self, admin_token):
         """Create a test therapist for suspend/activate tests"""
-        unique_mobile = f"66{uuid.uuid4().hex[:8]}"[:10]
+        import random
+        unique_mobile = f"66{random.randint(10000000, 99999999)}"  # 10 digit mobile
         unique_email = f"mgmt_test_{uuid.uuid4().hex[:8]}@example.com"
         
         # Submit application
