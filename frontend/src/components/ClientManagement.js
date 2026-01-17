@@ -236,6 +236,102 @@ const ClientManagement = () => {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Add Client Dialog */}
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent className="max-w-2xl" data-testid="add-client-dialog">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-serif text-primary">Add New Client</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleAddClient} className="space-y-4">
+            <div>
+              <Label htmlFor="new-client-name">Full Name *</Label>
+              <Input
+                id="new-client-name"
+                data-testid="new-client-name-input"
+                value={newClient.full_name}
+                onChange={(e) => setNewClient({ ...newClient, full_name: e.target.value })}
+                required
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="new-client-email">Email *</Label>
+              <Input
+                id="new-client-email"
+                type="email"
+                data-testid="new-client-email-input"
+                value={newClient.email}
+                onChange={(e) => setNewClient({ ...newClient, email: e.target.value })}
+                required
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="new-client-password">Password *</Label>
+              <Input
+                id="new-client-password"
+                type="password"
+                data-testid="new-client-password-input"
+                value={newClient.password}
+                onChange={(e) => setNewClient({ ...newClient, password: e.target.value })}
+                required
+                className="mt-1"
+                placeholder="Initial password for client"
+              />
+            </div>
+            <div>
+              <Label htmlFor="new-intake-summary">Intake Summary</Label>
+              <Textarea
+                id="new-intake-summary"
+                data-testid="new-intake-summary-input"
+                value={newClient.intake_summary}
+                onChange={(e) => setNewClient({ ...newClient, intake_summary: e.target.value })}
+                rows={4}
+                className="mt-1"
+                placeholder="Client's presenting concerns, history, goals..."
+              />
+            </div>
+            <div>
+              <Label htmlFor="new-emergency-contact-name">Emergency Contact Name</Label>
+              <Input
+                id="new-emergency-contact-name"
+                data-testid="new-emergency-contact-name-input"
+                value={newClient.emergency_contact_name}
+                onChange={(e) =>
+                  setNewClient({ ...newClient, emergency_contact_name: e.target.value })
+                }
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="new-emergency-contact-phone">Emergency Contact Phone</Label>
+              <Input
+                id="new-emergency-contact-phone"
+                data-testid="new-emergency-contact-phone-input"
+                value={newClient.emergency_contact_phone}
+                onChange={(e) =>
+                  setNewClient({ ...newClient, emergency_contact_phone: e.target.value })
+                }
+                className="mt-1"
+              />
+            </div>
+            <div className="flex gap-3">
+              <Button type="submit" className="flex-1" data-testid="save-new-client-button">
+                Add Client
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowAddDialog(false)}
+                data-testid="cancel-add-button"
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
