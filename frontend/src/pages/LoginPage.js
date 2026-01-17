@@ -17,7 +17,7 @@ const LoginPage = () => {
     mobile: '',
     password: '',
     full_name: '',
-    role: 'therapist',
+    role: 'client',  // Only client registration allowed
     email: '',
   });
   const [loading, setLoading] = useState(false);
