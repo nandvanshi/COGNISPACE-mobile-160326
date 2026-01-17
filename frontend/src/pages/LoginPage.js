@@ -173,28 +173,26 @@ const LoginPage = () => {
                     className="mt-1"
                   />
                 </div>
-                <div>
-                  <Label htmlFor="register-role">I am a</Label>
-                  <select
-                    id="register-role"
-                    data-testid="register-role-select"
-                    value={registerForm.role}
-                    onChange={(e) => setRegisterForm({ ...registerForm, role: e.target.value })}
-                    className="w-full mt-1 h-12 px-4 rounded-lg border border-border bg-white focus:outline-none focus:ring-2 focus:ring-ring"
-                  >
-                    <option value="therapist">Therapist</option>
-                    <option value="client">Client</option>
-                  </select>
-                </div>
                 <Button
                   type="submit"
                   className="w-full bg-primary hover:bg-primary-700 text-white rounded-full h-12 text-base font-medium"
                   disabled={loading}
                   data-testid="register-submit-button"
                 >
-                  {loading ? 'Creating account...' : 'Create Account'}
+                  {loading ? 'Creating account...' : 'Create Client Account'}
                 </Button>
               </form>
+              <div className="mt-6 text-center">
+                <p className="text-sm text-muted-foreground mb-2">Are you a therapist?</p>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate('/therapist-application')}
+                  className="w-full"
+                  data-testid="therapist-apply-button"
+                >
+                  Apply as Therapist
+                </Button>
+              </div>
             </TabsContent>
           </Tabs>
 
