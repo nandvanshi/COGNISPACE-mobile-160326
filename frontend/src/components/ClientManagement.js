@@ -75,6 +75,10 @@ const ClientManagement = () => {
     e.preventDefault();
     try {
       await axios.put(`${API}/clients/${selectedClient.id}`, {
+        age: editForm.age ? parseInt(editForm.age) : null,
+        guardian_name: editForm.guardian_name,
+        address: editForm.address,
+        referred_by: editForm.referred_by,
         intake_summary: editForm.intake_summary,
         emergency_contact_name: editForm.emergency_contact_name,
         emergency_contact_phone: editForm.emergency_contact_phone,
