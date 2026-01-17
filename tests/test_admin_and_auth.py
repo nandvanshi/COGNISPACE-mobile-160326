@@ -99,8 +99,9 @@ class TestTherapistApplicationFlow:
     
     def test_approve_therapist_application(self, admin_token):
         """P0: POST /api/admin/therapist-applications/{id}/approve should work"""
+        import random
         # First submit an application
-        unique_mobile = f"77{uuid.uuid4().hex[:8]}"[:10]
+        unique_mobile = f"77{random.randint(10000000, 99999999)}"  # 10 digit mobile
         unique_email = f"approve_test_{uuid.uuid4().hex[:8]}@example.com"
         
         submit_response = requests.post(f"{BASE_URL}/api/auth/therapist-application", json={
