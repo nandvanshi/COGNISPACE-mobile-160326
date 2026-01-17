@@ -16,6 +16,15 @@ const ClientManagement = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedClient, setSelectedClient] = useState(null);
   const [editForm, setEditForm] = useState({});
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [newClient, setNewClient] = useState({
+    email: '',
+    full_name: '',
+    password: '',
+    intake_summary: '',
+    emergency_contact_name: '',
+    emergency_contact_phone: '',
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
