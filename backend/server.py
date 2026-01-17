@@ -593,6 +593,30 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         created_at=datetime.fromisoformat(current_user["created_at"])
     )
 
+@api_router.get("/auth/subscription-status")
+async def get_subscription_status(current_user: dict = Depends(get_current_user)):
+    """Get current user's subscription status (for therapists)"""
+    if current_user["role"] != "therapist":
+        return {"is_read_only": False, "subscription_status": None, "subscription_end_date": None}
+    
+    subscription_status = current_user.get("subscription_status")
+    is_read_only = subscription_status not in ["trial", "active"]
+    
+    # Get subscription end date
+    subscription = await db.subscriptions.find_one(
+        {"therapist_id": current_user["id"]},
+        {"_id": 0},
+        sort=[("start_date", -1)]
+    )
+    subscription_end_date = subscription.get("end_date") if subscription else None
+    
+    return {
+        "is_read_only": is_read_only,
+        "subscription_status": subscription_status,
+        "subscription_plan": current_user.get("subscription_plan"),
+        "subscription_end_date": subscription_end_date
+    }
+
 # ============= SUPER ADMIN ENDPOINTS =============
 
 async def require_super_admin(current_user: dict = Depends(get_current_user)):
