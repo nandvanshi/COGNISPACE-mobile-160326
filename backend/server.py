@@ -488,8 +488,10 @@ async def get_clients(current_user: dict = Depends(get_current_user)):
         profile = await db.client_profiles.find_one({"user_id": client["id"]}, {"_id": 0})
         result.append(ClientProfile(
             id=client["id"],
+            client_id=client.get("client_id", ""),
             therapist_id=profile.get("therapist_id", "") if profile else "",
-            email=client["email"],
+            mobile=client["mobile"],
+            email=client.get("email"),
             full_name=client["full_name"],
             age=profile.get("age") if profile else None,
             guardian_name=profile.get("guardian_name") if profile else None,
