@@ -478,6 +478,22 @@ async def login(login_data: UserLogin):
     if not user or not verify_password(login_data.password, user["password_hash"]):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
+    # Check if therapist is approved
+    if user["role"] == "therapist":
+        if user.get("status") != "approved":
+            status = user.get("status", "pending_approval")
+            if status == "pending_approval":
+                raise HTTPException(status_code=403, detail="Your account is pending approval")
+            elif status == "suspended":
+                raise HTTPException(status_code=403, detail="Your account has been suspended")
+            elif status == "rejected":
+                raise HTTPException(status_code=403, detail="Your application was rejected")
+        
+        # Check subscription status
+        subscription_status = user.get("subscription_status")
+        if subscription_status not in ["trial", "active"]:
+            raise HTTPException(status_code=403, detail="Your subscription has expired. Please contact support.")
+    
     await log_audit(user["id"], user["role"], "login", "user", user["id"])
     
     token = create_token(user["id"], user["mobile"], user["role"])
@@ -488,7 +504,33 @@ async def login(login_data: UserLogin):
         email=user.get("email"),
         full_name=user["full_name"],
         role=user["role"],
+        status=user.get("status"),
+        subscription_status=user.get("subscription_status"),
+        subscription_plan=user.get("subscription_plan"),
         created_at=datetime.fromisoformat(user["created_at"])
+    )
+    
+    return TokenResponse(token=token, user=user_obj)
+
+@api_router.post("/auth/super-admin-login", response_model=TokenResponse)
+async def super_admin_login(login_data: SuperAdminLogin):
+    # Check against environment variable or database
+    super_admin_username = os.environ.get('SUPER_ADMIN_USERNAME', 'admin')
+    super_admin_password = os.environ.get('SUPER_ADMIN_PASSWORD', 'admin123')
+    
+    if login_data.username != super_admin_username or login_data.password != super_admin_password:
+        raise HTTPException(status_code=401, detail="Invalid admin credentials")
+    
+    # Create a virtual super admin user
+    admin_id = "super_admin"
+    token = create_token(admin_id, login_data.username, "super_admin")
+    user_obj = User(
+        id=admin_id,
+        mobile="0000000000",
+        email="admin@haven.com",
+        full_name="Super Admin",
+        role="super_admin",
+        created_at=datetime.now(timezone.utc)
     )
     
     return TokenResponse(token=token, user=user_obj)
