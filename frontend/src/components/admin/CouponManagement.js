@@ -26,7 +26,7 @@ const CouponManagement = () => {
 
   const fetchCoupons = async () => {
     try {
-      const response = await axios.get(`${API}/api/admin/coupons`);
+      const response = await axios.get(`${API}/admin/coupons`);
       setCoupons(response.data);
     } catch (error) {
       toast.error('Failed to load coupons');
@@ -55,7 +55,7 @@ const CouponManagement = () => {
         max_uses: newCoupon.max_uses ? parseInt(newCoupon.max_uses) : null,
       };
 
-      await axios.post(`${API}/api/admin/coupons`, payload);
+      await axios.post(`${API}/admin/coupons`, payload);
       toast.success('Coupon created');
       setShowCreateDialog(false);
       setNewCoupon({
@@ -74,7 +74,7 @@ const CouponManagement = () => {
     if (!window.confirm('Are you sure you want to delete this coupon?')) return;
 
     try {
-      await axios.delete(`${API}/api/admin/coupons/${couponId}`);
+      await axios.delete(`${API}/admin/coupons/${couponId}`);
       toast.success('Coupon deleted');
       fetchCoupons();
     } catch (error) {
