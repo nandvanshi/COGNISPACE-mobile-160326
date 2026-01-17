@@ -4,10 +4,12 @@ import axios from 'axios';
 import { useAuth, API } from '../App';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
-import { LogOut, Users, UserCheck, UserCog } from 'lucide-react';
+import { LogOut, Users, UserCheck, UserCog, CreditCard, Tag } from 'lucide-react';
 import TherapistApplications from '../components/admin/TherapistApplications';
 import TherapistManagement from '../components/admin/TherapistManagement';
 import ClientManagement from '../components/admin/ClientManagement';
+import SubscriptionManagement from '../components/admin/SubscriptionManagement';
+import CouponManagement from '../components/admin/CouponManagement';
 
 const SuperAdminDashboard = () => {
   const { user, logout } = useAuth();
@@ -18,6 +20,8 @@ const SuperAdminDashboard = () => {
     { id: 'applications', label: 'Therapist Applications', icon: UserCheck },
     { id: 'therapists', label: 'Therapist Management', icon: UserCog },
     { id: 'clients', label: 'Client Management', icon: Users },
+    { id: 'subscriptions', label: 'Subscription Plans', icon: CreditCard },
+    { id: 'coupons', label: 'Coupon Codes', icon: Tag },
   ];
 
   const handleLogout = () => {
