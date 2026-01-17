@@ -79,7 +79,7 @@ class TokenResponse(BaseModel):
 class ClientProfile(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str
-    client_id: str
+    client_id: str  # Immutable - auto-generated
     therapist_id: str
     mobile: str
     email: Optional[str] = None
@@ -91,9 +91,15 @@ class ClientProfile(BaseModel):
     intake_summary: Optional[str] = None
     emergency_contact_name: Optional[str] = None
     emergency_contact_phone: Optional[str] = None
+    profile_photo: Optional[str] = None
     created_at: datetime
 
 class ClientProfileUpdate(BaseModel):
+    # User fields (editable)
+    full_name: Optional[str] = None
+    mobile: Optional[str] = None
+    email: Optional[EmailStr] = None
+    # Profile fields
     age: Optional[int] = None
     guardian_name: Optional[str] = None
     address: Optional[str] = None
@@ -101,6 +107,10 @@ class ClientProfileUpdate(BaseModel):
     intake_summary: Optional[str] = None
     emergency_contact_name: Optional[str] = None
     emergency_contact_phone: Optional[str] = None
+    profile_photo: Optional[str] = None
+
+class ClientPasswordReset(BaseModel):
+    new_password: str
 
 # Appointment Models
 class AppointmentCreate(BaseModel):
