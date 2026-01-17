@@ -27,7 +27,7 @@ const SubscriptionManagement = () => {
 
   const fetchPlans = async () => {
     try {
-      const response = await axios.get(`${API}/admin/subscription-plans`);
+      const response = await axios.get(`${API}/api/admin/subscription-plans`);
       setPlans(response.data);
     } catch (error) {
       toast.error('Failed to load subscription plans');
@@ -48,7 +48,7 @@ const SubscriptionManagement = () => {
         max_clients: newPlan.max_clients ? parseInt(newPlan.max_clients) : null,
       };
 
-      await axios.post(`${API}/admin/subscription-plans`, payload);
+      await axios.post(`${API}/api/admin/subscription-plans`, payload);
       toast.success('Subscription plan created');
       setShowCreateDialog(false);
       setNewPlan({
@@ -68,7 +68,7 @@ const SubscriptionManagement = () => {
     if (!window.confirm('Are you sure you want to delete this plan?')) return;
 
     try {
-      await axios.delete(`${API}/admin/subscription-plans/${planId}`);
+      await axios.delete(`${API}/api/admin/subscription-plans/${planId}`);
       toast.success('Plan deleted');
       fetchPlans();
     } catch (error) {
