@@ -341,15 +341,29 @@ const ClientManagement = () => {
               />
             </div>
             <div>
-              <Label htmlFor="new-client-email">Email *</Label>
+              <Label htmlFor="new-client-mobile">Mobile Number *</Label>
+              <Input
+                id="new-client-mobile"
+                data-testid="new-client-mobile-input"
+                value={newClient.mobile}
+                onChange={(e) => setNewClient({ ...newClient, mobile: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+                required
+                className="mt-1"
+                placeholder="10-digit mobile"
+                maxLength={10}
+              />
+              <p className="text-xs text-muted-foreground mt-1">Primary login ID - must be exactly 10 digits</p>
+            </div>
+            <div>
+              <Label htmlFor="new-client-email">Email (Optional)</Label>
               <Input
                 id="new-client-email"
                 type="email"
                 data-testid="new-client-email-input"
                 value={newClient.email}
                 onChange={(e) => setNewClient({ ...newClient, email: e.target.value })}
-                required
                 className="mt-1"
+                placeholder="Optional"
               />
             </div>
             <div>
