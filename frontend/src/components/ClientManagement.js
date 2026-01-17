@@ -199,6 +199,54 @@ const ClientManagement = () => {
                 <Label>Email</Label>
                 <Input value={selectedClient.email} disabled className="mt-1" />
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="age">Age</Label>
+                  <Input
+                    id="age"
+                    type="number"
+                    data-testid="age-input"
+                    value={editForm.age || ''}
+                    onChange={(e) => setEditForm({ ...editForm, age: e.target.value })}
+                    className="mt-1"
+                    placeholder="Client age"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="guardian-name">Guardian Name</Label>
+                  <Input
+                    id="guardian-name"
+                    data-testid="guardian-name-input"
+                    value={editForm.guardian_name || ''}
+                    onChange={(e) => setEditForm({ ...editForm, guardian_name: e.target.value })}
+                    className="mt-1"
+                    placeholder="For minors"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="address">Address</Label>
+                <Textarea
+                  id="address"
+                  data-testid="address-input"
+                  value={editForm.address || ''}
+                  onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
+                  rows={2}
+                  className="mt-1"
+                  placeholder="Client address"
+                />
+              </div>
+              <div>
+                <Label htmlFor="referred-by">Referred By</Label>
+                <Input
+                  id="referred-by"
+                  data-testid="referred-by-input"
+                  value={editForm.referred_by || ''}
+                  onChange={(e) => setEditForm({ ...editForm, referred_by: e.target.value })}
+                  className="mt-1"
+                  placeholder="Referral source"
+                />
+              </div>
               <div>
                 <Label htmlFor="intake-summary">Intake Summary</Label>
                 <Textarea
