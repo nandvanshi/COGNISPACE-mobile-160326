@@ -602,6 +602,42 @@ async def require_super_admin(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=403, detail="Super admin access required")
     return current_user
 
+async def require_therapist(current_user: dict = Depends(get_current_user)):
+    """Allows any therapist to access (for read operations)"""
+    if current_user["role"] != "therapist":
+        raise HTTPException(status_code=403, detail="Therapist access required")
+    # Check if suspended or rejected
+    status = current_user.get("status")
+    if status == "suspended":
+        raise HTTPException(status_code=403, detail="Your account has been suspended")
+    if status == "rejected":
+        raise HTTPException(status_code=403, detail="Your application was rejected")
+    return current_user
+
+async def require_active_therapist(current_user: dict = Depends(get_current_user)):
+    """Requires therapist with active/trial subscription (for write operations)"""
+    if current_user["role"] != "therapist":
+        raise HTTPException(status_code=403, detail="Therapist access required")
+    # Check account status
+    status = current_user.get("status")
+    if status == "suspended":
+        raise HTTPException(status_code=403, detail="Your account has been suspended")
+    if status == "rejected":
+        raise HTTPException(status_code=403, detail="Your application was rejected")
+    # Check subscription status
+    subscription_status = current_user.get("subscription_status")
+    if subscription_status not in ["trial", "active"]:
+        raise HTTPException(
+            status_code=403, 
+            detail="Your subscription has expired. You are in read-only mode. Please renew to make changes."
+        )
+    return current_user
+
+def is_subscription_active(user: dict) -> bool:
+    """Helper to check if subscription is active"""
+    subscription_status = user.get("subscription_status")
+    return subscription_status in ["trial", "active"]
+
 @api_router.get("/admin/therapist-applications", response_model=List[TherapistProfile])
 async def get_therapist_applications(current_user: dict = Depends(require_super_admin)):
     applications = await db.therapist_applications.find({}, {"_id": 0}).to_list(1000)
