@@ -88,6 +88,20 @@ Build a secure, therapist-first web application for managing a therapy practice 
 - [x] **Therapist name in client profiles** - Shows assigned therapist
 - [x] **Navigation** - Client → Therapist, Therapist → Clients list
 
+### Phase 5: Subscription Read-Only Mode (COMPLETED - Jan 17, 2026)
+- [x] **Read-only mode for expired/cancelled subscriptions**:
+  - Allowed: View clients, profiles, session notes, assessments, protocols, homework
+  - Blocked: Create/update clients, appointments, notes, assignments, messages
+- [x] **Backend enforcements**:
+  - `require_therapist` - allows any approved therapist (read operations)
+  - `require_active_therapist` - requires trial/active subscription (write operations)
+  - `is_subscription_active()` helper function
+  - `GET /api/auth/subscription-status` endpoint
+- [x] **Frontend banner**: Persistent warning when subscription expired
+  - "Your subscription has expired. You are currently in read-only mode."
+  - Shows on all therapist pages
+  - "Contact Support" button
+
 ---
 
 ## Technical Architecture
