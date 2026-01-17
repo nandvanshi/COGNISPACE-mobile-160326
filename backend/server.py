@@ -648,10 +648,11 @@ async def get_all_therapists(current_user: dict = Depends(require_super_admin)):
     result = []
     for therapist in therapists:
         # Get application details if exists
-        app = await db.therapist_applications.find_one({"mobile": therapist["mobile"]}, {"_id": 0})
+        therapist_mobile = therapist.get("mobile", "")
+        app = await db.therapist_applications.find_one({"mobile": therapist_mobile}, {"_id": 0}) if therapist_mobile else None
         result.append(TherapistProfile(
             id=therapist["id"],
-            mobile=therapist["mobile"],
+            mobile=therapist_mobile,
             email=therapist.get("email"),
             full_name=therapist["full_name"],
             credentials=app.get("credentials", "N/A") if app else "N/A",
