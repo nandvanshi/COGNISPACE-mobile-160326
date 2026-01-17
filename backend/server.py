@@ -1453,6 +1453,13 @@ async def get_session_notes(client_id: Optional[str] = None, current_user: dict 
 
 @api_router.post("/messages", response_model=Message)
 async def send_message(msg_data: MessageCreate, current_user: dict = Depends(get_current_user)):
+    # Therapists need active subscription to send messages
+    if current_user["role"] == "therapist" and not is_subscription_active(current_user):
+        raise HTTPException(
+            status_code=403,
+            detail="Your subscription has expired. You are in read-only mode. Please renew to send messages."
+        )
+    
     recipient = await db.users.find_one({"id": msg_data.recipient_id}, {"_id": 0})
     if not recipient:
         raise HTTPException(status_code=404, detail="Recipient not found")
