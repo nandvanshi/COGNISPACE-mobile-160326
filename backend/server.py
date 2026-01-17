@@ -382,6 +382,10 @@ async def log_audit(user_id: str, user_role: str, action: str, resource_type: st
 
 @api_router.post("/auth/register", response_model=TokenResponse)
 async def register(user_data: UserRegister):
+    # Only clients can self-register
+    if user_data.role != "client":
+        raise HTTPException(status_code=400, detail="Only clients can self-register. Therapists must apply separately.")
+    
     # Validate mobile number
     if not validate_mobile(user_data.mobile):
         raise HTTPException(status_code=400, detail="Mobile number must be exactly 10 digits")
@@ -398,7 +402,7 @@ async def register(user_data: UserRegister):
             raise HTTPException(status_code=400, detail="Email already registered")
     
     user_id = str(uuid.uuid4())
-    client_id = generate_client_id() if user_data.role == "client" else None
+    client_id = generate_client_id()
     
     user_doc = {
         "id": user_id,
@@ -426,6 +430,39 @@ async def register(user_data: UserRegister):
     )
     
     return TokenResponse(token=token, user=user)
+
+@api_router.post("/auth/therapist-application")
+async def apply_as_therapist(application: TherapistApplication):
+    # Validate mobile number
+    if not validate_mobile(application.mobile):
+        raise HTTPException(status_code=400, detail="Mobile number must be exactly 10 digits")
+    
+    # Check if mobile or email already exists
+    existing_mobile = await db.users.find_one({"mobile": application.mobile})
+    if existing_mobile:
+        raise HTTPException(status_code=400, detail="Mobile number already registered")
+    
+    existing_email = await db.users.find_one({"email": application.email})
+    if existing_email:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    application_id = str(uuid.uuid4())
+    application_doc = {
+        "id": application_id,
+        "mobile": application.mobile,
+        "email": application.email,
+        "full_name": application.full_name,
+        "credentials": application.credentials,
+        "specialization": application.specialization,
+        "years_of_experience": application.years_of_experience,
+        "status": "pending_approval",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "approved_at": None
+    }
+    
+    await db.therapist_applications.insert_one(application_doc)
+    
+    return {"message": "Application submitted successfully. You will be notified once approved.", "application_id": application_id}
 
 @api_router.post("/auth/login", response_model=TokenResponse)
 async def login(login_data: UserLogin):
