@@ -82,10 +82,21 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   }
 
   if (!user) {
+    if (allowedRoles?.includes('super_admin')) {
+      return <Navigate to="/admin-login" replace />;
+    }
     return <Navigate to="/login" replace />;
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
+    // Redirect to appropriate dashboard
+    if (user.role === 'super_admin') {
+      return <Navigate to="/admin" replace />;
+    } else if (user.role === 'therapist') {
+      return <Navigate to="/therapist" replace />;
+    } else if (user.role === 'client') {
+      return <Navigate to="/client" replace />;
+    }
     return <Navigate to="/" replace />;
   }
 
