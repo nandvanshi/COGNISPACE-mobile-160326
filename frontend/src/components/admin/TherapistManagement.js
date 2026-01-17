@@ -35,7 +35,7 @@ const TherapistManagement = () => {
     if (!window.confirm('Are you sure you want to suspend this therapist?')) return;
 
     try {
-      await axios.post(`${API}/api/admin/therapists/${therapistId}/suspend`);
+      await axios.post(`${API}/admin/therapists/${therapistId}/suspend`);
       toast.success('Therapist suspended');
       fetchTherapists();
     } catch (error) {
