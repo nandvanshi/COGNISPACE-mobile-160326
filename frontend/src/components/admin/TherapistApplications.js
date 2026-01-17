@@ -22,7 +22,7 @@ const TherapistApplications = () => {
 
   const fetchApplications = async () => {
     try {
-      const response = await axios.get(`${API}/admin/therapist-applications`);
+      const response = await axios.get(`${API}/api/admin/therapist-applications`);
       setApplications(response.data);
     } catch (error) {
       toast.error('Failed to load applications');
@@ -49,7 +49,7 @@ const TherapistApplications = () => {
   const confirmApproval = async () => {
     try {
       await axios.post(
-        `${API}/admin/therapist-applications/${selectedApp.id}/approve?password=${generatedPassword}`
+        `${API}/api/admin/therapist-applications/${selectedApp.id}/approve?password=${generatedPassword}`
       );
       toast.success(`Therapist approved! Password: ${generatedPassword}`);
       setShowApproveDialog(false);
@@ -63,7 +63,7 @@ const TherapistApplications = () => {
     if (!window.confirm('Are you sure you want to reject this application?')) return;
 
     try {
-      await axios.post(`${API}/admin/therapist-applications/${appId}/reject`);
+      await axios.post(`${API}/api/admin/therapist-applications/${appId}/reject`);
       toast.success('Application rejected');
       fetchApplications();
     } catch (error) {
