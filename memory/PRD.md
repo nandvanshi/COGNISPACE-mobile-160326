@@ -31,10 +31,17 @@ Build a secure, therapist-first web application for managing a therapy practice 
 
 ### Super Admin Features
 - Therapist application approval workflow
+- **Manual therapist creation** (without application)
+- **Edit therapist details**
+- **Profile photo support for therapists**
 - Therapist management (suspend/activate/reset password)
-- Client management (view all, reset passwords)
-- Subscription plan management
-- Coupon code management
+- **Subscription details with remaining validity**
+- **View therapist's assigned clients**
+- Client management with full details
+- **Assigned therapist name in client profiles**
+- **Navigation: Client → Therapist profile, Therapist → Clients list**
+- Subscription plan management (CRUD)
+- Coupon code management (CRUD)
 
 ### Key Exclusions
 - No teletherapy/video calls
@@ -63,19 +70,23 @@ Build a secure, therapist-first web application for managing a therapy practice 
 ### Phase 3: Super Admin & Onboarding (COMPLETED - Jan 17, 2026)
 - [x] Super Admin login portal (`/admin-login`)
 - [x] Super Admin dashboard with navigation
-- [x] Therapist application workflow
-  - [x] Application submission endpoint
-  - [x] Application review page
-  - [x] Approve/Reject functionality
-  - [x] Auto-create therapist account on approval with 30-day trial
+- [x] Therapist application workflow (apply, approve, reject)
 - [x] Therapist management (suspend/activate/reset password)
 - [x] Client management for admins
 - [x] Subscription plan CRUD
 - [x] Coupon code management
 
-### Bug Fixes (Jan 17, 2026)
-- [x] **P0 Fixed**: Super Admin token validation - `get_current_user` now handles super_admin virtual user
-- [x] **P1 Fixed**: KeyError 'mobile' crash - all direct dict access changed to safe `.get()` methods
+### Phase 4: Admin Panel Enhancements (COMPLETED - Jan 17, 2026)
+- [x] **P0 Fixed**: Subscription Plans module (was double /api prefix)
+- [x] **P0 Fixed**: Coupon Codes module (was double /api prefix)
+- [x] **Manual therapist creation** - Add therapist directly without application
+- [x] **Edit therapist details** - Update name, email, credentials, specialization
+- [x] **Profile photo support** - Photo URL storage and display
+- [x] **Subscription details** - Show plan, status, and remaining validity days
+- [x] **View therapist's clients** - List all assigned clients per therapist
+- [x] **Full client details** - Age, guardian, address, emergency contact, intake summary
+- [x] **Therapist name in client profiles** - Shows assigned therapist
+- [x] **Navigation** - Client → Therapist, Therapist → Clients list
 
 ---
 
@@ -102,9 +113,19 @@ Build a secure, therapist-first web application for managing a therapy practice 
 - `POST /api/auth/therapist-application` - Submit application
 - `GET /api/admin/therapist-applications` - List applications
 - `POST /api/admin/therapist-applications/{id}/approve` - Approve therapist
+- `POST /api/admin/therapists/create` - **Manual therapist creation**
+- `PUT /api/admin/therapists/{id}` - **Edit therapist**
+- `GET /api/admin/therapists/{id}` - **Therapist detail with subscription**
+- `GET /api/admin/therapists/{id}/clients` - **Therapist's clients**
 - `POST /api/admin/therapists/{id}/suspend` - Suspend therapist
-- `GET /api/clients` - List clients (for therapists)
-- `GET /api/admin/clients` - List all clients (for admins)
+- `GET /api/admin/clients` - **Full client details with therapist name**
+- `GET /api/admin/clients/{id}` - **Single client detail**
+- `GET /api/admin/subscription-plans` - List subscription plans
+- `POST /api/admin/subscription-plans` - Create subscription plan
+- `DELETE /api/admin/subscription-plans/{id}` - Delete plan
+- `GET /api/admin/coupons` - List coupons
+- `POST /api/admin/coupons` - Create coupon
+- `DELETE /api/admin/coupons/{id}` - Delete coupon
 
 ### Test Credentials
 - **Super Admin**: username: `admin`, password: `admin123` (at `/admin-login`)
@@ -114,10 +135,6 @@ Build a secure, therapist-first web application for managing a therapy practice 
 
 ## Backlog
 
-### P0 - Critical (Required for MVP)
-- [ ] End-to-end test of complete therapist onboarding flow with frontend
-- [ ] Verify client login works with mobile + password
-
 ### P1 - High Priority
 - [ ] Appointment Calendar with double-booking prevention
 - [ ] Session Notes with SOAP/DAP templates
@@ -125,8 +142,8 @@ Build a secure, therapist-first web application for managing a therapy practice 
 
 ### P2 - Medium Priority  
 - [ ] Payment tracking for therapists
-- [ ] Client ID display in frontend
 - [ ] Assessment result visualization
+- [ ] Profile photo upload (currently URL-based)
 
 ### P3 - Future Enhancements
 - [ ] Therapy protocol builder UI
