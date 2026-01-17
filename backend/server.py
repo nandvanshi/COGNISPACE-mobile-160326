@@ -1780,9 +1780,7 @@ async def create_protocol(protocol_data: ProtocolCreate, current_user: dict = De
     return Protocol(**{k: datetime.fromisoformat(v) if k in ["created_at", "updated_at"] else v for k, v in protocol_doc.items()})
 
 @api_router.get("/protocols", response_model=List[Protocol])
-async def get_protocols(current_user: dict = Depends(get_current_user)):
-    if current_user["role"] != "therapist":
-        raise HTTPException(status_code=403, detail="Only therapists can access protocols")
+async def get_protocols(current_user: dict = Depends(require_therapist)):
     
     protocols = await db.protocols.find({"therapist_id": current_user["id"]}, {"_id": 0}).to_list(1000)
     return [Protocol(**{k: datetime.fromisoformat(v) if k in ["created_at", "updated_at"] else v for k, v in proto.items()}) for proto in protocols]
