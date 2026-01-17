@@ -67,7 +67,7 @@ const ClientManagement = () => {
   const confirmPasswordReset = async () => {
     try {
       await axios.post(
-        `${API}/api/admin/clients/${selectedClient.id}/reset-password?new_password=${newPassword}`
+        `${API}/admin/clients/${selectedClient.id}/reset-password?new_password=${newPassword}`
       );
       toast.success(`Password reset! New password: ${newPassword}`);
       setShowPasswordDialog(false);
