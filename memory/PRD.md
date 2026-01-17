@@ -102,6 +102,23 @@ Build a secure, therapist-first web application for managing a therapy practice 
   - Shows on all therapist pages
   - "Contact Support" button
 
+### Phase 6: Client Edit Functionality (COMPLETED - Jan 17, 2026)
+- [x] **Edit client profile details**:
+  - Full name, mobile, email (with validation)
+  - Age, guardian name, address, referred by
+  - Emergency contact name and phone
+  - Intake summary
+- [x] **Edit client credentials**:
+  - Mobile update with 10-digit validation
+  - Email update with uniqueness check
+  - Password reset by therapist (`POST /api/clients/{id}/reset-password`)
+- [x] **Client profile photo/avatar**:
+  - URL-based photo storage (`profile_photo` field)
+  - Initials fallback in UI
+- [x] **Client ID immutability**:
+  - `client_id` (e.g., CL-XXXXXX) remains unchanged
+  - Shown as "(immutable)" in edit dialog
+
 ---
 
 ## Technical Architecture
