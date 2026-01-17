@@ -408,14 +408,28 @@ async def create_client(client_data: ClientCreate, current_user: dict = Depends(
     if current_user["role"] != "therapist":
         raise HTTPException(status_code=403, detail="Only therapists can create clients")
     
-    # Check if user exists
-    existing = await db.users.find_one({"email": client_data.email})
-    if existing:
-        raise HTTPException(status_code=400, detail="Email already registered")
+    # Validate mobile number
+    if not validate_mobile(client_data.mobile):
+        raise HTTPException(status_code=400, detail="Mobile number must be exactly 10 digits")
+    
+    # Check if mobile already exists
+    existing_mobile = await db.users.find_one({"mobile": client_data.mobile})
+    if existing_mobile:
+        raise HTTPException(status_code=400, detail="Mobile number already registered")
+    
+    # Check if email exists (if provided)
+    if client_data.email:
+        existing_email = await db.users.find_one({"email": client_data.email})
+        if existing_email:
+            raise HTTPException(status_code=400, detail="Email already registered")
     
     client_id = str(uuid.uuid4())
+    unique_client_id = generate_client_id()
+    
     user_doc = {
         "id": client_id,
+        "client_id": unique_client_id,
+        "mobile": client_data.mobile,
         "email": client_data.email,
         "password_hash": hash_password(client_data.password),
         "full_name": client_data.full_name,
@@ -444,7 +458,9 @@ async def create_client(client_data: ClientCreate, current_user: dict = Depends(
     
     return ClientProfile(
         id=client_id,
+        client_id=unique_client_id,
         therapist_id=current_user["id"],
+        mobile=client_data.mobile,
         email=client_data.email,
         full_name=client_data.full_name,
         age=client_data.age,
