@@ -354,9 +354,10 @@ async def get_me(current_user: dict = Depends(get_current_user)):
 # ============= CLIENT ENDPOINTS =============
 
 class ClientCreate(BaseModel):
-    email: EmailStr
+    mobile: str
     full_name: str
     password: str
+    email: Optional[EmailStr] = None
     age: Optional[int] = None
     guardian_name: Optional[str] = None
     address: Optional[str] = None
