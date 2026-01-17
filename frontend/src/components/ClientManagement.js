@@ -344,6 +344,54 @@ const ClientManagement = () => {
                 placeholder="Initial password for client"
               />
             </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="new-age">Age</Label>
+                <Input
+                  id="new-age"
+                  type="number"
+                  data-testid="new-age-input"
+                  value={newClient.age}
+                  onChange={(e) => setNewClient({ ...newClient, age: e.target.value })}
+                  className="mt-1"
+                  placeholder="Client age"
+                />
+              </div>
+              <div>
+                <Label htmlFor="new-guardian-name">Guardian Name</Label>
+                <Input
+                  id="new-guardian-name"
+                  data-testid="new-guardian-name-input"
+                  value={newClient.guardian_name}
+                  onChange={(e) => setNewClient({ ...newClient, guardian_name: e.target.value })}
+                  className="mt-1"
+                  placeholder="For minors"
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="new-address">Address</Label>
+              <Textarea
+                id="new-address"
+                data-testid="new-address-input"
+                value={newClient.address}
+                onChange={(e) => setNewClient({ ...newClient, address: e.target.value })}
+                rows={2}
+                className="mt-1"
+                placeholder="Client address"
+              />
+            </div>
+            <div>
+              <Label htmlFor="new-referred-by">Referred By</Label>
+              <Input
+                id="new-referred-by"
+                data-testid="new-referred-by-input"
+                value={newClient.referred_by}
+                onChange={(e) => setNewClient({ ...newClient, referred_by: e.target.value })}
+                className="mt-1"
+                placeholder="Referral source (e.g., Dr. Smith, Insurance, Self)"
+              />
+            </div>
             <div>
               <Label htmlFor="new-intake-summary">Intake Summary</Label>
               <Textarea
