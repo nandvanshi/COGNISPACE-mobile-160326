@@ -1,0 +1,142 @@
+# TherapyFlow - Product Requirements Document
+
+## Original Problem Statement
+Build a secure, therapist-first web application for managing a therapy practice and supporting clinical decision-making.
+
+## Core Requirements
+
+### User Roles
+- **Therapist**: Primary user - manages clients, sessions, assessments, protocols, and payments
+- **Client**: Secondary user - receives therapy, completes assessments and homework
+- **Super Admin**: Platform administrator - approves therapists, manages subscriptions and coupons
+
+### Authentication
+- Secure email/password auth with JWT
+- Mobile-first authentication for clients (mobile number as primary identifier)
+- Super Admin has separate login portal at `/admin-login`
+- Therapist self-registration disabled - must apply and be approved by Super Admin
+
+### Practice Management (MVP)
+- Client profiles with extended fields (guardian name, age, address, etc.)
+- Appointment scheduling (double-booking prevention)
+- Session notes (SOAP & DAP templates)
+- Secure messaging between therapist and client
+- Basic payment tracking
+
+### Clinical Support
+- Assessment library (PHQ-9, GAD-7, PCL-5, ASRS, BDI-II, DASS-21, YBOCS, PSS)
+- Custom assessment creation by therapists
+- Therapy protocol builder with templates (CBT-Anxiety, DBT-Emotion Regulation, ACT-Depression)
+- Homework/resource sharing
+
+### Super Admin Features
+- Therapist application approval workflow
+- Therapist management (suspend/activate/reset password)
+- Client management (view all, reset passwords)
+- Subscription plan management
+- Coupon code management
+
+### Key Exclusions
+- No teletherapy/video calls
+- No insurance billing integration
+- No automated AI diagnosis
+
+---
+
+## What's Been Implemented
+
+### Phase 1: Core Infrastructure (COMPLETED)
+- [x] FastAPI backend with MongoDB
+- [x] React frontend with Tailwind CSS + Shadcn UI
+- [x] JWT-based authentication with role-based access control
+- [x] User registration and login for clients
+
+### Phase 2: Therapist Features (COMPLETED)
+- [x] Client management (create, view, update profiles)
+- [x] Expanded client profiles (guardian name, age, address, etc.)
+- [x] Clinical assessment library (8 standard assessments)
+- [x] Custom assessment creation
+- [x] Assessment assignment and completion
+- [x] Therapy protocol templates
+- [x] Homework assignment
+
+### Phase 3: Super Admin & Onboarding (COMPLETED - Jan 17, 2026)
+- [x] Super Admin login portal (`/admin-login`)
+- [x] Super Admin dashboard with navigation
+- [x] Therapist application workflow
+  - [x] Application submission endpoint
+  - [x] Application review page
+  - [x] Approve/Reject functionality
+  - [x] Auto-create therapist account on approval with 30-day trial
+- [x] Therapist management (suspend/activate/reset password)
+- [x] Client management for admins
+- [x] Subscription plan CRUD
+- [x] Coupon code management
+
+### Bug Fixes (Jan 17, 2026)
+- [x] **P0 Fixed**: Super Admin token validation - `get_current_user` now handles super_admin virtual user
+- [x] **P1 Fixed**: KeyError 'mobile' crash - all direct dict access changed to safe `.get()` methods
+
+---
+
+## Technical Architecture
+
+```
+/app/
+├── backend/
+│   ├── server.py          # Main API (FastAPI)
+│   └── tests/             # Pytest tests
+├── frontend/
+│   └── src/
+│       ├── App.js         # Router + API config
+│       ├── pages/         # Page components
+│       └── components/
+│           ├── admin/     # Super Admin components
+│           └── ui/        # Shadcn UI components
+└── test_reports/          # Test results
+```
+
+### API Endpoints (Key)
+- `POST /api/auth/login` - User login (mobile or email)
+- `POST /api/auth/super-admin-login` - Admin login
+- `POST /api/auth/therapist-application` - Submit application
+- `GET /api/admin/therapist-applications` - List applications
+- `POST /api/admin/therapist-applications/{id}/approve` - Approve therapist
+- `POST /api/admin/therapists/{id}/suspend` - Suspend therapist
+- `GET /api/clients` - List clients (for therapists)
+- `GET /api/admin/clients` - List all clients (for admins)
+
+### Test Credentials
+- **Super Admin**: username: `admin`, password: `admin123` (at `/admin-login`)
+- **Test Therapist**: mobile: `9999999999`, password: `TestPass123`
+
+---
+
+## Backlog
+
+### P0 - Critical (Required for MVP)
+- [ ] End-to-end test of complete therapist onboarding flow with frontend
+- [ ] Verify client login works with mobile + password
+
+### P1 - High Priority
+- [ ] Appointment Calendar with double-booking prevention
+- [ ] Session Notes with SOAP/DAP templates
+- [ ] Secure therapist-client messaging interface
+
+### P2 - Medium Priority  
+- [ ] Payment tracking for therapists
+- [ ] Client ID display in frontend
+- [ ] Assessment result visualization
+
+### P3 - Future Enhancements
+- [ ] Therapy protocol builder UI
+- [ ] Homework completion tracking
+- [ ] Audit log viewer for admins
+- [ ] Email notifications for approvals
+
+---
+
+## Refactoring Needs
+- Split `server.py` into modular structure (routes, models, services)
+- Add database migration strategy for schema changes
+- Add comprehensive error handling
