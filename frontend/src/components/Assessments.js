@@ -60,25 +60,127 @@ const Assessments = () => {
       return;
     }
 
-    const assessmentData = library[newAssignment.assessment_type];
-    if (!assessmentData) {
-      toast.error('Invalid assessment type');
-      return;
+    let assessmentData;
+    let questions;
+    
+    if (newAssignment.is_custom) {
+      // Custom assessment
+      const customAssess = customAssessments.find(a => a.id === newAssignment.assessment_type);
+      if (!customAssess) {
+        toast.error('Invalid custom assessment');
+        return;
+      }
+      questions = customAssess.questions;
+      assessmentData = {
+        client_id: newAssignment.client_id,
+        assessment_type: customAssess.name,
+        questions: questions,
+        is_custom: true,
+        custom_assessment_id: customAssess.id,
+      };
+    } else {
+      // Standard library assessment
+      const standardAssess = library[newAssignment.assessment_type];
+      if (!standardAssess) {
+        toast.error('Invalid assessment type');
+        return;
+      }
+      questions = standardAssess.questions;
+      assessmentData = {
+        client_id: newAssignment.client_id,
+        assessment_type: newAssignment.assessment_type,
+        questions: questions,
+        is_custom: false,
+      };
     }
 
     try {
-      await axios.post(`${API}/assessments`, {
-        client_id: newAssignment.client_id,
-        assessment_type: newAssignment.assessment_type,
-        questions: assessmentData.questions,
-      });
+      await axios.post(`${API}/assessments`, assessmentData);
       toast.success('Assessment assigned');
       setShowDialog(false);
-      setNewAssignment({ client_id: '', assessment_type: '' });
+      setNewAssignment({ client_id: '', assessment_type: '', is_custom: false });
       fetchData();
     } catch (error) {
       toast.error('Failed to assign assessment');
     }
+  };
+
+  const handleCreateCustomAssessment = async (e) => {
+    e.preventDefault();
+
+    // Validate
+    if (!newCustomAssessment.name || !newCustomAssessment.description) {
+      toast.error('Name and description are required');
+      return;
+    }
+
+    // Validate questions
+    const validQuestions = newCustomAssessment.questions.filter(
+      (q) => q.q.trim() && q.options.filter((o) => o.trim()).length >= 2
+    );
+
+    if (validQuestions.length === 0) {
+      toast.error('Add at least one question with 2+ options');
+      return;
+    }
+
+    try {
+      await axios.post(`${API}/assessments/custom`, {
+        name: newCustomAssessment.name,
+        description: newCustomAssessment.description,
+        questions: validQuestions,
+      });
+      toast.success('Custom assessment created');
+      setShowCreateCustom(false);
+      setNewCustomAssessment({
+        name: '',
+        description: '',
+        questions: [{ q: '', options: ['', ''] }],
+      });
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to create custom assessment');
+    }
+  };
+
+  const addQuestion = () => {
+    setNewCustomAssessment({
+      ...newCustomAssessment,
+      questions: [...newCustomAssessment.questions, { q: '', options: ['', ''] }],
+    });
+  };
+
+  const removeQuestion = (index) => {
+    setNewCustomAssessment({
+      ...newCustomAssessment,
+      questions: newCustomAssessment.questions.filter((_, i) => i !== index),
+    });
+  };
+
+  const updateQuestion = (index, field, value) => {
+    const updatedQuestions = [...newCustomAssessment.questions];
+    updatedQuestions[index][field] = value;
+    setNewCustomAssessment({ ...newCustomAssessment, questions: updatedQuestions });
+  };
+
+  const addOption = (questionIndex) => {
+    const updatedQuestions = [...newCustomAssessment.questions];
+    updatedQuestions[questionIndex].options.push('');
+    setNewCustomAssessment({ ...newCustomAssessment, questions: updatedQuestions });
+  };
+
+  const removeOption = (questionIndex, optionIndex) => {
+    const updatedQuestions = [...newCustomAssessment.questions];
+    updatedQuestions[questionIndex].options = updatedQuestions[questionIndex].options.filter(
+      (_, i) => i !== optionIndex
+    );
+    setNewCustomAssessment({ ...newCustomAssessment, questions: updatedQuestions });
+  };
+
+  const updateOption = (questionIndex, optionIndex, value) => {
+    const updatedQuestions = [...newCustomAssessment.questions];
+    updatedQuestions[questionIndex].options[optionIndex] = value;
+    setNewCustomAssessment({ ...newCustomAssessment, questions: updatedQuestions });
   };
 
   if (loading) {
