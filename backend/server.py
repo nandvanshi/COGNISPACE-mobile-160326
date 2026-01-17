@@ -1312,9 +1312,7 @@ async def get_clients(current_user: dict = Depends(require_therapist)):
     return result
 
 @api_router.get("/clients/{client_id}", response_model=ClientProfile)
-async def get_client(client_id: str, current_user: dict = Depends(get_current_user)):
-    if current_user["role"] != "therapist":
-        raise HTTPException(status_code=403, detail="Only therapists can access this")
+async def get_client(client_id: str, current_user: dict = Depends(require_therapist)):
     
     client = await db.users.find_one({"id": client_id, "role": "client"}, {"_id": 0})
     if not client:
