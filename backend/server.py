@@ -1788,9 +1788,7 @@ async def get_protocols(current_user: dict = Depends(require_therapist)):
 # ============= HOMEWORK ENDPOINTS =============
 
 @api_router.post("/homework", response_model=Homework)
-async def assign_homework(hw_data: HomeworkCreate, current_user: dict = Depends(get_current_user)):
-    if current_user["role"] != "therapist":
-        raise HTTPException(status_code=403, detail="Only therapists can assign homework")
+async def assign_homework(hw_data: HomeworkCreate, current_user: dict = Depends(require_active_therapist)):
     
     client = await db.users.find_one({"id": hw_data.client_id}, {"_id": 0})
     if not client:
