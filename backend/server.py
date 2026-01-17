@@ -64,12 +64,20 @@ class ClientProfile(BaseModel):
     therapist_id: str
     email: str
     full_name: str
+    age: Optional[int] = None
+    guardian_name: Optional[str] = None
+    address: Optional[str] = None
+    referred_by: Optional[str] = None
     intake_summary: Optional[str] = None
     emergency_contact_name: Optional[str] = None
     emergency_contact_phone: Optional[str] = None
     created_at: datetime
 
 class ClientProfileUpdate(BaseModel):
+    age: Optional[int] = None
+    guardian_name: Optional[str] = None
+    address: Optional[str] = None
+    referred_by: Optional[str] = None
     intake_summary: Optional[str] = None
     emergency_contact_name: Optional[str] = None
     emergency_contact_phone: Optional[str] = None
