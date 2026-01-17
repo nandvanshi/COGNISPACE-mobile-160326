@@ -64,8 +64,10 @@ class TokenResponse(BaseModel):
 class ClientProfile(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str
+    client_id: str
     therapist_id: str
-    email: str
+    mobile: str
+    email: Optional[str] = None
     full_name: str
     age: Optional[int] = None
     guardian_name: Optional[str] = None
