@@ -1362,10 +1362,7 @@ async def update_client(client_id: str, update_data: ClientProfileUpdate, curren
 # ============= APPOINTMENT ENDPOINTS =============
 
 @api_router.post("/appointments", response_model=Appointment)
-async def create_appointment(appt_data: AppointmentCreate, current_user: dict = Depends(get_current_user)):
-    if current_user["role"] != "therapist":
-        raise HTTPException(status_code=403, detail="Only therapists can create appointments")
-    
+async def create_appointment(appt_data: AppointmentCreate, current_user: dict = Depends(require_active_therapist)):
     # Check for double-booking
     existing = await db.appointments.find_one({
         "therapist_id": current_user["id"],
