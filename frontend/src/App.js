@@ -3,8 +3,11 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import axios from 'axios';
 import { Toaster } from 'sonner';
 import LoginPage from './pages/LoginPage';
+import AdminLoginPage from './pages/AdminLoginPage';
+import TherapistApplicationPage from './pages/TherapistApplicationPage';
 import TherapistDashboard from './pages/TherapistDashboard';
 import ClientDashboard from './pages/ClientDashboard';
+import SuperAdminDashboard from './pages/SuperAdminDashboard';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
