@@ -49,7 +49,7 @@ const TherapistApplications = () => {
   const confirmApproval = async () => {
     try {
       await axios.post(
-        `${API}/api/admin/therapist-applications/${selectedApp.id}/approve?password=${generatedPassword}`
+        `${API}/admin/therapist-applications/${selectedApp.id}/approve?password=${generatedPassword}`
       );
       toast.success(`Therapist approved! Password: ${generatedPassword}`);
       setShowApproveDialog(false);
