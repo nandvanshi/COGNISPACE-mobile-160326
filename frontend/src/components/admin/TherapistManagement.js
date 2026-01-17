@@ -45,7 +45,7 @@ const TherapistManagement = () => {
 
   const handleActivate = async (therapistId) => {
     try {
-      await axios.post(`${API}/api/admin/therapists/${therapistId}/activate`);
+      await axios.post(`${API}/admin/therapists/${therapistId}/activate`);
       toast.success('Therapist activated');
       fetchTherapists();
     } catch (error) {
