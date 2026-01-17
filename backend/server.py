@@ -698,17 +698,30 @@ async def get_all_therapists(current_user: dict = Depends(require_super_admin)):
         # Get application details if exists
         therapist_mobile = therapist.get("mobile", "")
         app = await db.therapist_applications.find_one({"mobile": therapist_mobile}, {"_id": 0}) if therapist_mobile else None
+        
+        # Get subscription end date
+        subscription = await db.subscriptions.find_one(
+            {"therapist_id": therapist["id"]},
+            {"_id": 0},
+            sort=[("start_date", -1)]
+        )
+        subscription_end_date = None
+        if subscription and subscription.get("end_date"):
+            subscription_end_date = datetime.fromisoformat(subscription["end_date"])
+        
         result.append(TherapistProfile(
             id=therapist["id"],
             mobile=therapist_mobile,
             email=therapist.get("email"),
             full_name=therapist["full_name"],
-            credentials=app.get("credentials", "N/A") if app else "N/A",
-            specialization=app.get("specialization") if app else None,
-            years_of_experience=app.get("years_of_experience") if app else None,
+            credentials=therapist.get("credentials") or (app.get("credentials", "N/A") if app else "N/A"),
+            specialization=therapist.get("specialization") or (app.get("specialization") if app else None),
+            years_of_experience=therapist.get("years_of_experience") or (app.get("years_of_experience") if app else None),
             status=therapist.get("status", "approved"),
             subscription_status=therapist.get("subscription_status"),
             subscription_plan=therapist.get("subscription_plan"),
+            subscription_end_date=subscription_end_date,
+            profile_photo=therapist.get("profile_photo"),
             created_at=datetime.fromisoformat(therapist["created_at"]),
             approved_at=datetime.fromisoformat(app["approved_at"]) if app and app.get("approved_at") else None
         ))
