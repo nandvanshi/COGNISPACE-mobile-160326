@@ -83,6 +83,26 @@ const ClientManagement = () => {
     }
   };
 
+  const handleAddClient = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post(`${API}/clients`, newClient);
+      toast.success('Client added successfully');
+      setShowAddDialog(false);
+      setNewClient({
+        email: '',
+        full_name: '',
+        password: '',
+        intake_summary: '',
+        emergency_contact_name: '',
+        emergency_contact_phone: '',
+      });
+      fetchClients();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to add client');
+    }
+  };
+
   if (loading) {
     return <div className="text-center py-12">Loading clients...</div>;
   }
