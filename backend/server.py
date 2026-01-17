@@ -352,6 +352,10 @@ class ClientCreate(BaseModel):
     email: EmailStr
     full_name: str
     password: str
+    age: Optional[int] = None
+    guardian_name: Optional[str] = None
+    address: Optional[str] = None
+    referred_by: Optional[str] = None
     intake_summary: Optional[str] = None
     emergency_contact_name: Optional[str] = None
     emergency_contact_phone: Optional[str] = None
