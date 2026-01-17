@@ -63,7 +63,7 @@ const TherapistApplications = () => {
     if (!window.confirm('Are you sure you want to reject this application?')) return;
 
     try {
-      await axios.post(`${API}/api/admin/therapist-applications/${appId}/reject`);
+      await axios.post(`${API}/admin/therapist-applications/${appId}/reject`);
       toast.success('Application rejected');
       fetchApplications();
     } catch (error) {
