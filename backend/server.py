@@ -356,6 +356,18 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         token = credentials.credentials
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         user_id = payload.get("user_id")
+        
+        # Handle super admin (virtual user not in DB)
+        if user_id == "super_admin":
+            return {
+                "id": "super_admin",
+                "mobile": "0000000000",
+                "email": "admin@haven.com",
+                "full_name": "Super Admin",
+                "role": "super_admin",
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+        
         user = await db.users.find_one({"id": user_id}, {"_id": 0})
         if not user:
             raise HTTPException(status_code=401, detail="User not found")
