@@ -13,7 +13,7 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 # Test credentials
 SUPER_ADMIN_USERNAME = "admin"
 SUPER_ADMIN_PASSWORD = "admin123"
-TEST_THERAPIST_MOBILE = f"99{uuid.uuid4().hex[:8]}"[:10]  # Generate unique mobile
+TEST_THERAPIST_MOBILE = "9999999999"  # Test mobile
 TEST_THERAPIST_PASSWORD = "TestPass123"
 
 
