@@ -39,7 +39,7 @@ const ClientManagement = () => {
 
   const fetchClients = async () => {
     try {
-      const response = await axios.get(`${API}/admin/clients`);
+      const response = await axios.get(`${API}/api/admin/clients`);
       setClients(response.data);
       setFilteredClients(response.data);
     } catch (error) {
@@ -67,7 +67,7 @@ const ClientManagement = () => {
   const confirmPasswordReset = async () => {
     try {
       await axios.post(
-        `${API}/admin/clients/${selectedClient.id}/reset-password?new_password=${newPassword}`
+        `${API}/api/admin/clients/${selectedClient.id}/reset-password?new_password=${newPassword}`
       );
       toast.success(`Password reset! New password: ${newPassword}`);
       setShowPasswordDialog(false);
