@@ -351,6 +351,7 @@ class TherapistUpdate(BaseModel):
     credentials: Optional[str] = None
     specialization: Optional[str] = None
     years_of_experience: Optional[int] = None
+    profile_photo: Optional[str] = None
 
 class ClientDetailResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
