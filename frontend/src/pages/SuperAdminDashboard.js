@@ -5,6 +5,7 @@ import { useAuth, API } from '../App';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { LogOut, Users, UserCheck, UserCog, CreditCard, Tag } from 'lucide-react';
+import { toast } from 'sonner';
 import TherapistApplications from '../components/admin/TherapistApplications';
 import TherapistManagement from '../components/admin/TherapistManagement';
 import ClientManagement from '../components/admin/ClientManagement';
@@ -27,6 +28,17 @@ const SuperAdminDashboard = () => {
   const handleLogout = () => {
     logout();
     navigate('/admin-login');
+  };
+
+  // Navigation handler for Client -> Therapist navigation
+  const handleViewTherapist = (therapistId, therapistName) => {
+    toast.info(`Navigating to therapist: ${therapistName}`);
+    setCurrentView('therapists');
+  };
+
+  // Navigation handler for Therapist -> Clients navigation
+  const handleViewTherapistClients = (therapistId) => {
+    setCurrentView('clients');
   };
 
   return (
@@ -76,8 +88,8 @@ const SuperAdminDashboard = () => {
       <main className="flex-1 overflow-y-auto">
         <div className="max-w-7xl mx-auto p-6 md:p-12">
           {currentView === 'applications' && <TherapistApplications />}
-          {currentView === 'therapists' && <TherapistManagement />}
-          {currentView === 'clients' && <ClientManagement />}
+          {currentView === 'therapists' && <TherapistManagement onViewClients={handleViewTherapistClients} />}
+          {currentView === 'clients' && <ClientManagement onViewTherapist={handleViewTherapist} />}
           {currentView === 'subscriptions' && <SubscriptionManagement />}
           {currentView === 'coupons' && <CouponManagement />}
         </div>
