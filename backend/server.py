@@ -275,6 +275,55 @@ class AuditLog(BaseModel):
     details: Optional[dict] = None
     created_at: datetime
 
+# Subscription Models
+class SubscriptionPlan(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    name: str
+    price: float
+    duration_days: int
+    features: List[str]
+    max_clients: Optional[int] = None
+    created_at: datetime
+
+class Subscription(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    therapist_id: str
+    plan_id: str
+    plan_name: str
+    status: str  # trial, active, expired, cancelled
+    start_date: datetime
+    end_date: datetime
+    coupon_code: Optional[str] = None
+
+class CouponCode(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    code: str
+    discount_percent: float
+    valid_until: datetime
+    max_uses: Optional[int] = None
+    used_count: int
+    created_by: str
+    created_at: datetime
+
+# Therapist Management Models
+class TherapistProfile(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    mobile: str
+    email: Optional[str] = None
+    full_name: str
+    credentials: str
+    specialization: Optional[str] = None
+    years_of_experience: Optional[int] = None
+    status: str  # pending_approval, approved, suspended, rejected
+    subscription_status: Optional[str] = None
+    subscription_plan: Optional[str] = None
+    created_at: datetime
+    approved_at: Optional[datetime] = None
+
 # ============= UTILITY FUNCTIONS =============
 
 def validate_mobile(mobile: str) -> bool:
