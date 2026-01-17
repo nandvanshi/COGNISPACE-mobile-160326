@@ -1644,9 +1644,7 @@ async def get_custom_assessments(current_user: dict = Depends(require_therapist)
     return [CustomAssessment(**{k: datetime.fromisoformat(v) if k == "created_at" else v for k, v in assess.items()}) for assess in assessments]
 
 @api_router.post("/assessments", response_model=Assessment)
-async def assign_assessment(assessment_data: AssessmentCreate, current_user: dict = Depends(get_current_user)):
-    if current_user["role"] != "therapist":
-        raise HTTPException(status_code=403, detail="Only therapists can assign assessments")
+async def assign_assessment(assessment_data: AssessmentCreate, current_user: dict = Depends(require_active_therapist)):
     
     client = await db.users.find_one({"id": assessment_data.client_id}, {"_id": 0})
     if not client:
