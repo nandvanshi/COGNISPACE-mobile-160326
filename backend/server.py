@@ -916,8 +916,78 @@ async def get_therapist_clients(therapist_id: str, current_user: dict = Depends(
 
 @api_router.get("/admin/clients", response_model=List[ClientDetailResponse])
 async def get_all_clients(current_user: dict = Depends(require_super_admin)):
+    """Get all clients with full details including assigned therapist"""
     clients = await db.users.find({"role": "client"}, {"_id": 0, "password_hash": 0}).to_list(1000)
-    return clients
+    
+    result = []
+    for client in clients:
+        # Get client profile
+        profile = await db.client_profiles.find_one({"user_id": client["id"]}, {"_id": 0})
+        
+        # Get therapist info
+        therapist_name = None
+        therapist_id = None
+        if profile and profile.get("therapist_id"):
+            therapist_id = profile["therapist_id"]
+            therapist = await db.users.find_one({"id": therapist_id}, {"_id": 0})
+            if therapist:
+                therapist_name = therapist["full_name"]
+        
+        result.append(ClientDetailResponse(
+            id=client["id"],
+            client_id=client.get("client_id", ""),
+            mobile=client.get("mobile", "N/A"),
+            email=client.get("email"),
+            full_name=client["full_name"],
+            age=profile.get("age") if profile else None,
+            guardian_name=profile.get("guardian_name") if profile else None,
+            address=profile.get("address") if profile else None,
+            referred_by=profile.get("referred_by") if profile else None,
+            intake_summary=profile.get("intake_summary") if profile else None,
+            emergency_contact_name=profile.get("emergency_contact_name") if profile else None,
+            emergency_contact_phone=profile.get("emergency_contact_phone") if profile else None,
+            therapist_id=therapist_id,
+            therapist_name=therapist_name,
+            created_at=datetime.fromisoformat(client["created_at"])
+        ))
+    
+    return result
+
+@api_router.get("/admin/clients/{client_id}")
+async def get_client_detail(client_id: str, current_user: dict = Depends(require_super_admin)):
+    """Get detailed client profile including assigned therapist"""
+    client = await db.users.find_one({"id": client_id, "role": "client"}, {"_id": 0, "password_hash": 0})
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    profile = await db.client_profiles.find_one({"user_id": client_id}, {"_id": 0})
+    
+    # Get therapist info
+    therapist_name = None
+    therapist_id = None
+    if profile and profile.get("therapist_id"):
+        therapist_id = profile["therapist_id"]
+        therapist = await db.users.find_one({"id": therapist_id}, {"_id": 0})
+        if therapist:
+            therapist_name = therapist["full_name"]
+    
+    return {
+        "id": client["id"],
+        "client_id": client.get("client_id", ""),
+        "mobile": client.get("mobile", "N/A"),
+        "email": client.get("email"),
+        "full_name": client["full_name"],
+        "age": profile.get("age") if profile else None,
+        "guardian_name": profile.get("guardian_name") if profile else None,
+        "address": profile.get("address") if profile else None,
+        "referred_by": profile.get("referred_by") if profile else None,
+        "intake_summary": profile.get("intake_summary") if profile else None,
+        "emergency_contact_name": profile.get("emergency_contact_name") if profile else None,
+        "emergency_contact_phone": profile.get("emergency_contact_phone") if profile else None,
+        "therapist_id": therapist_id,
+        "therapist_name": therapist_name,
+        "created_at": client["created_at"]
+    }
 
 @api_router.post("/admin/clients/{client_id}/reset-password")
 async def reset_client_password(client_id: str, new_password: str, current_user: dict = Depends(require_super_admin)):
