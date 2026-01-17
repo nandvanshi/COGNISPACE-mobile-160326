@@ -22,7 +22,7 @@ const TherapistManagement = () => {
 
   const fetchTherapists = async () => {
     try {
-      const response = await axios.get(`${API}/api/admin/therapists`);
+      const response = await axios.get(`${API}/admin/therapists`);
       setTherapists(response.data);
     } catch (error) {
       toast.error('Failed to load therapists');
