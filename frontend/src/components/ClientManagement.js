@@ -94,13 +94,21 @@ const ClientManagement = () => {
   const handleAddClient = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`${API}/clients`, newClient);
+      const clientData = {
+        ...newClient,
+        age: newClient.age ? parseInt(newClient.age) : null,
+      };
+      await axios.post(`${API}/clients`, clientData);
       toast.success('Client added successfully');
       setShowAddDialog(false);
       setNewClient({
         email: '',
         full_name: '',
         password: '',
+        age: '',
+        guardian_name: '',
+        address: '',
+        referred_by: '',
         intake_summary: '',
         emergency_contact_name: '',
         emergency_contact_phone: '',
