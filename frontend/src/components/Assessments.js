@@ -289,7 +289,24 @@ const Assessments = () => {
               </select>
             </div>
             <div>
-              <Label htmlFor="assessment-type">Assessment</Label>
+              <Label htmlFor="assessment-source">Assessment Source</Label>
+              <select
+                id="assessment-source"
+                data-testid="assessment-source-select"
+                value={newAssignment.is_custom ? 'custom' : 'standard'}
+                onChange={(e) =>
+                  setNewAssignment({ ...newAssignment, is_custom: e.target.value === 'custom', assessment_type: '' })
+                }
+                className="w-full mt-1 h-12 px-4 rounded-lg border border-border bg-white focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="standard">Standard Library</option>
+                <option value="custom">My Custom Assessments</option>
+              </select>
+            </div>
+            <div>
+              <Label htmlFor="assessment-type">
+                {newAssignment.is_custom ? 'Custom Assessment' : 'Standard Assessment'}
+              </Label>
               <select
                 id="assessment-type"
                 data-testid="assessment-type-select"
@@ -299,17 +316,25 @@ const Assessments = () => {
                 required
               >
                 <option value="">Select an assessment</option>
-                {Object.entries(library).map(([key, value]) => (
-                  <option key={key} value={key}>
-                    {key} - {value.name}
-                  </option>
-                ))}
+                {newAssignment.is_custom
+                  ? customAssessments.map((assess) => (
+                      <option key={assess.id} value={assess.id}>
+                        {assess.name}
+                      </option>
+                    ))
+                  : Object.entries(library).map(([key, value]) => (
+                      <option key={key} value={key}>
+                        {key} - {value.name}
+                      </option>
+                    ))}
               </select>
             </div>
-            {newAssignment.assessment_type && library[newAssignment.assessment_type] && (
+            {newAssignment.assessment_type && (
               <div className="p-4 bg-surface rounded-lg">
                 <p className="text-sm text-muted-foreground">
-                  {library[newAssignment.assessment_type].description}
+                  {newAssignment.is_custom
+                    ? customAssessments.find((a) => a.id === newAssignment.assessment_type)?.description
+                    : library[newAssignment.assessment_type]?.description}
                 </p>
               </div>
             )}
