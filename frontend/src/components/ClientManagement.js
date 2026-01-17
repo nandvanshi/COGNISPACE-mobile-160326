@@ -145,6 +145,8 @@ const ClientManagement = ({ isReadOnly = false }) => {
           onClick={() => setShowAddDialog(true)}
           className="bg-primary hover:bg-primary-700 rounded-full"
           data-testid="add-client-button"
+          disabled={isReadOnly}
+          title={isReadOnly ? 'Subscription expired - Read-only mode' : ''}
         >
           <UserPlus size={20} className="mr-2" />
           Add Client
