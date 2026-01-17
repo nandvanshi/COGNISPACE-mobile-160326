@@ -726,6 +726,154 @@ async def reset_client_password(client_id: str, new_password: str, current_user:
     
     return {"message": "Password reset successfully", "new_password": new_password}
 
+# ============= SUBSCRIPTION MANAGEMENT ENDPOINTS =============
+
+@api_router.get("/admin/subscription-plans", response_model=List[SubscriptionPlan])
+async def get_subscription_plans(current_user: dict = Depends(require_super_admin)):
+    plans = await db.subscription_plans.find({}, {"_id": 0}).to_list(1000)
+    return [SubscriptionPlan(**{k: datetime.fromisoformat(v) if k == "created_at" else v for k, v in plan.items()}) for plan in plans]
+
+class SubscriptionPlanCreate(BaseModel):
+    name: str
+    price: float
+    duration_days: int
+    features: List[str]
+    max_clients: Optional[int] = None
+
+@api_router.post("/admin/subscription-plans", response_model=SubscriptionPlan)
+async def create_subscription_plan(plan_data: SubscriptionPlanCreate, current_user: dict = Depends(require_super_admin)):
+    plan_id = str(uuid.uuid4())
+    plan_doc = {
+        "id": plan_id,
+        "name": plan_data.name,
+        "price": plan_data.price,
+        "duration_days": plan_data.duration_days,
+        "features": plan_data.features,
+        "max_clients": plan_data.max_clients,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.subscription_plans.insert_one(plan_doc)
+    await log_audit(current_user["id"], current_user["role"], "create", "subscription_plan", plan_id)
+    
+    return SubscriptionPlan(**{k: datetime.fromisoformat(v) if k == "created_at" else v for k, v in plan_doc.items()})
+
+@api_router.delete("/admin/subscription-plans/{plan_id}")
+async def delete_subscription_plan(plan_id: str, current_user: dict = Depends(require_super_admin)):
+    result = await db.subscription_plans.delete_one({"id": plan_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Plan not found")
+    
+    await log_audit(current_user["id"], current_user["role"], "delete", "subscription_plan", plan_id)
+    
+    return {"message": "Plan deleted"}
+
+class AssignSubscription(BaseModel):
+    plan_id: str
+    coupon_code: Optional[str] = None
+
+@api_router.post("/admin/therapists/{therapist_id}/assign-subscription")
+async def assign_subscription(therapist_id: str, subscription_data: AssignSubscription, current_user: dict = Depends(require_super_admin)):
+    therapist = await db.users.find_one({"id": therapist_id, "role": "therapist"}, {"_id": 0})
+    if not therapist:
+        raise HTTPException(status_code=404, detail="Therapist not found")
+    
+    plan = await db.subscription_plans.find_one({"id": subscription_data.plan_id}, {"_id": 0})
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plan not found")
+    
+    # Check coupon if provided
+    discount = 0
+    if subscription_data.coupon_code:
+        coupon = await db.coupon_codes.find_one({"code": subscription_data.coupon_code}, {"_id": 0})
+        if coupon:
+            if datetime.fromisoformat(coupon["valid_until"]) > datetime.now(timezone.utc):
+                if coupon.get("max_uses") is None or coupon["used_count"] < coupon["max_uses"]:
+                    discount = coupon["discount_percent"]
+                    # Increment usage
+                    await db.coupon_codes.update_one(
+                        {"code": subscription_data.coupon_code},
+                        {"$inc": {"used_count": 1}}
+                    )
+    
+    now = datetime.now(timezone.utc)
+    end_date = now + timedelta(days=plan["duration_days"])
+    
+    # Create subscription
+    subscription_id = str(uuid.uuid4())
+    subscription_doc = {
+        "id": subscription_id,
+        "therapist_id": therapist_id,
+        "plan_id": plan["id"],
+        "plan_name": plan["name"],
+        "status": "active",
+        "start_date": now.isoformat(),
+        "end_date": end_date.isoformat(),
+        "coupon_code": subscription_data.coupon_code
+    }
+    
+    await db.subscriptions.insert_one(subscription_doc)
+    
+    # Update therapist subscription status
+    await db.users.update_one(
+        {"id": therapist_id},
+        {"$set": {
+            "subscription_status": "active",
+            "subscription_plan": plan["name"]
+        }}
+    )
+    
+    await log_audit(current_user["id"], current_user["role"], "assign_subscription", "therapist", therapist_id)
+    
+    return {"message": "Subscription assigned", "subscription_id": subscription_id, "discount_applied": discount}
+
+@api_router.get("/admin/coupons", response_model=List[CouponCode])
+async def get_coupons(current_user: dict = Depends(require_super_admin)):
+    coupons = await db.coupon_codes.find({}, {"_id": 0}).to_list(1000)
+    return [CouponCode(**{k: datetime.fromisoformat(v) if k in ["valid_until", "created_at"] else v for k, v in coupon.items()}) for coupon in coupons]
+
+class CouponCreate(BaseModel):
+    code: str
+    discount_percent: float
+    valid_until: datetime
+    max_uses: Optional[int] = None
+
+@api_router.post("/admin/coupons", response_model=CouponCode)
+async def create_coupon(coupon_data: CouponCreate, current_user: dict = Depends(require_super_admin)):
+    # Check if code already exists
+    existing = await db.coupon_codes.find_one({"code": coupon_data.code})
+    if existing:
+        raise HTTPException(status_code=400, detail="Coupon code already exists")
+    
+    coupon_id = str(uuid.uuid4())
+    coupon_doc = {
+        "id": coupon_id,
+        "code": coupon_data.code.upper(),
+        "discount_percent": coupon_data.discount_percent,
+        "valid_until": coupon_data.valid_until.isoformat(),
+        "max_uses": coupon_data.max_uses,
+        "used_count": 0,
+        "created_by": current_user["id"],
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.coupon_codes.insert_one(coupon_doc)
+    await log_audit(current_user["id"], current_user["role"], "create", "coupon", coupon_id)
+    
+    return CouponCode(**{k: datetime.fromisoformat(v) if k in ["valid_until", "created_at"] else v for k, v in coupon_doc.items()})
+
+@api_router.delete("/admin/coupons/{coupon_id}")
+async def delete_coupon(coupon_id: str, current_user: dict = Depends(require_super_admin)):
+    result = await db.coupon_codes.delete_one({"id": coupon_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Coupon not found")
+    
+    await log_audit(current_user["id"], current_user["role"], "delete", "coupon", coupon_id)
+    
+    return {"message": "Coupon deleted"}
+
 # ============= CLIENT ENDPOINTS =============
 
 class ClientCreate(BaseModel):
