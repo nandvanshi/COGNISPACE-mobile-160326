@@ -61,7 +61,8 @@ class TestTherapistApplicationFlow:
     
     def test_therapist_application_submit(self):
         """Test submitting a therapist application"""
-        unique_mobile = f"88{uuid.uuid4().hex[:8]}"[:10]
+        import random
+        unique_mobile = f"88{random.randint(10000000, 99999999)}"  # 10 digit mobile
         unique_email = f"test_{uuid.uuid4().hex[:8]}@example.com"
         
         response = requests.post(f"{BASE_URL}/api/auth/therapist-application", json={
