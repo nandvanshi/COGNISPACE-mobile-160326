@@ -148,10 +148,26 @@ class Message(BaseModel):
     created_at: datetime
 
 # Assessment Models
+class CustomAssessmentCreate(BaseModel):
+    name: str
+    description: str
+    questions: List[dict]  # [{"q": "question", "options": ["opt1", "opt2"]}]
+
+class CustomAssessment(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    therapist_id: str
+    name: str
+    description: str
+    questions: List[dict]
+    created_at: datetime
+
 class AssessmentCreate(BaseModel):
     client_id: str
     assessment_type: str
     questions: List[dict]
+    is_custom: bool = False
+    custom_assessment_id: Optional[str] = None
 
 class Assessment(BaseModel):
     model_config = ConfigDict(extra="ignore")
