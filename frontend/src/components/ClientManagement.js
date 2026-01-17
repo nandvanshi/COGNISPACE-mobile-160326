@@ -18,9 +18,10 @@ const ClientManagement = () => {
   const [editForm, setEditForm] = useState({});
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newClient, setNewClient] = useState({
-    email: '',
+    mobile: '',
     full_name: '',
     password: '',
+    email: '',
     age: '',
     guardian_name: '',
     address: '',
