@@ -89,15 +89,15 @@ const LoginPage = () => {
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4">
                 <div>
-                  <Label htmlFor="login-email">Email</Label>
+                  <Label htmlFor="login-identifier">Mobile or Email</Label>
                   <Input
-                    id="login-email"
-                    type="email"
-                    data-testid="login-email-input"
-                    value={loginForm.email}
-                    onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
+                    id="login-identifier"
+                    data-testid="login-identifier-input"
+                    value={loginForm.identifier}
+                    onChange={(e) => setLoginForm({ ...loginForm, identifier: e.target.value })}
                     required
                     className="mt-1"
+                    placeholder="10-digit mobile or email"
                   />
                 </div>
                 <div>
