@@ -135,7 +135,8 @@ const TherapistManagement = ({ onViewClients }) => {
       email: therapist.email || '',
       credentials: therapist.credentials || '',
       specialization: therapist.specialization || '',
-      years_of_experience: therapist.years_of_experience || ''
+      years_of_experience: therapist.years_of_experience || '',
+      profile_photo: therapist.profile_photo || ''
     });
     setShowEditDialog(true);
   };
