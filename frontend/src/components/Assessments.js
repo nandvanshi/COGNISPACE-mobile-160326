@@ -361,6 +361,125 @@ const Assessments = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Create Custom Assessment Dialog */}
+      <Dialog open={showCreateCustom} onOpenChange={setShowCreateCustom}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" data-testid="create-custom-dialog">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-serif text-primary">Create Custom Assessment</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleCreateCustomAssessment} className="space-y-4">
+            <div>
+              <Label htmlFor="custom-name">Assessment Name *</Label>
+              <Input
+                id="custom-name"
+                data-testid="custom-name-input"
+                value={newCustomAssessment.name}
+                onChange={(e) => setNewCustomAssessment({ ...newCustomAssessment, name: e.target.value })}
+                required
+                className="mt-1"
+                placeholder="e.g., Daily Mood Check-in"
+              />
+            </div>
+            <div>
+              <Label htmlFor="custom-description">Description *</Label>
+              <Input
+                id="custom-description"
+                data-testid="custom-description-input"
+                value={newCustomAssessment.description}
+                onChange={(e) => setNewCustomAssessment({ ...newCustomAssessment, description: e.target.value })}
+                required
+                className="mt-1"
+                placeholder="Brief description of this assessment"
+              />
+            </div>
+
+            <div className="border-t pt-4">
+              <div className="flex justify-between items-center mb-4">
+                <Label className="text-lg">Questions</Label>
+                <Button type="button" onClick={addQuestion} size="sm" data-testid="add-question-button">
+                  <Plus size={16} className="mr-1" />
+                  Add Question
+                </Button>
+              </div>
+
+              {newCustomAssessment.questions.map((question, qIndex) => (
+                <Card key={qIndex} className="p-4 mb-4 bg-surface" data-testid={`question-${qIndex}`}>
+                  <div className="flex justify-between items-start mb-3">
+                    <Label>Question {qIndex + 1}</Label>
+                    {newCustomAssessment.questions.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeQuestion(qIndex)}
+                        data-testid={`remove-question-${qIndex}`}
+                      >
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+                  <Input
+                    value={question.q}
+                    onChange={(e) => updateQuestion(qIndex, 'q', e.target.value)}
+                    placeholder="Enter question text"
+                    className="mb-3"
+                    data-testid={`question-text-${qIndex}`}
+                  />
+
+                  <Label className="text-sm mb-2 block">Answer Options</Label>
+                  {question.options.map((option, oIndex) => (
+                    <div key={oIndex} className="flex gap-2 mb-2">
+                      <Input
+                        value={option}
+                        onChange={(e) => updateOption(qIndex, oIndex, e.target.value)}
+                        placeholder={`Option ${oIndex + 1}`}
+                        data-testid={`option-${qIndex}-${oIndex}`}
+                      />
+                      {question.options.length > 2 && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeOption(qIndex, oIndex)}
+                          data-testid={`remove-option-${qIndex}-${oIndex}`}
+                        >
+                          Remove
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => addOption(qIndex)}
+                    className="mt-2"
+                    data-testid={`add-option-${qIndex}`}
+                  >
+                    <Plus size={16} className="mr-1" />
+                    Add Option
+                  </Button>
+                </Card>
+              ))}
+            </div>
+
+            <div className="flex gap-3">
+              <Button type="submit" className="flex-1" data-testid="save-custom-assessment-button">
+                Create Assessment
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowCreateCustom(false)}
+                data-testid="cancel-custom-button"
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       {/* Assessment Library Dialog */}
       <Dialog open={showLibrary} onOpenChange={setShowLibrary}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" data-testid="library-dialog">
