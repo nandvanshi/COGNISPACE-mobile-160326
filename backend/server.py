@@ -496,11 +496,11 @@ async def login(login_data: UserLogin):
     
     await log_audit(user["id"], user["role"], "login", "user", user["id"])
     
-    token = create_token(user["id"], user["mobile"], user["role"])
+    token = create_token(user["id"], user.get("mobile", user.get("email", "")), user["role"])
     user_obj = User(
         id=user["id"],
         client_id=user.get("client_id"),
-        mobile=user["mobile"],
+        mobile=user.get("mobile", ""),
         email=user.get("email"),
         full_name=user["full_name"],
         role=user["role"],
@@ -540,7 +540,7 @@ async def get_me(current_user: dict = Depends(get_current_user)):
     return User(
         id=current_user["id"],
         client_id=current_user.get("client_id"),
-        mobile=current_user["mobile"],
+        mobile=current_user.get("mobile", ""),
         email=current_user.get("email"),
         full_name=current_user["full_name"],
         role=current_user["role"],
