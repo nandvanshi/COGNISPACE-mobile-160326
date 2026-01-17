@@ -35,14 +35,16 @@ const Assessments = () => {
 
   const fetchData = async () => {
     try {
-      const [assessRes, clientsRes, libraryRes] = await Promise.all([
+      const [assessRes, clientsRes, libraryRes, customRes] = await Promise.all([
         axios.get(`${API}/assessments`),
         axios.get(`${API}/clients`),
         axios.get(`${API}/assessments/library`),
+        axios.get(`${API}/assessments/custom`),
       ]);
       setAssessments(assessRes.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
       setClients(clientsRes.data);
       setLibrary(libraryRes.data);
+      setCustomAssessments(customRes.data);
     } catch (error) {
       toast.error('Failed to load assessments');
     } finally {
