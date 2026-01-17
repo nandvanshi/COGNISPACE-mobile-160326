@@ -237,6 +237,7 @@ class TestClientEndpoint:
     @pytest.fixture
     def therapist_token(self):
         """Get an approved therapist token"""
+        import random
         # First create and approve a therapist
         admin_response = requests.post(f"{BASE_URL}/api/auth/super-admin-login", json={
             "username": SUPER_ADMIN_USERNAME,
@@ -248,7 +249,7 @@ class TestClientEndpoint:
         
         admin_token = admin_response.json()["token"]
         
-        unique_mobile = f"55{uuid.uuid4().hex[:8]}"[:10]
+        unique_mobile = f"55{random.randint(10000000, 99999999)}"  # 10 digit mobile
         unique_email = f"client_test_{uuid.uuid4().hex[:8]}@example.com"
         
         # Submit application
