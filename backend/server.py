@@ -547,6 +547,185 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         created_at=datetime.fromisoformat(current_user["created_at"])
     )
 
+# ============= SUPER ADMIN ENDPOINTS =============
+
+async def require_super_admin(current_user: dict = Depends(get_current_user)):
+    if current_user["role"] != "super_admin":
+        raise HTTPException(status_code=403, detail="Super admin access required")
+    return current_user
+
+@api_router.get("/admin/therapist-applications", response_model=List[TherapistProfile])
+async def get_therapist_applications(current_user: dict = Depends(require_super_admin)):
+    applications = await db.therapist_applications.find({}, {"_id": 0}).to_list(1000)
+    result = []
+    for app in applications:
+        result.append(TherapistProfile(
+            id=app["id"],
+            mobile=app["mobile"],
+            email=app.get("email"),
+            full_name=app["full_name"],
+            credentials=app["credentials"],
+            specialization=app.get("specialization"),
+            years_of_experience=app.get("years_of_experience"),
+            status=app["status"],
+            subscription_status=None,
+            subscription_plan=None,
+            created_at=datetime.fromisoformat(app["created_at"]),
+            approved_at=datetime.fromisoformat(app["approved_at"]) if app.get("approved_at") else None
+        ))
+    return result
+
+@api_router.post("/admin/therapist-applications/{application_id}/approve")
+async def approve_therapist(application_id: str, password: str, current_user: dict = Depends(require_super_admin)):
+    application = await db.therapist_applications.find_one({"id": application_id}, {"_id": 0})
+    if not application:
+        raise HTTPException(status_code=404, detail="Application not found")
+    
+    if application["status"] != "pending_approval":
+        raise HTTPException(status_code=400, detail="Application already processed")
+    
+    # Create therapist user account
+    therapist_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc)
+    
+    user_doc = {
+        "id": therapist_id,
+        "mobile": application["mobile"],
+        "email": application.get("email"),
+        "password_hash": hash_password(password),
+        "full_name": application["full_name"],
+        "role": "therapist",
+        "status": "approved",
+        "subscription_status": "trial",  # Start with free trial
+        "subscription_plan": "free_trial",
+        "created_at": now.isoformat()
+    }
+    
+    await db.users.insert_one(user_doc)
+    
+    # Create trial subscription (30 days)
+    subscription_doc = {
+        "id": str(uuid.uuid4()),
+        "therapist_id": therapist_id,
+        "plan_id": "free_trial",
+        "plan_name": "Free Trial",
+        "status": "trial",
+        "start_date": now.isoformat(),
+        "end_date": (now + timedelta(days=30)).isoformat(),
+        "coupon_code": None
+    }
+    
+    await db.subscriptions.insert_one(subscription_doc)
+    
+    # Update application status
+    await db.therapist_applications.update_one(
+        {"id": application_id},
+        {"$set": {"status": "approved", "approved_at": now.isoformat()}}
+    )
+    
+    await log_audit(current_user["id"], current_user["role"], "approve", "therapist", therapist_id)
+    
+    return {"message": "Therapist approved successfully", "therapist_id": therapist_id, "password": password}
+
+@api_router.post("/admin/therapist-applications/{application_id}/reject")
+async def reject_therapist(application_id: str, current_user: dict = Depends(require_super_admin)):
+    application = await db.therapist_applications.find_one({"id": application_id}, {"_id": 0})
+    if not application:
+        raise HTTPException(status_code=404, detail="Application not found")
+    
+    await db.therapist_applications.update_one(
+        {"id": application_id},
+        {"$set": {"status": "rejected"}}
+    )
+    
+    await log_audit(current_user["id"], current_user["role"], "reject", "therapist_application", application_id)
+    
+    return {"message": "Application rejected"}
+
+@api_router.get("/admin/therapists", response_model=List[TherapistProfile])
+async def get_all_therapists(current_user: dict = Depends(require_super_admin)):
+    therapists = await db.users.find({"role": "therapist"}, {"_id": 0, "password_hash": 0}).to_list(1000)
+    result = []
+    for therapist in therapists:
+        # Get application details if exists
+        app = await db.therapist_applications.find_one({"mobile": therapist["mobile"]}, {"_id": 0})
+        result.append(TherapistProfile(
+            id=therapist["id"],
+            mobile=therapist["mobile"],
+            email=therapist.get("email"),
+            full_name=therapist["full_name"],
+            credentials=app.get("credentials", "N/A") if app else "N/A",
+            specialization=app.get("specialization") if app else None,
+            years_of_experience=app.get("years_of_experience") if app else None,
+            status=therapist.get("status", "approved"),
+            subscription_status=therapist.get("subscription_status"),
+            subscription_plan=therapist.get("subscription_plan"),
+            created_at=datetime.fromisoformat(therapist["created_at"]),
+            approved_at=datetime.fromisoformat(app["approved_at"]) if app and app.get("approved_at") else None
+        ))
+    return result
+
+@api_router.post("/admin/therapists/{therapist_id}/suspend")
+async def suspend_therapist(therapist_id: str, current_user: dict = Depends(require_super_admin)):
+    result = await db.users.update_one(
+        {"id": therapist_id, "role": "therapist"},
+        {"$set": {"status": "suspended"}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Therapist not found")
+    
+    await log_audit(current_user["id"], current_user["role"], "suspend", "therapist", therapist_id)
+    
+    return {"message": "Therapist suspended"}
+
+@api_router.post("/admin/therapists/{therapist_id}/activate")
+async def activate_therapist(therapist_id: str, current_user: dict = Depends(require_super_admin)):
+    result = await db.users.update_one(
+        {"id": therapist_id, "role": "therapist"},
+        {"$set": {"status": "approved"}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Therapist not found")
+    
+    await log_audit(current_user["id"], current_user["role"], "activate", "therapist", therapist_id)
+    
+    return {"message": "Therapist activated"}
+
+@api_router.post("/admin/therapists/{therapist_id}/reset-password")
+async def reset_therapist_password(therapist_id: str, new_password: str, current_user: dict = Depends(require_super_admin)):
+    result = await db.users.update_one(
+        {"id": therapist_id, "role": "therapist"},
+        {"$set": {"password_hash": hash_password(new_password)}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Therapist not found")
+    
+    await log_audit(current_user["id"], current_user["role"], "reset_password", "therapist", therapist_id)
+    
+    return {"message": "Password reset successfully", "new_password": new_password}
+
+@api_router.get("/admin/clients")
+async def get_all_clients(current_user: dict = Depends(require_super_admin)):
+    clients = await db.users.find({"role": "client"}, {"_id": 0, "password_hash": 0}).to_list(1000)
+    return clients
+
+@api_router.post("/admin/clients/{client_id}/reset-password")
+async def reset_client_password(client_id: str, new_password: str, current_user: dict = Depends(require_super_admin)):
+    result = await db.users.update_one(
+        {"id": client_id, "role": "client"},
+        {"$set": {"password_hash": hash_password(new_password)}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    await log_audit(current_user["id"], current_user["role"], "reset_password", "client", client_id)
+    
+    return {"message": "Password reset successfully", "new_password": new_password}
+
 # ============= CLIENT ENDPOINTS =============
 
 class ClientCreate(BaseModel):
