@@ -878,6 +878,8 @@ async def assign_assessment(assessment_data: AssessmentCreate, current_user: dic
         "client_name": client["full_name"],
         "assessment_type": assessment_data.assessment_type,
         "questions": assessment_data.questions,
+        "is_custom": assessment_data.is_custom,
+        "custom_assessment_id": assessment_data.custom_assessment_id,
         "answers": None,
         "score": None,
         "status": "assigned",
