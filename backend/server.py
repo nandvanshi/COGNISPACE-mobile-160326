@@ -246,6 +246,15 @@ class AuditLog(BaseModel):
 
 # ============= UTILITY FUNCTIONS =============
 
+def validate_mobile(mobile: str) -> bool:
+    """Validate that mobile is exactly 10 digits"""
+    return mobile.isdigit() and len(mobile) == 10
+
+def generate_client_id() -> str:
+    """Generate a unique client ID in format CL-XXXXXX"""
+    import random
+    return f"CL-{random.randint(100000, 999999)}"
+
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
