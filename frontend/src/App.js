@@ -100,6 +100,8 @@ function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/admin-login" element={<AdminLoginPage />} />
+            <Route path="/therapist-application" element={<TherapistApplicationPage />} />
             <Route
               path="/therapist/*"
               element={
@@ -113,6 +115,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['client']}>
                   <ClientDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/*"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin']}>
+                  <SuperAdminDashboard />
                 </ProtectedRoute>
               }
             />
