@@ -39,8 +39,20 @@ class UserRegister(BaseModel):
     mobile: str
     password: str
     full_name: str
-    role: Literal["therapist", "client"]
+    role: Literal["client"]  # Only clients can self-register
     email: Optional[EmailStr] = None
+
+class TherapistApplication(BaseModel):
+    mobile: str
+    email: EmailStr
+    full_name: str
+    credentials: str  # License number, certification
+    specialization: Optional[str] = None
+    years_of_experience: Optional[int] = None
+    
+class SuperAdminLogin(BaseModel):
+    username: str
+    password: str
 
 class UserLogin(BaseModel):
     identifier: str  # Can be mobile or email
@@ -54,6 +66,9 @@ class User(BaseModel):
     email: Optional[str] = None
     full_name: str
     role: str
+    status: Optional[str] = None  # For therapists: pending_approval, approved, suspended, rejected
+    subscription_status: Optional[str] = None  # For therapists: trial, active, expired, cancelled
+    subscription_plan: Optional[str] = None
     created_at: datetime
 
 class TokenResponse(BaseModel):
