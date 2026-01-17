@@ -1753,9 +1753,7 @@ async def get_protocol_templates(current_user: dict = Depends(get_current_user))
     return PROTOCOL_TEMPLATES
 
 @api_router.post("/protocols", response_model=Protocol)
-async def create_protocol(protocol_data: ProtocolCreate, current_user: dict = Depends(get_current_user)):
-    if current_user["role"] != "therapist":
-        raise HTTPException(status_code=403, detail="Only therapists can create protocols")
+async def create_protocol(protocol_data: ProtocolCreate, current_user: dict = Depends(require_active_therapist)):
     
     client = await db.users.find_one({"id": protocol_data.client_id}, {"_id": 0})
     if not client:
