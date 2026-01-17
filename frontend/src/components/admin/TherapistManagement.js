@@ -455,6 +455,26 @@ const TherapistManagement = ({ onViewClients }) => {
               <DialogTitle className="text-2xl font-serif text-primary">Edit Therapist</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleUpdateTherapist} className="space-y-4">
+              {/* Profile Photo */}
+              <div className="flex items-center gap-4 p-4 bg-surface rounded-lg">
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                  {editData.profile_photo ? (
+                    <img src={editData.profile_photo} alt={editData.full_name} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-xl font-bold text-primary">{editData.full_name?.charAt(0)}</span>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <Label>Profile Photo URL</Label>
+                  <Input
+                    value={editData.profile_photo}
+                    onChange={(e) => setEditData({ ...editData, profile_photo: e.target.value })}
+                    placeholder="https://example.com/photo.jpg"
+                    className="mt-1"
+                    data-testid="edit-therapist-photo"
+                  />
+                </div>
+              </div>
               <div>
                 <Label>Full Name</Label>
                 <Input
