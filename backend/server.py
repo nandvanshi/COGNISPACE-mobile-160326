@@ -1368,6 +1368,7 @@ async def get_client(client_id: str, current_user: dict = Depends(require_therap
         intake_summary=profile.get("intake_summary") if profile else None,
         emergency_contact_name=profile.get("emergency_contact_name") if profile else None,
         emergency_contact_phone=profile.get("emergency_contact_phone") if profile else None,
+        profile_photo=profile.get("profile_photo") if profile else None,
         created_at=datetime.fromisoformat(client["created_at"])
     )
 
