@@ -1411,9 +1411,7 @@ async def get_appointments(current_user: dict = Depends(get_current_user)):
 # ============= SESSION NOTES ENDPOINTS =============
 
 @api_router.post("/session-notes", response_model=SessionNote)
-async def create_session_note(note_data: SessionNoteCreate, current_user: dict = Depends(get_current_user)):
-    if current_user["role"] != "therapist":
-        raise HTTPException(status_code=403, detail="Only therapists can create session notes")
+async def create_session_note(note_data: SessionNoteCreate, current_user: dict = Depends(require_active_therapist)):
     
     client = await db.users.find_one({"id": note_data.client_id}, {"_id": 0})
     if not client:
