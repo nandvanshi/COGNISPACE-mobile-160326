@@ -22,7 +22,7 @@ const TherapistApplications = () => {
 
   const fetchApplications = async () => {
     try {
-      const response = await axios.get(`${API}/api/admin/therapist-applications`);
+      const response = await axios.get(`${API}/admin/therapist-applications`);
       setApplications(response.data);
     } catch (error) {
       toast.error('Failed to load applications');
