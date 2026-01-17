@@ -209,8 +209,16 @@ const ClientManagement = () => {
             </DialogHeader>
             <form onSubmit={handleUpdateClient} className="space-y-4">
               <div>
+                <Label>Client ID</Label>
+                <Input value={selectedClient.client_id || 'N/A'} disabled className="mt-1 bg-surface" />
+              </div>
+              <div>
+                <Label>Mobile Number</Label>
+                <Input value={selectedClient.mobile} disabled className="mt-1 bg-surface" />
+              </div>
+              <div>
                 <Label>Email</Label>
-                <Input value={selectedClient.email} disabled className="mt-1" />
+                <Input value={selectedClient.email || 'Not provided'} disabled className="mt-1 bg-surface" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
