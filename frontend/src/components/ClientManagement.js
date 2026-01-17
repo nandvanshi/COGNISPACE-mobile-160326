@@ -179,7 +179,10 @@ const ClientManagement = () => {
               </div>
               <div>
                 <p className="font-medium text-foreground">{client.full_name}</p>
-                <p className="text-sm text-muted-foreground">{client.email}</p>
+                <p className="text-sm text-muted-foreground">{client.mobile}</p>
+                {client.client_id && (
+                  <p className="text-xs text-muted-foreground">ID: {client.client_id}</p>
+                )}
               </div>
             </div>
             {client.intake_summary && (
