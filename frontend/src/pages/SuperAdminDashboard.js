@@ -78,6 +78,8 @@ const SuperAdminDashboard = () => {
           {currentView === 'applications' && <TherapistApplications />}
           {currentView === 'therapists' && <TherapistManagement />}
           {currentView === 'clients' && <ClientManagement />}
+          {currentView === 'subscriptions' && <SubscriptionManagement />}
+          {currentView === 'coupons' && <CouponManagement />}
         </div>
       </main>
     </div>
