@@ -42,7 +42,8 @@ const ClientManagement = () => {
         clients.filter(
           (c) =>
             c.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            c.email.toLowerCase().includes(searchQuery.toLowerCase())
+            (c.mobile && c.mobile.includes(searchQuery)) ||
+            (c.email && c.email.toLowerCase().includes(searchQuery.toLowerCase()))
         )
       );
     } else {
