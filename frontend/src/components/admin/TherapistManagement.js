@@ -22,7 +22,7 @@ const TherapistManagement = () => {
 
   const fetchTherapists = async () => {
     try {
-      const response = await axios.get(`${API}/admin/therapists`);
+      const response = await axios.get(`${API}/api/admin/therapists`);
       setTherapists(response.data);
     } catch (error) {
       toast.error('Failed to load therapists');
@@ -35,7 +35,7 @@ const TherapistManagement = () => {
     if (!window.confirm('Are you sure you want to suspend this therapist?')) return;
 
     try {
-      await axios.post(`${API}/admin/therapists/${therapistId}/suspend`);
+      await axios.post(`${API}/api/admin/therapists/${therapistId}/suspend`);
       toast.success('Therapist suspended');
       fetchTherapists();
     } catch (error) {
@@ -45,7 +45,7 @@ const TherapistManagement = () => {
 
   const handleActivate = async (therapistId) => {
     try {
-      await axios.post(`${API}/admin/therapists/${therapistId}/activate`);
+      await axios.post(`${API}/api/admin/therapists/${therapistId}/activate`);
       toast.success('Therapist activated');
       fetchTherapists();
     } catch (error) {
@@ -71,7 +71,7 @@ const TherapistManagement = () => {
   const confirmPasswordReset = async () => {
     try {
       await axios.post(
-        `${API}/admin/therapists/${selectedTherapist.id}/reset-password?new_password=${newPassword}`
+        `${API}/api/admin/therapists/${selectedTherapist.id}/reset-password?new_password=${newPassword}`
       );
       toast.success(`Password reset! New password: ${newPassword}`);
       setShowPasswordDialog(false);
