@@ -36,19 +36,22 @@ api_router = APIRouter(prefix="/api")
 
 # Auth Models
 class UserRegister(BaseModel):
-    email: EmailStr
+    mobile: str
     password: str
     full_name: str
     role: Literal["therapist", "client"]
+    email: Optional[EmailStr] = None
 
 class UserLogin(BaseModel):
-    email: EmailStr
+    identifier: str  # Can be mobile or email
     password: str
 
 class User(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str
-    email: str
+    client_id: Optional[str] = None  # Only for clients
+    mobile: str
+    email: Optional[str] = None
     full_name: str
     role: str
     created_at: datetime
