@@ -4,6 +4,7 @@ import { API } from '../App';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Label } from './ui/label';
+import { Input } from './ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { toast } from 'sonner';
 import { Plus, ClipboardCheck, Lightbulb } from 'lucide-react';
