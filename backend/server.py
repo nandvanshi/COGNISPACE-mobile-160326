@@ -518,8 +518,10 @@ async def get_client(client_id: str, current_user: dict = Depends(get_current_us
     
     return ClientProfile(
         id=client["id"],
+        client_id=client.get("client_id", ""),
         therapist_id=profile.get("therapist_id", "") if profile else "",
-        email=client["email"],
+        mobile=client["mobile"],
+        email=client.get("email"),
         full_name=client["full_name"],
         age=profile.get("age") if profile else None,
         guardian_name=profile.get("guardian_name") if profile else None,
