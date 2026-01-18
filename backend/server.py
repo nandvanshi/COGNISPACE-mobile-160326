@@ -2464,50 +2464,60 @@ async def update_availability(update_data: TherapistAvailabilityUpdate, current_
 # ============= BLOCKED TIME ENDPOINTS =============
 
 @api_router.post("/blocked-times", response_model=BlockedTime)
-async def create_blocked_time(block_data: BlockedTimeCreate, current_user: dict = Depends(require_active_therapist)):
-    """Block a time range (e.g., vacation, personal time)"""
+async def create_blocked_time(block_data: BlockedTimeCreate, current_user: dict = Depends(require_active_therapist_or_assistant)):
+    """Block a time range (e.g., vacation, personal time) - assistants can block calendar time"""
+    therapist_id = get_effective_therapist_id(current_user)
+    
     if block_data.start_datetime >= block_data.end_datetime:
         raise HTTPException(status_code=400, detail="End time must be after start time")
     
     block_id = str(uuid.uuid4())
     block_doc = {
         "id": block_id,
-        "therapist_id": current_user["id"],
+        "therapist_id": therapist_id,
         "start_datetime": block_data.start_datetime.isoformat(),
         "end_datetime": block_data.end_datetime.isoformat(),
         "reason": block_data.reason,
         "is_all_day": block_data.is_all_day,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": current_user["id"]
     }
     
     await db.blocked_times.insert_one(block_doc)
-    await log_audit(current_user["id"], current_user["role"], "create", "blocked_time", block_id)
+    await log_audit(current_user["id"], current_user["role"], "create", "blocked_time", block_id,
+                   {"created_by_assistant": current_user["role"] == "assistant"})
     
     return BlockedTime(**{k: datetime.fromisoformat(v) if k in ["start_datetime", "end_datetime", "created_at"] else v for k, v in block_doc.items()})
 
 @api_router.get("/blocked-times", response_model=List[BlockedTime])
 async def get_blocked_times(current_user: dict = Depends(get_current_user)):
-    """Get all blocked times for the therapist"""
-    therapist_id = current_user["id"] if current_user["role"] == "therapist" else None
-    if not therapist_id:
-        raise HTTPException(status_code=403, detail="Only therapists can access blocked times")
+    """Get all blocked times for the therapist - assistants can view their therapist's blocked times"""
+    if current_user["role"] == "therapist":
+        therapist_id = current_user["id"]
+    elif current_user["role"] == "assistant":
+        therapist_id = current_user.get("therapist_id")
+    else:
+        raise HTTPException(status_code=403, detail="Only therapists and assistants can access blocked times")
     
     blocked = await db.blocked_times.find({"therapist_id": therapist_id}, {"_id": 0}).to_list(1000)
     
     return [BlockedTime(**{k: datetime.fromisoformat(v) if k in ["start_datetime", "end_datetime", "created_at"] else v for k, v in b.items()}) for b in blocked]
 
 @api_router.delete("/blocked-times/{block_id}")
-async def delete_blocked_time(block_id: str, current_user: dict = Depends(require_active_therapist)):
-    """Delete a blocked time"""
+async def delete_blocked_time(block_id: str, current_user: dict = Depends(require_active_therapist_or_assistant)):
+    """Delete a blocked time - assistants can delete blocked times they or the therapist created"""
+    therapist_id = get_effective_therapist_id(current_user)
+    
     block = await db.blocked_times.find_one({"id": block_id}, {"_id": 0})
     if not block:
         raise HTTPException(status_code=404, detail="Blocked time not found")
     
-    if block["therapist_id"] != current_user["id"]:
+    if block["therapist_id"] != therapist_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     await db.blocked_times.delete_one({"id": block_id})
-    await log_audit(current_user["id"], current_user["role"], "delete", "blocked_time", block_id)
+    await log_audit(current_user["id"], current_user["role"], "delete", "blocked_time", block_id,
+                   {"deleted_by_assistant": current_user["role"] == "assistant"})
     
     return {"message": "Blocked time deleted"}
 
