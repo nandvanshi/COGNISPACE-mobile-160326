@@ -775,6 +775,81 @@ def is_subscription_active(user: dict) -> bool:
     subscription_status = user.get("subscription_status")
     return subscription_status in ["trial", "active"]
 
+def get_effective_therapist_id(user: dict) -> str:
+    """Get the therapist_id for the current user (self if therapist, linked therapist if assistant)"""
+    if user["role"] == "therapist":
+        return user["id"]
+    elif user["role"] == "assistant":
+        return user.get("therapist_id")
+    return None
+
+async def get_linked_therapist(user: dict) -> dict:
+    """Get the therapist object for an assistant's linked therapist"""
+    if user["role"] == "therapist":
+        return user
+    elif user["role"] == "assistant":
+        therapist = await db.users.find_one({"id": user.get("therapist_id"), "role": "therapist"}, {"_id": 0})
+        return therapist
+    return None
+
+async def require_therapist_or_assistant(current_user: dict = Depends(get_current_user)):
+    """Allows therapist or their assistant to access (for read operations on non-clinical data)"""
+    if current_user["role"] not in ["therapist", "assistant"]:
+        raise HTTPException(status_code=403, detail="Therapist or assistant access required")
+    
+    if current_user["role"] == "therapist":
+        status = current_user.get("status")
+        if status == "suspended":
+            raise HTTPException(status_code=403, detail="Your account has been suspended")
+        if status == "rejected":
+            raise HTTPException(status_code=403, detail="Your application was rejected")
+    elif current_user["role"] == "assistant":
+        if current_user.get("status") == "suspended":
+            raise HTTPException(status_code=403, detail="Your account has been suspended")
+        # Check if linked therapist is still valid
+        therapist = await get_linked_therapist(current_user)
+        if not therapist:
+            raise HTTPException(status_code=403, detail="Linked therapist not found")
+        if therapist.get("status") == "suspended":
+            raise HTTPException(status_code=403, detail="The therapist account you're linked to has been suspended")
+    
+    return current_user
+
+async def require_active_therapist_or_assistant(current_user: dict = Depends(get_current_user)):
+    """Allows therapist with active subscription or their assistant (for write operations on non-clinical data)"""
+    if current_user["role"] not in ["therapist", "assistant"]:
+        raise HTTPException(status_code=403, detail="Therapist or assistant access required")
+    
+    if current_user["role"] == "therapist":
+        status = current_user.get("status")
+        if status == "suspended":
+            raise HTTPException(status_code=403, detail="Your account has been suspended")
+        if status == "rejected":
+            raise HTTPException(status_code=403, detail="Your application was rejected")
+        subscription_status = current_user.get("subscription_status")
+        if subscription_status not in ["trial", "active"]:
+            raise HTTPException(
+                status_code=403, 
+                detail="Your subscription has expired. You are in read-only mode. Please renew to make changes."
+            )
+    elif current_user["role"] == "assistant":
+        if current_user.get("status") == "suspended":
+            raise HTTPException(status_code=403, detail="Your account has been suspended")
+        # Check linked therapist's subscription
+        therapist = await get_linked_therapist(current_user)
+        if not therapist:
+            raise HTTPException(status_code=403, detail="Linked therapist not found")
+        if therapist.get("status") == "suspended":
+            raise HTTPException(status_code=403, detail="The therapist account you're linked to has been suspended")
+        subscription_status = therapist.get("subscription_status")
+        if subscription_status not in ["trial", "active"]:
+            raise HTTPException(
+                status_code=403, 
+                detail="The therapist's subscription has expired. Read-only mode is active."
+            )
+    
+    return current_user
+
 @api_router.get("/admin/therapist-applications", response_model=List[TherapistProfile])
 async def get_therapist_applications(current_user: dict = Depends(require_super_admin)):
     applications = await db.therapist_applications.find({}, {"_id": 0}).to_list(1000)
