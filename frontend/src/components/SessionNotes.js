@@ -9,17 +9,30 @@ import { Input } from './ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { toast } from 'sonner';
-import { Plus, FileText, Edit, Trash2, Calendar, Clock, Link, User } from 'lucide-react';
+import { Plus, FileText, Edit, Trash2, Calendar, Clock, Link, User, Zap, BookmarkPlus, Settings } from 'lucide-react';
+
+const TEMPLATE_CATEGORIES = [
+  { value: 'subjective', label: 'Subjective (S)', color: 'bg-blue-100 text-blue-700' },
+  { value: 'objective', label: 'Objective (O)', color: 'bg-green-100 text-green-700' },
+  { value: 'assessment', label: 'Assessment (A)', color: 'bg-yellow-100 text-yellow-700' },
+  { value: 'plan', label: 'Plan (P)', color: 'bg-purple-100 text-purple-700' },
+  { value: 'data', label: 'Data (D)', color: 'bg-teal-100 text-teal-700' },
+  { value: 'general', label: 'General', color: 'bg-gray-100 text-gray-700' },
+];
 
 const SessionNotes = ({ isReadOnly = false }) => {
   const [notes, setNotes] = useState([]);
   const [clients, setClients] = useState([]);
   const [appointments, setAppointments] = useState([]);
+  const [templates, setTemplates] = useState([]);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showViewDialog, setShowViewDialog] = useState(false);
+  const [showTemplateDialog, setShowTemplateDialog] = useState(false);
+  const [showManageTemplatesDialog, setShowManageTemplatesDialog] = useState(false);
   const [selectedNote, setSelectedNote] = useState(null);
   const [filterClient, setFilterClient] = useState('all');
+  const [activeField, setActiveField] = useState(null);
   const [newNote, setNewNote] = useState({
     client_id: '',
     appointment_id: '',
@@ -38,6 +51,11 @@ const SessionNotes = ({ isReadOnly = false }) => {
     plan: '',
     data: '',
   });
+  const [newTemplate, setNewTemplate] = useState({
+    name: '',
+    category: 'general',
+    content: '',
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -46,15 +64,16 @@ const SessionNotes = ({ isReadOnly = false }) => {
 
   const fetchData = async () => {
     try {
-      const [notesRes, clientsRes, apptsRes] = await Promise.all([
+      const [notesRes, clientsRes, apptsRes, templatesRes] = await Promise.all([
         axios.get(`${API}/session-notes`),
         axios.get(`${API}/clients`),
         axios.get(`${API}/appointments`),
+        axios.get(`${API}/note-templates`).catch(() => ({ data: [] })),
       ]);
       setNotes(notesRes.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
       setClients(clientsRes.data);
-      // Only show completed appointments for linking
       setAppointments(apptsRes.data.filter(a => a.status === 'completed' || a.status === 'scheduled'));
+      setTemplates(templatesRes.data);
     } catch (error) {
       toast.error('Failed to load session notes');
     } finally {
@@ -75,7 +94,6 @@ const SessionNotes = ({ isReadOnly = false }) => {
       return;
     }
 
-    // Validate that at least one field has content
     const hasContent = newNote.template_type === 'SOAP'
       ? (newNote.subjective || newNote.objective || newNote.assessment || newNote.plan)
       : (newNote.data || newNote.assessment || newNote.plan);
@@ -129,7 +147,7 @@ const SessionNotes = ({ isReadOnly = false }) => {
   };
 
   const handleDeleteNote = async (noteId) => {
-    if (!window.confirm('Are you sure you want to delete this session note? This action cannot be undone.')) return;
+    if (!window.confirm('Are you sure you want to delete this session note?')) return;
 
     try {
       await axios.delete(`${API}/session-notes/${noteId}`);
@@ -140,6 +158,76 @@ const SessionNotes = ({ isReadOnly = false }) => {
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to delete session note');
     }
+  };
+
+  const handleCreateTemplate = async (e) => {
+    e.preventDefault();
+
+    if (!newTemplate.name || !newTemplate.content) {
+      toast.error('Please fill in name and content');
+      return;
+    }
+
+    try {
+      await axios.post(`${API}/note-templates`, newTemplate);
+      toast.success('Template created');
+      setNewTemplate({ name: '', category: 'general', content: '' });
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to create template');
+    }
+  };
+
+  const handleDeleteTemplate = async (templateId) => {
+    if (!window.confirm('Delete this template?')) return;
+
+    try {
+      await axios.delete(`${API}/note-templates/${templateId}`);
+      toast.success('Template deleted');
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to delete template');
+    }
+  };
+
+  const insertTemplate = async (template, targetField, isEditing = false) => {
+    // Record usage
+    try {
+      await axios.post(`${API}/note-templates/${template.id}/use`);
+    } catch (e) {
+      // Ignore usage tracking errors
+    }
+
+    if (isEditing) {
+      setEditNote(prev => ({
+        ...prev,
+        [targetField]: prev[targetField] ? `${prev[targetField]}\n${template.content}` : template.content
+      }));
+    } else {
+      setNewNote(prev => ({
+        ...prev,
+        [targetField]: prev[targetField] ? `${prev[targetField]}\n${template.content}` : template.content
+      }));
+    }
+    setShowTemplateDialog(false);
+    toast.success('Template inserted');
+  };
+
+  const openTemplateSelector = (field) => {
+    setActiveField(field);
+    setShowTemplateDialog(true);
+  };
+
+  const getTemplatesForField = (field) => {
+    const categoryMap = {
+      subjective: 'subjective',
+      objective: 'objective',
+      assessment: 'assessment',
+      plan: 'plan',
+      data: 'data',
+    };
+    const category = categoryMap[field];
+    return templates.filter(t => t.category === category || t.category === 'general');
   };
 
   const openEditDialog = (note) => {
@@ -190,6 +278,31 @@ const SessionNotes = ({ isReadOnly = false }) => {
     });
   };
 
+  const getCategoryBadge = (category) => {
+    const cat = TEMPLATE_CATEGORIES.find(c => c.value === category);
+    return cat ? cat.color : 'bg-gray-100 text-gray-700';
+  };
+
+  // Render template insert button for a field
+  const renderTemplateButton = (field, isEditing = false) => {
+    const fieldTemplates = getTemplatesForField(field);
+    if (fieldTemplates.length === 0) return null;
+    
+    return (
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={() => openTemplateSelector(field)}
+        className="h-6 px-2 text-xs text-muted-foreground hover:text-primary"
+        data-testid={`template-btn-${field}`}
+      >
+        <Zap size={12} className="mr-1" />
+        Quick Insert ({fieldTemplates.length})
+      </Button>
+    );
+  };
+
   if (loading) {
     return <div className="text-center py-12">Loading session notes...</div>;
   }
@@ -202,20 +315,32 @@ const SessionNotes = ({ isReadOnly = false }) => {
           <h2 className="text-4xl font-serif text-primary mb-2">Session Notes</h2>
           <p className="text-muted-foreground">Document client sessions with SOAP or DAP templates</p>
         </div>
-        {!isReadOnly && (
-          <Button
-            onClick={() => setShowCreateDialog(true)}
-            className="bg-primary hover:bg-primary-700 rounded-full"
-            data-testid="create-note-button"
-          >
-            <Plus size={20} className="mr-2" />
-            New Note
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {!isReadOnly && (
+            <>
+              <Button
+                variant="outline"
+                onClick={() => setShowManageTemplatesDialog(true)}
+                data-testid="manage-templates-button"
+              >
+                <Settings size={16} className="mr-2" />
+                Templates ({templates.length})
+              </Button>
+              <Button
+                onClick={() => setShowCreateDialog(true)}
+                className="bg-primary hover:bg-primary-700 rounded-full"
+                data-testid="create-note-button"
+              >
+                <Plus size={20} className="mr-2" />
+                New Note
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <Card className="p-4 bg-white/70 backdrop-blur-xl border border-border/40">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -250,6 +375,17 @@ const SessionNotes = ({ isReadOnly = false }) => {
                 {notes.filter(n => n.template_type === 'DAP').length}
               </p>
               <p className="text-sm text-muted-foreground">DAP Notes</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-4 bg-white/70 backdrop-blur-xl border border-border/40">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-warning/10 flex items-center justify-center">
+              <Zap size={20} className="text-warning" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-foreground">{templates.length}</p>
+              <p className="text-sm text-muted-foreground">Quick Templates</p>
             </div>
           </div>
         </Card>
@@ -417,50 +553,62 @@ const SessionNotes = ({ isReadOnly = false }) => {
             {newNote.template_type === 'SOAP' ? (
               <>
                 <div>
-                  <Label htmlFor="subjective">Subjective</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="subjective">Subjective</Label>
+                    {renderTemplateButton('subjective')}
+                  </div>
                   <Textarea
                     id="subjective"
                     data-testid="subjective-input"
                     value={newNote.subjective}
                     onChange={(e) => setNewNote({ ...newNote, subjective: e.target.value })}
                     rows={3}
-                    placeholder="Client's reported symptoms, concerns, feelings, and experiences in their own words..."
+                    placeholder="Client's reported symptoms, concerns, feelings, and experiences..."
                     className="mt-1"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="objective">Objective</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="objective">Objective</Label>
+                    {renderTemplateButton('objective')}
+                  </div>
                   <Textarea
                     id="objective"
                     data-testid="objective-input"
                     value={newNote.objective}
                     onChange={(e) => setNewNote({ ...newNote, objective: e.target.value })}
                     rows={3}
-                    placeholder="Observable behaviors, mental status, appearance, affect, speech patterns..."
+                    placeholder="Observable behaviors, mental status, appearance, affect..."
                     className="mt-1"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="assessment">Assessment</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="assessment">Assessment</Label>
+                    {renderTemplateButton('assessment')}
+                  </div>
                   <Textarea
                     id="assessment"
                     data-testid="assessment-input"
                     value={newNote.assessment}
                     onChange={(e) => setNewNote({ ...newNote, assessment: e.target.value })}
                     rows={3}
-                    placeholder="Clinical impressions, progress toward goals, diagnosis considerations..."
+                    placeholder="Clinical impressions, progress toward goals..."
                     className="mt-1"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="plan">Plan</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="plan">Plan</Label>
+                    {renderTemplateButton('plan')}
+                  </div>
                   <Textarea
                     id="plan"
                     data-testid="plan-input"
                     value={newNote.plan}
                     onChange={(e) => setNewNote({ ...newNote, plan: e.target.value })}
                     rows={3}
-                    placeholder="Treatment plan, interventions, homework assignments, next session focus..."
+                    placeholder="Treatment plan, interventions, homework..."
                     className="mt-1"
                   />
                 </div>
@@ -468,38 +616,47 @@ const SessionNotes = ({ isReadOnly = false }) => {
             ) : (
               <>
                 <div>
-                  <Label htmlFor="data">Data</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="data">Data</Label>
+                    {renderTemplateButton('data')}
+                  </div>
                   <Textarea
                     id="data"
                     data-testid="data-input"
                     value={newNote.data}
                     onChange={(e) => setNewNote({ ...newNote, data: e.target.value })}
                     rows={4}
-                    placeholder="Observations, information gathered, what happened during the session..."
+                    placeholder="Observations, information gathered..."
                     className="mt-1"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="assessment-dap">Assessment</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="assessment-dap">Assessment</Label>
+                    {renderTemplateButton('assessment')}
+                  </div>
                   <Textarea
                     id="assessment-dap"
                     data-testid="assessment-dap-input"
                     value={newNote.assessment}
                     onChange={(e) => setNewNote({ ...newNote, assessment: e.target.value })}
                     rows={3}
-                    placeholder="Clinical impressions, interpretations, progress evaluation..."
+                    placeholder="Clinical impressions, interpretations..."
                     className="mt-1"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="plan-dap">Plan</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="plan-dap">Plan</Label>
+                    {renderTemplateButton('plan')}
+                  </div>
                   <Textarea
                     id="plan-dap"
                     data-testid="plan-dap-input"
                     value={newNote.plan}
                     onChange={(e) => setNewNote({ ...newNote, plan: e.target.value })}
                     rows={3}
-                    placeholder="Treatment plan, next steps, homework..."
+                    placeholder="Treatment plan, next steps..."
                     className="mt-1"
                   />
                 </div>
@@ -517,12 +674,145 @@ const SessionNotes = ({ isReadOnly = false }) => {
                   setShowCreateDialog(false);
                   resetNewNote();
                 }}
-                data-testid="cancel-note-button"
               >
                 Cancel
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Template Selector Dialog */}
+      <Dialog open={showTemplateDialog} onOpenChange={setShowTemplateDialog}>
+        <DialogContent className="max-w-md" data-testid="template-selector-dialog">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-serif text-primary">
+              Quick Insert - {activeField?.charAt(0).toUpperCase() + activeField?.slice(1)}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {activeField && getTemplatesForField(activeField).map((template) => (
+              <button
+                key={template.id}
+                onClick={() => insertTemplate(template, activeField, showEditDialog)}
+                className="w-full p-3 text-left rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-all"
+                data-testid={`template-option-${template.id}`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-medium text-sm">{template.name}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded ${getCategoryBadge(template.category)}`}>
+                    {template.category}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground line-clamp-2">{template.content}</p>
+              </button>
+            ))}
+            {activeField && getTemplatesForField(activeField).length === 0 && (
+              <p className="text-center text-muted-foreground py-4">
+                No templates for this field. Create one in Template Manager.
+              </p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Manage Templates Dialog */}
+      <Dialog open={showManageTemplatesDialog} onOpenChange={setShowManageTemplatesDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="manage-templates-dialog">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-serif text-primary">Manage Quick Templates</DialogTitle>
+          </DialogHeader>
+          
+          {/* Create new template */}
+          <form onSubmit={handleCreateTemplate} className="space-y-3 p-4 bg-surface rounded-lg">
+            <h4 className="font-medium flex items-center gap-2">
+              <BookmarkPlus size={16} />
+              Create New Template
+            </h4>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Name</Label>
+                <Input
+                  value={newTemplate.name}
+                  onChange={(e) => setNewTemplate({ ...newTemplate, name: e.target.value })}
+                  placeholder="e.g., Anxious presentation"
+                  className="mt-1"
+                  data-testid="new-template-name"
+                />
+              </div>
+              <div>
+                <Label>Category</Label>
+                <Select
+                  value={newTemplate.category}
+                  onValueChange={(value) => setNewTemplate({ ...newTemplate, category: value })}
+                >
+                  <SelectTrigger className="mt-1" data-testid="new-template-category">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TEMPLATE_CATEGORIES.map((cat) => (
+                      <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label>Content</Label>
+              <Textarea
+                value={newTemplate.content}
+                onChange={(e) => setNewTemplate({ ...newTemplate, content: e.target.value })}
+                placeholder="Template text to insert..."
+                rows={2}
+                className="mt-1"
+                data-testid="new-template-content"
+              />
+            </div>
+            <Button type="submit" size="sm" data-testid="save-new-template">
+              <Plus size={14} className="mr-1" />
+              Add Template
+            </Button>
+          </form>
+
+          {/* Existing templates */}
+          <div className="space-y-2 mt-4">
+            <h4 className="font-medium">Your Templates ({templates.length})</h4>
+            {templates.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">
+                No templates yet. Create one above to speed up note-taking.
+              </p>
+            ) : (
+              templates.map((template) => (
+                <div
+                  key={template.id}
+                  className="p-3 border border-border rounded-lg flex items-start justify-between gap-3"
+                  data-testid={`template-item-${template.id}`}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium text-sm">{template.name}</span>
+                      <span className={`text-xs px-2 py-0.5 rounded ${getCategoryBadge(template.category)}`}>
+                        {template.category}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        Used {template.usage_count}x
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground line-clamp-2">{template.content}</p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDeleteTemplate(template.id)}
+                    className="text-error hover:text-error hover:bg-error/10 shrink-0"
+                    data-testid={`delete-template-${template.id}`}
+                  >
+                    <Trash2 size={14} />
+                  </Button>
+                </div>
+              ))
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -551,11 +841,6 @@ const SessionNotes = ({ isReadOnly = false }) => {
                       <p className="text-sm text-success mt-1 flex items-center gap-1">
                         <Link size={14} />
                         Linked to appointment: {formatAppointmentDate(selectedNote.appointment_date)}
-                      </p>
-                    )}
-                    {selectedNote.updated_at !== selectedNote.created_at && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Last updated: {new Date(selectedNote.updated_at).toLocaleString()}
                       </p>
                     )}
                   </div>
@@ -666,7 +951,6 @@ const SessionNotes = ({ isReadOnly = false }) => {
                     setSelectedNote(null);
                   }}
                   className={isReadOnly ? 'w-full' : ''}
-                  data-testid="close-note-button"
                 >
                   Close
                 </Button>
@@ -693,7 +977,7 @@ const SessionNotes = ({ isReadOnly = false }) => {
                     value={editNote.template_type}
                     onValueChange={(value) => setEditNote({ ...editNote, template_type: value })}
                   >
-                    <SelectTrigger className="mt-1" data-testid="edit-template-type-select">
+                    <SelectTrigger className="mt-1">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -706,83 +990,97 @@ const SessionNotes = ({ isReadOnly = false }) => {
                 {editNote.template_type === 'SOAP' ? (
                   <>
                     <div>
-                      <Label htmlFor="edit-subjective">Subjective</Label>
+                      <div className="flex items-center justify-between">
+                        <Label>Subjective</Label>
+                        {renderTemplateButton('subjective', true)}
+                      </div>
                       <Textarea
-                        id="edit-subjective"
-                        data-testid="edit-subjective-input"
                         value={editNote.subjective}
                         onChange={(e) => setEditNote({ ...editNote, subjective: e.target.value })}
                         rows={3}
                         className="mt-1"
+                        data-testid="edit-subjective-input"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="edit-objective">Objective</Label>
+                      <div className="flex items-center justify-between">
+                        <Label>Objective</Label>
+                        {renderTemplateButton('objective', true)}
+                      </div>
                       <Textarea
-                        id="edit-objective"
-                        data-testid="edit-objective-input"
                         value={editNote.objective}
                         onChange={(e) => setEditNote({ ...editNote, objective: e.target.value })}
                         rows={3}
                         className="mt-1"
+                        data-testid="edit-objective-input"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="edit-assessment">Assessment</Label>
+                      <div className="flex items-center justify-between">
+                        <Label>Assessment</Label>
+                        {renderTemplateButton('assessment', true)}
+                      </div>
                       <Textarea
-                        id="edit-assessment"
-                        data-testid="edit-assessment-input"
                         value={editNote.assessment}
                         onChange={(e) => setEditNote({ ...editNote, assessment: e.target.value })}
                         rows={3}
                         className="mt-1"
+                        data-testid="edit-assessment-input"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="edit-plan">Plan</Label>
+                      <div className="flex items-center justify-between">
+                        <Label>Plan</Label>
+                        {renderTemplateButton('plan', true)}
+                      </div>
                       <Textarea
-                        id="edit-plan"
-                        data-testid="edit-plan-input"
                         value={editNote.plan}
                         onChange={(e) => setEditNote({ ...editNote, plan: e.target.value })}
                         rows={3}
                         className="mt-1"
+                        data-testid="edit-plan-input"
                       />
                     </div>
                   </>
                 ) : (
                   <>
                     <div>
-                      <Label htmlFor="edit-data">Data</Label>
+                      <div className="flex items-center justify-between">
+                        <Label>Data</Label>
+                        {renderTemplateButton('data', true)}
+                      </div>
                       <Textarea
-                        id="edit-data"
-                        data-testid="edit-data-input"
                         value={editNote.data}
                         onChange={(e) => setEditNote({ ...editNote, data: e.target.value })}
                         rows={4}
                         className="mt-1"
+                        data-testid="edit-data-input"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="edit-assessment-dap">Assessment</Label>
+                      <div className="flex items-center justify-between">
+                        <Label>Assessment</Label>
+                        {renderTemplateButton('assessment', true)}
+                      </div>
                       <Textarea
-                        id="edit-assessment-dap"
-                        data-testid="edit-assessment-dap-input"
                         value={editNote.assessment}
                         onChange={(e) => setEditNote({ ...editNote, assessment: e.target.value })}
                         rows={3}
                         className="mt-1"
+                        data-testid="edit-assessment-dap-input"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="edit-plan-dap">Plan</Label>
+                      <div className="flex items-center justify-between">
+                        <Label>Plan</Label>
+                        {renderTemplateButton('plan', true)}
+                      </div>
                       <Textarea
-                        id="edit-plan-dap"
-                        data-testid="edit-plan-dap-input"
                         value={editNote.plan}
                         onChange={(e) => setEditNote({ ...editNote, plan: e.target.value })}
                         rows={3}
                         className="mt-1"
+                        data-testid="edit-plan-dap-input"
                       />
                     </div>
                   </>
@@ -799,7 +1097,6 @@ const SessionNotes = ({ isReadOnly = false }) => {
                       setShowEditDialog(false);
                       setSelectedNote(null);
                     }}
-                    data-testid="cancel-edit-button"
                   >
                     Cancel
                   </Button>
