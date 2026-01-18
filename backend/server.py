@@ -655,12 +655,26 @@ async def login(login_data: UserLogin):
         # Note: We no longer block login for expired subscriptions
         # Expired therapists can login but will be in read-only mode
     
+    # Check assistant account status
+    if user["role"] == "assistant":
+        if user.get("status") == "suspended":
+            raise HTTPException(status_code=403, detail="Your account has been suspended")
+        if user.get("status") == "deleted":
+            raise HTTPException(status_code=403, detail="Your account has been deleted")
+        # Verify linked therapist exists and is active
+        therapist = await db.users.find_one({"id": user.get("therapist_id"), "role": "therapist"}, {"_id": 0})
+        if not therapist:
+            raise HTTPException(status_code=403, detail="Your linked therapist account no longer exists")
+        if therapist.get("status") == "suspended":
+            raise HTTPException(status_code=403, detail="The therapist account you're linked to has been suspended")
+    
     await log_audit(user["id"], user["role"], "login", "user", user["id"])
     
     token = create_token(user["id"], user.get("mobile", user.get("email", "")), user["role"])
     user_obj = User(
         id=user["id"],
         client_id=user.get("client_id"),
+        therapist_id=user.get("therapist_id"),  # For assistants
         mobile=user.get("mobile", ""),
         email=user.get("email"),
         full_name=user["full_name"],
