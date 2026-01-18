@@ -1692,20 +1692,33 @@ async def update_client_photo(client_id: str, photo_url: str, current_user: dict
 
 @api_router.post("/appointments", response_model=Appointment)
 async def create_appointment(appt_data: AppointmentCreate, current_user: dict = Depends(require_active_therapist)):
-    # Check for double-booking
+    """Create a new appointment - respects subscription read-only mode"""
+    # Validate times
+    if appt_data.start_time >= appt_data.end_time:
+        raise HTTPException(status_code=400, detail="End time must be after start time")
+    
+    # Check for double-booking (exclude cancelled appointments)
     existing = await db.appointments.find_one({
         "therapist_id": current_user["id"],
+        "status": {"$ne": "cancelled"},
         "$or": [
             {"start_time": {"$lt": appt_data.end_time.isoformat()}, "end_time": {"$gt": appt_data.start_time.isoformat()}}
         ]
     })
     
     if existing:
-        raise HTTPException(status_code=400, detail="Time slot already booked")
+        raise HTTPException(status_code=400, detail="Time slot already booked. Please choose a different time.")
     
-    client = await db.users.find_one({"id": appt_data.client_id}, {"_id": 0})
+    # Find client - check both clients collection and users collection
+    client = await db.clients.find_one({"id": appt_data.client_id}, {"_id": 0})
+    if not client:
+        client = await db.users.find_one({"id": appt_data.client_id, "role": "client"}, {"_id": 0})
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")
+    
+    # Verify client belongs to this therapist
+    if client.get("therapist_id") and client["therapist_id"] != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Client is not assigned to you")
     
     appt_id = str(uuid.uuid4())
     appt_doc = {
@@ -1727,6 +1740,7 @@ async def create_appointment(appt_data: AppointmentCreate, current_user: dict = 
 
 @api_router.get("/appointments", response_model=List[Appointment])
 async def get_appointments(current_user: dict = Depends(get_current_user)):
+    """Get appointments - therapists see their appointments, clients see theirs"""
     query = {}
     if current_user["role"] == "therapist":
         query["therapist_id"] = current_user["id"]
@@ -1736,6 +1750,125 @@ async def get_appointments(current_user: dict = Depends(get_current_user)):
     appointments = await db.appointments.find(query, {"_id": 0}).to_list(1000)
     
     return [Appointment(**{k: datetime.fromisoformat(v) if k in ["start_time", "end_time", "created_at"] else v for k, v in appt.items()}) for appt in appointments]
+
+@api_router.get("/appointments/{appointment_id}", response_model=Appointment)
+async def get_appointment(appointment_id: str, current_user: dict = Depends(get_current_user)):
+    """Get a single appointment by ID"""
+    appointment = await db.appointments.find_one({"id": appointment_id}, {"_id": 0})
+    if not appointment:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+    
+    # Verify ownership
+    if current_user["role"] == "therapist" and appointment["therapist_id"] != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    elif current_user["role"] == "client" and appointment["client_id"] != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    return Appointment(**{k: datetime.fromisoformat(v) if k in ["start_time", "end_time", "created_at"] else v for k, v in appointment.items()})
+
+@api_router.put("/appointments/{appointment_id}", response_model=Appointment)
+async def update_appointment(appointment_id: str, update_data: AppointmentUpdate, current_user: dict = Depends(require_active_therapist)):
+    """Update an appointment - respects subscription read-only mode"""
+    appointment = await db.appointments.find_one({"id": appointment_id}, {"_id": 0})
+    if not appointment:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+    
+    # Verify ownership
+    if appointment["therapist_id"] != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Build update fields
+    update_fields = {}
+    
+    if update_data.start_time is not None:
+        update_fields["start_time"] = update_data.start_time.isoformat()
+    if update_data.end_time is not None:
+        update_fields["end_time"] = update_data.end_time.isoformat()
+    if update_data.notes is not None:
+        update_fields["notes"] = update_data.notes
+    if update_data.status is not None:
+        update_fields["status"] = update_data.status
+    
+    if not update_fields:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    
+    # Validate times if being updated
+    new_start = update_fields.get("start_time", appointment["start_time"])
+    new_end = update_fields.get("end_time", appointment["end_time"])
+    if new_start >= new_end:
+        raise HTTPException(status_code=400, detail="End time must be after start time")
+    
+    # Check for double-booking if times are being changed (exclude current appointment and cancelled ones)
+    if "start_time" in update_fields or "end_time" in update_fields:
+        existing = await db.appointments.find_one({
+            "therapist_id": current_user["id"],
+            "id": {"$ne": appointment_id},
+            "status": {"$ne": "cancelled"},
+            "$or": [
+                {"start_time": {"$lt": new_end}, "end_time": {"$gt": new_start}}
+            ]
+        })
+        
+        if existing:
+            raise HTTPException(status_code=400, detail="Time slot already booked. Please choose a different time.")
+    
+    await db.appointments.update_one({"id": appointment_id}, {"$set": update_fields})
+    await log_audit(current_user["id"], current_user["role"], "update", "appointment", appointment_id)
+    
+    # Get updated appointment
+    updated = await db.appointments.find_one({"id": appointment_id}, {"_id": 0})
+    return Appointment(**{k: datetime.fromisoformat(v) if k in ["start_time", "end_time", "created_at"] else v for k, v in updated.items()})
+
+@api_router.post("/appointments/{appointment_id}/complete")
+async def complete_appointment(appointment_id: str, current_user: dict = Depends(require_active_therapist)):
+    """Mark an appointment as completed - respects subscription read-only mode"""
+    appointment = await db.appointments.find_one({"id": appointment_id}, {"_id": 0})
+    if not appointment:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+    
+    if appointment["therapist_id"] != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    if appointment["status"] == "cancelled":
+        raise HTTPException(status_code=400, detail="Cannot complete a cancelled appointment")
+    
+    await db.appointments.update_one({"id": appointment_id}, {"$set": {"status": "completed"}})
+    await log_audit(current_user["id"], current_user["role"], "complete", "appointment", appointment_id)
+    
+    return {"message": "Appointment marked as completed"}
+
+@api_router.post("/appointments/{appointment_id}/cancel")
+async def cancel_appointment(appointment_id: str, current_user: dict = Depends(require_active_therapist)):
+    """Cancel an appointment - respects subscription read-only mode"""
+    appointment = await db.appointments.find_one({"id": appointment_id}, {"_id": 0})
+    if not appointment:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+    
+    if appointment["therapist_id"] != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    if appointment["status"] == "completed":
+        raise HTTPException(status_code=400, detail="Cannot cancel a completed appointment")
+    
+    await db.appointments.update_one({"id": appointment_id}, {"$set": {"status": "cancelled"}})
+    await log_audit(current_user["id"], current_user["role"], "cancel", "appointment", appointment_id)
+    
+    return {"message": "Appointment cancelled"}
+
+@api_router.delete("/appointments/{appointment_id}")
+async def delete_appointment(appointment_id: str, current_user: dict = Depends(require_active_therapist)):
+    """Delete an appointment - respects subscription read-only mode"""
+    appointment = await db.appointments.find_one({"id": appointment_id}, {"_id": 0})
+    if not appointment:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+    
+    if appointment["therapist_id"] != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    await db.appointments.delete_one({"id": appointment_id})
+    await log_audit(current_user["id"], current_user["role"], "delete", "appointment", appointment_id)
+    
+    return {"message": "Appointment deleted"}
 
 # ============= SESSION NOTES ENDPOINTS =============
 
