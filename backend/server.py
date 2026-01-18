@@ -1072,10 +1072,11 @@ async def get_client_detail(client_id: str, current_user: dict = Depends(require
     }
 
 @api_router.post("/admin/clients/{client_id}/reset-password")
-async def reset_client_password(client_id: str, new_password: str, current_user: dict = Depends(require_super_admin)):
+async def reset_client_password(client_id: str, password_data: ClientPasswordReset, current_user: dict = Depends(require_super_admin)):
+    """Admin endpoint to reset client password"""
     result = await db.users.update_one(
         {"id": client_id, "role": "client"},
-        {"$set": {"password_hash": hash_password(new_password)}}
+        {"$set": {"password_hash": hash_password(password_data.new_password)}}
     )
     
     if result.matched_count == 0:
@@ -1083,7 +1084,78 @@ async def reset_client_password(client_id: str, new_password: str, current_user:
     
     await log_audit(current_user["id"], current_user["role"], "reset_password", "client", client_id)
     
-    return {"message": "Password reset successfully", "new_password": new_password}
+    return {"message": "Password reset successfully", "new_password": password_data.new_password}
+
+@api_router.put("/admin/clients/{client_id}")
+async def admin_update_client(client_id: str, update_data: ClientProfileUpdate, current_user: dict = Depends(require_super_admin)):
+    """Admin endpoint to update client details"""
+    client = await db.users.find_one({"id": client_id, "role": "client"}, {"_id": 0})
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    update_dict = update_data.model_dump(exclude_unset=True)
+    
+    # Separate user fields from profile fields
+    user_fields = {}
+    profile_fields = {}
+    
+    # User fields (stored in users collection)
+    if "full_name" in update_dict:
+        user_fields["full_name"] = update_dict.pop("full_name")
+    if "mobile" in update_dict:
+        new_mobile = update_dict.pop("mobile")
+        if not validate_mobile(new_mobile):
+            raise HTTPException(status_code=400, detail="Mobile number must be exactly 10 digits")
+        existing = await db.users.find_one({"mobile": new_mobile, "id": {"$ne": client_id}})
+        if existing:
+            raise HTTPException(status_code=400, detail="Mobile number already in use")
+        user_fields["mobile"] = new_mobile
+    if "email" in update_dict:
+        new_email = update_dict.pop("email")
+        if new_email:
+            existing = await db.users.find_one({"email": new_email, "id": {"$ne": client_id}})
+            if existing:
+                raise HTTPException(status_code=400, detail="Email already in use")
+        user_fields["email"] = new_email
+    
+    # Profile fields
+    profile_fields = update_dict
+    profile_fields["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    # Update user document
+    if user_fields:
+        await db.users.update_one({"id": client_id}, {"$set": user_fields})
+    
+    # Update profile document
+    if profile_fields:
+        await db.client_profiles.update_one(
+            {"user_id": client_id},
+            {"$set": profile_fields},
+            upsert=True
+        )
+    
+    await log_audit(current_user["id"], current_user["role"], "update", "client", client_id, {**user_fields, **profile_fields})
+    
+    # Return updated client
+    updated_client = await db.users.find_one({"id": client_id}, {"_id": 0, "password_hash": 0})
+    profile = await db.client_profiles.find_one({"user_id": client_id}, {"_id": 0})
+    
+    return {
+        "id": updated_client["id"],
+        "client_id": updated_client.get("client_id", ""),
+        "mobile": updated_client.get("mobile", "N/A"),
+        "email": updated_client.get("email"),
+        "full_name": updated_client["full_name"],
+        "age": profile.get("age") if profile else None,
+        "guardian_name": profile.get("guardian_name") if profile else None,
+        "address": profile.get("address") if profile else None,
+        "referred_by": profile.get("referred_by") if profile else None,
+        "intake_summary": profile.get("intake_summary") if profile else None,
+        "emergency_contact_name": profile.get("emergency_contact_name") if profile else None,
+        "emergency_contact_phone": profile.get("emergency_contact_phone") if profile else None,
+        "profile_photo": profile.get("profile_photo") if profile else None,
+        "created_at": updated_client["created_at"]
+    }
 
 # ============= SUBSCRIPTION MANAGEMENT ENDPOINTS =============
 
