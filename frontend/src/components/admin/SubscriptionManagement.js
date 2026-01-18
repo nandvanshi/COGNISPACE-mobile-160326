@@ -132,7 +132,7 @@ const SubscriptionManagement = () => {
             </div>
             <div className="mb-4">
               <p className="text-3xl font-bold text-foreground">
-                ${plan.price}
+                {formatCurrency(plan.price)}
                 <span className="text-sm text-muted-foreground font-normal">/{plan.duration_days} days</span>
               </p>
             </div>
