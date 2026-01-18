@@ -137,6 +137,62 @@ class Appointment(BaseModel):
     status: str = "scheduled"  # scheduled, completed, cancelled
     created_at: datetime
 
+# Therapist Availability Models
+class TimeBlock(BaseModel):
+    start_time: str  # Format: "HH:MM" (24-hour)
+    end_time: str    # Format: "HH:MM" (24-hour)
+
+class DayAvailability(BaseModel):
+    enabled: bool = False
+    time_blocks: List[TimeBlock] = []
+
+class TherapistAvailabilityUpdate(BaseModel):
+    session_duration: Optional[int] = None  # Duration in minutes (e.g., 45, 60)
+    buffer_time: Optional[int] = None  # Buffer between sessions in minutes
+    monday: Optional[DayAvailability] = None
+    tuesday: Optional[DayAvailability] = None
+    wednesday: Optional[DayAvailability] = None
+    thursday: Optional[DayAvailability] = None
+    friday: Optional[DayAvailability] = None
+    saturday: Optional[DayAvailability] = None
+    sunday: Optional[DayAvailability] = None
+
+class TherapistAvailability(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    therapist_id: str
+    session_duration: int = 60  # Default 60 minutes
+    buffer_time: int = 0  # Default no buffer
+    monday: DayAvailability = DayAvailability()
+    tuesday: DayAvailability = DayAvailability()
+    wednesday: DayAvailability = DayAvailability()
+    thursday: DayAvailability = DayAvailability()
+    friday: DayAvailability = DayAvailability()
+    saturday: DayAvailability = DayAvailability()
+    sunday: DayAvailability = DayAvailability()
+    updated_at: datetime
+
+class BlockedTimeCreate(BaseModel):
+    start_datetime: datetime
+    end_datetime: datetime
+    reason: Optional[str] = None
+    is_all_day: bool = False
+
+class BlockedTime(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    therapist_id: str
+    start_datetime: datetime
+    end_datetime: datetime
+    reason: Optional[str] = None
+    is_all_day: bool = False
+    created_at: datetime
+
+class AvailableSlot(BaseModel):
+    start_time: datetime
+    end_time: datetime
+    duration_minutes: int
+
 # Session Note Models
 class SessionNoteCreate(BaseModel):
     client_id: str
