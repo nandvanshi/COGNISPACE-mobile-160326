@@ -316,7 +316,7 @@ const TherapistOverview = ({ isReadOnly = false }) => {
                           <div>
                             <p className="font-medium text-foreground">{appt.client_name}</p>
                             <p className="text-sm text-muted-foreground">
-                              {formatTime(appt.start_time)} - {formatTime(appt.end_time)}
+                              {formatTimeRange(appt.start_time, appt.end_time)}
                             </p>
                           </div>
                         </div>
