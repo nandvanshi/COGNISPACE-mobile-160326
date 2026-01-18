@@ -3199,6 +3199,10 @@ async def get_conversations(current_user: dict = Depends(get_current_user)):
 @api_router.get("/messaging-contacts")
 async def get_messaging_contacts(current_user: dict = Depends(get_current_user)):
     """Get list of users the current user can message"""
+    # Assistants cannot access messaging
+    if current_user["role"] == "assistant":
+        raise HTTPException(status_code=403, detail="Assistants cannot access messaging")
+    
     contacts = []
     
     if current_user["role"] == "therapist":
