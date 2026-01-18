@@ -49,15 +49,15 @@ const TherapistOverview = ({ isReadOnly = false }) => {
       ]);
 
       // Calculate today's stats
-      const today = new Date();
+      const today = nowIST();
       today.setHours(0, 0, 0, 0);
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
-      const now = new Date();
+      const now = nowIST();
 
       const allAppts = apptsRes.data;
       const todayAppts = allAppts.filter((appt) => {
-        const apptDate = new Date(appt.start_time);
+        const apptDate = toIST(appt.start_time);
         return apptDate >= today && apptDate < tomorrow && appt.status !== 'cancelled';
       }).sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
 
@@ -65,14 +65,14 @@ const TherapistOverview = ({ isReadOnly = false }) => {
 
       // Find next upcoming appointment
       const upcomingAppts = allAppts
-        .filter(a => new Date(a.start_time) > now && a.status === 'scheduled')
+        .filter(a => toIST(a.start_time) > now && a.status === 'scheduled')
         .sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
       
       // Count unread messages
       const unreadCount = messagesRes.data.filter(m => !m.read && m.recipient_id === user?.id).length;
 
       // Get active clients (clients with appointments in last 30 days)
-      const thirtyDaysAgo = new Date();
+      const thirtyDaysAgo = nowIST();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       
       const recentApptsMap = {};
