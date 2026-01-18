@@ -2245,6 +2245,58 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+@app.on_event("startup")
+async def startup_event():
+    """Run on application startup - migrate therapists without subscriptions"""
+    logger.info("Running startup migration for therapists without subscriptions...")
+    
+    # Find all therapists without subscription_status or with null/empty subscription_status
+    therapists_without_subscription = await db.users.find(
+        {"role": "therapist", "$or": [
+            {"subscription_status": {"$exists": False}},
+            {"subscription_status": None},
+            {"subscription_status": ""}
+        ]},
+        {"_id": 0, "id": 1, "full_name": 1}
+    ).to_list(1000)
+    
+    if not therapists_without_subscription:
+        logger.info("No therapists without subscriptions found.")
+        return
+    
+    now = datetime.now(timezone.utc)
+    end_date = now + timedelta(days=30)
+    migrated_count = 0
+    
+    for therapist in therapists_without_subscription:
+        # Create trial subscription
+        subscription_id = str(uuid.uuid4())
+        subscription_doc = {
+            "id": subscription_id,
+            "therapist_id": therapist["id"],
+            "plan_id": "free_trial",
+            "plan_name": "Free Trial",
+            "status": "trial",
+            "start_date": now.isoformat(),
+            "end_date": end_date.isoformat(),
+            "coupon_code": None
+        }
+        
+        await db.subscriptions.insert_one(subscription_doc)
+        
+        # Update therapist
+        await db.users.update_one(
+            {"id": therapist["id"]},
+            {"$set": {
+                "subscription_status": "trial",
+                "subscription_plan": "free_trial"
+            }}
+        )
+        migrated_count += 1
+        logger.info(f"Migrated therapist: {therapist.get('full_name', therapist['id'])}")
+    
+    logger.info(f"Startup migration complete. Migrated {migrated_count} therapists to trial subscription.")
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
