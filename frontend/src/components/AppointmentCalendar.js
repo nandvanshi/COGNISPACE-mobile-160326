@@ -294,8 +294,7 @@ const AppointmentCalendar = ({ isReadOnly = false }) => {
   };
 
   const formatDateTimeLocal = (dateStr) => {
-    const date = new Date(dateStr);
-    return date.toISOString().slice(0, 16);
+    return isoToInputFormat(dateStr);
   };
 
   const groupAppointmentsByDate = () => {
@@ -305,12 +304,7 @@ const AppointmentCalendar = ({ isReadOnly = false }) => {
       : appointments.filter(a => a.status === filterStatus);
     
     filteredAppts.forEach((appt) => {
-      const date = new Date(appt.start_time).toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
+      const date = formatGroupDate(appt.start_time);
       if (!grouped[date]) grouped[date] = [];
       grouped[date].push(appt);
     });
@@ -320,12 +314,7 @@ const AppointmentCalendar = ({ isReadOnly = false }) => {
   const groupBlockedTimesByDate = () => {
     const grouped = {};
     blockedTimes.forEach((block) => {
-      const date = new Date(block.start_datetime).toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
+      const date = formatGroupDate(block.start_datetime);
       if (!grouped[date]) grouped[date] = [];
       grouped[date].push(block);
     });
