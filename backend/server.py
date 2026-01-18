@@ -2182,15 +2182,17 @@ async def update_client_photo(client_id: str, photo_url: str, current_user: dict
 # ============= APPOINTMENT ENDPOINTS =============
 
 @api_router.post("/appointments", response_model=Appointment)
-async def create_appointment(appt_data: AppointmentCreate, current_user: dict = Depends(require_active_therapist)):
-    """Create a new appointment - respects subscription read-only mode"""
+async def create_appointment(appt_data: AppointmentCreate, current_user: dict = Depends(require_active_therapist_or_assistant)):
+    """Create a new appointment - assistants can create appointments for their linked therapist"""
+    therapist_id = get_effective_therapist_id(current_user)
+    
     # Validate times
     if appt_data.start_time >= appt_data.end_time:
         raise HTTPException(status_code=400, detail="End time must be after start time")
     
     # Check for double-booking (exclude cancelled appointments)
     existing = await db.appointments.find_one({
-        "therapist_id": current_user["id"],
+        "therapist_id": therapist_id,
         "status": {"$ne": "cancelled"},
         "$or": [
             {"start_time": {"$lt": appt_data.end_time.isoformat()}, "end_time": {"$gt": appt_data.start_time.isoformat()}}
@@ -2208,33 +2210,38 @@ async def create_appointment(appt_data: AppointmentCreate, current_user: dict = 
         raise HTTPException(status_code=404, detail="Client not found")
     
     # Verify client belongs to this therapist
-    if client.get("therapist_id") and client["therapist_id"] != current_user["id"]:
-        raise HTTPException(status_code=403, detail="Client is not assigned to you")
+    client_profile = await db.client_profiles.find_one({"user_id": appt_data.client_id}, {"_id": 0})
+    if client_profile and client_profile.get("therapist_id") != therapist_id:
+        raise HTTPException(status_code=403, detail="Client is not assigned to this therapist")
     
     appt_id = str(uuid.uuid4())
     appt_doc = {
         "id": appt_id,
-        "therapist_id": current_user["id"],
+        "therapist_id": therapist_id,
         "client_id": appt_data.client_id,
         "client_name": client["full_name"],
         "start_time": appt_data.start_time.isoformat(),
         "end_time": appt_data.end_time.isoformat(),
         "notes": appt_data.notes,
         "status": "scheduled",
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": current_user["id"]
     }
     
     await db.appointments.insert_one(appt_doc)
-    await log_audit(current_user["id"], current_user["role"], "create", "appointment", appt_id)
+    await log_audit(current_user["id"], current_user["role"], "create", "appointment", appt_id,
+                   {"created_by_assistant": current_user["role"] == "assistant"})
     
     return Appointment(**{k: datetime.fromisoformat(v) if k in ["start_time", "end_time", "created_at"] else v for k, v in appt_doc.items()})
 
 @api_router.get("/appointments", response_model=List[Appointment])
 async def get_appointments(current_user: dict = Depends(get_current_user)):
-    """Get appointments - therapists see their appointments, clients see theirs"""
+    """Get appointments - therapists/assistants see therapist's appointments, clients see theirs"""
     query = {}
     if current_user["role"] == "therapist":
         query["therapist_id"] = current_user["id"]
+    elif current_user["role"] == "assistant":
+        query["therapist_id"] = current_user.get("therapist_id")
     else:
         query["client_id"] = current_user["id"]
     
