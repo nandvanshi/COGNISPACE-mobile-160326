@@ -1390,59 +1390,74 @@ async def create_client(client_data: ClientCreate, current_user: dict = Depends(
 
 @api_router.get("/clients", response_model=List[ClientProfile])
 async def get_clients(current_user: dict = Depends(require_therapist)):
+    """Get only clients assigned to the current therapist"""
+    therapist_id = current_user["id"]
     
-    clients = await db.users.find(
-        {"role": "client"},
-        {"_id": 0, "password_hash": 0}
+    # Get client profiles assigned to this therapist
+    client_profiles = await db.client_profiles.find(
+        {"therapist_id": therapist_id},
+        {"_id": 0}
     ).to_list(1000)
     
     result = []
-    for client in clients:
-        profile = await db.client_profiles.find_one({"user_id": client["id"]}, {"_id": 0})
-        result.append(ClientProfile(
-            id=client["id"],
-            client_id=client.get("client_id", ""),
-            therapist_id=profile.get("therapist_id", "") if profile else "",
-            mobile=client.get("mobile", "N/A"),
-            email=client.get("email"),
-            full_name=client["full_name"],
-            age=profile.get("age") if profile else None,
-            guardian_name=profile.get("guardian_name") if profile else None,
-            address=profile.get("address") if profile else None,
-            referred_by=profile.get("referred_by") if profile else None,
-            intake_summary=profile.get("intake_summary") if profile else None,
-            emergency_contact_name=profile.get("emergency_contact_name") if profile else None,
-            emergency_contact_phone=profile.get("emergency_contact_phone") if profile else None,
-            profile_photo=profile.get("profile_photo") if profile else None,
-            created_at=datetime.fromisoformat(client["created_at"])
-        ))
+    for profile in client_profiles:
+        client = await db.users.find_one(
+            {"id": profile["user_id"], "role": "client"},
+            {"_id": 0, "password_hash": 0}
+        )
+        if client:
+            result.append(ClientProfile(
+                id=client["id"],
+                client_id=client.get("client_id", ""),
+                therapist_id=profile.get("therapist_id", ""),
+                mobile=client.get("mobile", "N/A"),
+                email=client.get("email"),
+                full_name=client["full_name"],
+                age=profile.get("age"),
+                guardian_name=profile.get("guardian_name"),
+                address=profile.get("address"),
+                referred_by=profile.get("referred_by"),
+                intake_summary=profile.get("intake_summary"),
+                emergency_contact_name=profile.get("emergency_contact_name"),
+                emergency_contact_phone=profile.get("emergency_contact_phone"),
+                profile_photo=profile.get("profile_photo"),
+                created_at=datetime.fromisoformat(client["created_at"])
+            ))
     
     return result
 
 @api_router.get("/clients/{client_id}", response_model=ClientProfile)
 async def get_client(client_id: str, current_user: dict = Depends(require_therapist)):
+    """Get a specific client - must be assigned to current therapist"""
+    therapist_id = current_user["id"]
+    
+    # Verify client is assigned to this therapist
+    profile = await db.client_profiles.find_one(
+        {"user_id": client_id, "therapist_id": therapist_id},
+        {"_id": 0}
+    )
+    if not profile:
+        raise HTTPException(status_code=404, detail="Client not found or not assigned to you")
     
     client = await db.users.find_one({"id": client_id, "role": "client"}, {"_id": 0})
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")
     
-    profile = await db.client_profiles.find_one({"user_id": client_id}, {"_id": 0})
-    
     return ClientProfile(
         id=client["id"],
         client_id=client.get("client_id", ""),
-        therapist_id=profile.get("therapist_id", "") if profile else "",
+        therapist_id=profile.get("therapist_id", ""),
         mobile=client.get("mobile", "N/A"),
         email=client.get("email"),
         full_name=client["full_name"],
-        age=profile.get("age") if profile else None,
-        guardian_name=profile.get("guardian_name") if profile else None,
-        address=profile.get("address") if profile else None,
-        referred_by=profile.get("referred_by") if profile else None,
-        intake_summary=profile.get("intake_summary") if profile else None,
-        emergency_contact_name=profile.get("emergency_contact_name") if profile else None,
-        emergency_contact_phone=profile.get("emergency_contact_phone") if profile else None,
-        profile_photo=profile.get("profile_photo") if profile else None,
+        age=profile.get("age"),
+        guardian_name=profile.get("guardian_name"),
+        address=profile.get("address"),
+        referred_by=profile.get("referred_by"),
+        intake_summary=profile.get("intake_summary"),
+        emergency_contact_name=profile.get("emergency_contact_name"),
+        emergency_contact_phone=profile.get("emergency_contact_phone"),
+        profile_photo=profile.get("profile_photo"),
         created_at=datetime.fromisoformat(client["created_at"])
     )
 
