@@ -995,7 +995,7 @@ const AppointmentCalendar = ({ isReadOnly = false }) => {
               <Input
                 id="block-date"
                 type="date"
-                min={new Date().toISOString().split('T')[0]}
+                min={getTodayInputFormat()}
                 value={newBlock.date}
                 onChange={(e) => setNewBlock({ ...newBlock, date: e.target.value })}
                 required
