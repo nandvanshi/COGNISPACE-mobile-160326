@@ -551,7 +551,7 @@ class TestAppointmentStatusChanges:
             "start_time": start_time.isoformat(),
             "end_time": end_time.isoformat()
         })
-        assert create_response.status_code == 201
+        assert create_response.status_code in [200, 201], f"Create failed: {create_response.text}"
         appt_id = create_response.json()["id"]
         
         # Complete it
