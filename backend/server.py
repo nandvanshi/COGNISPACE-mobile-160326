@@ -292,6 +292,10 @@ class Message(BaseModel):
     read: bool = False
     created_at: datetime
 
+class ClientMessagingSettings(BaseModel):
+    client_id: str
+    messaging_enabled: bool
+
 # Assessment Models
 class CustomAssessmentCreate(BaseModel):
     name: str
