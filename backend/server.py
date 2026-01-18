@@ -1917,9 +1917,6 @@ async def create_client(client_data: ClientCreate, current_user: dict = Depends(
     # Get effective therapist_id (for assistants, it's their linked therapist)
     therapist_id = get_effective_therapist_id(current_user)
     
-    # Debug logging
-    logging.info(f"create_client: current_user.id={current_user.get('id')}, role={current_user.get('role')}, therapist_id_field={current_user.get('therapist_id')}, effective_therapist_id={therapist_id}")
-    
     # Validate mobile number
     if not validate_mobile(client_data.mobile):
         raise HTTPException(status_code=400, detail="Mobile number must be exactly 10 digits")
