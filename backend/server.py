@@ -1926,6 +1926,273 @@ async def delete_appointment(appointment_id: str, current_user: dict = Depends(r
     
     return {"message": "Appointment deleted"}
 
+# ============= THERAPIST AVAILABILITY ENDPOINTS =============
+
+@api_router.get("/availability", response_model=TherapistAvailability)
+async def get_availability(current_user: dict = Depends(get_current_user)):
+    """Get therapist's availability settings"""
+    therapist_id = current_user["id"] if current_user["role"] == "therapist" else None
+    if not therapist_id:
+        raise HTTPException(status_code=403, detail="Only therapists can access availability settings")
+    
+    availability = await db.therapist_availability.find_one({"therapist_id": therapist_id}, {"_id": 0})
+    
+    if not availability:
+        # Create default availability
+        default_availability = {
+            "id": str(uuid.uuid4()),
+            "therapist_id": therapist_id,
+            "session_duration": 60,
+            "buffer_time": 0,
+            "monday": {"enabled": False, "time_blocks": []},
+            "tuesday": {"enabled": False, "time_blocks": []},
+            "wednesday": {"enabled": False, "time_blocks": []},
+            "thursday": {"enabled": False, "time_blocks": []},
+            "friday": {"enabled": False, "time_blocks": []},
+            "saturday": {"enabled": False, "time_blocks": []},
+            "sunday": {"enabled": False, "time_blocks": []},
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.therapist_availability.insert_one(default_availability)
+        availability = default_availability
+    
+    return TherapistAvailability(**{k: datetime.fromisoformat(v) if k == "updated_at" else v for k, v in availability.items()})
+
+@api_router.put("/availability", response_model=TherapistAvailability)
+async def update_availability(update_data: TherapistAvailabilityUpdate, current_user: dict = Depends(require_active_therapist)):
+    """Update therapist's availability settings"""
+    therapist_id = current_user["id"]
+    
+    # Get existing or create new
+    availability = await db.therapist_availability.find_one({"therapist_id": therapist_id}, {"_id": 0})
+    
+    if not availability:
+        availability = {
+            "id": str(uuid.uuid4()),
+            "therapist_id": therapist_id,
+            "session_duration": 60,
+            "buffer_time": 0,
+            "monday": {"enabled": False, "time_blocks": []},
+            "tuesday": {"enabled": False, "time_blocks": []},
+            "wednesday": {"enabled": False, "time_blocks": []},
+            "thursday": {"enabled": False, "time_blocks": []},
+            "friday": {"enabled": False, "time_blocks": []},
+            "saturday": {"enabled": False, "time_blocks": []},
+            "sunday": {"enabled": False, "time_blocks": []},
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.therapist_availability.insert_one(availability)
+    
+    # Build update fields
+    update_fields = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    
+    if update_data.session_duration is not None:
+        if update_data.session_duration < 15 or update_data.session_duration > 240:
+            raise HTTPException(status_code=400, detail="Session duration must be between 15 and 240 minutes")
+        update_fields["session_duration"] = update_data.session_duration
+    
+    if update_data.buffer_time is not None:
+        if update_data.buffer_time < 0 or update_data.buffer_time > 60:
+            raise HTTPException(status_code=400, detail="Buffer time must be between 0 and 60 minutes")
+        update_fields["buffer_time"] = update_data.buffer_time
+    
+    # Update each day's availability
+    for day in ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]:
+        day_data = getattr(update_data, day, None)
+        if day_data is not None:
+            update_fields[day] = day_data.model_dump()
+    
+    await db.therapist_availability.update_one(
+        {"therapist_id": therapist_id},
+        {"$set": update_fields}
+    )
+    
+    # Get updated availability
+    updated = await db.therapist_availability.find_one({"therapist_id": therapist_id}, {"_id": 0})
+    await log_audit(current_user["id"], current_user["role"], "update", "availability", therapist_id)
+    
+    return TherapistAvailability(**{k: datetime.fromisoformat(v) if k == "updated_at" else v for k, v in updated.items()})
+
+# ============= BLOCKED TIME ENDPOINTS =============
+
+@api_router.post("/blocked-times", response_model=BlockedTime)
+async def create_blocked_time(block_data: BlockedTimeCreate, current_user: dict = Depends(require_active_therapist)):
+    """Block a time range (e.g., vacation, personal time)"""
+    if block_data.start_datetime >= block_data.end_datetime:
+        raise HTTPException(status_code=400, detail="End time must be after start time")
+    
+    block_id = str(uuid.uuid4())
+    block_doc = {
+        "id": block_id,
+        "therapist_id": current_user["id"],
+        "start_datetime": block_data.start_datetime.isoformat(),
+        "end_datetime": block_data.end_datetime.isoformat(),
+        "reason": block_data.reason,
+        "is_all_day": block_data.is_all_day,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.blocked_times.insert_one(block_doc)
+    await log_audit(current_user["id"], current_user["role"], "create", "blocked_time", block_id)
+    
+    return BlockedTime(**{k: datetime.fromisoformat(v) if k in ["start_datetime", "end_datetime", "created_at"] else v for k, v in block_doc.items()})
+
+@api_router.get("/blocked-times", response_model=List[BlockedTime])
+async def get_blocked_times(current_user: dict = Depends(get_current_user)):
+    """Get all blocked times for the therapist"""
+    therapist_id = current_user["id"] if current_user["role"] == "therapist" else None
+    if not therapist_id:
+        raise HTTPException(status_code=403, detail="Only therapists can access blocked times")
+    
+    blocked = await db.blocked_times.find({"therapist_id": therapist_id}, {"_id": 0}).to_list(1000)
+    
+    return [BlockedTime(**{k: datetime.fromisoformat(v) if k in ["start_datetime", "end_datetime", "created_at"] else v for k, v in b.items()}) for b in blocked]
+
+@api_router.delete("/blocked-times/{block_id}")
+async def delete_blocked_time(block_id: str, current_user: dict = Depends(require_active_therapist)):
+    """Delete a blocked time"""
+    block = await db.blocked_times.find_one({"id": block_id}, {"_id": 0})
+    if not block:
+        raise HTTPException(status_code=404, detail="Blocked time not found")
+    
+    if block["therapist_id"] != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    await db.blocked_times.delete_one({"id": block_id})
+    await log_audit(current_user["id"], current_user["role"], "delete", "blocked_time", block_id)
+    
+    return {"message": "Blocked time deleted"}
+
+# ============= AVAILABLE SLOTS ENDPOINT =============
+
+@api_router.get("/available-slots/{therapist_id}", response_model=List[AvailableSlot])
+async def get_available_slots(therapist_id: str, date: str, current_user: dict = Depends(get_current_user)):
+    """Get available appointment slots for a specific date.
+    This is the public-facing endpoint for clients to see available times.
+    """
+    # Parse the date
+    try:
+        target_date = datetime.strptime(date, "%Y-%m-%d").date()
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+    
+    # Don't allow booking in the past
+    if target_date < datetime.now(timezone.utc).date():
+        return []
+    
+    # Get therapist's availability settings
+    availability = await db.therapist_availability.find_one({"therapist_id": therapist_id}, {"_id": 0})
+    if not availability:
+        return []  # Therapist has not set up availability
+    
+    # Get the day of week
+    day_names = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+    day_name = day_names[target_date.weekday()]
+    
+    day_availability = availability.get(day_name, {})
+    if not day_availability.get("enabled", False):
+        return []  # Therapist not available on this day
+    
+    time_blocks = day_availability.get("time_blocks", [])
+    if not time_blocks:
+        return []
+    
+    session_duration = availability.get("session_duration", 60)
+    buffer_time = availability.get("buffer_time", 0)
+    
+    # Get existing appointments for this date
+    start_of_day = datetime.combine(target_date, datetime.min.time()).replace(tzinfo=timezone.utc)
+    end_of_day = datetime.combine(target_date, datetime.max.time()).replace(tzinfo=timezone.utc)
+    
+    existing_appointments = await db.appointments.find({
+        "therapist_id": therapist_id,
+        "status": {"$ne": "cancelled"},
+        "start_time": {"$gte": start_of_day.isoformat(), "$lt": end_of_day.isoformat()}
+    }, {"_id": 0}).to_list(100)
+    
+    # Get blocked times for this date
+    blocked_times = await db.blocked_times.find({
+        "therapist_id": therapist_id,
+        "$or": [
+            {"start_datetime": {"$gte": start_of_day.isoformat(), "$lt": end_of_day.isoformat()}},
+            {"end_datetime": {"$gt": start_of_day.isoformat(), "$lte": end_of_day.isoformat()}},
+            {"start_datetime": {"$lte": start_of_day.isoformat()}, "end_datetime": {"$gte": end_of_day.isoformat()}}
+        ]
+    }, {"_id": 0}).to_list(100)
+    
+    # Generate slots
+    available_slots = []
+    
+    for block in time_blocks:
+        block_start = datetime.strptime(block["start_time"], "%H:%M").time()
+        block_end = datetime.strptime(block["end_time"], "%H:%M").time()
+        
+        current_start = datetime.combine(target_date, block_start).replace(tzinfo=timezone.utc)
+        block_end_dt = datetime.combine(target_date, block_end).replace(tzinfo=timezone.utc)
+        
+        while current_start + timedelta(minutes=session_duration) <= block_end_dt:
+            slot_end = current_start + timedelta(minutes=session_duration)
+            
+            # Check if this slot overlaps with any existing appointment
+            is_booked = False
+            for appt in existing_appointments:
+                appt_start = datetime.fromisoformat(appt["start_time"].replace('Z', '+00:00'))
+                appt_end = datetime.fromisoformat(appt["end_time"].replace('Z', '+00:00'))
+                
+                if current_start < appt_end and slot_end > appt_start:
+                    is_booked = True
+                    break
+            
+            # Check if this slot is blocked
+            is_blocked = False
+            for bt in blocked_times:
+                bt_start = datetime.fromisoformat(bt["start_datetime"].replace('Z', '+00:00'))
+                bt_end = datetime.fromisoformat(bt["end_datetime"].replace('Z', '+00:00'))
+                
+                if current_start < bt_end and slot_end > bt_start:
+                    is_blocked = True
+                    break
+            
+            # Don't show slots that have already passed today
+            now = datetime.now(timezone.utc)
+            is_past = current_start <= now
+            
+            if not is_booked and not is_blocked and not is_past:
+                available_slots.append(AvailableSlot(
+                    start_time=current_start,
+                    end_time=slot_end,
+                    duration_minutes=session_duration
+                ))
+            
+            # Move to next slot (session + buffer)
+            current_start = slot_end + timedelta(minutes=buffer_time)
+    
+    return available_slots
+
+@api_router.get("/therapist/{therapist_id}/availability")
+async def get_therapist_availability_public(therapist_id: str, current_user: dict = Depends(get_current_user)):
+    """Get therapist's public availability settings (for clients to see)"""
+    availability = await db.therapist_availability.find_one({"therapist_id": therapist_id}, {"_id": 0})
+    
+    if not availability:
+        return {
+            "session_duration": 60,
+            "available_days": []
+        }
+    
+    available_days = []
+    day_names = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+    
+    for day in day_names:
+        day_data = availability.get(day, {})
+        if day_data.get("enabled", False) and day_data.get("time_blocks"):
+            available_days.append(day)
+    
+    return {
+        "session_duration": availability.get("session_duration", 60),
+        "available_days": available_days
+    }
+
 # ============= SESSION NOTES ENDPOINTS =============
 
 @api_router.post("/session-notes", response_model=SessionNote)
