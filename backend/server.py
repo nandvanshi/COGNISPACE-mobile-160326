@@ -2531,6 +2531,9 @@ async def delete_blocked_time(block_id: str, current_user: dict = Depends(requir
 async def get_available_slots(therapist_id: str, date: str, current_user: dict = Depends(get_current_user)):
     """Get available appointment slots for a specific date.
     This is the public-facing endpoint for clients to see available times.
+    
+    IMPORTANT: All availability times are in IST (India Standard Time).
+    The therapist sets times in IST, slots are generated in IST, and returned in IST.
     """
     # Parse the date
     try:
@@ -2538,8 +2541,9 @@ async def get_available_slots(therapist_id: str, date: str, current_user: dict =
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
     
-    # Don't allow booking in the past
-    if target_date < datetime.now(timezone.utc).date():
+    # Don't allow booking in the past (compare in IST)
+    now_ist = datetime.now(IST)
+    if target_date < now_ist.date():
         return []
     
     # Get therapist's availability settings
@@ -2562,35 +2566,40 @@ async def get_available_slots(therapist_id: str, date: str, current_user: dict =
     session_duration = availability.get("session_duration", 60)
     buffer_time = availability.get("buffer_time", 0)
     
-    # Get existing appointments for this date
-    start_of_day = datetime.combine(target_date, datetime.min.time()).replace(tzinfo=timezone.utc)
-    end_of_day = datetime.combine(target_date, datetime.max.time()).replace(tzinfo=timezone.utc)
+    # Create IST day boundaries for querying existing appointments/blocks
+    # We query with a wide range to catch all relevant appointments
+    start_of_day_ist = datetime.combine(target_date, datetime.min.time()).replace(tzinfo=IST)
+    end_of_day_ist = datetime.combine(target_date, datetime.max.time()).replace(tzinfo=IST)
+    # Convert to UTC for database query (appointments stored in UTC)
+    start_of_day_utc = start_of_day_ist.astimezone(timezone.utc)
+    end_of_day_utc = end_of_day_ist.astimezone(timezone.utc)
     
     existing_appointments = await db.appointments.find({
         "therapist_id": therapist_id,
         "status": {"$ne": "cancelled"},
-        "start_time": {"$gte": start_of_day.isoformat(), "$lt": end_of_day.isoformat()}
+        "start_time": {"$gte": start_of_day_utc.isoformat(), "$lt": end_of_day_utc.isoformat()}
     }, {"_id": 0}).to_list(100)
     
     # Get blocked times for this date
     blocked_times = await db.blocked_times.find({
         "therapist_id": therapist_id,
         "$or": [
-            {"start_datetime": {"$gte": start_of_day.isoformat(), "$lt": end_of_day.isoformat()}},
-            {"end_datetime": {"$gt": start_of_day.isoformat(), "$lte": end_of_day.isoformat()}},
-            {"start_datetime": {"$lte": start_of_day.isoformat()}, "end_datetime": {"$gte": end_of_day.isoformat()}}
+            {"start_datetime": {"$gte": start_of_day_utc.isoformat(), "$lt": end_of_day_utc.isoformat()}},
+            {"end_datetime": {"$gt": start_of_day_utc.isoformat(), "$lte": end_of_day_utc.isoformat()}},
+            {"start_datetime": {"$lte": start_of_day_utc.isoformat()}, "end_datetime": {"$gte": end_of_day_utc.isoformat()}}
         ]
     }, {"_id": 0}).to_list(100)
     
-    # Generate slots
+    # Generate slots - time blocks are in IST
     available_slots = []
     
     for block in time_blocks:
         block_start = datetime.strptime(block["start_time"], "%H:%M").time()
         block_end = datetime.strptime(block["end_time"], "%H:%M").time()
         
-        current_start = datetime.combine(target_date, block_start).replace(tzinfo=timezone.utc)
-        block_end_dt = datetime.combine(target_date, block_end).replace(tzinfo=timezone.utc)
+        # Create datetime in IST (availability is configured in IST)
+        current_start_ist = datetime.combine(target_date, block_start).replace(tzinfo=IST)
+        block_end_ist = datetime.combine(target_date, block_end).replace(tzinfo=IST)
         
         while current_start + timedelta(minutes=session_duration) <= block_end_dt:
             slot_end = current_start + timedelta(minutes=session_duration)
