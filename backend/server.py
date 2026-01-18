@@ -728,7 +728,27 @@ async def get_me(current_user: dict = Depends(get_current_user)):
 
 @api_router.get("/auth/subscription-status")
 async def get_subscription_status(current_user: dict = Depends(get_current_user)):
-    """Get current user's subscription status (for therapists)"""
+    """Get current user's subscription status (for therapists and assistants)"""
+    if current_user["role"] == "assistant":
+        # For assistants, get the linked therapist's subscription status
+        therapist = await db.users.find_one({"id": current_user.get("therapist_id")}, {"_id": 0})
+        if not therapist:
+            return {"is_read_only": True, "subscription_status": None, "subscription_end_date": None}
+        subscription_status = therapist.get("subscription_status")
+        is_read_only = subscription_status not in ["trial", "active"]
+        subscription = await db.subscriptions.find_one(
+            {"therapist_id": therapist["id"]},
+            {"_id": 0},
+            sort=[("start_date", -1)]
+        )
+        subscription_end_date = subscription.get("end_date") if subscription else None
+        return {
+            "is_read_only": is_read_only,
+            "subscription_status": subscription_status,
+            "subscription_plan": therapist.get("subscription_plan"),
+            "subscription_end_date": subscription_end_date
+        }
+    
     if current_user["role"] != "therapist":
         return {"is_read_only": False, "subscription_status": None, "subscription_end_date": None}
     
