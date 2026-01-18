@@ -254,6 +254,28 @@ class RecurringPattern(BaseModel):
     is_active: bool = True
     created_at: datetime
 
+# Note Template Models
+class NoteTemplateCreate(BaseModel):
+    name: str
+    category: Literal["subjective", "objective", "assessment", "plan", "data", "general"]
+    content: str
+
+class NoteTemplateUpdate(BaseModel):
+    name: Optional[str] = None
+    category: Optional[Literal["subjective", "objective", "assessment", "plan", "data", "general"]] = None
+    content: Optional[str] = None
+
+class NoteTemplate(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    therapist_id: str
+    name: str
+    category: str
+    content: str
+    usage_count: int = 0
+    created_at: datetime
+    updated_at: datetime
+
 # Message Models
 class MessageCreate(BaseModel):
     recipient_id: str
