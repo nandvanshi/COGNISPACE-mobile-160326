@@ -52,7 +52,8 @@ class TestDataIsolation:
     def therapist_2_token(self, super_admin_token):
         """Create a second therapist and get their token"""
         # Create therapist 2 via admin
-        unique_mobile = f"98765{str(uuid.uuid4())[:5].replace('-', '0')}"[:10]
+        import random
+        unique_mobile = f"9876{random.randint(100000, 999999)}"
         unique_email = f"therapist2_{uuid.uuid4().hex[:8]}@test.com"
         
         response = requests.post(
