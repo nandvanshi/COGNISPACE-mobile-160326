@@ -2858,24 +2858,27 @@ async def toggle_client_messaging(
     current_user: dict = Depends(require_active_therapist)
 ):
     """Enable or disable messaging for a specific client"""
-    # Find client
-    client = await db.clients.find_one({"id": client_id}, {"_id": 0})
-    if not client:
+    # Find client profile
+    profile = await db.client_profiles.find_one({"user_id": client_id}, {"_id": 0})
+    if not profile:
         raise HTTPException(status_code=404, detail="Client not found")
     
     # Verify client is assigned to this therapist
-    if client.get("therapist_id") != current_user["id"]:
+    if profile.get("therapist_id") != current_user["id"]:
         raise HTTPException(status_code=403, detail="This client is not assigned to you")
     
-    await db.clients.update_one(
-        {"id": client_id},
+    # Get client user for name
+    client_user = await db.users.find_one({"id": client_id}, {"_id": 0, "full_name": 1})
+    
+    await db.client_profiles.update_one(
+        {"user_id": client_id},
         {"$set": {"messaging_enabled": settings.messaging_enabled}}
     )
     
     status = "enabled" if settings.messaging_enabled else "disabled"
     await log_audit(current_user["id"], current_user["role"], f"messaging_{status}", "client", client_id)
     
-    return {"message": f"Messaging {status} for {client['full_name']}"}
+    return {"message": f"Messaging {status} for {client_user['full_name'] if client_user else 'client'}"}
 
 @api_router.get("/clients/{client_id}/messaging-status")
 async def get_client_messaging_status(client_id: str, current_user: dict = Depends(require_therapist)):
