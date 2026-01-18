@@ -185,11 +185,12 @@ class TestClientMessagingSettings:
     
     @pytest.fixture(scope="class")
     def test_client(self, auth_headers):
-        """Get a test client for settings tests"""
+        """Get a test client for settings tests - from /api/clients endpoint"""
         response = requests.get(f"{BASE_URL}/api/clients", headers=auth_headers)
         clients = response.json()
         if clients:
-            return clients[0]
+            # Return client with both id and full_name
+            return {"id": clients[0]["id"], "full_name": clients[0]["full_name"]}
         pytest.skip("No clients available for settings test")
     
     def test_get_client_messaging_status(self, auth_headers, test_client):
@@ -205,8 +206,6 @@ class TestClientMessagingSettings:
         assert "client_id" in status
         assert "messaging_enabled" in status
         print(f"✓ Client {test_client['full_name']} messaging status: {status['messaging_enabled']}")
-        
-        return status["messaging_enabled"]
     
     def test_disable_client_messaging(self, auth_headers, test_client):
         """Test therapist can disable messaging for a client"""
