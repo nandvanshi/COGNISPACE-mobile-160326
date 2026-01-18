@@ -62,11 +62,12 @@ class User(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str
     client_id: Optional[str] = None  # Only for clients
+    therapist_id: Optional[str] = None  # Only for assistants - linked therapist
     mobile: str
     email: Optional[str] = None
     full_name: str
     role: str
-    status: Optional[str] = None  # For therapists: pending_approval, approved, suspended, rejected
+    status: Optional[str] = None  # For therapists: pending_approval, approved, suspended, rejected; For assistants: active, suspended
     subscription_status: Optional[str] = None  # For therapists: trial, active, expired, cancelled
     subscription_plan: Optional[str] = None
     created_at: datetime
@@ -74,6 +75,26 @@ class User(BaseModel):
 class TokenResponse(BaseModel):
     token: str
     user: User
+
+# Assistant Models
+class AssistantCreate(BaseModel):
+    email: EmailStr
+    password: str
+    full_name: str
+
+class AssistantUpdate(BaseModel):
+    email: Optional[EmailStr] = None
+    full_name: Optional[str] = None
+
+class AssistantResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    therapist_id: str
+    email: str
+    full_name: str
+    role: str
+    status: str
+    created_at: datetime
 
 # Client Profile Models
 class ClientProfile(BaseModel):
