@@ -179,39 +179,6 @@ const TherapistOverview = ({ isReadOnly = false }) => {
     );
   };
 
-  const formatTime = (dateStr) => {
-    return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
-  const formatDate = (dateStr) => {
-    const date = new Date(dateStr);
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    
-    if (date.toDateString() === today.toDateString()) return 'Today';
-    if (date.toDateString() === tomorrow.toDateString()) return 'Tomorrow';
-    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-  };
-
-  const getTimeUntil = (dateStr) => {
-    const now = new Date();
-    const target = new Date(dateStr);
-    const diff = target - now;
-    
-    if (diff < 0) return 'Started';
-    
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    
-    if (hours > 24) {
-      const days = Math.floor(hours / 24);
-      return `in ${days} day${days > 1 ? 's' : ''}`;
-    }
-    if (hours > 0) return `in ${hours}h ${minutes}m`;
-    return `in ${minutes}m`;
-  };
-
   if (loading) {
     return (
       <div className="text-center py-12">
