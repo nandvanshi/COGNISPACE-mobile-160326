@@ -421,7 +421,7 @@ const TherapistOverview = ({ isReadOnly = false }) => {
                       <div>
                         <p className="font-medium text-foreground">{client.full_name}</p>
                         <p className="text-xs text-muted-foreground">
-                          Last session: {formatDate(client.lastSession.start_time)}
+                          Last session: {getRelativeDate(client.lastSession.start_time)}
                         </p>
                       </div>
                     </div>
