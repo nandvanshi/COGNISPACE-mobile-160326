@@ -412,17 +412,17 @@ Build a secure, therapist-first web application for managing a therapy practice 
 ## Backlog
 
 ### P1 - High Priority
-- [ ] Appointment Calendar with double-booking prevention
-- [ ] Session Notes with SOAP/DAP templates
-- [ ] Secure therapist-client messaging interface
+- [ ] Coupon Code management validation and testing
+- [ ] Payment tracking for therapists
 
 ### P2 - Medium Priority  
-- [ ] Payment tracking for therapists
 - [ ] Assessment result visualization
 - [ ] Profile photo upload (currently URL-based)
 
 ### P3 - Future Enhancements
-- [ ] Therapy protocol builder UI
+- [ ] Clinical Support: Assessment suggestion engine
+- [ ] Clinical Support: Therapy protocol builder
+- [ ] Template sharing between therapists
 - [ ] Homework completion tracking
 - [ ] Audit log viewer for admins
 - [ ] Email notifications for approvals
