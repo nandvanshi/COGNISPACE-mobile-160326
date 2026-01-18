@@ -62,7 +62,9 @@ class TestSessionNotesCRUD:
         notes_response = self.session.get(f"{BASE_URL}/api/session-notes")
         if notes_response.status_code == 200:
             for note in notes_response.json():
-                if note.get("subjective", "").startswith("TEST_") or note.get("data", "").startswith("TEST_"):
+                subjective = note.get("subjective") or ""
+                data = note.get("data") or ""
+                if subjective.startswith("TEST_") or data.startswith("TEST_"):
                     self.session.delete(f"{BASE_URL}/api/session-notes/{note['id']}")
     
     def test_p0_1_create_soap_note_all_fields(self):
