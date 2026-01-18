@@ -119,6 +119,21 @@ Build a secure, therapist-first web application for managing a therapy practice 
   - `client_id` (e.g., CL-XXXXXX) remains unchanged
   - Shown as "(immutable)" in edit dialog
 
+### Phase 7: Data Isolation Security Fix (COMPLETED - Jan 18, 2026)
+- [x] **Client self-registration DISABLED**:
+  - `POST /api/auth/register` returns 403
+  - Login page shows message: "Clients: Please contact your therapist to create an account for you"
+  - No registration tab on login page
+- [x] **Therapist data isolation**:
+  - `GET /api/clients` returns ONLY clients assigned to current therapist
+  - `GET /api/clients/{id}` returns 404 for unassigned clients
+  - `PUT /api/clients/{id}` returns 404 for unassigned clients
+  - `POST /api/clients/{id}/reset-password` returns 403 for unassigned clients
+- [x] **Super Admin access preserved**:
+  - `GET /api/admin/clients` returns ALL clients
+  - `PUT /api/admin/clients/{id}` works for any client
+  - Admin can view and edit any client details
+
 ---
 
 ## Technical Architecture
