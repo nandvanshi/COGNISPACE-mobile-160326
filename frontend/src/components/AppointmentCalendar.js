@@ -802,15 +802,7 @@ const AppointmentCalendar = ({ isReadOnly = false }) => {
                             <div className="flex items-center gap-2">
                               <Clock size={14} className="text-muted-foreground" />
                               <span className="font-medium">
-                                {new Date(slot.start_time).toLocaleTimeString([], {
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                })}
-                                {' - '}
-                                {new Date(slot.end_time).toLocaleTimeString([], {
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                })}
+                                {formatTimeRange(slot.start_time, slot.end_time)}
                               </span>
                               <span className="text-xs text-muted-foreground">
                                 ({slot.duration_minutes} min)
