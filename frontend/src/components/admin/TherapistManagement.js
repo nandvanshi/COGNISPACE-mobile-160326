@@ -320,8 +320,37 @@ const TherapistManagement = ({ onViewClients }) => {
         </div>
       </div>
 
+      {/* Search Bar */}
+      <div className="mb-6">
+        <div className="relative max-w-md">
+          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search by name, email, mobile, or credentials..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 pr-10"
+            data-testid="therapist-search-input"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              data-testid="clear-search-button"
+            >
+              <X size={16} />
+            </button>
+          )}
+        </div>
+        {searchQuery && (
+          <p className="text-sm text-muted-foreground mt-2" data-testid="search-results-count">
+            Showing {filteredTherapists.length} of {therapists.length} therapist{therapists.length !== 1 ? 's' : ''}
+          </p>
+        )}
+      </div>
+
       <div className="grid grid-cols-1 gap-4">
-        {therapists.map((therapist) => {
+        {filteredTherapists.map((therapist) => {
           const remainingDays = getRemainingDays(therapist.subscription_end_date);
           return (
             <Card
