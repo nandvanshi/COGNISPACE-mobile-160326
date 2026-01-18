@@ -511,8 +511,8 @@ class TestAppointmentStatusChanges:
     
     def test_cannot_complete_cancelled_appointment(self, therapist_headers):
         """Cannot complete a cancelled appointment"""
-        # Create and cancel appointment
-        future_date = datetime.now(timezone.utc) + timedelta(days=32)
+        # Create and cancel appointment - use unique time slot
+        future_date = datetime.now(timezone.utc) + timedelta(days=50)  # Far future to avoid conflicts
         start_time = future_date.replace(hour=11, minute=0, second=0, microsecond=0)
         end_time = start_time + timedelta(hours=1)
         
@@ -541,8 +541,8 @@ class TestAppointmentStatusChanges:
     
     def test_cannot_cancel_completed_appointment(self, therapist_headers):
         """Cannot cancel a completed appointment"""
-        # Create and complete appointment
-        future_date = datetime.now(timezone.utc) + timedelta(days=33)
+        # Create and complete appointment - use unique time slot
+        future_date = datetime.now(timezone.utc) + timedelta(days=51)  # Far future to avoid conflicts
         start_time = future_date.replace(hour=12, minute=0, second=0, microsecond=0)
         end_time = start_time + timedelta(hours=1)
         
