@@ -10,6 +10,7 @@ import { Switch } from './ui/switch';
 import { Label } from './ui/label';
 import { toast } from 'sonner';
 import { Send, MessageCircle, Plus, User, Settings, Shield, AlertTriangle } from 'lucide-react';
+import { formatDate, formatTime, formatDateTime, toIST } from '../utils/formatUtils';
 
 const Messaging = ({ isReadOnly = false }) => {
   const { user } = useAuth();
