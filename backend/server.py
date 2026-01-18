@@ -2265,14 +2265,16 @@ async def get_appointment(appointment_id: str, current_user: dict = Depends(get_
     return Appointment(**{k: datetime.fromisoformat(v) if k in ["start_time", "end_time", "created_at"] else v for k, v in appointment.items()})
 
 @api_router.put("/appointments/{appointment_id}", response_model=Appointment)
-async def update_appointment(appointment_id: str, update_data: AppointmentUpdate, current_user: dict = Depends(require_active_therapist)):
-    """Update an appointment - respects subscription read-only mode"""
+async def update_appointment(appointment_id: str, update_data: AppointmentUpdate, current_user: dict = Depends(require_active_therapist_or_assistant)):
+    """Update an appointment - assistants can reschedule appointments"""
+    therapist_id = get_effective_therapist_id(current_user)
+    
     appointment = await db.appointments.find_one({"id": appointment_id}, {"_id": 0})
     if not appointment:
         raise HTTPException(status_code=404, detail="Appointment not found")
     
     # Verify ownership
-    if appointment["therapist_id"] != current_user["id"]:
+    if appointment["therapist_id"] != therapist_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     # Build update fields
@@ -2299,7 +2301,7 @@ async def update_appointment(appointment_id: str, update_data: AppointmentUpdate
     # Check for double-booking if times are being changed (exclude current appointment and cancelled ones)
     if "start_time" in update_fields or "end_time" in update_fields:
         existing = await db.appointments.find_one({
-            "therapist_id": current_user["id"],
+            "therapist_id": therapist_id,
             "id": {"$ne": appointment_id},
             "status": {"$ne": "cancelled"},
             "$or": [
@@ -2311,7 +2313,8 @@ async def update_appointment(appointment_id: str, update_data: AppointmentUpdate
             raise HTTPException(status_code=400, detail="Time slot already booked. Please choose a different time.")
     
     await db.appointments.update_one({"id": appointment_id}, {"$set": update_fields})
-    await log_audit(current_user["id"], current_user["role"], "update", "appointment", appointment_id)
+    await log_audit(current_user["id"], current_user["role"], "update", "appointment", appointment_id,
+                   {"updated_by_assistant": current_user["role"] == "assistant"})
     
     # Get updated appointment
     updated = await db.appointments.find_one({"id": appointment_id}, {"_id": 0})
@@ -2319,7 +2322,7 @@ async def update_appointment(appointment_id: str, update_data: AppointmentUpdate
 
 @api_router.post("/appointments/{appointment_id}/complete")
 async def complete_appointment(appointment_id: str, current_user: dict = Depends(require_active_therapist)):
-    """Mark an appointment as completed - respects subscription read-only mode"""
+    """Mark an appointment as completed - ONLY therapists can complete (clinical action)"""
     appointment = await db.appointments.find_one({"id": appointment_id}, {"_id": 0})
     if not appointment:
         raise HTTPException(status_code=404, detail="Appointment not found")
@@ -2336,26 +2339,29 @@ async def complete_appointment(appointment_id: str, current_user: dict = Depends
     return {"message": "Appointment marked as completed"}
 
 @api_router.post("/appointments/{appointment_id}/cancel")
-async def cancel_appointment(appointment_id: str, current_user: dict = Depends(require_active_therapist)):
-    """Cancel an appointment - respects subscription read-only mode"""
+async def cancel_appointment(appointment_id: str, current_user: dict = Depends(require_active_therapist_or_assistant)):
+    """Cancel an appointment - assistants can cancel appointments"""
+    therapist_id = get_effective_therapist_id(current_user)
+    
     appointment = await db.appointments.find_one({"id": appointment_id}, {"_id": 0})
     if not appointment:
         raise HTTPException(status_code=404, detail="Appointment not found")
     
-    if appointment["therapist_id"] != current_user["id"]:
+    if appointment["therapist_id"] != therapist_id:
         raise HTTPException(status_code=403, detail="Access denied")
     
     if appointment["status"] == "completed":
         raise HTTPException(status_code=400, detail="Cannot cancel a completed appointment")
     
     await db.appointments.update_one({"id": appointment_id}, {"$set": {"status": "cancelled"}})
-    await log_audit(current_user["id"], current_user["role"], "cancel", "appointment", appointment_id)
+    await log_audit(current_user["id"], current_user["role"], "cancel", "appointment", appointment_id,
+                   {"cancelled_by_assistant": current_user["role"] == "assistant"})
     
     return {"message": "Appointment cancelled"}
 
 @api_router.delete("/appointments/{appointment_id}")
 async def delete_appointment(appointment_id: str, current_user: dict = Depends(require_active_therapist)):
-    """Delete an appointment - respects subscription read-only mode"""
+    """Delete an appointment - ONLY therapists can permanently delete"""
     appointment = await db.appointments.find_one({"id": appointment_id}, {"_id": 0})
     if not appointment:
         raise HTTPException(status_code=404, detail="Appointment not found")
