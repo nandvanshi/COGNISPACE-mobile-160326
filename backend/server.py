@@ -1912,7 +1912,10 @@ class ClientCreate(BaseModel):
     emergency_contact_phone: Optional[str] = None
 
 @api_router.post("/clients", response_model=ClientProfile)
-async def create_client(client_data: ClientCreate, current_user: dict = Depends(require_active_therapist)):
+async def create_client(client_data: ClientCreate, current_user: dict = Depends(require_active_therapist_or_assistant)):
+    """Create a client - therapist or assistant can create"""
+    # Get effective therapist_id (for assistants, it's their linked therapist)
+    therapist_id = get_effective_therapist_id(current_user)
     
     # Validate mobile number
     if not validate_mobile(client_data.mobile):
@@ -1945,10 +1948,10 @@ async def create_client(client_data: ClientCreate, current_user: dict = Depends(
     
     await db.users.insert_one(user_doc)
     
-    # Create client profile
+    # Create client profile - linked to the therapist (not assistant)
     profile_doc = {
         "user_id": client_id,
-        "therapist_id": current_user["id"],
+        "therapist_id": therapist_id,
         "age": client_data.age,
         "guardian_name": client_data.guardian_name,
         "address": client_data.address,
@@ -1960,12 +1963,13 @@ async def create_client(client_data: ClientCreate, current_user: dict = Depends(
     }
     
     await db.client_profiles.insert_one(profile_doc)
-    await log_audit(current_user["id"], current_user["role"], "create", "client", client_id)
+    await log_audit(current_user["id"], current_user["role"], "create", "client", client_id,
+                   {"created_by_assistant": current_user["role"] == "assistant"})
     
     return ClientProfile(
         id=client_id,
         client_id=unique_client_id,
-        therapist_id=current_user["id"],
+        therapist_id=therapist_id,
         mobile=client_data.mobile,
         email=client_data.email,
         full_name=client_data.full_name,
@@ -1980,9 +1984,9 @@ async def create_client(client_data: ClientCreate, current_user: dict = Depends(
     )
 
 @api_router.get("/clients", response_model=List[ClientProfile])
-async def get_clients(current_user: dict = Depends(require_therapist)):
-    """Get only clients assigned to the current therapist"""
-    therapist_id = current_user["id"]
+async def get_clients(current_user: dict = Depends(require_therapist_or_assistant)):
+    """Get only clients assigned to the therapist (or assistant's linked therapist)"""
+    therapist_id = get_effective_therapist_id(current_user)
     
     # Get client profiles assigned to this therapist
     client_profiles = await db.client_profiles.find(
