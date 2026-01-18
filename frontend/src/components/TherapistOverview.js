@@ -457,12 +457,12 @@ const TherapistOverview = ({ isReadOnly = false }) => {
                 <div className="p-3 bg-white/50 rounded-lg space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Date</span>
-                    <span className="font-medium">{formatDate(nextAppointment.start_time)}</span>
+                    <span className="font-medium">{getRelativeDate(nextAppointment.start_time)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Time</span>
                     <span className="font-medium">
-                      {formatTime(nextAppointment.start_time)} - {formatTime(nextAppointment.end_time)}
+                      {formatTimeRange(nextAppointment.start_time, nextAppointment.end_time)}
                     </span>
                   </div>
                 </div>
