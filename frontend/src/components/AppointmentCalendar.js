@@ -660,17 +660,7 @@ const AppointmentCalendar = ({ isReadOnly = false }) => {
                               {block.is_all_day ? (
                                 <span className="text-error">Full Day Blocked</span>
                               ) : (
-                                <>
-                                  {new Date(block.start_datetime).toLocaleTimeString([], {
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                  })}{' '}
-                                  -{' '}
-                                  {new Date(block.end_datetime).toLocaleTimeString([], {
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                  })}
-                                </>
+                                <>{formatTimeRange(block.start_datetime, block.end_datetime)}</>
                               )}
                             </p>
                             {block.reason && (
