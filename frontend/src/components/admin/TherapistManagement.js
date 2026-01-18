@@ -432,9 +432,18 @@ const TherapistManagement = ({ onViewClients }) => {
           );
         })}
 
-        {therapists.length === 0 && (
+        {filteredTherapists.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-muted-foreground">No therapists found</p>
+            {searchQuery ? (
+              <div>
+                <p className="text-muted-foreground mb-2">No therapists found matching "{searchQuery}"</p>
+                <Button variant="outline" onClick={() => setSearchQuery('')} data-testid="clear-search-empty">
+                  Clear Search
+                </Button>
+              </div>
+            ) : (
+              <p className="text-muted-foreground">No therapists found</p>
+            )}
           </div>
         )}
       </div>
