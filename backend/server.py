@@ -1664,6 +1664,238 @@ async def delete_coupon(coupon_id: str, current_user: dict = Depends(require_sup
     
     return {"message": "Coupon deleted"}
 
+# ============= ASSISTANT ENDPOINTS =============
+
+@api_router.post("/assistants", response_model=AssistantResponse)
+async def create_assistant(assistant_data: AssistantCreate, current_user: dict = Depends(require_active_therapist)):
+    """Therapist creates an assistant linked to their account"""
+    # Check if email already exists
+    existing = await db.users.find_one({"email": assistant_data.email})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    assistant_id = str(uuid.uuid4())
+    assistant_doc = {
+        "id": assistant_id,
+        "therapist_id": current_user["id"],
+        "email": assistant_data.email,
+        "password_hash": hash_password(assistant_data.password),
+        "full_name": assistant_data.full_name,
+        "role": "assistant",
+        "status": "active",
+        "mobile": "",  # Assistants login via email
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.users.insert_one(assistant_doc)
+    await log_audit(current_user["id"], current_user["role"], "create", "assistant", assistant_id, 
+                   {"assistant_email": assistant_data.email})
+    
+    return AssistantResponse(
+        id=assistant_id,
+        therapist_id=current_user["id"],
+        email=assistant_data.email,
+        full_name=assistant_data.full_name,
+        role="assistant",
+        status="active",
+        created_at=datetime.fromisoformat(assistant_doc["created_at"])
+    )
+
+@api_router.get("/assistants", response_model=List[AssistantResponse])
+async def get_assistants(current_user: dict = Depends(require_therapist)):
+    """Therapist gets list of their assistants"""
+    assistants = await db.users.find(
+        {"therapist_id": current_user["id"], "role": "assistant", "status": {"$ne": "deleted"}},
+        {"_id": 0}
+    ).to_list(100)
+    
+    return [AssistantResponse(
+        id=a["id"],
+        therapist_id=a["therapist_id"],
+        email=a["email"],
+        full_name=a["full_name"],
+        role=a["role"],
+        status=a["status"],
+        created_at=datetime.fromisoformat(a["created_at"])
+    ) for a in assistants]
+
+@api_router.get("/assistants/{assistant_id}", response_model=AssistantResponse)
+async def get_assistant(assistant_id: str, current_user: dict = Depends(require_therapist)):
+    """Get a specific assistant"""
+    assistant = await db.users.find_one(
+        {"id": assistant_id, "therapist_id": current_user["id"], "role": "assistant"},
+        {"_id": 0}
+    )
+    if not assistant:
+        raise HTTPException(status_code=404, detail="Assistant not found")
+    
+    return AssistantResponse(
+        id=assistant["id"],
+        therapist_id=assistant["therapist_id"],
+        email=assistant["email"],
+        full_name=assistant["full_name"],
+        role=assistant["role"],
+        status=assistant["status"],
+        created_at=datetime.fromisoformat(assistant["created_at"])
+    )
+
+@api_router.put("/assistants/{assistant_id}", response_model=AssistantResponse)
+async def update_assistant(assistant_id: str, update_data: AssistantUpdate, current_user: dict = Depends(require_active_therapist)):
+    """Update assistant details"""
+    assistant = await db.users.find_one(
+        {"id": assistant_id, "therapist_id": current_user["id"], "role": "assistant"},
+        {"_id": 0}
+    )
+    if not assistant:
+        raise HTTPException(status_code=404, detail="Assistant not found")
+    
+    update_fields = {}
+    if update_data.email is not None:
+        # Check email uniqueness
+        existing = await db.users.find_one({"email": update_data.email, "id": {"$ne": assistant_id}})
+        if existing:
+            raise HTTPException(status_code=400, detail="Email already in use")
+        update_fields["email"] = update_data.email
+    if update_data.full_name is not None:
+        update_fields["full_name"] = update_data.full_name
+    
+    if update_fields:
+        await db.users.update_one({"id": assistant_id}, {"$set": update_fields})
+        await log_audit(current_user["id"], current_user["role"], "update", "assistant", assistant_id, update_fields)
+    
+    # Fetch updated assistant
+    assistant = await db.users.find_one({"id": assistant_id}, {"_id": 0})
+    return AssistantResponse(
+        id=assistant["id"],
+        therapist_id=assistant["therapist_id"],
+        email=assistant["email"],
+        full_name=assistant["full_name"],
+        role=assistant["role"],
+        status=assistant["status"],
+        created_at=datetime.fromisoformat(assistant["created_at"])
+    )
+
+@api_router.put("/assistants/{assistant_id}/suspend")
+async def suspend_assistant(assistant_id: str, current_user: dict = Depends(require_therapist)):
+    """Suspend an assistant"""
+    assistant = await db.users.find_one(
+        {"id": assistant_id, "therapist_id": current_user["id"], "role": "assistant"},
+        {"_id": 0}
+    )
+    if not assistant:
+        raise HTTPException(status_code=404, detail="Assistant not found")
+    
+    await db.users.update_one({"id": assistant_id}, {"$set": {"status": "suspended"}})
+    await log_audit(current_user["id"], current_user["role"], "suspend", "assistant", assistant_id)
+    
+    return {"message": f"Assistant {assistant['full_name']} has been suspended"}
+
+@api_router.put("/assistants/{assistant_id}/activate")
+async def activate_assistant(assistant_id: str, current_user: dict = Depends(require_therapist)):
+    """Activate a suspended assistant"""
+    assistant = await db.users.find_one(
+        {"id": assistant_id, "therapist_id": current_user["id"], "role": "assistant"},
+        {"_id": 0}
+    )
+    if not assistant:
+        raise HTTPException(status_code=404, detail="Assistant not found")
+    
+    await db.users.update_one({"id": assistant_id}, {"$set": {"status": "active"}})
+    await log_audit(current_user["id"], current_user["role"], "activate", "assistant", assistant_id)
+    
+    return {"message": f"Assistant {assistant['full_name']} has been activated"}
+
+@api_router.delete("/assistants/{assistant_id}")
+async def delete_assistant(assistant_id: str, current_user: dict = Depends(require_therapist)):
+    """Soft delete an assistant"""
+    assistant = await db.users.find_one(
+        {"id": assistant_id, "therapist_id": current_user["id"], "role": "assistant"},
+        {"_id": 0}
+    )
+    if not assistant:
+        raise HTTPException(status_code=404, detail="Assistant not found")
+    
+    # Soft delete - mark as deleted
+    await db.users.update_one({"id": assistant_id}, {"$set": {"status": "deleted"}})
+    await log_audit(current_user["id"], current_user["role"], "delete", "assistant", assistant_id)
+    
+    return {"message": f"Assistant {assistant['full_name']} has been deleted"}
+
+@api_router.put("/assistants/{assistant_id}/reset-password")
+async def reset_assistant_password(assistant_id: str, new_password: str, current_user: dict = Depends(require_therapist)):
+    """Reset assistant password"""
+    assistant = await db.users.find_one(
+        {"id": assistant_id, "therapist_id": current_user["id"], "role": "assistant"},
+        {"_id": 0}
+    )
+    if not assistant:
+        raise HTTPException(status_code=404, detail="Assistant not found")
+    
+    await db.users.update_one({"id": assistant_id}, {"$set": {"password_hash": hash_password(new_password)}})
+    await log_audit(current_user["id"], current_user["role"], "reset_password", "assistant", assistant_id)
+    
+    return {"message": f"Password reset for {assistant['full_name']}"}
+
+# Super Admin can also manage assistants
+@api_router.get("/admin/assistants", response_model=List[AssistantResponse])
+async def admin_get_all_assistants(therapist_id: Optional[str] = None, current_user: dict = Depends(require_super_admin)):
+    """Super Admin gets all assistants, optionally filtered by therapist"""
+    query = {"role": "assistant"}
+    if therapist_id:
+        query["therapist_id"] = therapist_id
+    
+    assistants = await db.users.find(query, {"_id": 0}).to_list(1000)
+    
+    return [AssistantResponse(
+        id=a["id"],
+        therapist_id=a["therapist_id"],
+        email=a["email"],
+        full_name=a["full_name"],
+        role=a["role"],
+        status=a["status"],
+        created_at=datetime.fromisoformat(a["created_at"])
+    ) for a in assistants]
+
+@api_router.post("/admin/assistants", response_model=AssistantResponse)
+async def admin_create_assistant(assistant_data: AssistantCreate, therapist_id: str, current_user: dict = Depends(require_super_admin)):
+    """Super Admin creates an assistant for a therapist"""
+    # Verify therapist exists
+    therapist = await db.users.find_one({"id": therapist_id, "role": "therapist"})
+    if not therapist:
+        raise HTTPException(status_code=404, detail="Therapist not found")
+    
+    # Check if email already exists
+    existing = await db.users.find_one({"email": assistant_data.email})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    assistant_id = str(uuid.uuid4())
+    assistant_doc = {
+        "id": assistant_id,
+        "therapist_id": therapist_id,
+        "email": assistant_data.email,
+        "password_hash": hash_password(assistant_data.password),
+        "full_name": assistant_data.full_name,
+        "role": "assistant",
+        "status": "active",
+        "mobile": "",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.users.insert_one(assistant_doc)
+    await log_audit(current_user["id"], current_user["role"], "create", "assistant", assistant_id,
+                   {"therapist_id": therapist_id, "assistant_email": assistant_data.email})
+    
+    return AssistantResponse(
+        id=assistant_id,
+        therapist_id=therapist_id,
+        email=assistant_data.email,
+        full_name=assistant_data.full_name,
+        role="assistant",
+        status="active",
+        created_at=datetime.fromisoformat(assistant_doc["created_at"])
+    )
+
 # ============= CLIENT ENDPOINTS =============
 
 class ClientCreate(BaseModel):
