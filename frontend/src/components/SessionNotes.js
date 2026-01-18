@@ -379,15 +379,15 @@ const SessionNotes = ({ isReadOnly = false }) => {
               <div>
                 <Label>Link to Appointment (optional)</Label>
                 <Select
-                  value={newNote.appointment_id}
-                  onValueChange={(value) => setNewNote({ ...newNote, appointment_id: value })}
+                  value={newNote.appointment_id || "none"}
+                  onValueChange={(value) => setNewNote({ ...newNote, appointment_id: value === "none" ? "" : value })}
                   disabled={!newNote.client_id}
                 >
                   <SelectTrigger className="mt-1" data-testid="note-appointment-select">
                     <SelectValue placeholder={newNote.client_id ? "Select appointment" : "Select client first"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No appointment link</SelectItem>
+                    <SelectItem value="none">No appointment link</SelectItem>
                     {getClientAppointments(newNote.client_id).map((appt) => (
                       <SelectItem key={appt.id} value={appt.id}>
                         {formatAppointmentDate(appt.start_time)} - {appt.status}
