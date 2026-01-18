@@ -197,6 +197,15 @@ class AvailableSlot(BaseModel):
 class SessionNoteCreate(BaseModel):
     client_id: str
     template_type: Literal["SOAP", "DAP"]
+    appointment_id: Optional[str] = None  # Link to appointment
+    subjective: Optional[str] = None
+    objective: Optional[str] = None
+    assessment: Optional[str] = None
+    plan: Optional[str] = None
+    data: Optional[str] = None
+
+class SessionNoteUpdate(BaseModel):
+    template_type: Optional[Literal["SOAP", "DAP"]] = None
     subjective: Optional[str] = None
     objective: Optional[str] = None
     assessment: Optional[str] = None
@@ -209,6 +218,8 @@ class SessionNote(BaseModel):
     therapist_id: str
     client_id: str
     client_name: str
+    appointment_id: Optional[str] = None
+    appointment_date: Optional[str] = None
     template_type: str
     subjective: Optional[str] = None
     objective: Optional[str] = None
@@ -217,6 +228,31 @@ class SessionNote(BaseModel):
     data: Optional[str] = None
     created_at: datetime
     updated_at: datetime
+
+# Recurring Appointment Models
+class RecurringPatternCreate(BaseModel):
+    client_id: str
+    day_of_week: int  # 0=Monday, 6=Sunday
+    start_time: str  # "HH:MM" format
+    end_time: str    # "HH:MM" format
+    notes: Optional[str] = None
+    start_date: str  # YYYY-MM-DD - when to start generating
+    end_date: Optional[str] = None  # YYYY-MM-DD - when to stop (None = indefinite)
+
+class RecurringPattern(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    therapist_id: str
+    client_id: str
+    client_name: str
+    day_of_week: int
+    start_time: str
+    end_time: str
+    notes: Optional[str] = None
+    start_date: str
+    end_date: Optional[str] = None
+    is_active: bool = True
+    created_at: datetime
 
 # Message Models
 class MessageCreate(BaseModel):
