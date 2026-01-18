@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { API } from '../App';
+import { API, useAuth } from '../App';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -8,30 +8,37 @@ import { Label } from './ui/label';
 import { Switch } from './ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { toast } from 'sonner';
-import { Clock, Plus, Trash2, Calendar, Settings, Ban } from 'lucide-react';
+import { Clock, Plus, Trash2, Calendar, Settings, Ban, Copy } from 'lucide-react';
 
 const DAYS = [
-  { key: 'monday', label: 'Monday' },
-  { key: 'tuesday', label: 'Tuesday' },
-  { key: 'wednesday', label: 'Wednesday' },
-  { key: 'thursday', label: 'Thursday' },
-  { key: 'friday', label: 'Friday' },
-  { key: 'saturday', label: 'Saturday' },
-  { key: 'sunday', label: 'Sunday' },
+  { key: 'monday', label: 'Monday', short: 'Mon' },
+  { key: 'tuesday', label: 'Tuesday', short: 'Tue' },
+  { key: 'wednesday', label: 'Wednesday', short: 'Wed' },
+  { key: 'thursday', label: 'Thursday', short: 'Thu' },
+  { key: 'friday', label: 'Friday', short: 'Fri' },
+  { key: 'saturday', label: 'Saturday', short: 'Sat' },
+  { key: 'sunday', label: 'Sunday', short: 'Sun' },
 ];
 
 const AvailabilitySettings = ({ isReadOnly = false }) => {
+  const { user } = useAuth();
   const [availability, setAvailability] = useState(null);
   const [blockedTimes, setBlockedTimes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showBlockDialog, setShowBlockDialog] = useState(false);
+  const [showCopyDialog, setShowCopyDialog] = useState(false);
+  const [copySourceDay, setCopySourceDay] = useState(null);
+  const [copyTargetDays, setCopyTargetDays] = useState({});
   const [newBlock, setNewBlock] = useState({
     start_datetime: '',
     end_datetime: '',
     reason: '',
     is_all_day: false,
   });
+
+  // Only therapists can use copy feature (not assistants)
+  const canUseCopyFeature = user?.role === 'therapist' && !isReadOnly;
 
   useEffect(() => {
     fetchData();
@@ -120,6 +127,90 @@ const AvailabilitySettings = ({ isReadOnly = false }) => {
     }));
   };
 
+  // Copy Day functionality
+  const openCopyDialog = (dayKey) => {
+    setCopySourceDay(dayKey);
+    // Initialize all other days as unchecked
+    const targets = {};
+    DAYS.forEach(d => {
+      if (d.key !== dayKey) {
+        targets[d.key] = false;
+      }
+    });
+    setCopyTargetDays(targets);
+    setShowCopyDialog(true);
+  };
+
+  const handleCopyDay = () => {
+    if (!copySourceDay || !availability) return;
+
+    const sourceSchedule = availability[copySourceDay];
+    const selectedTargets = Object.entries(copyTargetDays).filter(([_, selected]) => selected).map(([day]) => day);
+
+    if (selectedTargets.length === 0) {
+      toast.error('Please select at least one day to copy to');
+      return;
+    }
+
+    // Check if any target day has existing schedules
+    const daysWithSchedules = selectedTargets.filter(dayKey => {
+      const daySchedule = availability[dayKey];
+      return daySchedule?.enabled && daySchedule?.time_blocks?.length > 0;
+    });
+
+    if (daysWithSchedules.length > 0) {
+      const dayLabels = daysWithSchedules.map(dk => DAYS.find(d => d.key === dk)?.label).join(', ');
+      if (!window.confirm(`The following days have existing schedules that will be overwritten: ${dayLabels}. Continue?`)) {
+        return;
+      }
+    }
+
+    // Copy the schedule to selected days
+    setAvailability((prev) => {
+      const updated = { ...prev };
+      selectedTargets.forEach(targetDay => {
+        updated[targetDay] = {
+          enabled: sourceSchedule.enabled,
+          time_blocks: sourceSchedule.time_blocks.map(block => ({ ...block })), // Deep copy time blocks
+        };
+      });
+      return updated;
+    });
+
+    const sourceDayLabel = DAYS.find(d => d.key === copySourceDay)?.label;
+    toast.success(`${sourceDayLabel}'s schedule copied to ${selectedTargets.length} day(s)`);
+    setShowCopyDialog(false);
+    setCopySourceDay(null);
+    setCopyTargetDays({});
+  };
+
+  const toggleTargetDay = (dayKey) => {
+    setCopyTargetDays(prev => ({
+      ...prev,
+      [dayKey]: !prev[dayKey]
+    }));
+  };
+
+  const selectAllTargets = () => {
+    const allSelected = {};
+    DAYS.forEach(d => {
+      if (d.key !== copySourceDay) {
+        allSelected[d.key] = true;
+      }
+    });
+    setCopyTargetDays(allSelected);
+  };
+
+  const selectWeekdays = () => {
+    const weekdays = {};
+    DAYS.forEach(d => {
+      if (d.key !== copySourceDay) {
+        weekdays[d.key] = !['saturday', 'sunday'].includes(d.key);
+      }
+    });
+    setCopyTargetDays(weekdays);
+  };
+
   const handleCreateBlockedTime = async (e) => {
     e.preventDefault();
 
@@ -156,6 +247,18 @@ const AvailabilitySettings = ({ isReadOnly = false }) => {
     }
   };
 
+  const getSourceDayInfo = () => {
+    if (!copySourceDay || !availability) return null;
+    const daySchedule = availability[copySourceDay];
+    const dayLabel = DAYS.find(d => d.key === copySourceDay)?.label;
+    return {
+      label: dayLabel,
+      enabled: daySchedule?.enabled,
+      blockCount: daySchedule?.time_blocks?.length || 0,
+      blocks: daySchedule?.time_blocks || []
+    };
+  };
+
   if (loading) {
     return <div className="text-center py-12">Loading availability settings...</div>;
   }
@@ -163,6 +266,8 @@ const AvailabilitySettings = ({ isReadOnly = false }) => {
   if (!availability) {
     return <div className="text-center py-12">Failed to load availability settings</div>;
   }
+
+  const sourceDayInfo = getSourceDayInfo();
 
   return (
     <div data-testid="availability-settings">
@@ -230,9 +335,16 @@ const AvailabilitySettings = ({ isReadOnly = false }) => {
 
       {/* Weekly Schedule */}
       <Card className="p-6 mb-6 bg-white/70 backdrop-blur-xl border border-border/40">
-        <div className="flex items-center gap-2 mb-4">
-          <Calendar size={20} className="text-primary" />
-          <h3 className="text-xl font-serif text-primary">Weekly Schedule</h3>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Calendar size={20} className="text-primary" />
+            <h3 className="text-xl font-serif text-primary">Weekly Schedule</h3>
+          </div>
+          {canUseCopyFeature && (
+            <p className="text-xs text-muted-foreground">
+              Use <Copy size={12} className="inline mx-1" /> to copy a day's schedule to other days
+            </p>
+          )}
         </div>
         <div className="space-y-4">
           {DAYS.map((day) => (
@@ -250,18 +362,39 @@ const AvailabilitySettings = ({ isReadOnly = false }) => {
                     data-testid={`toggle-${day.key}`}
                   />
                   <span className="font-medium text-foreground">{day.label}</span>
+                  {availability[day.key]?.enabled && availability[day.key]?.time_blocks?.length > 0 && (
+                    <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                      {availability[day.key].time_blocks.length} block(s)
+                    </span>
+                  )}
                 </div>
-                {availability[day.key]?.enabled && !isReadOnly && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleAddTimeBlock(day.key)}
-                    data-testid={`add-block-${day.key}`}
-                  >
-                    <Plus size={14} className="mr-1" />
-                    Add Time Block
-                  </Button>
-                )}
+                <div className="flex items-center gap-2">
+                  {/* Copy Day Button - only for therapists, not read-only, and day must be enabled with blocks */}
+                  {canUseCopyFeature && availability[day.key]?.enabled && availability[day.key]?.time_blocks?.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openCopyDialog(day.key)}
+                      className="text-muted-foreground hover:text-primary"
+                      title={`Copy ${day.label}'s schedule to other days`}
+                      data-testid={`copy-day-${day.key}`}
+                    >
+                      <Copy size={14} className="mr-1" />
+                      Copy
+                    </Button>
+                  )}
+                  {availability[day.key]?.enabled && !isReadOnly && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleAddTimeBlock(day.key)}
+                      data-testid={`add-block-${day.key}`}
+                    >
+                      <Plus size={14} className="mr-1" />
+                      Add Time Block
+                    </Button>
+                  )}
+                </div>
               </div>
 
               {availability[day.key]?.enabled && (
@@ -475,6 +608,131 @@ const AvailabilitySettings = ({ isReadOnly = false }) => {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Copy Day Dialog */}
+      <Dialog open={showCopyDialog} onOpenChange={setShowCopyDialog}>
+        <DialogContent data-testid="copy-day-dialog">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-serif text-primary flex items-center gap-2">
+              <Copy size={24} />
+              Copy Day Schedule
+            </DialogTitle>
+          </DialogHeader>
+          
+          {sourceDayInfo && (
+            <div className="space-y-4">
+              {/* Source Day Info */}
+              <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                <p className="font-medium text-foreground mb-2">
+                  Copying from: <span className="text-primary">{sourceDayInfo.label}</span>
+                </p>
+                <div className="text-sm text-muted-foreground space-y-1">
+                  <p>• {sourceDayInfo.blockCount} time block(s)</p>
+                  {sourceDayInfo.blocks.map((block, idx) => (
+                    <p key={idx} className="ml-4">
+                      {block.start_time} - {block.end_time}
+                    </p>
+                  ))}
+                  <p>• Session duration: {availability.session_duration} minutes</p>
+                  <p>• Buffer time: {availability.buffer_time} minutes</p>
+                </div>
+              </div>
+
+              {/* Target Days Selection */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <Label className="text-base">Copy to:</Label>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={selectWeekdays}
+                      className="text-xs"
+                      data-testid="select-weekdays"
+                    >
+                      Weekdays
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={selectAllTargets}
+                      className="text-xs"
+                      data-testid="select-all-days"
+                    >
+                      All Days
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2">
+                  {DAYS.filter(d => d.key !== copySourceDay).map((day) => {
+                    const hasExisting = availability[day.key]?.enabled && availability[day.key]?.time_blocks?.length > 0;
+                    return (
+                      <label
+                        key={day.key}
+                        className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
+                          copyTargetDays[day.key]
+                            ? 'border-primary bg-primary/5'
+                            : 'border-border hover:border-primary/50'
+                        }`}
+                        data-testid={`target-day-${day.key}`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={copyTargetDays[day.key] || false}
+                          onChange={() => toggleTargetDay(day.key)}
+                          className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
+                        />
+                        <div className="flex-1">
+                          <span className="font-medium">{day.label}</span>
+                          {hasExisting && (
+                            <span className="ml-2 text-xs text-warning">(has schedule)</span>
+                          )}
+                        </div>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Warning for overwriting */}
+              {Object.entries(copyTargetDays).some(([day, selected]) => 
+                selected && availability[day]?.enabled && availability[day]?.time_blocks?.length > 0
+              ) && (
+                <div className="p-3 bg-warning/10 border border-warning/30 rounded-lg text-sm text-warning-foreground">
+                  <strong>Note:</strong> Some selected days have existing schedules that will be overwritten.
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex gap-3 pt-2">
+                <Button
+                  onClick={handleCopyDay}
+                  className="flex-1"
+                  disabled={!Object.values(copyTargetDays).some(v => v)}
+                  data-testid="confirm-copy-button"
+                >
+                  <Copy size={16} className="mr-2" />
+                  Copy Schedule
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setShowCopyDialog(false);
+                    setCopySourceDay(null);
+                    setCopyTargetDays({});
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
