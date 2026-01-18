@@ -2057,9 +2057,9 @@ async def get_client(client_id: str, current_user: dict = Depends(require_therap
     )
 
 @api_router.put("/clients/{client_id}", response_model=ClientProfile)
-async def update_client(client_id: str, update_data: ClientProfileUpdate, current_user: dict = Depends(require_active_therapist)):
-    """Update client - must be assigned to current therapist"""
-    therapist_id = current_user["id"]
+async def update_client(client_id: str, update_data: ClientProfileUpdate, current_user: dict = Depends(require_active_therapist_or_assistant)):
+    """Update client - assistant can update non-clinical data but cannot reassign to another therapist"""
+    therapist_id = get_effective_therapist_id(current_user)
     
     # Verify client is assigned to this therapist
     profile = await db.client_profiles.find_one(
@@ -2074,6 +2074,10 @@ async def update_client(client_id: str, update_data: ClientProfileUpdate, curren
         raise HTTPException(status_code=404, detail="Client not found")
     
     update_dict = update_data.model_dump(exclude_unset=True)
+    
+    # Assistants cannot change therapist assignment (reassign clients)
+    if current_user["role"] == "assistant" and "therapist_id" in update_dict:
+        raise HTTPException(status_code=403, detail="Assistants cannot reassign clients to another therapist")
     
     # Separate user fields from profile fields
     user_fields = {}
