@@ -168,6 +168,38 @@ Build a secure, therapist-first web application for managing a therapy practice 
   - `POST /api/admin/therapists/{id}/assign-trial` - Assign 30-day trial
   - `GET /api/admin/therapists/{id}/subscription` - Get subscription details
 
+### Phase 10: Appointment Calendar (COMPLETED - Jan 18, 2026)
+- [x] **Therapist-wise scheduling**:
+  - Each therapist has their own appointment calendar
+  - Appointments filtered by logged-in therapist's ID
+- [x] **Client association**:
+  - Appointments linked to specific clients via client dropdown
+  - Client name displayed on appointment cards
+- [x] **Double-booking prevention**:
+  - Backend validates no overlapping appointments for same therapist
+  - Cancelled appointments free up time slots for rebooking
+  - Adjacent (back-to-back) appointments are allowed
+- [x] **Appointment status management**:
+  - Status options: `scheduled`, `completed`, `cancelled`
+  - Complete appointment via checkmark button or `POST /api/appointments/{id}/complete`
+  - Cancel appointment via X button or `POST /api/appointments/{id}/cancel`
+  - Status badges with color coding (blue=scheduled, green=completed, red=cancelled)
+- [x] **Full CRUD operations**:
+  - Create: `POST /api/appointments` with client_id, start_time, end_time, notes
+  - Read: `GET /api/appointments` (list) and `GET /api/appointments/{id}` (single)
+  - Update: `PUT /api/appointments/{id}` to reschedule time or update notes
+  - Delete: `DELETE /api/appointments/{id}`
+- [x] **Subscription read-only mode respected**:
+  - All write endpoints use `require_active_therapist` dependency
+  - Expired subscription therapists cannot create/update/delete appointments
+  - UI hides action buttons when in read-only mode
+- [x] **UI Features**:
+  - Stats cards: Today's Sessions, Completed, Upcoming counts
+  - Filter by status dropdown (All/Scheduled/Completed/Cancelled)
+  - Appointments grouped by date with date headers
+  - Create/Edit dialogs with datetime-local inputs
+  - Action buttons: Edit (pencil), Complete (checkmark), Cancel (X), Delete (trash)
+
 ---
 
 ## Technical Architecture
