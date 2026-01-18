@@ -8,20 +8,23 @@ import { Label } from './ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { toast } from 'sonner';
-import { Plus, Calendar as CalendarIcon, Clock, User, Edit, Check, X, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Calendar as CalendarIcon, Clock, User, Edit, Check, X, Trash2, ChevronLeft, ChevronRight, Settings } from 'lucide-react';
 
 const AppointmentCalendar = ({ isReadOnly = false }) => {
   const { user } = useAuth();
   const [appointments, setAppointments] = useState([]);
   const [clients, setClients] = useState([]);
+  const [availability, setAvailability] = useState(null);
+  const [availableSlots, setAvailableSlots] = useState([]);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
-  const [viewMode, setViewMode] = useState('list'); // 'list' or 'calendar'
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [bookingMode, setBookingMode] = useState('slots'); // 'slots' or 'manual'
   const [newAppt, setNewAppt] = useState({
     client_id: '',
+    selected_slot: null,
     start_time: '',
     end_time: '',
     notes: '',
@@ -33,19 +36,28 @@ const AppointmentCalendar = ({ isReadOnly = false }) => {
     status: '',
   });
   const [loading, setLoading] = useState(true);
+  const [loadingSlots, setLoadingSlots] = useState(false);
 
   useEffect(() => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    if (selectedDate && user) {
+      fetchAvailableSlots(selectedDate);
+    }
+  }, [selectedDate]);
+
   const fetchData = async () => {
     try {
-      const [apptsRes, clientsRes] = await Promise.all([
+      const [apptsRes, clientsRes, availRes] = await Promise.all([
         axios.get(`${API}/appointments`),
         axios.get(`${API}/clients`),
+        axios.get(`${API}/availability`).catch(() => ({ data: null })),
       ]);
       setAppointments(apptsRes.data.sort((a, b) => new Date(a.start_time) - new Date(b.start_time)));
       setClients(clientsRes.data);
+      setAvailability(availRes.data);
     } catch (error) {
       toast.error('Failed to load appointments');
     } finally {
@@ -53,17 +65,41 @@ const AppointmentCalendar = ({ isReadOnly = false }) => {
     }
   };
 
+  const fetchAvailableSlots = async (date) => {
+    if (!user?.id) return;
+    setLoadingSlots(true);
+    try {
+      const response = await axios.get(`${API}/available-slots/${user.id}?date=${date}`);
+      setAvailableSlots(response.data);
+    } catch (error) {
+      console.error('Failed to fetch available slots:', error);
+      setAvailableSlots([]);
+    } finally {
+      setLoadingSlots(false);
+    }
+  };
+
   const handleCreateAppointment = async (e) => {
     e.preventDefault();
 
-    if (!newAppt.client_id || !newAppt.start_time || !newAppt.end_time) {
-      toast.error('Please fill in all required fields');
+    if (!newAppt.client_id) {
+      toast.error('Please select a client');
       return;
     }
 
-    const startTime = new Date(newAppt.start_time);
-    const endTime = new Date(newAppt.end_time);
-    
+    let startTime, endTime;
+
+    if (bookingMode === 'slots' && newAppt.selected_slot) {
+      startTime = new Date(newAppt.selected_slot.start_time);
+      endTime = new Date(newAppt.selected_slot.end_time);
+    } else if (bookingMode === 'manual' && newAppt.start_time && newAppt.end_time) {
+      startTime = new Date(newAppt.start_time);
+      endTime = new Date(newAppt.end_time);
+    } else {
+      toast.error('Please select a time slot or enter times manually');
+      return;
+    }
+
     if (endTime <= startTime) {
       toast.error('End time must be after start time');
       return;
@@ -78,7 +114,9 @@ const AppointmentCalendar = ({ isReadOnly = false }) => {
       });
       toast.success('Appointment scheduled successfully');
       setShowCreateDialog(false);
-      setNewAppt({ client_id: '', start_time: '', end_time: '', notes: '' });
+      setNewAppt({ client_id: '', selected_slot: null, start_time: '', end_time: '', notes: '' });
+      setSelectedDate('');
+      setAvailableSlots([]);
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to create appointment');
@@ -105,7 +143,6 @@ const AppointmentCalendar = ({ isReadOnly = false }) => {
       updateData.status = editAppt.status;
     }
 
-    // Validate times
     const newStart = editAppt.start_time ? new Date(editAppt.start_time) : new Date(selectedAppointment.start_time);
     const newEnd = editAppt.end_time ? new Date(editAppt.end_time) : new Date(selectedAppointment.end_time);
     
@@ -215,6 +252,12 @@ const AppointmentCalendar = ({ isReadOnly = false }) => {
     return appointments.filter(a => new Date(a.start_time).toDateString() === today);
   };
 
+  const hasAvailabilitySetup = () => {
+    if (!availability) return false;
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    return days.some(day => availability[day]?.enabled && availability[day]?.time_blocks?.length > 0);
+  };
+
   const groupedAppointments = groupAppointmentsByDate();
   const upcomingAppointments = getUpcomingAppointments();
   const todaysAppointments = getTodaysAppointments();
@@ -242,6 +285,21 @@ const AppointmentCalendar = ({ isReadOnly = false }) => {
           </Button>
         )}
       </div>
+
+      {/* Availability Setup Notice */}
+      {!hasAvailabilitySetup() && !isReadOnly && (
+        <Card className="p-4 mb-6 bg-warning/10 border-warning/30">
+          <div className="flex items-center gap-3">
+            <Settings size={20} className="text-warning" />
+            <div className="flex-1">
+              <p className="font-medium text-foreground">Set up your availability</p>
+              <p className="text-sm text-muted-foreground">
+                Define your working hours to enable slot-based booking. Go to Availability settings.
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -422,7 +480,7 @@ const AppointmentCalendar = ({ isReadOnly = false }) => {
 
       {/* Create Appointment Dialog */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent data-testid="create-appointment-dialog">
+        <DialogContent className="max-w-lg" data-testid="create-appointment-dialog">
           <DialogHeader>
             <DialogTitle className="text-2xl font-serif text-primary">
               Schedule Appointment
@@ -447,32 +505,150 @@ const AppointmentCalendar = ({ isReadOnly = false }) => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="start-time">Start Time *</Label>
-                <Input
-                  id="start-time"
-                  type="datetime-local"
-                  data-testid="appointment-start-input"
-                  value={newAppt.start_time}
-                  onChange={(e) => setNewAppt({ ...newAppt, start_time: e.target.value })}
-                  required
-                  className="mt-1"
-                />
+
+            {/* Booking Mode Toggle */}
+            {hasAvailabilitySetup() && (
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={bookingMode === 'slots' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setBookingMode('slots')}
+                  data-testid="booking-mode-slots"
+                >
+                  <Clock size={14} className="mr-1" />
+                  Available Slots
+                </Button>
+                <Button
+                  type="button"
+                  variant={bookingMode === 'manual' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setBookingMode('manual')}
+                  data-testid="booking-mode-manual"
+                >
+                  <CalendarIcon size={14} className="mr-1" />
+                  Manual Entry
+                </Button>
               </div>
-              <div>
-                <Label htmlFor="end-time">End Time *</Label>
-                <Input
-                  id="end-time"
-                  type="datetime-local"
-                  data-testid="appointment-end-input"
-                  value={newAppt.end_time}
-                  onChange={(e) => setNewAppt({ ...newAppt, end_time: e.target.value })}
-                  required
-                  className="mt-1"
-                />
+            )}
+
+            {/* Slot-based booking */}
+            {(bookingMode === 'slots' && hasAvailabilitySetup()) ? (
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="slot-date">Select Date *</Label>
+                  <Input
+                    id="slot-date"
+                    type="date"
+                    min={new Date().toISOString().split('T')[0]}
+                    value={selectedDate}
+                    onChange={(e) => {
+                      setSelectedDate(e.target.value);
+                      setNewAppt({ ...newAppt, selected_slot: null });
+                    }}
+                    className="mt-1"
+                    data-testid="slot-date-input"
+                  />
+                </div>
+
+                {selectedDate && (
+                  <div>
+                    <Label>Available Time Slots</Label>
+                    <div className="mt-2 max-h-48 overflow-y-auto space-y-2">
+                      {loadingSlots ? (
+                        <p className="text-sm text-muted-foreground py-4 text-center">Loading slots...</p>
+                      ) : availableSlots.length > 0 ? (
+                        availableSlots.map((slot, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setNewAppt({ ...newAppt, selected_slot: slot })}
+                            className={`w-full p-3 rounded-lg border text-left transition-all ${
+                              newAppt.selected_slot?.start_time === slot.start_time
+                                ? 'border-primary bg-primary/10 ring-2 ring-primary'
+                                : 'border-border hover:border-primary/50 hover:bg-surface'
+                            }`}
+                            data-testid={`time-slot-${idx}`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Clock size={14} className="text-muted-foreground" />
+                              <span className="font-medium">
+                                {new Date(slot.start_time).toLocaleTimeString([], {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                                {' - '}
+                                {new Date(slot.end_time).toLocaleTimeString([], {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                ({slot.duration_minutes} min)
+                              </span>
+                            </div>
+                          </button>
+                        ))
+                      ) : (
+                        <div className="text-center py-4">
+                          <p className="text-sm text-muted-foreground">No available slots for this date</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Try another date or use manual entry
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {newAppt.selected_slot && (
+                  <div className="p-3 bg-success/10 border border-success/30 rounded-lg">
+                    <p className="text-sm font-medium text-success">Selected slot:</p>
+                    <p className="text-sm">
+                      {new Date(newAppt.selected_slot.start_time).toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        month: 'long',
+                        day: 'numeric',
+                      })}{' '}
+                      at{' '}
+                      {new Date(newAppt.selected_slot.start_time).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </p>
+                  </div>
+                )}
               </div>
-            </div>
+            ) : (
+              /* Manual time entry */
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="start-time">Start Time *</Label>
+                  <Input
+                    id="start-time"
+                    type="datetime-local"
+                    data-testid="appointment-start-input"
+                    value={newAppt.start_time}
+                    onChange={(e) => setNewAppt({ ...newAppt, start_time: e.target.value })}
+                    required={bookingMode === 'manual'}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="end-time">End Time *</Label>
+                  <Input
+                    id="end-time"
+                    type="datetime-local"
+                    data-testid="appointment-end-input"
+                    value={newAppt.end_time}
+                    onChange={(e) => setNewAppt({ ...newAppt, end_time: e.target.value })}
+                    required={bookingMode === 'manual'}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+            )}
+
             <div>
               <Label htmlFor="notes">Notes (optional)</Label>
               <Input
@@ -491,7 +667,11 @@ const AppointmentCalendar = ({ isReadOnly = false }) => {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setShowCreateDialog(false)}
+                onClick={() => {
+                  setShowCreateDialog(false);
+                  setSelectedDate('');
+                  setAvailableSlots([]);
+                }}
                 data-testid="cancel-create-button"
               >
                 Cancel
