@@ -29,12 +29,6 @@ ADMIN_PASSWORD = "admin123"
 class TestAvailabilitySetup:
     """Test availability settings CRUD operations"""
     
-    @pytest.fixture(autouse=True)
-    def setup(self, therapist_token):
-        """Setup for each test"""
-        self.token = therapist_token
-        self.headers = {"Authorization": f"Bearer {self.token}"}
-    
     def test_get_default_availability(self, therapist_token):
         """P0-1: Get default availability settings for therapist"""
         headers = {"Authorization": f"Bearer {therapist_token}"}
@@ -63,6 +57,10 @@ class TestAvailabilitySetup:
         """P0-2: Therapist can set session duration"""
         headers = {"Authorization": f"Bearer {therapist_token}"}
         
+        # Get current value
+        current = requests.get(f"{BASE_URL}/api/availability", headers=headers).json()
+        original_duration = current["session_duration"]
+        
         # Set session duration to 45 minutes
         response = requests.put(
             f"{BASE_URL}/api/availability",
@@ -79,12 +77,16 @@ class TestAvailabilitySetup:
         assert get_response.status_code == 200
         assert get_response.json()["session_duration"] == 45
         
-        # Reset to 60 minutes
-        requests.put(f"{BASE_URL}/api/availability", headers=headers, json={"session_duration": 60})
+        # Reset to original
+        requests.put(f"{BASE_URL}/api/availability", headers=headers, json={"session_duration": original_duration})
     
     def test_update_buffer_time(self, therapist_token):
         """P0-3: Therapist can set buffer time between appointments"""
         headers = {"Authorization": f"Bearer {therapist_token}"}
+        
+        # Get current value
+        current = requests.get(f"{BASE_URL}/api/availability", headers=headers).json()
+        original_buffer = current["buffer_time"]
         
         # Set buffer time to 15 minutes
         response = requests.put(
@@ -102,19 +104,19 @@ class TestAvailabilitySetup:
         assert get_response.status_code == 200
         assert get_response.json()["buffer_time"] == 15
         
-        # Reset to 0
-        requests.put(f"{BASE_URL}/api/availability", headers=headers, json={"buffer_time": 0})
+        # Reset to original
+        requests.put(f"{BASE_URL}/api/availability", headers=headers, json={"buffer_time": original_buffer})
     
     def test_enable_day_with_time_blocks(self, therapist_token):
         """P0-1: Therapist can define weekly working hours with multiple time blocks per day"""
         headers = {"Authorization": f"Bearer {therapist_token}"}
         
-        # Enable Monday with two time blocks (morning and afternoon)
+        # Enable Thursday with two time blocks (morning and afternoon)
         response = requests.put(
             f"{BASE_URL}/api/availability",
             headers=headers,
             json={
-                "monday": {
+                "thursday": {
                     "enabled": True,
                     "time_blocks": [
                         {"start_time": "09:00", "end_time": "12:00"},
@@ -126,26 +128,34 @@ class TestAvailabilitySetup:
         
         assert response.status_code == 200
         data = response.json()
-        assert data["monday"]["enabled"] == True
-        assert len(data["monday"]["time_blocks"]) == 2
-        assert data["monday"]["time_blocks"][0]["start_time"] == "09:00"
-        assert data["monday"]["time_blocks"][0]["end_time"] == "12:00"
-        assert data["monday"]["time_blocks"][1]["start_time"] == "14:00"
-        assert data["monday"]["time_blocks"][1]["end_time"] == "18:00"
+        assert data["thursday"]["enabled"] == True
+        assert len(data["thursday"]["time_blocks"]) == 2
+        assert data["thursday"]["time_blocks"][0]["start_time"] == "09:00"
+        assert data["thursday"]["time_blocks"][0]["end_time"] == "12:00"
+        assert data["thursday"]["time_blocks"][1]["start_time"] == "14:00"
+        assert data["thursday"]["time_blocks"][1]["end_time"] == "18:00"
+        
+        # Cleanup - disable Thursday
+        requests.put(f"{BASE_URL}/api/availability", headers=headers, json={
+            "thursday": {"enabled": False, "time_blocks": []}
+        })
     
     def test_update_multiple_days(self, therapist_token):
         """P0-1: Update multiple days at once"""
         headers = {"Authorization": f"Bearer {therapist_token}"}
         
+        # Save original state
+        original = requests.get(f"{BASE_URL}/api/availability", headers=headers).json()
+        
         response = requests.put(
             f"{BASE_URL}/api/availability",
             headers=headers,
             json={
-                "tuesday": {
+                "friday": {
                     "enabled": True,
                     "time_blocks": [{"start_time": "10:00", "end_time": "16:00"}]
                 },
-                "wednesday": {
+                "saturday": {
                     "enabled": True,
                     "time_blocks": [{"start_time": "08:00", "end_time": "14:00"}]
                 }
@@ -154,8 +164,14 @@ class TestAvailabilitySetup:
         
         assert response.status_code == 200
         data = response.json()
-        assert data["tuesday"]["enabled"] == True
-        assert data["wednesday"]["enabled"] == True
+        assert data["friday"]["enabled"] == True
+        assert data["saturday"]["enabled"] == True
+        
+        # Cleanup - restore original
+        requests.put(f"{BASE_URL}/api/availability", headers=headers, json={
+            "friday": original["friday"],
+            "saturday": original["saturday"]
+        })
     
     def test_session_duration_validation(self, therapist_token):
         """P0-2: Session duration must be between 15 and 240 minutes"""
@@ -206,7 +222,7 @@ class TestBlockedTimes:
         headers = {"Authorization": f"Bearer {therapist_token}"}
         
         # Block a future date
-        future_date = datetime.now() + timedelta(days=30)
+        future_date = datetime.now() + timedelta(days=60)
         start_dt = future_date.replace(hour=9, minute=0, second=0, microsecond=0)
         end_dt = future_date.replace(hour=17, minute=0, second=0, microsecond=0)
         
@@ -227,8 +243,8 @@ class TestBlockedTimes:
         assert data["reason"] == "TEST_Vacation"
         assert data["is_all_day"] == False
         
-        # Store for cleanup
-        return data["id"]
+        # Cleanup
+        requests.delete(f"{BASE_URL}/api/blocked-times/{data['id']}", headers=headers)
     
     def test_get_blocked_times(self, therapist_token):
         """P0-5: Get all blocked times for therapist"""
@@ -245,7 +261,7 @@ class TestBlockedTimes:
         headers = {"Authorization": f"Bearer {therapist_token}"}
         
         # First create a blocked time
-        future_date = datetime.now() + timedelta(days=45)
+        future_date = datetime.now() + timedelta(days=65)
         start_dt = future_date.replace(hour=9, minute=0, second=0, microsecond=0)
         end_dt = future_date.replace(hour=17, minute=0, second=0, microsecond=0)
         
@@ -299,12 +315,20 @@ class TestBlockedTimes:
 class TestAvailableSlots:
     """Test available slot generation"""
     
-    @pytest.fixture(autouse=True)
-    def setup_availability(self, therapist_token, therapist_id):
-        """Setup availability for slot tests"""
+    def test_generate_slots_for_enabled_day(self, therapist_token, therapist_id):
+        """P0-4: System generates available slots based on availability settings"""
         headers = {"Authorization": f"Bearer {therapist_token}"}
         
-        # Set up Monday with 9AM-5PM, 60-min sessions, no buffer
+        # Use a far future date to avoid conflicts with existing appointments
+        # Find a Monday 8 weeks from now
+        today = datetime.now()
+        days_until_monday = (7 - today.weekday()) % 7
+        if days_until_monday == 0:
+            days_until_monday = 7
+        future_monday = today + timedelta(days=days_until_monday + 56)  # 8 weeks out
+        date_str = future_monday.strftime("%Y-%m-%d")
+        
+        # First set up clean availability for Monday
         requests.put(
             f"{BASE_URL}/api/availability",
             headers=headers,
@@ -318,21 +342,6 @@ class TestAvailableSlots:
             }
         )
         
-        self.therapist_id = therapist_id
-        self.headers = headers
-    
-    def test_generate_slots_for_enabled_day(self, therapist_token, therapist_id):
-        """P0-4: System generates available slots based on availability settings"""
-        headers = {"Authorization": f"Bearer {therapist_token}"}
-        
-        # Find next Monday
-        today = datetime.now()
-        days_until_monday = (7 - today.weekday()) % 7
-        if days_until_monday == 0:
-            days_until_monday = 7  # Next Monday, not today
-        next_monday = today + timedelta(days=days_until_monday)
-        date_str = next_monday.strftime("%Y-%m-%d")
-        
         response = requests.get(
             f"{BASE_URL}/api/available-slots/{therapist_id}?date={date_str}",
             headers=headers
@@ -342,7 +351,7 @@ class TestAvailableSlots:
         slots = response.json()
         
         # With 9AM-5PM (8 hours) and 60-min sessions, should have 8 slots
-        assert len(slots) == 8
+        assert len(slots) == 8, f"Expected 8 slots, got {len(slots)} for date {date_str}"
         
         # Verify slot structure
         for slot in slots:
@@ -355,7 +364,7 @@ class TestAvailableSlots:
         """P0-4: No slots generated for disabled days"""
         headers = {"Authorization": f"Bearer {therapist_token}"}
         
-        # Disable Sunday
+        # Ensure Sunday is disabled
         requests.put(
             f"{BASE_URL}/api/availability",
             headers=headers,
@@ -364,13 +373,13 @@ class TestAvailableSlots:
             }
         )
         
-        # Find next Sunday
+        # Find a Sunday 8 weeks from now
         today = datetime.now()
         days_until_sunday = (6 - today.weekday()) % 7
         if days_until_sunday == 0:
             days_until_sunday = 7
-        next_sunday = today + timedelta(days=days_until_sunday)
-        date_str = next_sunday.strftime("%Y-%m-%d")
+        future_sunday = today + timedelta(days=days_until_sunday + 56)
+        date_str = future_sunday.strftime("%Y-%m-%d")
         
         response = requests.get(
             f"{BASE_URL}/api/available-slots/{therapist_id}?date={date_str}",
@@ -385,27 +394,27 @@ class TestAvailableSlots:
         """P0-3: Buffer time affects slot generation"""
         headers = {"Authorization": f"Bearer {therapist_token}"}
         
-        # Set 60-min sessions with 15-min buffer
+        # Find a Tuesday 8 weeks from now
+        today = datetime.now()
+        days_until_tuesday = (1 - today.weekday()) % 7
+        if days_until_tuesday == 0:
+            days_until_tuesday = 7
+        future_tuesday = today + timedelta(days=days_until_tuesday + 56)
+        date_str = future_tuesday.strftime("%Y-%m-%d")
+        
+        # Set 60-min sessions with 15-min buffer on Tuesday
         requests.put(
             f"{BASE_URL}/api/availability",
             headers=headers,
             json={
                 "session_duration": 60,
                 "buffer_time": 15,
-                "monday": {
+                "tuesday": {
                     "enabled": True,
                     "time_blocks": [{"start_time": "09:00", "end_time": "17:00"}]
                 }
             }
         )
-        
-        # Find next Monday
-        today = datetime.now()
-        days_until_monday = (7 - today.weekday()) % 7
-        if days_until_monday == 0:
-            days_until_monday = 7
-        next_monday = today + timedelta(days=days_until_monday)
-        date_str = next_monday.strftime("%Y-%m-%d")
         
         response = requests.get(
             f"{BASE_URL}/api/available-slots/{therapist_id}?date={date_str}",
@@ -415,11 +424,9 @@ class TestAvailableSlots:
         assert response.status_code == 200
         slots = response.json()
         
-        # With 8 hours, 60-min sessions + 15-min buffer (75 min total), should have ~6 slots
+        # With 8 hours, 60-min sessions + 15-min buffer (75 min total), should have 6 slots
         # 9:00-10:00, 10:15-11:15, 11:30-12:30, 12:45-13:45, 14:00-15:00, 15:15-16:15
-        # Last possible: 16:00-17:00 (starts at 16:00 after 15:15+60+15=16:30 - doesn't fit)
-        # Actually: 480 min / 75 min = 6.4, so 6 slots
-        assert len(slots) >= 6
+        assert len(slots) == 6, f"Expected 6 slots with buffer, got {len(slots)}"
         
         # Reset buffer
         requests.put(f"{BASE_URL}/api/availability", headers=headers, json={"buffer_time": 0})
@@ -428,27 +435,27 @@ class TestAvailableSlots:
         """P0-2: Different session durations generate different number of slots"""
         headers = {"Authorization": f"Bearer {therapist_token}"}
         
-        # Set 45-min sessions
+        # Find a Wednesday 8 weeks from now
+        today = datetime.now()
+        days_until_wednesday = (2 - today.weekday()) % 7
+        if days_until_wednesday == 0:
+            days_until_wednesday = 7
+        future_wednesday = today + timedelta(days=days_until_wednesday + 56)
+        date_str = future_wednesday.strftime("%Y-%m-%d")
+        
+        # Set 45-min sessions on Wednesday
         requests.put(
             f"{BASE_URL}/api/availability",
             headers=headers,
             json={
                 "session_duration": 45,
                 "buffer_time": 0,
-                "monday": {
+                "wednesday": {
                     "enabled": True,
                     "time_blocks": [{"start_time": "09:00", "end_time": "17:00"}]
                 }
             }
         )
-        
-        # Find next Monday
-        today = datetime.now()
-        days_until_monday = (7 - today.weekday()) % 7
-        if days_until_monday == 0:
-            days_until_monday = 7
-        next_monday = today + timedelta(days=days_until_monday)
-        date_str = next_monday.strftime("%Y-%m-%d")
         
         response = requests.get(
             f"{BASE_URL}/api/available-slots/{therapist_id}?date={date_str}",
@@ -459,7 +466,7 @@ class TestAvailableSlots:
         slots = response.json()
         
         # With 8 hours (480 min) and 45-min sessions, should have 10 slots (480/45 = 10.67)
-        assert len(slots) == 10
+        assert len(slots) == 10, f"Expected 10 slots with 45-min duration, got {len(slots)}"
         
         for slot in slots:
             assert slot["duration_minutes"] == 45
@@ -500,38 +507,40 @@ class TestBlockedTimesPreventSlots:
         """P0-6: Blocked times prevent slot generation"""
         headers = {"Authorization": f"Bearer {therapist_token}"}
         
-        # Setup Monday availability
+        # Find a Thursday 8 weeks from now
+        today = datetime.now()
+        days_until_thursday = (3 - today.weekday()) % 7
+        if days_until_thursday == 0:
+            days_until_thursday = 7
+        future_thursday = today + timedelta(days=days_until_thursday + 56)
+        date_str = future_thursday.strftime("%Y-%m-%d")
+        
+        # Setup Thursday availability
         requests.put(
             f"{BASE_URL}/api/availability",
             headers=headers,
             json={
                 "session_duration": 60,
                 "buffer_time": 0,
-                "monday": {
+                "thursday": {
                     "enabled": True,
                     "time_blocks": [{"start_time": "09:00", "end_time": "17:00"}]
                 }
             }
         )
         
-        # Find next Monday
-        today = datetime.now()
-        days_until_monday = (7 - today.weekday()) % 7
-        if days_until_monday == 0:
-            days_until_monday = 7
-        next_monday = today + timedelta(days=days_until_monday)
-        date_str = next_monday.strftime("%Y-%m-%d")
-        
         # Get initial slots count
         initial_response = requests.get(
             f"{BASE_URL}/api/available-slots/{therapist_id}?date={date_str}",
             headers=headers
         )
+        assert initial_response.status_code == 200
         initial_slots = len(initial_response.json())
+        assert initial_slots == 8, f"Expected 8 initial slots, got {initial_slots}"
         
-        # Block 10AM-12PM on that Monday
-        block_start = next_monday.replace(hour=10, minute=0, second=0, microsecond=0)
-        block_end = next_monday.replace(hour=12, minute=0, second=0, microsecond=0)
+        # Block 10AM-12PM on that Thursday
+        block_start = future_thursday.replace(hour=10, minute=0, second=0, microsecond=0)
+        block_end = future_thursday.replace(hour=12, minute=0, second=0, microsecond=0)
         
         block_response = requests.post(
             f"{BASE_URL}/api/blocked-times",
@@ -551,14 +560,18 @@ class TestBlockedTimesPreventSlots:
             f"{BASE_URL}/api/available-slots/{therapist_id}?date={date_str}",
             headers=headers
         )
+        assert after_response.status_code == 200
         after_slots = len(after_response.json())
         
         # Should have 2 fewer slots (10AM and 11AM blocked)
-        assert after_slots < initial_slots
-        assert after_slots == initial_slots - 2
+        assert after_slots < initial_slots, f"Expected fewer slots after blocking, got {after_slots} vs {initial_slots}"
+        assert after_slots == initial_slots - 2, f"Expected {initial_slots - 2} slots, got {after_slots}"
         
-        # Cleanup - delete the blocked time
+        # Cleanup - delete the blocked time and disable Thursday
         requests.delete(f"{BASE_URL}/api/blocked-times/{block_id}", headers=headers)
+        requests.put(f"{BASE_URL}/api/availability", headers=headers, json={
+            "thursday": {"enabled": False, "time_blocks": []}
+        })
 
 
 class TestBookedAppointmentsPreventSlots:
@@ -568,27 +581,27 @@ class TestBookedAppointmentsPreventSlots:
         """P0-7: Booked appointments prevent double-booking on slot generation"""
         headers = {"Authorization": f"Bearer {therapist_token}"}
         
-        # Setup Monday availability
+        # Find a Friday 8 weeks from now
+        today = datetime.now()
+        days_until_friday = (4 - today.weekday()) % 7
+        if days_until_friday == 0:
+            days_until_friday = 7
+        future_friday = today + timedelta(days=days_until_friday + 56)
+        date_str = future_friday.strftime("%Y-%m-%d")
+        
+        # Setup Friday availability
         requests.put(
             f"{BASE_URL}/api/availability",
             headers=headers,
             json={
                 "session_duration": 60,
                 "buffer_time": 0,
-                "monday": {
+                "friday": {
                     "enabled": True,
                     "time_blocks": [{"start_time": "09:00", "end_time": "17:00"}]
                 }
             }
         )
-        
-        # Find next Monday
-        today = datetime.now()
-        days_until_monday = (7 - today.weekday()) % 7
-        if days_until_monday == 0:
-            days_until_monday = 7
-        next_monday = today + timedelta(days=days_until_monday)
-        date_str = next_monday.strftime("%Y-%m-%d")
         
         # Get a client to book with
         clients_response = requests.get(f"{BASE_URL}/api/clients", headers=headers)
@@ -604,11 +617,13 @@ class TestBookedAppointmentsPreventSlots:
             f"{BASE_URL}/api/available-slots/{therapist_id}?date={date_str}",
             headers=headers
         )
+        assert initial_response.status_code == 200
         initial_slots = len(initial_response.json())
+        assert initial_slots == 8, f"Expected 8 initial slots, got {initial_slots}"
         
         # Book an appointment at 10AM
-        appt_start = next_monday.replace(hour=10, minute=0, second=0, microsecond=0)
-        appt_end = next_monday.replace(hour=11, minute=0, second=0, microsecond=0)
+        appt_start = future_friday.replace(hour=10, minute=0, second=0, microsecond=0)
+        appt_end = future_friday.replace(hour=11, minute=0, second=0, microsecond=0)
         
         appt_response = requests.post(
             f"{BASE_URL}/api/appointments",
@@ -628,13 +643,17 @@ class TestBookedAppointmentsPreventSlots:
             f"{BASE_URL}/api/available-slots/{therapist_id}?date={date_str}",
             headers=headers
         )
+        assert after_response.status_code == 200
         after_slots = len(after_response.json())
         
         # Should have 1 fewer slot (10AM booked)
-        assert after_slots == initial_slots - 1
+        assert after_slots == initial_slots - 1, f"Expected {initial_slots - 1} slots, got {after_slots}"
         
-        # Cleanup - delete the appointment
+        # Cleanup - delete the appointment and disable Friday
         requests.delete(f"{BASE_URL}/api/appointments/{appt_id}", headers=headers)
+        requests.put(f"{BASE_URL}/api/availability", headers=headers, json={
+            "friday": {"enabled": False, "time_blocks": []}
+        })
 
 
 class TestSlotBasedBooking:
@@ -644,27 +663,27 @@ class TestSlotBasedBooking:
         """P0-8: Slot-based booking works end-to-end"""
         headers = {"Authorization": f"Bearer {therapist_token}"}
         
-        # Setup Monday availability
+        # Find a Saturday 8 weeks from now
+        today = datetime.now()
+        days_until_saturday = (5 - today.weekday()) % 7
+        if days_until_saturday == 0:
+            days_until_saturday = 7
+        future_saturday = today + timedelta(days=days_until_saturday + 56)
+        date_str = future_saturday.strftime("%Y-%m-%d")
+        
+        # Setup Saturday availability
         requests.put(
             f"{BASE_URL}/api/availability",
             headers=headers,
             json={
                 "session_duration": 60,
                 "buffer_time": 0,
-                "monday": {
+                "saturday": {
                     "enabled": True,
                     "time_blocks": [{"start_time": "09:00", "end_time": "17:00"}]
                 }
             }
         )
-        
-        # Find next Monday
-        today = datetime.now()
-        days_until_monday = (7 - today.weekday()) % 7
-        if days_until_monday == 0:
-            days_until_monday = 7
-        next_monday = today + timedelta(days=days_until_monday)
-        date_str = next_monday.strftime("%Y-%m-%d")
         
         # Get available slots
         slots_response = requests.get(
@@ -673,7 +692,7 @@ class TestSlotBasedBooking:
         )
         assert slots_response.status_code == 200
         slots = slots_response.json()
-        assert len(slots) > 0
+        assert len(slots) > 0, "No slots available for booking test"
         
         # Get a client
         clients_response = requests.get(f"{BASE_URL}/api/clients", headers=headers)
@@ -708,65 +727,13 @@ class TestSlotBasedBooking:
         ).json()
         
         slot_times = [s["start_time"] for s in slots_after]
-        assert first_slot["start_time"] not in slot_times
+        assert first_slot["start_time"] not in slot_times, "Booked slot should not be available"
         
         # Cleanup
         requests.delete(f"{BASE_URL}/api/appointments/{appt_data['id']}", headers=headers)
-
-
-class TestReadOnlyMode:
-    """Test read-only mode for availability settings"""
-    
-    def test_expired_therapist_cannot_update_availability(self, expired_therapist_token):
-        """P0-9: Read-only mode respected for availability settings"""
-        if not expired_therapist_token:
-            pytest.skip("No expired therapist available for test")
-        
-        headers = {"Authorization": f"Bearer {expired_therapist_token}"}
-        
-        # Try to update availability - should fail
-        response = requests.put(
-            f"{BASE_URL}/api/availability",
-            headers=headers,
-            json={"session_duration": 45}
-        )
-        
-        assert response.status_code == 403
-        assert "read-only" in response.json().get("detail", "").lower() or "expired" in response.json().get("detail", "").lower()
-    
-    def test_expired_therapist_cannot_create_blocked_time(self, expired_therapist_token):
-        """P0-9: Expired therapist cannot create blocked times"""
-        if not expired_therapist_token:
-            pytest.skip("No expired therapist available for test")
-        
-        headers = {"Authorization": f"Bearer {expired_therapist_token}"}
-        
-        future_date = datetime.now() + timedelta(days=30)
-        
-        response = requests.post(
-            f"{BASE_URL}/api/blocked-times",
-            headers=headers,
-            json={
-                "start_datetime": future_date.isoformat(),
-                "end_datetime": (future_date + timedelta(hours=8)).isoformat(),
-                "reason": "Test",
-                "is_all_day": False
-            }
-        )
-        
-        assert response.status_code == 403
-    
-    def test_expired_therapist_can_read_availability(self, expired_therapist_token):
-        """P0-9: Expired therapist can still read availability"""
-        if not expired_therapist_token:
-            pytest.skip("No expired therapist available for test")
-        
-        headers = {"Authorization": f"Bearer {expired_therapist_token}"}
-        
-        response = requests.get(f"{BASE_URL}/api/availability", headers=headers)
-        
-        # Should be able to read
-        assert response.status_code == 200
+        requests.put(f"{BASE_URL}/api/availability", headers=headers, json={
+            "saturday": {"enabled": False, "time_blocks": []}
+        })
 
 
 class TestMultipleTimeBlocks:
@@ -776,14 +743,22 @@ class TestMultipleTimeBlocks:
         """P0-1: Multiple time blocks per day generate correct slots"""
         headers = {"Authorization": f"Bearer {therapist_token}"}
         
-        # Setup Monday with morning and afternoon blocks
+        # Find a Sunday 8 weeks from now
+        today = datetime.now()
+        days_until_sunday = (6 - today.weekday()) % 7
+        if days_until_sunday == 0:
+            days_until_sunday = 7
+        future_sunday = today + timedelta(days=days_until_sunday + 56)
+        date_str = future_sunday.strftime("%Y-%m-%d")
+        
+        # Setup Sunday with morning and afternoon blocks
         requests.put(
             f"{BASE_URL}/api/availability",
             headers=headers,
             json={
                 "session_duration": 60,
                 "buffer_time": 0,
-                "monday": {
+                "sunday": {
                     "enabled": True,
                     "time_blocks": [
                         {"start_time": "09:00", "end_time": "12:00"},  # 3 hours = 3 slots
@@ -792,14 +767,6 @@ class TestMultipleTimeBlocks:
                 }
             }
         )
-        
-        # Find next Monday
-        today = datetime.now()
-        days_until_monday = (7 - today.weekday()) % 7
-        if days_until_monday == 0:
-            days_until_monday = 7
-        next_monday = today + timedelta(days=days_until_monday)
-        date_str = next_monday.strftime("%Y-%m-%d")
         
         response = requests.get(
             f"{BASE_URL}/api/available-slots/{therapist_id}?date={date_str}",
@@ -810,12 +777,50 @@ class TestMultipleTimeBlocks:
         slots = response.json()
         
         # Should have 6 slots total (3 morning + 3 afternoon)
-        assert len(slots) == 6
+        assert len(slots) == 6, f"Expected 6 slots for multiple time blocks, got {len(slots)}"
         
         # Verify no slots during lunch break (12:00-14:00)
         for slot in slots:
             slot_hour = datetime.fromisoformat(slot["start_time"].replace('Z', '+00:00')).hour
-            assert slot_hour not in [12, 13]  # No slots during lunch
+            assert slot_hour not in [12, 13], f"Found slot during lunch break at hour {slot_hour}"
+        
+        # Cleanup - disable Sunday
+        requests.put(f"{BASE_URL}/api/availability", headers=headers, json={
+            "sunday": {"enabled": False, "time_blocks": []}
+        })
+
+
+class TestPublicAvailability:
+    """Test public availability endpoint"""
+    
+    def test_get_therapist_public_availability(self, therapist_token, therapist_id):
+        """Test public availability endpoint returns correct data"""
+        headers = {"Authorization": f"Bearer {therapist_token}"}
+        
+        # First set up some availability
+        requests.put(
+            f"{BASE_URL}/api/availability",
+            headers=headers,
+            json={
+                "session_duration": 60,
+                "monday": {
+                    "enabled": True,
+                    "time_blocks": [{"start_time": "09:00", "end_time": "17:00"}]
+                }
+            }
+        )
+        
+        # Get public availability
+        response = requests.get(
+            f"{BASE_URL}/api/therapist/{therapist_id}/availability",
+            headers=headers
+        )
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert "session_duration" in data
+        assert "available_days" in data
+        assert "monday" in data["available_days"]
 
 
 # ============= FIXTURES =============
@@ -843,14 +848,6 @@ def therapist_id(therapist_token):
 
 
 @pytest.fixture(scope="module")
-def expired_therapist_token():
-    """Get token for expired therapist (if available)"""
-    # Try to find an expired therapist or return None
-    # For now, return None as we don't have an expired therapist in test data
-    return None
-
-
-@pytest.fixture(scope="module")
 def admin_token():
     """Get super admin token"""
     response = requests.post(
@@ -868,8 +865,9 @@ def cleanup_test_data(therapist_token):
     """Cleanup test data after all tests"""
     yield
     
-    # Cleanup blocked times with TEST_ prefix
     headers = {"Authorization": f"Bearer {therapist_token}"}
+    
+    # Cleanup blocked times with TEST_ prefix
     blocked_response = requests.get(f"{BASE_URL}/api/blocked-times", headers=headers)
     if blocked_response.status_code == 200:
         for block in blocked_response.json():
@@ -882,3 +880,32 @@ def cleanup_test_data(therapist_token):
         for appt in appts_response.json():
             if appt.get("notes", "").startswith("TEST_"):
                 requests.delete(f"{BASE_URL}/api/appointments/{appt['id']}", headers=headers)
+    
+    # Reset availability to original state (Monday enabled with 9-12, 14-17)
+    requests.put(
+        f"{BASE_URL}/api/availability",
+        headers=headers,
+        json={
+            "session_duration": 60,
+            "buffer_time": 0,
+            "monday": {
+                "enabled": True,
+                "time_blocks": [
+                    {"start_time": "09:00", "end_time": "12:00"},
+                    {"start_time": "14:00", "end_time": "17:00"}
+                ]
+            },
+            "tuesday": {
+                "enabled": True,
+                "time_blocks": [{"start_time": "10:00", "end_time": "16:00"}]
+            },
+            "wednesday": {
+                "enabled": True,
+                "time_blocks": [{"start_time": "08:00", "end_time": "14:00"}]
+            },
+            "thursday": {"enabled": False, "time_blocks": []},
+            "friday": {"enabled": False, "time_blocks": []},
+            "saturday": {"enabled": False, "time_blocks": []},
+            "sunday": {"enabled": False, "time_blocks": []}
+        }
+    )
