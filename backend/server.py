@@ -2601,8 +2601,12 @@ async def get_available_slots(therapist_id: str, date: str, current_user: dict =
         current_start_ist = datetime.combine(target_date, block_start).replace(tzinfo=IST)
         block_end_ist = datetime.combine(target_date, block_end).replace(tzinfo=IST)
         
-        while current_start + timedelta(minutes=session_duration) <= block_end_dt:
-            slot_end = current_start + timedelta(minutes=session_duration)
+        while current_start_ist + timedelta(minutes=session_duration) <= block_end_ist:
+            slot_end_ist = current_start_ist + timedelta(minutes=session_duration)
+            
+            # Convert to UTC for comparison with stored appointments/blocks
+            current_start_utc = current_start_ist.astimezone(timezone.utc)
+            slot_end_utc = slot_end_ist.astimezone(timezone.utc)
             
             # Check if this slot overlaps with any existing appointment
             is_booked = False
@@ -2619,7 +2623,7 @@ async def get_available_slots(therapist_id: str, date: str, current_user: dict =
                 else:
                     appt_end = datetime.fromisoformat(appt_end_str).replace(tzinfo=timezone.utc)
                 
-                if current_start < appt_end and slot_end > appt_start:
+                if current_start_utc < appt_end and slot_end_utc > appt_start:
                     is_booked = True
                     break
             
@@ -2638,23 +2642,23 @@ async def get_available_slots(therapist_id: str, date: str, current_user: dict =
                 else:
                     bt_end = datetime.fromisoformat(bt_end_str).replace(tzinfo=timezone.utc)
                 
-                if current_start < bt_end and slot_end > bt_start:
+                if current_start_utc < bt_end and slot_end_utc > bt_start:
                     is_blocked = True
                     break
             
-            # Don't show slots that have already passed today
-            now = datetime.now(timezone.utc)
-            is_past = current_start <= now
+            # Don't show slots that have already passed today (compare in IST)
+            is_past = current_start_ist <= now_ist
             
             if not is_booked and not is_blocked and not is_past:
+                # Return slots in UTC (frontend will convert to IST for display)
                 available_slots.append(AvailableSlot(
-                    start_time=current_start,
-                    end_time=slot_end,
+                    start_time=current_start_utc,
+                    end_time=slot_end_utc,
                     duration_minutes=session_duration
                 ))
             
-            # Move to next slot (session + buffer)
-            current_start = slot_end + timedelta(minutes=buffer_time)
+            # Move to next slot (session + buffer) in IST
+            current_start_ist = slot_end_ist + timedelta(minutes=buffer_time)
     
     return available_slots
 
