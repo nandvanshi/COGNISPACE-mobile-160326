@@ -142,6 +142,32 @@ Build a secure, therapist-first web application for managing a therapy practice 
   - Clear button (X) to reset search
   - Empty state message when no results match
 
+### Phase 9: P0 Subscription Management (COMPLETED - Jan 18, 2026)
+- [x] **Automatic trial subscription for new therapists**:
+  - Manual creation via `POST /api/admin/therapists/create` assigns 30-day trial
+  - Approved applications via `POST /api/admin/therapist-applications/{id}/approve` assigns 30-day trial
+  - UI shows info message: "New therapists automatically receive a 30-day trial subscription"
+- [x] **Startup migration for existing therapists**:
+  - Backend `@app.on_event("startup")` automatically migrates therapists without subscriptions
+  - Assigns 30-day free trial to any therapist missing subscription_status
+- [x] **Super Admin subscription management UI**:
+  - Subscription dialog accessible via "Subscription" button on each therapist card
+  - **Assign Free Trial**: One-click 30-day trial assignment
+  - **Assign Subscription Plan**: Dropdown with all available plans (Basic, Silver, etc.)
+  - **Extend Subscription**: Add extra days to current subscription end date
+- [x] **Subscription changes persist immediately**:
+  - Therapist profiles update instantly after subscription changes
+  - Subscription badges show status (trial/active/expired) and plan name
+  - Days remaining displayed with color coding (green/warning/expired)
+- [x] **Fix Missing Subscriptions button**:
+  - `POST /api/admin/migrate-subscriptions` endpoint
+  - Bulk assigns trial subscriptions to all therapists without one
+- [x] **Backend endpoints verified**:
+  - `POST /api/admin/therapists/{id}/assign-subscription` - Assign plan
+  - `POST /api/admin/therapists/{id}/extend-subscription` - Extend by days
+  - `POST /api/admin/therapists/{id}/assign-trial` - Assign 30-day trial
+  - `GET /api/admin/therapists/{id}/subscription` - Get subscription details
+
 ---
 
 ## Technical Architecture
