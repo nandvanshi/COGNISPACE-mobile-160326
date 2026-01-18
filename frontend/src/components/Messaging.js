@@ -135,7 +135,6 @@ const Messaging = ({ isReadOnly = false }) => {
   const handleToggleClientMessaging = async (clientId, enabled) => {
     try {
       await axios.put(`${API}/clients/${clientId}/messaging`, {
-        client_id: clientId,
         messaging_enabled: enabled,
       });
       setClientMessagingSettings(prev => ({
