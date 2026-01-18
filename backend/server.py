@@ -2883,13 +2883,13 @@ async def toggle_client_messaging(
 @api_router.get("/clients/{client_id}/messaging-status")
 async def get_client_messaging_status(client_id: str, current_user: dict = Depends(require_therapist)):
     """Get messaging status for a specific client"""
-    client = await db.clients.find_one({"id": client_id}, {"_id": 0, "messaging_enabled": 1, "full_name": 1})
-    if not client:
+    profile = await db.client_profiles.find_one({"user_id": client_id}, {"_id": 0, "messaging_enabled": 1})
+    if not profile:
         raise HTTPException(status_code=404, detail="Client not found")
     
     return {
         "client_id": client_id,
-        "messaging_enabled": client.get("messaging_enabled", True)
+        "messaging_enabled": profile.get("messaging_enabled", True)
     }
 
 # ============= ASSESSMENT ENDPOINTS =============
