@@ -133,6 +133,14 @@ function App() {
               }
             />
             <Route
+              path="/assistant/*"
+              element={
+                <ProtectedRoute allowedRoles={['assistant']}>
+                  <AssistantDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/admin/*"
               element={
                 <ProtectedRoute allowedRoles={['super_admin']}>
