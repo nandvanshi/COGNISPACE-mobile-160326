@@ -115,9 +115,9 @@ class TestAppointmentCRUD:
     
     def test_create_appointment(self, therapist_headers, client_id):
         """Test creating a new appointment"""
-        # Schedule appointment for tomorrow to avoid conflicts
-        tomorrow = datetime.now() + timedelta(days=1)
-        start_time = tomorrow.replace(hour=10, minute=0, second=0, microsecond=0)
+        # Schedule appointment far in the future with unique time to avoid conflicts
+        future_date = datetime.now() + timedelta(days=50)
+        start_time = future_date.replace(hour=8, minute=30, second=0, microsecond=0)
         end_time = start_time + timedelta(hours=1)
         
         payload = {
