@@ -448,7 +448,8 @@ Build a secure, therapist-first web application for managing a therapy practice 
 
 ### Test Credentials
 - **Super Admin**: username: `admin`, password: `admin123` (at `/admin-login`)
-- **Test Therapist**: mobile: `9999999999`, password: `TestPass123`
+- **Test Therapist**: mobile: `9999999999`, password: `password123`
+- **Test Assistant**: email: `assistant1@test.com`, password: `assist123`
 
 ---
 
