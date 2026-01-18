@@ -304,6 +304,32 @@ Build a secure, therapist-first web application for managing a therapy practice 
   - Generate, Toggle, Delete buttons per pattern
   - Create Pattern dialog with all fields
 
+### Phase 14: Note Templates / Quick Insert (COMPLETED - Jan 18, 2026)
+- [x] **Template CRUD**:
+  - `POST /api/note-templates` - Create template with name, category, content
+  - `GET /api/note-templates` - List all templates (sorted by usage count)
+  - `PUT /api/note-templates/{id}` - Update template
+  - `DELETE /api/note-templates/{id}` - Delete template
+- [x] **Categories**:
+  - Subjective (S), Objective (O), Assessment (A), Plan (P), Data (D), General
+  - Category-specific filtering when inserting
+  - Color-coded badges in UI
+- [x] **Usage tracking**:
+  - `POST /api/note-templates/{id}/use` - Increment usage count
+  - Most-used templates appear first in lists
+  - "Used Nx" display on template cards
+- [x] **Quick Insert in note forms**:
+  - "Quick Insert (N)" button appears on each SOAP/DAP field
+  - Shows only templates matching that field's category + General
+  - One-click insert appends content to field
+  - Works in both Create and Edit dialogs
+- [x] **Template Manager UI**:
+  - "Templates (N)" button in Session Notes header
+  - "Manage Quick Templates" dialog
+  - Create New Template form (name, category dropdown, content)
+  - List of existing templates with delete buttons
+  - Stats card showing template count
+
 ---
 
 ## Technical Architecture
