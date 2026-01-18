@@ -6,8 +6,9 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Textarea } from '../ui/textarea';
 import { toast } from 'sonner';
-import { Key, Search, Eye, User, Phone, Mail, MapPin, AlertCircle } from 'lucide-react';
+import { Key, Search, Eye, User, Phone, Mail, Edit, AlertCircle } from 'lucide-react';
 
 const ClientManagement = ({ onViewTherapist }) => {
   const [clients, setClients] = useState([]);
@@ -15,9 +16,11 @@ const ClientManagement = ({ onViewTherapist }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
   const [clientDetail, setClientDetail] = useState(null);
   const [newPassword, setNewPassword] = useState('');
+  const [editForm, setEditForm] = useState({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -63,6 +66,64 @@ const ClientManagement = ({ onViewTherapist }) => {
     }
   };
 
+  const handleEditClient = async (client) => {
+    try {
+      const response = await axios.get(`${API}/admin/clients/${client.id}`);
+      setSelectedClient(client);
+      setEditForm({
+        full_name: response.data.full_name || '',
+        mobile: response.data.mobile || '',
+        email: response.data.email || '',
+        age: response.data.age || '',
+        guardian_name: response.data.guardian_name || '',
+        address: response.data.address || '',
+        referred_by: response.data.referred_by || '',
+        intake_summary: response.data.intake_summary || '',
+        emergency_contact_name: response.data.emergency_contact_name || '',
+        emergency_contact_phone: response.data.emergency_contact_phone || '',
+        profile_photo: response.data.profile_photo || '',
+      });
+      setShowEditDialog(true);
+    } catch (error) {
+      toast.error('Failed to load client details');
+    }
+  };
+
+  const handleUpdateClient = async (e) => {
+    e.preventDefault();
+    
+    if (editForm.mobile && !/^\d{10}$/.test(editForm.mobile)) {
+      toast.error('Mobile number must be exactly 10 digits');
+      return;
+    }
+    
+    try {
+      const updateData = {
+        full_name: editForm.full_name || undefined,
+        mobile: editForm.mobile || undefined,
+        email: editForm.email || undefined,
+        age: editForm.age ? parseInt(editForm.age) : undefined,
+        guardian_name: editForm.guardian_name || undefined,
+        address: editForm.address || undefined,
+        referred_by: editForm.referred_by || undefined,
+        intake_summary: editForm.intake_summary || undefined,
+        emergency_contact_name: editForm.emergency_contact_name || undefined,
+        emergency_contact_phone: editForm.emergency_contact_phone || undefined,
+        profile_photo: editForm.profile_photo || undefined,
+      };
+      
+      Object.keys(updateData).forEach(key => updateData[key] === undefined && delete updateData[key]);
+      
+      await axios.put(`${API}/admin/clients/${selectedClient.id}`, updateData);
+      toast.success('Client updated successfully');
+      setShowEditDialog(false);
+      setSelectedClient(null);
+      fetchClients();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to update client');
+    }
+  };
+
   const handleResetPassword = (client) => {
     setSelectedClient(client);
     setNewPassword(generatePassword());
@@ -80,13 +141,14 @@ const ClientManagement = ({ onViewTherapist }) => {
 
   const confirmPasswordReset = async () => {
     try {
-      await axios.post(
-        `${API}/admin/clients/${selectedClient.id}/reset-password?new_password=${newPassword}`
-      );
+      await axios.post(`${API}/admin/clients/${selectedClient.id}/reset-password`, {
+        new_password: newPassword
+      });
       toast.success(`Password reset! New password: ${newPassword}`);
       setShowPasswordDialog(false);
+      setSelectedClient(null);
     } catch (error) {
-      toast.error('Failed to reset password');
+      toast.error(error.response?.data?.detail || 'Failed to reset password');
     }
   };
 
@@ -120,7 +182,7 @@ const ClientManagement = ({ onViewTherapist }) => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
-            data-testid="client-search-input"
+            data-testid="admin-client-search-input"
           />
         </div>
       </div>
@@ -131,37 +193,47 @@ const ClientManagement = ({ onViewTherapist }) => {
           <Card
             key={client.id}
             className="p-6 bg-white/70 backdrop-blur-xl border border-border/40 rounded-xl"
-            data-testid={`client-${client.id}`}
+            data-testid={`admin-client-${client.id}`}
           >
             <div className="flex justify-between items-start">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <h4 className="text-lg font-medium text-foreground">{client.full_name}</h4>
-                  {client.client_id && (
-                    <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">
-                      {client.client_id}
-                    </span>
+              <div className="flex items-start gap-3">
+                {/* Avatar */}
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden flex-shrink-0">
+                  {client.profile_photo ? (
+                    <img src={client.profile_photo} alt={client.full_name} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-lg font-bold text-primary">{client.full_name?.charAt(0)}</span>
                   )}
                 </div>
-                <div className="space-y-1 text-sm text-muted-foreground">
-                  <p className="flex items-center gap-2">
-                    <Phone size={14} /> {client.mobile || 'N/A'}
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <Mail size={14} /> {client.email || 'N/A'}
-                  </p>
-                  {client.age && (
-                    <p className="flex items-center gap-2">
-                      <User size={14} /> Age: {client.age}
-                    </p>
-                  )}
-                  {client.therapist_name && (
-                    <p className="flex items-center gap-2 mt-2">
-                      <span className="px-2 py-1 bg-info/10 text-info text-xs rounded-full">
-                        Therapist: {client.therapist_name}
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h4 className="text-lg font-medium text-foreground">{client.full_name}</h4>
+                    {client.client_id && (
+                      <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full">
+                        {client.client_id}
                       </span>
+                    )}
+                  </div>
+                  <div className="space-y-1 text-sm text-muted-foreground">
+                    <p className="flex items-center gap-2">
+                      <Phone size={14} /> {client.mobile || 'N/A'}
                     </p>
-                  )}
+                    <p className="flex items-center gap-2">
+                      <Mail size={14} /> {client.email || 'N/A'}
+                    </p>
+                    {client.age && (
+                      <p className="flex items-center gap-2">
+                        <User size={14} /> Age: {client.age}
+                      </p>
+                    )}
+                    {client.therapist_name && (
+                      <p className="mt-2">
+                        <span className="px-2 py-1 bg-info/10 text-info text-xs rounded-full">
+                          Therapist: {client.therapist_name}
+                        </span>
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="flex flex-col gap-2">
@@ -169,16 +241,25 @@ const ClientManagement = ({ onViewTherapist }) => {
                   onClick={() => handleViewDetail(client)}
                   variant="outline"
                   size="sm"
-                  data-testid={`view-client-${client.id}`}
+                  data-testid={`admin-view-client-${client.id}`}
                 >
                   <Eye size={16} className="mr-1" />
                   View
                 </Button>
                 <Button
+                  onClick={() => handleEditClient(client)}
+                  variant="outline"
+                  size="sm"
+                  data-testid={`admin-edit-client-${client.id}`}
+                >
+                  <Edit size={16} className="mr-1" />
+                  Edit
+                </Button>
+                <Button
                   onClick={() => handleResetPassword(client)}
                   variant="outline"
                   size="sm"
-                  data-testid={`reset-password-${client.id}`}
+                  data-testid={`admin-reset-password-${client.id}`}
                 >
                   <Key size={16} className="mr-1" />
                   Reset PW
@@ -205,15 +286,19 @@ const ClientManagement = ({ onViewTherapist }) => {
       {/* Client Detail Dialog */}
       {showDetailDialog && clientDetail && (
         <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
-          <DialogContent className="max-w-lg" data-testid="client-detail-dialog">
+          <DialogContent className="max-w-lg" data-testid="admin-client-detail-dialog">
             <DialogHeader>
               <DialogTitle className="text-2xl font-serif text-primary">Client Profile</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               {/* Basic Info */}
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-2xl font-bold text-primary">{clientDetail.full_name?.charAt(0)}</span>
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                  {clientDetail.profile_photo ? (
+                    <img src={clientDetail.profile_photo} alt={clientDetail.full_name} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-2xl font-bold text-primary">{clientDetail.full_name?.charAt(0)}</span>
+                  )}
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold">{clientDetail.full_name}</h3>
@@ -277,7 +362,7 @@ const ClientManagement = ({ onViewTherapist }) => {
                       size="sm"
                       variant="outline"
                       onClick={() => handleNavigateToTherapist(clientDetail.therapist_id, clientDetail.therapist_name)}
-                      data-testid="view-therapist-button"
+                      data-testid="admin-view-therapist-button"
                     >
                       View Therapist Profile
                     </Button>
@@ -296,10 +381,171 @@ const ClientManagement = ({ onViewTherapist }) => {
         </Dialog>
       )}
 
+      {/* Edit Client Dialog */}
+      {showEditDialog && selectedClient && (
+        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="admin-edit-client-dialog">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-serif text-primary">Edit Client Profile</DialogTitle>
+            </DialogHeader>
+            
+            {/* Client ID (Immutable) */}
+            <div className="p-3 bg-muted rounded-lg mb-4">
+              <p className="text-sm text-muted-foreground">
+                <strong>Client ID:</strong> {selectedClient.client_id || 'N/A'} 
+                <span className="ml-2 text-xs">(immutable)</span>
+              </p>
+            </div>
+            
+            <form onSubmit={handleUpdateClient} className="space-y-4">
+              {/* Profile Photo */}
+              <div className="flex items-center gap-4 p-4 bg-surface rounded-lg">
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                  {editForm.profile_photo ? (
+                    <img src={editForm.profile_photo} alt={editForm.full_name} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-xl font-bold text-primary">{editForm.full_name?.charAt(0)}</span>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <Label>Profile Photo URL</Label>
+                  <Input
+                    value={editForm.profile_photo}
+                    onChange={(e) => setEditForm({ ...editForm, profile_photo: e.target.value })}
+                    placeholder="https://example.com/photo.jpg"
+                    className="mt-1"
+                    data-testid="admin-edit-client-photo"
+                  />
+                </div>
+              </div>
+              
+              {/* Basic Info */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Full Name *</Label>
+                  <Input
+                    value={editForm.full_name}
+                    onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
+                    required
+                    className="mt-1"
+                    data-testid="admin-edit-client-name"
+                  />
+                </div>
+                <div>
+                  <Label>Mobile (10 digits) *</Label>
+                  <Input
+                    value={editForm.mobile}
+                    onChange={(e) => setEditForm({ ...editForm, mobile: e.target.value })}
+                    required
+                    maxLength={10}
+                    className="mt-1"
+                    data-testid="admin-edit-client-mobile"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Email</Label>
+                  <Input
+                    type="email"
+                    value={editForm.email}
+                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                    className="mt-1"
+                    data-testid="admin-edit-client-email"
+                  />
+                </div>
+                <div>
+                  <Label>Age</Label>
+                  <Input
+                    type="number"
+                    value={editForm.age}
+                    onChange={(e) => setEditForm({ ...editForm, age: e.target.value })}
+                    className="mt-1"
+                    data-testid="admin-edit-client-age"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Guardian Name</Label>
+                  <Input
+                    value={editForm.guardian_name}
+                    onChange={(e) => setEditForm({ ...editForm, guardian_name: e.target.value })}
+                    className="mt-1"
+                    data-testid="admin-edit-client-guardian"
+                  />
+                </div>
+                <div>
+                  <Label>Referred By</Label>
+                  <Input
+                    value={editForm.referred_by}
+                    onChange={(e) => setEditForm({ ...editForm, referred_by: e.target.value })}
+                    className="mt-1"
+                    data-testid="admin-edit-client-referred"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Address</Label>
+                <Textarea
+                  value={editForm.address}
+                  onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
+                  className="mt-1"
+                  data-testid="admin-edit-client-address"
+                />
+              </div>
+              
+              {/* Emergency Contact */}
+              <div className="p-4 bg-warning/10 border border-warning/20 rounded-lg">
+                <h4 className="font-semibold mb-2 flex items-center gap-2">
+                  <AlertCircle size={16} /> Emergency Contact
+                </h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Contact Name</Label>
+                    <Input
+                      value={editForm.emergency_contact_name}
+                      onChange={(e) => setEditForm({ ...editForm, emergency_contact_name: e.target.value })}
+                      className="mt-1"
+                      data-testid="admin-edit-client-emergency-name"
+                    />
+                  </div>
+                  <div>
+                    <Label>Contact Phone</Label>
+                    <Input
+                      value={editForm.emergency_contact_phone}
+                      onChange={(e) => setEditForm({ ...editForm, emergency_contact_phone: e.target.value })}
+                      className="mt-1"
+                      data-testid="admin-edit-client-emergency-phone"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <Label>Intake Summary</Label>
+                <Textarea
+                  value={editForm.intake_summary}
+                  onChange={(e) => setEditForm({ ...editForm, intake_summary: e.target.value })}
+                  className="mt-1"
+                  rows={3}
+                  data-testid="admin-edit-client-intake"
+                />
+              </div>
+              
+              <div className="flex gap-3">
+                <Button type="submit" className="flex-1" data-testid="admin-submit-edit-client">Save Changes</Button>
+                <Button type="button" variant="outline" onClick={() => setShowEditDialog(false)}>Cancel</Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      )}
+
       {/* Reset Password Dialog */}
       {showPasswordDialog && selectedClient && (
         <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
-          <DialogContent data-testid="client-password-reset-dialog">
+          <DialogContent data-testid="admin-client-password-reset-dialog">
             <DialogHeader>
               <DialogTitle className="text-2xl font-serif text-primary">
                 Reset Client Password
@@ -315,13 +561,13 @@ const ClientManagement = ({ onViewTherapist }) => {
                   <Input
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    data-testid="new-client-password-input"
+                    data-testid="admin-new-client-password-input"
                   />
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => setNewPassword(generatePassword())}
-                    data-testid="regenerate-client-password-button"
+                    data-testid="admin-regenerate-client-password-button"
                   >
                     Regenerate
                   </Button>
@@ -331,14 +577,14 @@ const ClientManagement = ({ onViewTherapist }) => {
                 <Button
                   onClick={confirmPasswordReset}
                   className="flex-1"
-                  data-testid="confirm-client-reset-button"
+                  data-testid="admin-confirm-client-reset-button"
                 >
                   Reset Password
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => setShowPasswordDialog(false)}
-                  data-testid="cancel-client-reset-button"
+                  data-testid="admin-cancel-client-reset-button"
                 >
                   Cancel
                 </Button>
