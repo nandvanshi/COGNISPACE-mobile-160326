@@ -8,6 +8,7 @@ import TherapistApplicationPage from './pages/TherapistApplicationPage';
 import TherapistDashboard from './pages/TherapistDashboard';
 import ClientDashboard from './pages/ClientDashboard';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
+import AssistantDashboard from './pages/AssistantDashboard';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
