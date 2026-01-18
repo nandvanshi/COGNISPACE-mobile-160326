@@ -7,12 +7,14 @@ Build a secure, therapist-first web application for managing a therapy practice 
 
 ### User Roles
 - **Therapist**: Primary user - manages clients, sessions, assessments, protocols, and payments
+- **Therapist Assistant**: Delegated user - manages non-clinical operational tasks for a linked therapist
 - **Client**: Secondary user - receives therapy, completes assessments and homework
 - **Super Admin**: Platform administrator - approves therapists, manages subscriptions and coupons
 
 ### Authentication
 - Secure email/password auth with JWT
 - Mobile-first authentication for clients (mobile number as primary identifier)
+- Assistant login via email (same login endpoint, role-based routing)
 - Super Admin has separate login portal at `/admin-login`
 - Therapist self-registration disabled - must apply and be approved by Super Admin
 
@@ -42,6 +44,7 @@ Build a secure, therapist-first web application for managing a therapy practice 
 - **Navigation: Client → Therapist profile, Therapist → Clients list**
 - Subscription plan management (CRUD)
 - Coupon code management (CRUD)
+- Assistant management (view all assistants across therapists)
 
 ### Key Exclusions
 - No teletherapy/video calls
