@@ -134,6 +134,14 @@ Build a secure, therapist-first web application for managing a therapy practice 
   - `PUT /api/admin/clients/{id}` works for any client
   - Admin can view and edit any client details
 
+### Phase 8: Super Admin UX Improvements (COMPLETED - Jan 18, 2026)
+- [x] **Search functionality in Therapist Management**:
+  - Search input with magnifying glass icon
+  - Client-side filtering by name, email, mobile, credentials
+  - Real-time result count (e.g., "Showing 1 of 20 therapists")
+  - Clear button (X) to reset search
+  - Empty state message when no results match
+
 ---
 
 ## Technical Architecture
