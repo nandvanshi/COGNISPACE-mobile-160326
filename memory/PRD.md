@@ -381,7 +381,26 @@ Build a secure, therapist-first web application for managing a therapy practice 
   - Uses `client_profiles` collection for therapist assignment
   - messaging_enabled field in client_profiles
 
-### Phase 16: Therapist Assistant Role (COMPLETED - Jan 18, 2026)
+### Phase 16: Slot Generation Timezone Bug Fix (COMPLETED - Jan 18, 2026)
+- [x] **Bug Fixed**: Timing mismatch between Weekly Availability settings and available appointment slots
+  - Root cause: Backend was treating IST availability times as UTC in slot generation
+  - Impact: Slots were shifted by 5.5 hours (e.g., 09:00 IST availability showed as 14:30 IST slots)
+- [x] **Solution Applied**:
+  - Added IST timezone constant using `zoneinfo.ZoneInfo("Asia/Kolkata")`
+  - Modified slot generation to treat `time_blocks` as IST times
+  - Convert to UTC for comparison with stored appointments/blocked times
+  - Return slots in UTC (frontend converts to IST for display)
+- [x] **Verification**:
+  - Therapist 1: 09:00-17:00 IST availability → First slot at 09:00 IST ✓
+  - Therapist 2: Multiple blocks (10:20-17:00, 17:30-18:10, 18:30-20:45) → All block start times match exactly ✓
+  - Buffer times applied correctly between slots ✓
+  - Blocked times correctly remove affected slots ✓
+  - 13/13 backend tests passed (100%)
+- [x] **Acceptance Criteria Met**:
+  - A slot booked always falls fully within the defined availability block ✓
+  - Displayed slot times exactly match availability configuration ✓
+
+### Phase 17: Therapist Assistant Role (COMPLETED - Jan 18, 2026)
 - [x] **Role Definition**:
   - Stored in `users` collection with `role: "assistant"` and `therapist_id`
   - Always linked to exactly one therapist (cannot switch)
