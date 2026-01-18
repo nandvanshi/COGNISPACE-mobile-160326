@@ -2395,6 +2395,100 @@ async def delete_session_note(note_id: str, current_user: dict = Depends(require
     
     return {"message": "Session note deleted"}
 
+# ============= NOTE TEMPLATES ENDPOINTS =============
+
+@api_router.post("/note-templates", response_model=NoteTemplate)
+async def create_note_template(template_data: NoteTemplateCreate, current_user: dict = Depends(require_active_therapist)):
+    """Create a new note template (quick-insert phrase)"""
+    if not template_data.name or not template_data.content:
+        raise HTTPException(status_code=400, detail="Name and content are required")
+    
+    template_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    
+    template_doc = {
+        "id": template_id,
+        "therapist_id": current_user["id"],
+        "name": template_data.name,
+        "category": template_data.category,
+        "content": template_data.content,
+        "usage_count": 0,
+        "created_at": now,
+        "updated_at": now
+    }
+    
+    await db.note_templates.insert_one(template_doc)
+    await log_audit(current_user["id"], current_user["role"], "create", "note_template", template_id)
+    
+    return NoteTemplate(**{k: datetime.fromisoformat(v) if k in ["created_at", "updated_at"] else v for k, v in template_doc.items()})
+
+@api_router.get("/note-templates", response_model=List[NoteTemplate])
+async def get_note_templates(category: Optional[str] = None, current_user: dict = Depends(require_therapist)):
+    """Get all note templates for the therapist"""
+    query = {"therapist_id": current_user["id"]}
+    if category:
+        query["category"] = category
+    
+    templates = await db.note_templates.find(query, {"_id": 0}).sort("usage_count", -1).to_list(100)
+    
+    return [NoteTemplate(**{k: datetime.fromisoformat(v) if k in ["created_at", "updated_at"] else v for k, v in t.items()}) for t in templates]
+
+@api_router.put("/note-templates/{template_id}", response_model=NoteTemplate)
+async def update_note_template(template_id: str, update_data: NoteTemplateUpdate, current_user: dict = Depends(require_active_therapist)):
+    """Update a note template"""
+    template = await db.note_templates.find_one({"id": template_id}, {"_id": 0})
+    if not template:
+        raise HTTPException(status_code=404, detail="Template not found")
+    
+    if template["therapist_id"] != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    update_fields = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    
+    if update_data.name is not None:
+        update_fields["name"] = update_data.name
+    if update_data.category is not None:
+        update_fields["category"] = update_data.category
+    if update_data.content is not None:
+        update_fields["content"] = update_data.content
+    
+    await db.note_templates.update_one({"id": template_id}, {"$set": update_fields})
+    
+    updated = await db.note_templates.find_one({"id": template_id}, {"_id": 0})
+    return NoteTemplate(**{k: datetime.fromisoformat(v) if k in ["created_at", "updated_at"] else v for k, v in updated.items()})
+
+@api_router.delete("/note-templates/{template_id}")
+async def delete_note_template(template_id: str, current_user: dict = Depends(require_active_therapist)):
+    """Delete a note template"""
+    template = await db.note_templates.find_one({"id": template_id}, {"_id": 0})
+    if not template:
+        raise HTTPException(status_code=404, detail="Template not found")
+    
+    if template["therapist_id"] != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    await db.note_templates.delete_one({"id": template_id})
+    await log_audit(current_user["id"], current_user["role"], "delete", "note_template", template_id)
+    
+    return {"message": "Template deleted"}
+
+@api_router.post("/note-templates/{template_id}/use")
+async def use_note_template(template_id: str, current_user: dict = Depends(require_therapist)):
+    """Increment usage count when a template is used"""
+    template = await db.note_templates.find_one({"id": template_id}, {"_id": 0})
+    if not template:
+        raise HTTPException(status_code=404, detail="Template not found")
+    
+    if template["therapist_id"] != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    await db.note_templates.update_one(
+        {"id": template_id},
+        {"$inc": {"usage_count": 1}}
+    )
+    
+    return {"message": "Template usage recorded", "content": template["content"]}
+
 # ============= RECURRING APPOINTMENTS ENDPOINTS =============
 
 @api_router.post("/recurring-appointments", response_model=RecurringPattern)
