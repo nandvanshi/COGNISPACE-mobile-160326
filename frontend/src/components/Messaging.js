@@ -142,6 +142,9 @@ const Messaging = ({ isReadOnly = false }) => {
         [clientId]: enabled,
       }));
       toast.success(`Messaging ${enabled ? 'enabled' : 'disabled'}`);
+      // Refresh contacts list to reflect the change
+      const contactsRes = await axios.get(`${API}/messaging-contacts`);
+      setContacts(contactsRes.data);
     } catch (error) {
       toast.error('Failed to update messaging settings');
     }
