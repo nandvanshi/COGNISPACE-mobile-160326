@@ -715,10 +715,14 @@ async def get_me(current_user: dict = Depends(get_current_user)):
     return User(
         id=current_user["id"],
         client_id=current_user.get("client_id"),
+        therapist_id=current_user.get("therapist_id"),
         mobile=current_user.get("mobile", ""),
         email=current_user.get("email"),
         full_name=current_user["full_name"],
         role=current_user["role"],
+        status=current_user.get("status"),
+        subscription_status=current_user.get("subscription_status"),
+        subscription_plan=current_user.get("subscription_plan"),
         created_at=datetime.fromisoformat(current_user["created_at"])
     )
 
