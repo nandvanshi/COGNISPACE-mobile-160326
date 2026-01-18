@@ -1530,14 +1530,19 @@ async def update_client(client_id: str, update_data: ClientProfileUpdate, curren
 @api_router.post("/clients/{client_id}/reset-password")
 async def reset_client_password_by_therapist(client_id: str, password_data: ClientPasswordReset, current_user: dict = Depends(require_active_therapist)):
     """Reset client password (by their assigned therapist)"""
+    therapist_id = current_user["id"]
+    
+    # Verify client is assigned to this therapist
+    profile = await db.client_profiles.find_one(
+        {"user_id": client_id, "therapist_id": therapist_id},
+        {"_id": 0}
+    )
+    if not profile:
+        raise HTTPException(status_code=403, detail="You can only reset passwords for your own clients")
+    
     client = await db.users.find_one({"id": client_id, "role": "client"}, {"_id": 0})
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")
-    
-    # Verify the therapist is assigned to this client
-    profile = await db.client_profiles.find_one({"user_id": client_id}, {"_id": 0})
-    if profile and profile.get("therapist_id") != current_user["id"]:
-        raise HTTPException(status_code=403, detail="You can only reset passwords for your own clients")
     
     await db.users.update_one(
         {"id": client_id},
@@ -1550,7 +1555,17 @@ async def reset_client_password_by_therapist(client_id: str, password_data: Clie
 
 @api_router.post("/clients/{client_id}/photo")
 async def update_client_photo(client_id: str, photo_url: str, current_user: dict = Depends(require_active_therapist)):
-    """Update client profile photo URL"""
+    """Update client profile photo URL - must be assigned to current therapist"""
+    therapist_id = current_user["id"]
+    
+    # Verify client is assigned to this therapist
+    profile = await db.client_profiles.find_one(
+        {"user_id": client_id, "therapist_id": therapist_id},
+        {"_id": 0}
+    )
+    if not profile:
+        raise HTTPException(status_code=403, detail="You can only update photos for your own clients")
+    
     client = await db.users.find_one({"id": client_id, "role": "client"}, {"_id": 0})
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")
