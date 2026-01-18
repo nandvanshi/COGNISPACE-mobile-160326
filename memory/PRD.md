@@ -367,6 +367,46 @@ Build a secure, therapist-first web application for managing a therapy practice 
   - Uses `client_profiles` collection for therapist assignment
   - messaging_enabled field in client_profiles
 
+### Phase 16: Therapist Assistant Role (COMPLETED - Jan 18, 2026)
+- [x] **Role Definition**:
+  - Stored in `users` collection with `role: "assistant"` and `therapist_id`
+  - Always linked to exactly one therapist (cannot switch)
+  - No self-registration (created by therapist or super admin)
+- [x] **Account Management**:
+  - `POST /api/assistants` - Therapist creates assistant
+  - `GET /api/assistants` - List therapist's assistants
+  - `PUT /api/assistants/{id}` - Update assistant details
+  - `PUT /api/assistants/{id}/suspend` - Suspend assistant
+  - `PUT /api/assistants/{id}/activate` - Activate assistant
+  - `DELETE /api/assistants/{id}` - Soft delete (status: deleted)
+  - `PUT /api/assistants/{id}/reset-password` - Reset password
+- [x] **Login & Auth**:
+  - Same `/api/auth/login` endpoint (email-based login)
+  - Returns `role: "assistant"` and `therapist_id` in response
+  - Frontend routes to `/assistant` dashboard
+- [x] **Allowed Access**:
+  - View/create clients (non-clinical data only)
+  - Create, reschedule, cancel appointments
+  - Block calendar time (full day or time slots)
+  - View therapist availability and bookings
+  - View payments
+- [x] **Explicit Restrictions (Backend Enforced)**:
+  - Cannot access: session notes, assessments, protocols, messaging
+  - Cannot change therapist availability settings
+  - Cannot reassign clients to another therapist
+  - Cannot permanently delete clients
+  - Cannot complete appointments (clinical action)
+- [x] **UI**:
+  - AssistantDashboard with limited sidebar (Overview, Clients, Appointments, Payments)
+  - AssistantManagement component for therapists to manage assistants
+  - "Assistants" menu item in therapist dashboard
+- [x] **Audit Logging**:
+  - All assistant actions logged with `created_by_assistant: true` in details
+  - Audit trail for: create client, create/cancel appointment, block time
+- [x] **Subscription Enforcement**:
+  - Assistant inherits therapist's subscription status
+  - Read-only mode applies when therapist subscription expired
+
 ---
 
 ## Technical Architecture
