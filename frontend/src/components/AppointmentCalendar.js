@@ -769,7 +769,7 @@ const AppointmentCalendar = ({ isReadOnly = false }) => {
                   <Input
                     id="slot-date"
                     type="date"
-                    min={new Date().toISOString().split('T')[0]}
+                    min={getTodayInputFormat()}
                     value={selectedDate}
                     onChange={(e) => {
                       setSelectedDate(e.target.value);
