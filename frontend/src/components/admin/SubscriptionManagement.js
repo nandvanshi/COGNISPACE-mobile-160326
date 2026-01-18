@@ -179,7 +179,7 @@ const SubscriptionManagement = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="plan-price">Price ($) *</Label>
+                <Label htmlFor="plan-price">Price (₹) *</Label>
                 <Input
                   id="plan-price"
                   type="number"
