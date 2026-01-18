@@ -243,6 +243,67 @@ Build a secure, therapist-first web application for managing a therapy practice 
   - Blocked Times card with list and add button
   - Save Availability button with success toast
 
+### Phase 12: Session Notes (COMPLETED - Jan 18, 2026)
+- [x] **SOAP Template**:
+  - Subjective: Client's reported symptoms, concerns, experiences
+  - Objective: Observable behaviors, mental status, appearance
+  - Assessment: Clinical impressions, progress, interpretations
+  - Plan: Treatment plan, interventions, homework, next steps
+- [x] **DAP Template**:
+  - Data: Observations and information gathered
+  - Assessment: Clinical impressions and interpretations
+  - Plan: Treatment plan and next steps
+- [x] **Notes linked to appointments**:
+  - Optional appointment_id field when creating notes
+  - Dropdown shows client's appointments (completed/scheduled)
+  - Linked notes display appointment date
+  - "Linked" badge on note cards
+- [x] **Therapist-only editing**:
+  - Only note creator can edit/delete
+  - Backend enforces `therapist_id` check on all operations
+- [x] **Subscription read-only mode respected**:
+  - All write endpoints use `require_active_therapist`
+  - Expired therapists can view but not create/edit/delete
+  - UI hides action buttons when `isReadOnly=true`
+- [x] **Full CRUD operations**:
+  - `POST /api/session-notes` - Create (SOAP or DAP)
+  - `GET /api/session-notes` - List with optional client_id filter
+  - `GET /api/session-notes/{id}` - Get single note
+  - `PUT /api/session-notes/{id}` - Update note content
+  - `DELETE /api/session-notes/{id}` - Delete note
+- [x] **UI Features**:
+  - Stats cards: Total Notes, SOAP Notes, DAP Notes
+  - Filter by client dropdown
+  - Note cards with preview text and metadata
+  - View dialog with formatted S/O/A/P or D/A/P sections
+  - Edit dialog with all fields editable
+  - Delete with confirmation
+
+### Phase 13: Recurring Appointments (COMPLETED - Jan 18, 2026)
+- [x] **Pattern creation**:
+  - Select client, day of week, start/end time
+  - Define start date and optional end date
+  - Optional notes field for session description
+  - `POST /api/recurring-appointments` endpoint
+- [x] **Generate appointments from pattern**:
+  - `POST /api/recurring-appointments/{id}/generate?weeks_ahead=4`
+  - Creates scheduled appointments for next N weeks
+  - Skips dates with existing appointments at same time
+  - Marks generated appointments with `recurring_pattern_id`
+- [x] **Toggle pattern active/inactive**:
+  - `PUT /api/recurring-appointments/{id}/toggle`
+  - Inactive patterns cannot generate new appointments
+  - UI shows "Paused" label for inactive patterns
+- [x] **Delete pattern**:
+  - `DELETE /api/recurring-appointments/{id}`
+  - Does not delete already-generated appointments
+- [x] **UI Features**:
+  - New "Recurring" sidebar menu item with Repeat icon
+  - Info card explaining how recurring appointments work
+  - Pattern cards showing client, day, time, date range
+  - Generate, Toggle, Delete buttons per pattern
+  - Create Pattern dialog with all fields
+
 ---
 
 ## Technical Architecture
