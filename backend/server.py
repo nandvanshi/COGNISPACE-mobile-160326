@@ -2669,8 +2669,56 @@ async def toggle_recurring_pattern(pattern_id: str, current_user: dict = Depends
 
 # ============= MESSAGING ENDPOINTS =============
 
+async def verify_messaging_allowed(sender_id: str, sender_role: str, recipient_id: str) -> tuple:
+    """Verify that messaging is allowed between two users.
+    Returns (is_allowed, error_message, recipient_doc)
+    """
+    # Find recipient - could be in users or clients collection
+    recipient = await db.users.find_one({"id": recipient_id}, {"_id": 0})
+    if not recipient:
+        recipient = await db.clients.find_one({"id": recipient_id}, {"_id": 0})
+    
+    if not recipient:
+        return False, "Recipient not found", None
+    
+    recipient_role = recipient.get("role", "client")  # clients collection entries are clients
+    
+    # Therapists can only message their assigned clients
+    if sender_role == "therapist":
+        if recipient_role != "client":
+            return False, "Therapists can only message their assigned clients", None
+        
+        # Check if client is assigned to this therapist
+        client_therapist_id = recipient.get("therapist_id")
+        if client_therapist_id != sender_id:
+            return False, "This client is not assigned to you", None
+        
+        # Check if messaging is enabled for this client
+        if not recipient.get("messaging_enabled", True):
+            return False, "Messaging is disabled for this client", None
+    
+    # Clients can only message their assigned therapist
+    if sender_role == "client":
+        sender_doc = await db.clients.find_one({"id": sender_id}, {"_id": 0})
+        if not sender_doc:
+            sender_doc = await db.users.find_one({"id": sender_id}, {"_id": 0})
+        
+        if not sender_doc:
+            return False, "Sender not found", None
+        
+        client_therapist_id = sender_doc.get("therapist_id")
+        if recipient_id != client_therapist_id:
+            return False, "You can only message your assigned therapist", None
+        
+        # Check if messaging is enabled for this client
+        if not sender_doc.get("messaging_enabled", True):
+            return False, "Messaging has been disabled by your therapist", None
+    
+    return True, None, recipient
+
 @api_router.post("/messages", response_model=Message)
 async def send_message(msg_data: MessageCreate, current_user: dict = Depends(get_current_user)):
+    """Send a message - enforces therapist-client relationship"""
     # Therapists need active subscription to send messages
     if current_user["role"] == "therapist" and not is_subscription_active(current_user):
         raise HTTPException(
@@ -2678,9 +2726,15 @@ async def send_message(msg_data: MessageCreate, current_user: dict = Depends(get
             detail="Your subscription has expired. You are in read-only mode. Please renew to send messages."
         )
     
-    recipient = await db.users.find_one({"id": msg_data.recipient_id}, {"_id": 0})
-    if not recipient:
-        raise HTTPException(status_code=404, detail="Recipient not found")
+    # Verify messaging is allowed
+    is_allowed, error_msg, recipient = await verify_messaging_allowed(
+        current_user["id"], 
+        current_user["role"], 
+        msg_data.recipient_id
+    )
+    
+    if not is_allowed:
+        raise HTTPException(status_code=403, detail=error_msg)
     
     msg_id = str(uuid.uuid4())
     msg_doc = {
@@ -2701,6 +2755,7 @@ async def send_message(msg_data: MessageCreate, current_user: dict = Depends(get
 
 @api_router.get("/messages/{other_user_id}", response_model=List[Message])
 async def get_messages(other_user_id: str, current_user: dict = Depends(get_current_user)):
+    """Get messages with a specific user"""
     messages = await db.messages.find({
         "$or": [
             {"sender_id": current_user["id"], "recipient_id": other_user_id},
@@ -2718,6 +2773,7 @@ async def get_messages(other_user_id: str, current_user: dict = Depends(get_curr
 
 @api_router.get("/messages", response_model=List[dict])
 async def get_conversations(current_user: dict = Depends(get_current_user)):
+    """Get all conversations for the current user"""
     messages = await db.messages.find({
         "$or": [
             {"sender_id": current_user["id"]},
@@ -2747,6 +2803,87 @@ async def get_conversations(current_user: dict = Depends(get_current_user)):
             conversations[other_id]["unread_count"] += 1
     
     return list(conversations.values())
+
+@api_router.get("/messaging-contacts")
+async def get_messaging_contacts(current_user: dict = Depends(get_current_user)):
+    """Get list of users the current user can message"""
+    contacts = []
+    
+    if current_user["role"] == "therapist":
+        # Get all assigned clients with messaging enabled
+        clients = await db.clients.find(
+            {"therapist_id": current_user["id"], "messaging_enabled": {"$ne": False}},
+            {"_id": 0, "id": 1, "full_name": 1, "client_id": 1, "profile_photo": 1}
+        ).to_list(1000)
+        
+        for client in clients:
+            contacts.append({
+                "id": client["id"],
+                "name": client["full_name"],
+                "display_id": client.get("client_id", ""),
+                "photo": client.get("profile_photo"),
+                "type": "client"
+            })
+    
+    elif current_user["role"] == "client":
+        # Get assigned therapist
+        client_doc = await db.clients.find_one({"id": current_user["id"]}, {"_id": 0})
+        if not client_doc:
+            client_doc = await db.users.find_one({"id": current_user["id"]}, {"_id": 0})
+        
+        if client_doc and client_doc.get("therapist_id"):
+            therapist = await db.users.find_one(
+                {"id": client_doc["therapist_id"]},
+                {"_id": 0, "id": 1, "full_name": 1, "credentials": 1, "profile_photo": 1}
+            )
+            if therapist:
+                contacts.append({
+                    "id": therapist["id"],
+                    "name": therapist["full_name"],
+                    "display_id": therapist.get("credentials", ""),
+                    "photo": therapist.get("profile_photo"),
+                    "type": "therapist"
+                })
+    
+    return contacts
+
+@api_router.put("/clients/{client_id}/messaging")
+async def toggle_client_messaging(
+    client_id: str, 
+    settings: ClientMessagingSettings, 
+    current_user: dict = Depends(require_active_therapist)
+):
+    """Enable or disable messaging for a specific client"""
+    # Find client
+    client = await db.clients.find_one({"id": client_id}, {"_id": 0})
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    # Verify client is assigned to this therapist
+    if client.get("therapist_id") != current_user["id"]:
+        raise HTTPException(status_code=403, detail="This client is not assigned to you")
+    
+    await db.clients.update_one(
+        {"id": client_id},
+        {"$set": {"messaging_enabled": settings.messaging_enabled}}
+    )
+    
+    status = "enabled" if settings.messaging_enabled else "disabled"
+    await log_audit(current_user["id"], current_user["role"], f"messaging_{status}", "client", client_id)
+    
+    return {"message": f"Messaging {status} for {client['full_name']}"}
+
+@api_router.get("/clients/{client_id}/messaging-status")
+async def get_client_messaging_status(client_id: str, current_user: dict = Depends(require_therapist)):
+    """Get messaging status for a specific client"""
+    client = await db.clients.find_one({"id": client_id}, {"_id": 0, "messaging_enabled": 1, "full_name": 1})
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    return {
+        "client_id": client_id,
+        "messaging_enabled": client.get("messaging_enabled", True)
+    }
 
 # ============= ASSESSMENT ENDPOINTS =============
 
