@@ -119,6 +119,12 @@ class AppointmentCreate(BaseModel):
     end_time: datetime
     notes: Optional[str] = None
 
+class AppointmentUpdate(BaseModel):
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+    notes: Optional[str] = None
+    status: Optional[Literal["scheduled", "completed", "cancelled"]] = None
+
 class Appointment(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str
@@ -128,7 +134,7 @@ class Appointment(BaseModel):
     start_time: datetime
     end_time: datetime
     notes: Optional[str] = None
-    status: str = "scheduled"
+    status: str = "scheduled"  # scheduled, completed, cancelled
     created_at: datetime
 
 # Session Note Models
