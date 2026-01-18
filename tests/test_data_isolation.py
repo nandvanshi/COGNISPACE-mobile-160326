@@ -87,7 +87,8 @@ class TestDataIsolation:
     def therapist_1_client(self, therapist_1_token):
         """Create a client assigned to therapist 1"""
         token, therapist_id = therapist_1_token
-        unique_mobile = f"55555{str(uuid.uuid4())[:5].replace('-', '0')}"[:10]
+        import random
+        unique_mobile = f"5555{random.randint(100000, 999999)}"
         
         response = requests.post(
             f"{BASE_URL}/api/clients",
