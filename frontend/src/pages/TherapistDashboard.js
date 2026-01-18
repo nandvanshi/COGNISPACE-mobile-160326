@@ -3,7 +3,7 @@ import { Routes, Route, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth, API } from '../App';
 import { Button } from '../components/ui/button';
-import { LogOut, Users, Calendar, FileText, MessageSquare, ClipboardList, BookOpen, DollarSign, Home, AlertTriangle } from 'lucide-react';
+import { LogOut, Users, Calendar, FileText, MessageSquare, ClipboardList, BookOpen, DollarSign, Home, AlertTriangle, Clock } from 'lucide-react';
 import TherapistOverview from '../components/TherapistOverview';
 import ClientManagement from '../components/ClientManagement';
 import AppointmentCalendar from '../components/AppointmentCalendar';
@@ -12,6 +12,7 @@ import Messaging from '../components/Messaging';
 import Assessments from '../components/Assessments';
 import Protocols from '../components/Protocols';
 import Payments from '../components/Payments';
+import AvailabilitySettings from '../components/AvailabilitySettings';
 
 const TherapistDashboard = () => {
   const { user, logout } = useAuth();
@@ -38,6 +39,7 @@ const TherapistDashboard = () => {
     { id: 'overview', label: 'Overview', icon: Home },
     { id: 'clients', label: 'Clients', icon: Users },
     { id: 'appointments', label: 'Appointments', icon: Calendar },
+    { id: 'availability', label: 'Availability', icon: Clock },
     { id: 'notes', label: 'Session Notes', icon: FileText },
     { id: 'messages', label: 'Messages', icon: MessageSquare },
     { id: 'assessments', label: 'Assessments', icon: ClipboardList },
