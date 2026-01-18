@@ -449,17 +449,6 @@ async def register(user_data: UserRegister):
         status_code=403, 
         detail="Client self-registration is disabled. Please contact your therapist to create an account for you."
     )
-    user = User(
-        id=user_id,
-        client_id=client_id,
-        mobile=user_data.mobile,
-        email=user_data.email,
-        full_name=user_data.full_name,
-        role=user_data.role,
-        created_at=datetime.fromisoformat(user_doc["created_at"])
-    )
-    
-    return TokenResponse(token=token, user=user)
 
 @api_router.post("/auth/therapist-application")
 async def apply_as_therapist(application: TherapistApplication):
