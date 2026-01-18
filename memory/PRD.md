@@ -200,6 +200,49 @@ Build a secure, therapist-first web application for managing a therapy practice 
   - Create/Edit dialogs with datetime-local inputs
   - Action buttons: Edit (pencil), Complete (checkmark), Cancel (X), Delete (trash)
 
+### Phase 11: Therapist Availability & Slot-Based Scheduling (COMPLETED - Jan 18, 2026)
+- [x] **Weekly working hours definition**:
+  - Therapists can enable/disable each day of the week
+  - Multiple time blocks per day (e.g., 9AM-12PM and 2PM-6PM)
+  - Add/remove time block buttons with start/end time inputs
+  - `PUT /api/availability` endpoint to save settings
+- [x] **Session duration setting**:
+  - Configurable session duration (15-240 minutes)
+  - Default: 60 minutes
+  - Input validation enforced on backend
+- [x] **Buffer time between sessions**:
+  - Configurable buffer time (0-60 minutes)
+  - Default: 0 minutes (no buffer)
+  - Applied between generated slots
+- [x] **Automatic slot generation**:
+  - `GET /api/available-slots/{therapist_id}?date=YYYY-MM-DD`
+  - Generates slots based on working hours, session duration, and buffer time
+  - Only shows future slots (past slots filtered out)
+  - Respects day-of-week availability
+- [x] **Block full days or specific time ranges**:
+  - `POST /api/blocked-times` to create blocked periods
+  - Support for all-day blocks and specific time ranges
+  - Optional reason field (vacation, holiday, personal, etc.)
+  - `DELETE /api/blocked-times/{id}` to remove blocks
+- [x] **Blocked times prevent slot generation**:
+  - Slots overlapping blocked times are excluded
+  - Tested and verified in iteration_8
+- [x] **Booked appointments prevent double-booking**:
+  - Existing appointments exclude those time slots
+  - Cancelled appointments free up slots
+- [x] **Slot-based booking UI**:
+  - "Available Slots" vs "Manual Entry" toggle in booking dialog
+  - Date picker to select appointment date
+  - Clickable slot buttons showing time and duration
+  - Selected slot highlighted with confirmation message
+  - "No available slots" message for disabled days
+- [x] **Availability Settings page**:
+  - New sidebar menu item "Availability" with Clock icon
+  - Session Settings card (duration, buffer time)
+  - Weekly Schedule card with day toggles and time blocks
+  - Blocked Times card with list and add button
+  - Save Availability button with success toast
+
 ---
 
 ## Technical Architecture
