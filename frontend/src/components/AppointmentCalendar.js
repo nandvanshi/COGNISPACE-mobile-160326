@@ -826,16 +826,7 @@ const AppointmentCalendar = ({ isReadOnly = false }) => {
                   <div className="p-3 bg-success/10 border border-success/30 rounded-lg">
                     <p className="text-sm font-medium text-success">Selected slot:</p>
                     <p className="text-sm">
-                      {new Date(newAppt.selected_slot.start_time).toLocaleDateString('en-US', {
-                        weekday: 'long',
-                        month: 'long',
-                        day: 'numeric',
-                      })}{' '}
-                      at{' '}
-                      {new Date(newAppt.selected_slot.start_time).toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
+                      {formatDate(newAppt.selected_slot.start_time)} at {formatTime(newAppt.selected_slot.start_time)}
                     </p>
                   </div>
                 )}
