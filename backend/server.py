@@ -2251,10 +2251,29 @@ async def get_therapist_availability_public(therapist_id: str, current_user: dic
 
 @api_router.post("/session-notes", response_model=SessionNote)
 async def create_session_note(note_data: SessionNoteCreate, current_user: dict = Depends(require_active_therapist)):
-    
-    client = await db.users.find_one({"id": note_data.client_id}, {"_id": 0})
+    """Create a new session note - respects subscription read-only mode"""
+    # Find client in clients collection first, then users
+    client = await db.clients.find_one({"id": note_data.client_id}, {"_id": 0})
+    if not client:
+        client = await db.users.find_one({"id": note_data.client_id, "role": "client"}, {"_id": 0})
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")
+    
+    # Verify client belongs to this therapist
+    if client.get("therapist_id") and client["therapist_id"] != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Client is not assigned to you")
+    
+    # If linked to appointment, verify appointment exists and belongs to therapist
+    appointment_date = None
+    if note_data.appointment_id:
+        appointment = await db.appointments.find_one({"id": note_data.appointment_id}, {"_id": 0})
+        if not appointment:
+            raise HTTPException(status_code=404, detail="Appointment not found")
+        if appointment["therapist_id"] != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Appointment does not belong to you")
+        if appointment["client_id"] != note_data.client_id:
+            raise HTTPException(status_code=400, detail="Appointment client does not match selected client")
+        appointment_date = appointment["start_time"]
     
     note_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc).isoformat()
@@ -2263,6 +2282,8 @@ async def create_session_note(note_data: SessionNoteCreate, current_user: dict =
         "therapist_id": current_user["id"],
         "client_id": note_data.client_id,
         "client_name": client["full_name"],
+        "appointment_id": note_data.appointment_id,
+        "appointment_date": appointment_date,
         "template_type": note_data.template_type,
         "subjective": note_data.subjective,
         "objective": note_data.objective,
@@ -2279,14 +2300,252 @@ async def create_session_note(note_data: SessionNoteCreate, current_user: dict =
     return SessionNote(**{k: datetime.fromisoformat(v) if k in ["created_at", "updated_at"] else v for k, v in note_doc.items()})
 
 @api_router.get("/session-notes", response_model=List[SessionNote])
-async def get_session_notes(client_id: Optional[str] = None, current_user: dict = Depends(require_therapist)):
-    
+async def get_session_notes(client_id: Optional[str] = None, appointment_id: Optional[str] = None, current_user: dict = Depends(require_therapist)):
+    """Get session notes - therapists only see their own notes"""
     query = {"therapist_id": current_user["id"]}
     if client_id:
         query["client_id"] = client_id
+    if appointment_id:
+        query["appointment_id"] = appointment_id
     
     notes = await db.session_notes.find(query, {"_id": 0}).to_list(1000)
     return [SessionNote(**{k: datetime.fromisoformat(v) if k in ["created_at", "updated_at"] else v for k, v in note.items()}) for note in notes]
+
+@api_router.get("/session-notes/{note_id}", response_model=SessionNote)
+async def get_session_note(note_id: str, current_user: dict = Depends(require_therapist)):
+    """Get a single session note by ID"""
+    note = await db.session_notes.find_one({"id": note_id}, {"_id": 0})
+    if not note:
+        raise HTTPException(status_code=404, detail="Session note not found")
+    
+    # Verify ownership
+    if note["therapist_id"] != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    return SessionNote(**{k: datetime.fromisoformat(v) if k in ["created_at", "updated_at"] else v for k, v in note.items()})
+
+@api_router.put("/session-notes/{note_id}", response_model=SessionNote)
+async def update_session_note(note_id: str, update_data: SessionNoteUpdate, current_user: dict = Depends(require_active_therapist)):
+    """Update a session note - respects subscription read-only mode"""
+    note = await db.session_notes.find_one({"id": note_id}, {"_id": 0})
+    if not note:
+        raise HTTPException(status_code=404, detail="Session note not found")
+    
+    # Verify ownership - only the therapist who created the note can edit
+    if note["therapist_id"] != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Access denied - only the note creator can edit")
+    
+    # Build update fields
+    update_fields = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    
+    if update_data.template_type is not None:
+        update_fields["template_type"] = update_data.template_type
+    if update_data.subjective is not None:
+        update_fields["subjective"] = update_data.subjective
+    if update_data.objective is not None:
+        update_fields["objective"] = update_data.objective
+    if update_data.assessment is not None:
+        update_fields["assessment"] = update_data.assessment
+    if update_data.plan is not None:
+        update_fields["plan"] = update_data.plan
+    if update_data.data is not None:
+        update_fields["data"] = update_data.data
+    
+    await db.session_notes.update_one({"id": note_id}, {"$set": update_fields})
+    await log_audit(current_user["id"], current_user["role"], "update", "session_note", note_id)
+    
+    updated = await db.session_notes.find_one({"id": note_id}, {"_id": 0})
+    return SessionNote(**{k: datetime.fromisoformat(v) if k in ["created_at", "updated_at"] else v for k, v in updated.items()})
+
+@api_router.delete("/session-notes/{note_id}")
+async def delete_session_note(note_id: str, current_user: dict = Depends(require_active_therapist)):
+    """Delete a session note - respects subscription read-only mode"""
+    note = await db.session_notes.find_one({"id": note_id}, {"_id": 0})
+    if not note:
+        raise HTTPException(status_code=404, detail="Session note not found")
+    
+    # Verify ownership
+    if note["therapist_id"] != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    await db.session_notes.delete_one({"id": note_id})
+    await log_audit(current_user["id"], current_user["role"], "delete", "session_note", note_id)
+    
+    return {"message": "Session note deleted"}
+
+# ============= RECURRING APPOINTMENTS ENDPOINTS =============
+
+@api_router.post("/recurring-appointments", response_model=RecurringPattern)
+async def create_recurring_pattern(pattern_data: RecurringPatternCreate, current_user: dict = Depends(require_active_therapist)):
+    """Create a recurring appointment pattern"""
+    # Validate day of week
+    if pattern_data.day_of_week < 0 or pattern_data.day_of_week > 6:
+        raise HTTPException(status_code=400, detail="day_of_week must be 0-6 (Monday-Sunday)")
+    
+    # Find client
+    client = await db.clients.find_one({"id": pattern_data.client_id}, {"_id": 0})
+    if not client:
+        client = await db.users.find_one({"id": pattern_data.client_id, "role": "client"}, {"_id": 0})
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    # Verify client belongs to therapist
+    if client.get("therapist_id") and client["therapist_id"] != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Client is not assigned to you")
+    
+    pattern_id = str(uuid.uuid4())
+    pattern_doc = {
+        "id": pattern_id,
+        "therapist_id": current_user["id"],
+        "client_id": pattern_data.client_id,
+        "client_name": client["full_name"],
+        "day_of_week": pattern_data.day_of_week,
+        "start_time": pattern_data.start_time,
+        "end_time": pattern_data.end_time,
+        "notes": pattern_data.notes,
+        "start_date": pattern_data.start_date,
+        "end_date": pattern_data.end_date,
+        "is_active": True,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.recurring_patterns.insert_one(pattern_doc)
+    await log_audit(current_user["id"], current_user["role"], "create", "recurring_pattern", pattern_id)
+    
+    return RecurringPattern(**{k: datetime.fromisoformat(v) if k == "created_at" else v for k, v in pattern_doc.items()})
+
+@api_router.get("/recurring-appointments", response_model=List[RecurringPattern])
+async def get_recurring_patterns(current_user: dict = Depends(require_therapist)):
+    """Get all recurring appointment patterns for the therapist"""
+    patterns = await db.recurring_patterns.find(
+        {"therapist_id": current_user["id"]},
+        {"_id": 0}
+    ).to_list(100)
+    
+    return [RecurringPattern(**{k: datetime.fromisoformat(v) if k == "created_at" else v for k, v in p.items()}) for p in patterns]
+
+@api_router.delete("/recurring-appointments/{pattern_id}")
+async def delete_recurring_pattern(pattern_id: str, current_user: dict = Depends(require_active_therapist)):
+    """Delete a recurring appointment pattern"""
+    pattern = await db.recurring_patterns.find_one({"id": pattern_id}, {"_id": 0})
+    if not pattern:
+        raise HTTPException(status_code=404, detail="Recurring pattern not found")
+    
+    if pattern["therapist_id"] != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    await db.recurring_patterns.delete_one({"id": pattern_id})
+    await log_audit(current_user["id"], current_user["role"], "delete", "recurring_pattern", pattern_id)
+    
+    return {"message": "Recurring pattern deleted"}
+
+@api_router.post("/recurring-appointments/{pattern_id}/generate")
+async def generate_recurring_appointments(
+    pattern_id: str,
+    weeks_ahead: int = 4,
+    current_user: dict = Depends(require_active_therapist)
+):
+    """Generate appointments from a recurring pattern for the next N weeks"""
+    pattern = await db.recurring_patterns.find_one({"id": pattern_id}, {"_id": 0})
+    if not pattern:
+        raise HTTPException(status_code=404, detail="Recurring pattern not found")
+    
+    if pattern["therapist_id"] != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    if not pattern.get("is_active", True):
+        raise HTTPException(status_code=400, detail="Pattern is not active")
+    
+    # Find client
+    client = await db.clients.find_one({"id": pattern["client_id"]}, {"_id": 0})
+    if not client:
+        client = await db.users.find_one({"id": pattern["client_id"]}, {"_id": 0})
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    # Generate appointments
+    created_appointments = []
+    today = datetime.now(timezone.utc).date()
+    start_date = datetime.strptime(pattern["start_date"], "%Y-%m-%d").date()
+    end_date = None
+    if pattern.get("end_date"):
+        end_date = datetime.strptime(pattern["end_date"], "%Y-%m-%d").date()
+    
+    # Start from today or start_date, whichever is later
+    current_date = max(today, start_date)
+    
+    # Find the next occurrence of the target day
+    days_ahead = (pattern["day_of_week"] - current_date.weekday()) % 7
+    if days_ahead == 0 and current_date == today:
+        days_ahead = 7  # Skip today, start next week
+    current_date = current_date + timedelta(days=days_ahead)
+    
+    for week in range(weeks_ahead):
+        if end_date and current_date > end_date:
+            break
+        
+        # Parse times
+        start_time_parts = pattern["start_time"].split(":")
+        end_time_parts = pattern["end_time"].split(":")
+        
+        appt_start = datetime.combine(
+            current_date,
+            datetime.strptime(pattern["start_time"], "%H:%M").time()
+        ).replace(tzinfo=timezone.utc)
+        
+        appt_end = datetime.combine(
+            current_date,
+            datetime.strptime(pattern["end_time"], "%H:%M").time()
+        ).replace(tzinfo=timezone.utc)
+        
+        # Check for existing appointment at this time
+        existing = await db.appointments.find_one({
+            "therapist_id": current_user["id"],
+            "status": {"$ne": "cancelled"},
+            "start_time": appt_start.isoformat()
+        })
+        
+        if not existing:
+            appt_id = str(uuid.uuid4())
+            appt_doc = {
+                "id": appt_id,
+                "therapist_id": current_user["id"],
+                "client_id": pattern["client_id"],
+                "client_name": client["full_name"],
+                "start_time": appt_start.isoformat(),
+                "end_time": appt_end.isoformat(),
+                "notes": pattern.get("notes", ""),
+                "status": "scheduled",
+                "recurring_pattern_id": pattern_id,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            await db.appointments.insert_one(appt_doc)
+            created_appointments.append(appt_doc)
+        
+        current_date = current_date + timedelta(days=7)
+    
+    return {
+        "message": f"Generated {len(created_appointments)} appointments",
+        "appointments_created": len(created_appointments)
+    }
+
+@api_router.put("/recurring-appointments/{pattern_id}/toggle")
+async def toggle_recurring_pattern(pattern_id: str, current_user: dict = Depends(require_active_therapist)):
+    """Toggle a recurring pattern active/inactive"""
+    pattern = await db.recurring_patterns.find_one({"id": pattern_id}, {"_id": 0})
+    if not pattern:
+        raise HTTPException(status_code=404, detail="Recurring pattern not found")
+    
+    if pattern["therapist_id"] != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    new_status = not pattern.get("is_active", True)
+    await db.recurring_patterns.update_one(
+        {"id": pattern_id},
+        {"$set": {"is_active": new_status}}
+    )
+    
+    return {"message": f"Pattern {'activated' if new_status else 'deactivated'}", "is_active": new_status}
 
 # ============= MESSAGING ENDPOINTS =============
 
