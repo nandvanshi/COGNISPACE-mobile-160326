@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { API } from '../../App';
 import { Card } from '../ui/card';
@@ -8,7 +8,7 @@ import { Label } from '../ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { toast } from 'sonner';
-import { Ban, CheckCircle, Key, Plus, Edit, Users, Eye, Calendar, CreditCard, RefreshCw } from 'lucide-react';
+import { Ban, CheckCircle, Key, Plus, Edit, Users, Eye, Calendar, CreditCard, RefreshCw, Search, X } from 'lucide-react';
 
 const TherapistManagement = ({ onViewClients }) => {
   const [therapists, setTherapists] = useState([]);
@@ -26,6 +26,7 @@ const TherapistManagement = ({ onViewClients }) => {
   const [loading, setLoading] = useState(true);
   const [selectedPlanId, setSelectedPlanId] = useState('');
   const [extendDays, setExtendDays] = useState(30);
+  const [searchQuery, setSearchQuery] = useState('');
   const [newTherapist, setNewTherapist] = useState({
     mobile: '',
     email: '',
