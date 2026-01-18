@@ -1,0 +1,118 @@
+{
+  "summary": "Slot Generation Timezone Bug Fix Verification Complete - All 13 backend tests passed (100%). Frontend verification confirmed slots display correctly in IST timezone. Bug fix verified: Therapist availability times (IST) now correctly generate appointment slots starting at the configured times.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/tests/test_slot_generation_timezone.py",
+    "/app/test_reports/pytest/pytest_results_timezone.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/tests/test_slot_generation_timezone.py"
+  ],
+  "success_rate": {
+    "backend": "100% (13/13 tests passed)",
+    "frontend": "100% (all UI verifications passed)"
+  },
+  "test_credentials": {
+    "therapist_1": {
+      "mobile": "9999999999",
+      "password": "password",
+      "id": "74f28b81-c293-40bf-9226-28626af1ae27"
+    },
+    "therapist_2": {
+      "mobile": "7275005007",
+      "password": "password",
+      "id": "95ca48f3-6715-4b72-af4d-7f0ef7d2a34d"
+    }
+  },
+  "seed_data_creation": "Test appointments and blocked times created with TEST_ prefix during testing, cleaned up after tests",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Slot generation timezone bug has been fixed and verified. The backend now correctly treats availability times as IST and generates slots accordingly.",
+  "bug_fix_verification": {
+    "original_bug": "Timing mismatch between Weekly Availability settings and available appointment slots - slots showed different start/end times than configured availability blocks",
+    "root_cause": "Backend was treating IST availability times as UTC in slot generation",
+    "fix_applied": "Added IST timezone (Asia/Kolkata) constant, treating time_blocks as IST times, converting to UTC for comparison with stored appointments",
+    "verification_results": {
+      "therapist_1_wednesday": {
+        "availability": "09:00-17:00 IST with 60min sessions and 10min buffer",
+        "expected_first_slot": "09:00 IST",
+        "actual_first_slot": "09:00 IST",
+        "status": "PASS"
+      },
+      "therapist_2_wednesday": {
+        "availability": "10:20-17:00, 17:30-18:10, 18:30-20:45 IST with 40min sessions and 5min buffer",
+        "expected_first_slot_block1": "10:20 IST",
+        "actual_first_slot_block1": "10:20 IST",
+        "expected_first_slot_block2": "17:30 IST",
+        "actual_first_slot_block2": "17:30 IST",
+        "expected_first_slot_block3": "18:30 IST",
+        "actual_first_slot_block3": "18:30 IST",
+        "status": "PASS"
+      }
+    }
+  },
+  "features_tested": {
+    "slot_generation_matches_availability": {
+      "status": "PASS",
+      "tests": [
+        "test_therapist1_slot_generation_starts_at_0900_ist",
+        "test_therapist2_multiple_time_blocks_slot_generation"
+      ]
+    },
+    "slot_times_24hour_format": {
+      "status": "PASS",
+      "tests": ["test_therapist1_slot_times_in_24hour_format"]
+    },
+    "buffer_time_applied": {
+      "status": "PASS",
+      "tests": [
+        "test_therapist1_slot_buffer_time_applied",
+        "test_therapist2_slot_buffer_time_applied"
+      ]
+    },
+    "booking_uses_correct_times": {
+      "status": "PASS",
+      "tests": ["test_booking_appointment_uses_correct_times"]
+    },
+    "blocked_times_remove_slots": {
+      "status": "PASS",
+      "tests": ["test_blocked_time_removes_slot"]
+    },
+    "availability_settings_display": {
+      "status": "PASS",
+      "tests": ["test_availability_settings_page_displays_correctly"]
+    },
+    "edge_cases": {
+      "status": "PASS",
+      "tests": [
+        "test_disabled_day_returns_no_slots",
+        "test_past_date_returns_no_slots",
+        "test_invalid_date_format_returns_error"
+      ]
+    }
+  },
+  "frontend_verification": {
+    "login": "PASS - Successfully logged in as Therapist 1",
+    "appointments_page": "PASS - Shows appointments with times in 24-hour format",
+    "schedule_appointment_dialog": "PASS - Opens with Available Slots and Manual Entry options",
+    "slot_display": "PASS - For 2026-01-21 (Wednesday), first slot shows 09:00-10:00 (60 min)",
+    "availability_settings_page": "PASS - Shows Session Duration (60), Buffer Time (10), Wednesday enabled with 09:00-17:00"
+  },
+  "api_endpoints_tested": [
+    "GET /api/availability - Get therapist availability settings",
+    "GET /api/available-slots/{therapist_id}?date= - Slot generation with IST timezone",
+    "POST /api/appointments - Create appointment with correct times",
+    "POST /api/blocked-times - Create blocked time",
+    "DELETE /api/blocked-times/{id} - Delete blocked time"
+  ]
+}
