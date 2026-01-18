@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { toast } from 'sonner';
 import { Plus, FileText, Edit, Trash2, Calendar, Clock, Link, User, Zap, BookmarkPlus, Settings } from 'lucide-react';
+import { formatDate, formatTime, formatDateLong } from '../utils/formatUtils';
 
 const TEMPLATE_CATEGORIES = [
   { value: 'subjective', label: 'Subjective (S)', color: 'bg-blue-100 text-blue-700' },
