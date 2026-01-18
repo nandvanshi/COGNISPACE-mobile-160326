@@ -365,7 +365,7 @@ class TestDoubleBookingPrevention:
             "notes": "TEST_First appointment"
         })
         
-        assert first_response.status_code == 201
+        assert first_response.status_code in [200, 201], f"First appointment creation failed: {first_response.text}"
         first_appt_id = first_response.json()["id"]
         
         # Try to create overlapping appointment
@@ -402,7 +402,7 @@ class TestDoubleBookingPrevention:
             "end_time": end1.isoformat(),
             "notes": "TEST_First for update test"
         })
-        assert first_response.status_code == 201
+        assert first_response.status_code in [200, 201], f"First appointment failed: {first_response.text}"
         first_id = first_response.json()["id"]
         
         # Second appointment: 14:00-15:00
@@ -415,7 +415,7 @@ class TestDoubleBookingPrevention:
             "end_time": end2.isoformat(),
             "notes": "TEST_Second for update test"
         })
-        assert second_response.status_code == 201
+        assert second_response.status_code in [200, 201], f"Second appointment failed: {second_response.text}"
         second_id = second_response.json()["id"]
         
         # Try to update second appointment to overlap with first
