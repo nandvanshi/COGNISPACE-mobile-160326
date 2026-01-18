@@ -276,6 +276,19 @@ const TherapistManagement = ({ onViewClients }) => {
     );
   };
 
+  // Filter therapists based on search query (name, email, mobile)
+  const filteredTherapists = useMemo(() => {
+    if (!searchQuery.trim()) return therapists;
+    const query = searchQuery.toLowerCase().trim();
+    return therapists.filter((therapist) => {
+      const fullName = (therapist.full_name || '').toLowerCase();
+      const email = (therapist.email || '').toLowerCase();
+      const mobile = (therapist.mobile || '').toLowerCase();
+      const credentials = (therapist.credentials || '').toLowerCase();
+      return fullName.includes(query) || email.includes(query) || mobile.includes(query) || credentials.includes(query);
+    });
+  }, [therapists, searchQuery]);
+
   if (loading) {
     return <div className="text-center py-12">Loading therapists...</div>;
   }
