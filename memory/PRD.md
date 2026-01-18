@@ -330,6 +330,40 @@ Build a secure, therapist-first web application for managing a therapy practice 
   - List of existing templates with delete buttons
   - Stats card showing template count
 
+### Phase 15: Secure Therapist-Client Messaging (COMPLETED - Jan 18, 2026)
+- [x] **Therapist-controlled visibility**:
+  - Therapists can enable/disable messaging per client
+  - `PUT /api/clients/{id}/messaging` - Toggle messaging enabled/disabled
+  - `GET /api/clients/{id}/messaging-status` - Get messaging status
+  - Client Settings dialog with toggle switches for each client
+- [x] **Restriction to assigned clients only**:
+  - `GET /api/messaging-contacts` - Returns only assigned clients with messaging enabled
+  - `POST /api/messages` - Validates sender-recipient relationship
+  - Therapists can only message their assigned clients
+  - Clients can only message their assigned therapist
+- [x] **Read-only mode enforcement**:
+  - Expired subscription therapists cannot send messages
+  - Returns 403 with "read-only mode" message
+  - UI shows warning banner and disables message input
+- [x] **Full messaging features**:
+  - `POST /api/messages` - Send message to valid recipient
+  - `GET /api/messages/{user_id}` - Get messages with specific user
+  - `GET /api/messages` - Get all conversations (list view)
+  - Auto-mark as read when viewing conversation
+  - Unread count badges on conversations
+- [x] **UI Features**:
+  - Conversations list with last message preview
+  - Messages panel with chat bubbles (sender/receiver styling)
+  - Timestamps on messages
+  - Read indicators for sent messages
+  - New Message dialog with contact selection
+  - Client Settings dialog for toggling messaging
+  - HIPAA compliance notice
+- [x] **Security**:
+  - verify_messaging_allowed() validates all send requests
+  - Uses `client_profiles` collection for therapist assignment
+  - messaging_enabled field in client_profiles
+
 ---
 
 ## Technical Architecture
