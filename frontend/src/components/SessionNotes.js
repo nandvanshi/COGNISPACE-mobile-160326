@@ -815,12 +815,7 @@ const SessionNotes = ({ isReadOnly = false }) => {
                       Session Note - {selectedNote.client_name}
                     </DialogTitle>
                     <p className="text-sm text-muted-foreground mt-1">
-                      {new Date(selectedNote.created_at).toLocaleDateString('en-US', {
-                        weekday: 'long',
-                        month: 'long',
-                        day: 'numeric',
-                        year: 'numeric',
-                      })}
+                      {formatDateLong(selectedNote.created_at)}
                       {' • '}
                       {selectedNote.template_type}
                     </p>
