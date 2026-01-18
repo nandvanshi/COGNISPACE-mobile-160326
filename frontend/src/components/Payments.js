@@ -8,9 +8,10 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { toast } from 'sonner';
-import { Plus, DollarSign } from 'lucide-react';
+import { Plus, IndianRupee } from 'lucide-react';
+import { formatCurrency, formatDate } from '../utils/formatUtils';
 
-const Payments = () => {
+const Payments = ({ isReadOnly = false }) => {
   const [payments, setPayments] = useState([]);
   const [clients, setClients] = useState([]);
   const [showDialog, setShowDialog] = useState(false);
@@ -83,24 +84,26 @@ const Payments = () => {
           <h2 className="text-4xl font-serif text-primary mb-2">Payment Tracking</h2>
           <p className="text-muted-foreground">Manually track client payments</p>
         </div>
-        <Button
-          onClick={() => setShowDialog(true)}
-          className="bg-primary hover:bg-primary-700 rounded-full"
-          data-testid="record-payment-button"
-        >
-          <Plus size={20} className="mr-2" />
-          Record Payment
-        </Button>
+        {!isReadOnly && (
+          <Button
+            onClick={() => setShowDialog(true)}
+            className="bg-primary hover:bg-primary-700 rounded-full"
+            data-testid="record-payment-button"
+          >
+            <Plus size={20} className="mr-2" />
+            Record Payment
+          </Button>
+        )}
       </div>
 
       {/* Summary Card */}
       <Card className="mb-6 p-6 bg-white/70 backdrop-blur-xl border border-border/40 rounded-xl" data-testid="payment-summary">
         <div className="flex items-center gap-4">
           <div className="p-4 bg-success/10 rounded-lg">
-            <DollarSign className="text-success" size={32} />
+            <IndianRupee className="text-success" size={32} />
           </div>
           <div>
-            <p className="text-3xl font-bold text-primary">${totalRevenue.toFixed(2)}</p>
+            <p className="text-3xl font-bold text-primary">{formatCurrency(totalRevenue)}</p>
             <p className="text-sm text-muted-foreground">
               {filterClient ? 'Client Total' : 'Total Revenue'}
             </p>
@@ -144,16 +147,19 @@ const Payments = () => {
               {filteredPayments.map((payment) => (
                 <tr key={payment.id} data-testid={`payment-${payment.id}`}>
                   <td className="px-6 py-4 text-sm text-foreground">
-                    {new Date(payment.created_at).toLocaleDateString()}
+                    {formatDate(payment.created_at)}
                   </td>
                   <td className="px-6 py-4 text-sm text-foreground font-medium">
                     {payment.client_name}
                   </td>
                   <td className="px-6 py-4 text-sm text-foreground font-medium">
-                    ${payment.amount.toFixed(2)}
+                    {formatCurrency(payment.amount)}
                   </td>
                   <td className="px-6 py-4 text-sm text-muted-foreground capitalize">
-                    {payment.payment_method}
+                    {payment.payment_method === 'bank_transfer' ? 'Bank Transfer' : 
+                     payment.payment_method === 'credit_card' ? 'Credit Card' :
+                     payment.payment_method === 'upi' ? 'UPI' :
+                     payment.payment_method}
                   </td>
                   <td className="px-6 py-4 text-sm text-muted-foreground">
                     {payment.notes || '-'}
@@ -197,7 +203,7 @@ const Payments = () => {
               </select>
             </div>
             <div>
-              <Label htmlFor="amount">Amount ($)</Label>
+              <Label htmlFor="amount">Amount (₹)</Label>
               <Input
                 id="amount"
                 type="number"
@@ -207,6 +213,7 @@ const Payments = () => {
                 onChange={(e) => setNewPayment({ ...newPayment, amount: e.target.value })}
                 required
                 className="mt-1"
+                placeholder="Enter amount in rupees"
               />
             </div>
             <div>
@@ -219,9 +226,10 @@ const Payments = () => {
                 className="w-full mt-1 h-12 px-4 rounded-lg border border-border bg-white focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="cash">Cash</option>
-                <option value="check">Check</option>
-                <option value="credit_card">Credit Card</option>
+                <option value="upi">UPI</option>
                 <option value="bank_transfer">Bank Transfer</option>
+                <option value="credit_card">Credit Card</option>
+                <option value="cheque">Cheque</option>
                 <option value="other">Other</option>
               </select>
             </div>
