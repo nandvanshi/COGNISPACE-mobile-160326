@@ -421,16 +421,9 @@ const SessionNotes = ({ isReadOnly = false }) => {
                   <p className="font-medium text-lg text-foreground">{note.client_name}</p>
                   <p className="text-sm text-muted-foreground flex items-center gap-2">
                     <Calendar size={14} />
-                    {new Date(note.created_at).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                    })}
+                    {formatDate(note.created_at)}
                     <Clock size={14} className="ml-2" />
-                    {new Date(note.created_at).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
+                    {formatTime(note.created_at)}
                   </p>
                 </div>
               </div>
