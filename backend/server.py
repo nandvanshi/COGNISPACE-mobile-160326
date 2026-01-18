@@ -10,7 +10,11 @@ from pydantic import BaseModel, Field, EmailStr, ConfigDict
 from typing import List, Optional, Literal
 import uuid
 from datetime import datetime, timezone, timedelta
+from zoneinfo import ZoneInfo
 from passlib.context import CryptContext
+
+# IST timezone for India Standard Time
+IST = ZoneInfo("Asia/Kolkata")
 import jwt
 from bson import ObjectId
 
