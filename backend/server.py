@@ -2022,9 +2022,9 @@ async def get_clients(current_user: dict = Depends(require_therapist_or_assistan
     return result
 
 @api_router.get("/clients/{client_id}", response_model=ClientProfile)
-async def get_client(client_id: str, current_user: dict = Depends(require_therapist)):
-    """Get a specific client - must be assigned to current therapist"""
-    therapist_id = current_user["id"]
+async def get_client(client_id: str, current_user: dict = Depends(require_therapist_or_assistant)):
+    """Get a specific client - must be assigned to therapist (or assistant's linked therapist)"""
+    therapist_id = get_effective_therapist_id(current_user)
     
     # Verify client is assigned to this therapist
     profile = await db.client_profiles.find_one(
