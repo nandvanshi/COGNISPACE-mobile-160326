@@ -197,11 +197,25 @@ Build a secure, therapist-first web application for managing a therapy practice 
   - Expired subscription therapists cannot create/update/delete appointments
   - UI hides action buttons when in read-only mode
 - [x] **UI Features**:
-  - Stats cards: Today's Sessions, Completed, Upcoming counts
+  - Stats cards: Today's Sessions, Completed, Upcoming, Blocked Times counts
   - Filter by status dropdown (All/Scheduled/Completed/Cancelled)
   - Appointments grouped by date with date headers
   - Create/Edit dialogs with datetime-local inputs
   - Action buttons: Edit (pencil), Complete (checkmark), Cancel (X), Delete (trash)
+  - **Block Time button** with dedicated dialog
+  - **Appointments/Blocked Times toggle** to switch views
+- [x] **Calendar Blocking (P0)**:
+  - Block full day (holiday/leave) via is_all_day checkbox
+  - Block specific time ranges on a date
+  - Optional reason field (Leave, Holiday, Personal, Offline Booking, Training, Meeting, Other)
+  - Blocked slots excluded from available slots (enforced in slot generation backend)
+  - Visually distinct blocked times view with red styling
+  - Cannot override existing appointments (frontend validates before blocking)
+  - Therapist: full block/unblock control
+  - Assistant: can block/unblock time but cannot change availability rules
+  - `POST /api/blocked-times` - Create blocked time
+  - `GET /api/blocked-times` - List blocked times
+  - `DELETE /api/blocked-times/{id}` - Remove blocked time
 
 ### Phase 11: Therapist Availability & Slot-Based Scheduling (COMPLETED - Jan 18, 2026)
 - [x] **Weekly working hours definition**:
