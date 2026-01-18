@@ -1219,6 +1219,148 @@ async def assign_subscription(therapist_id: str, subscription_data: AssignSubscr
     
     return {"message": "Subscription assigned", "subscription_id": subscription_id, "discount_applied": discount}
 
+class ExtendSubscription(BaseModel):
+    additional_days: int
+
+@api_router.post("/admin/therapists/{therapist_id}/extend-subscription")
+async def extend_subscription(therapist_id: str, extend_data: ExtendSubscription, current_user: dict = Depends(require_super_admin)):
+    """Extend a therapist's current subscription by additional days"""
+    therapist = await db.users.find_one({"id": therapist_id, "role": "therapist"}, {"_id": 0})
+    if not therapist:
+        raise HTTPException(status_code=404, detail="Therapist not found")
+    
+    # Get current subscription
+    subscription = await db.subscriptions.find_one(
+        {"therapist_id": therapist_id},
+        {"_id": 0},
+        sort=[("start_date", -1)]
+    )
+    
+    if not subscription:
+        raise HTTPException(status_code=400, detail="No subscription found. Please assign a subscription first.")
+    
+    # Extend end date
+    current_end = datetime.fromisoformat(subscription["end_date"])
+    new_end = current_end + timedelta(days=extend_data.additional_days)
+    
+    await db.subscriptions.update_one(
+        {"id": subscription["id"]},
+        {"$set": {"end_date": new_end.isoformat()}}
+    )
+    
+    # Update status to active if it was expired
+    await db.users.update_one(
+        {"id": therapist_id},
+        {"$set": {"subscription_status": "active"}}
+    )
+    
+    await log_audit(current_user["id"], current_user["role"], "extend_subscription", "therapist", therapist_id, {"additional_days": extend_data.additional_days})
+    
+    return {"message": f"Subscription extended by {extend_data.additional_days} days", "new_end_date": new_end.isoformat()}
+
+@api_router.post("/admin/therapists/{therapist_id}/assign-trial")
+async def assign_trial_subscription(therapist_id: str, current_user: dict = Depends(require_super_admin)):
+    """Assign a default 30-day trial subscription to a therapist"""
+    therapist = await db.users.find_one({"id": therapist_id, "role": "therapist"}, {"_id": 0})
+    if not therapist:
+        raise HTTPException(status_code=404, detail="Therapist not found")
+    
+    now = datetime.now(timezone.utc)
+    end_date = now + timedelta(days=30)
+    
+    # Create trial subscription
+    subscription_id = str(uuid.uuid4())
+    subscription_doc = {
+        "id": subscription_id,
+        "therapist_id": therapist_id,
+        "plan_id": "free_trial",
+        "plan_name": "Free Trial",
+        "status": "trial",
+        "start_date": now.isoformat(),
+        "end_date": end_date.isoformat(),
+        "coupon_code": None
+    }
+    
+    await db.subscriptions.insert_one(subscription_doc)
+    
+    # Update therapist subscription status
+    await db.users.update_one(
+        {"id": therapist_id},
+        {"$set": {
+            "subscription_status": "trial",
+            "subscription_plan": "free_trial"
+        }}
+    )
+    
+    await log_audit(current_user["id"], current_user["role"], "assign_trial", "therapist", therapist_id)
+    
+    return {"message": "30-day trial subscription assigned", "subscription_id": subscription_id, "end_date": end_date.isoformat()}
+
+@api_router.get("/admin/therapists/{therapist_id}/subscription")
+async def get_therapist_subscription(therapist_id: str, current_user: dict = Depends(require_super_admin)):
+    """Get detailed subscription info for a therapist"""
+    therapist = await db.users.find_one({"id": therapist_id, "role": "therapist"}, {"_id": 0})
+    if not therapist:
+        raise HTTPException(status_code=404, detail="Therapist not found")
+    
+    subscription = await db.subscriptions.find_one(
+        {"therapist_id": therapist_id},
+        {"_id": 0},
+        sort=[("start_date", -1)]
+    )
+    
+    return {
+        "therapist_id": therapist_id,
+        "therapist_name": therapist["full_name"],
+        "subscription_status": therapist.get("subscription_status"),
+        "subscription_plan": therapist.get("subscription_plan"),
+        "subscription": subscription
+    }
+
+@api_router.post("/admin/migrate-subscriptions")
+async def migrate_subscriptions(current_user: dict = Depends(require_super_admin)):
+    """Assign default trial subscriptions to all therapists without subscriptions"""
+    therapists_without_subscription = await db.users.find(
+        {"role": "therapist", "$or": [
+            {"subscription_status": {"$exists": False}},
+            {"subscription_status": None},
+            {"subscription_status": ""}
+        ]},
+        {"_id": 0}
+    ).to_list(1000)
+    
+    now = datetime.now(timezone.utc)
+    end_date = now + timedelta(days=30)
+    migrated_count = 0
+    
+    for therapist in therapists_without_subscription:
+        subscription_id = str(uuid.uuid4())
+        subscription_doc = {
+            "id": subscription_id,
+            "therapist_id": therapist["id"],
+            "plan_id": "free_trial",
+            "plan_name": "Free Trial",
+            "status": "trial",
+            "start_date": now.isoformat(),
+            "end_date": end_date.isoformat(),
+            "coupon_code": None
+        }
+        
+        await db.subscriptions.insert_one(subscription_doc)
+        
+        await db.users.update_one(
+            {"id": therapist["id"]},
+            {"$set": {
+                "subscription_status": "trial",
+                "subscription_plan": "free_trial"
+            }}
+        )
+        migrated_count += 1
+    
+    await log_audit(current_user["id"], current_user["role"], "migrate_subscriptions", "system", None, {"count": migrated_count})
+    
+    return {"message": f"Migrated {migrated_count} therapists to trial subscription"}
+
 @api_router.get("/admin/coupons", response_model=List[CouponCode])
 async def get_coupons(current_user: dict = Depends(require_super_admin)):
     coupons = await db.coupon_codes.find({}, {"_id": 0}).to_list(1000)
