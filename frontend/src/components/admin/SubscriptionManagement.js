@@ -7,7 +7,8 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { toast } from 'sonner';
-import { Plus, Trash2, DollarSign } from 'lucide-react';
+import { Plus, Trash2, IndianRupee } from 'lucide-react';
+import { formatCurrency } from '../../utils/formatUtils';
 
 const SubscriptionManagement = () => {
   const [plans, setPlans] = useState([]);
