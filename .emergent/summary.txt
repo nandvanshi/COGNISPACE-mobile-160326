@@ -3,7 +3,7 @@
 **PRODUCT REQUIREMENTS**
 - **User Roles**: Therapist, Client, and Super Admin.
 - **Authentication**: Secure login for all roles. Client self-registration is disabled; clients are created by Therapists or Super Admins. Therapist registration requires Super Admin approval.
-- **Practice Management**: Client profiles (editable), appointment scheduling, session notes (SOAP & DAP), secure messaging, and payment tracking.
+- **Practice Management**: Client profiles (editable), appointment scheduling (with availability), session notes (SOAP & DAP), secure messaging, and payment tracking.
 - **Clinical Support**: Assessment suggestion engine, therapy protocol builder, and homework/resource sharing.
 - **Super Admin & Subscriptions**: A Super Admin role to manage therapists (approval, suspension, manual creation, profile edits), clients (full CRUD), and a subscription module (assigning/changing plans).
 - **Data Isolation**: Therapists can only see and manage their own assigned clients.
@@ -13,165 +13,159 @@
 **User's preferred language**: English
 
 **what currently exists?**
-A full-stack application with a FastAPI backend, React frontend, and MongoDB database. Key features include:
--   **Multi-Role Authentication**: Secure login for Super Admin, Therapist, and Client roles. Client self-registration is disabled, and therapist onboarding is managed via an admin approval workflow.
--   **Super Admin Panel**: A functional dashboard for approving/managing therapists and full CRUD operations on clients. The UI for managing Subscription Plans and Coupon Codes is present but requires fixes.
--   **Therapist Dashboard**: Therapists can create, view, and edit profiles for their assigned clients. Profile photos (URL-based) are supported.
--   **Security & Access Control**:
-    -   **Data Isolation**: Backend logic is in place to ensure therapists can only access their own assigned clients.
-    -   **Read-Only Mode**: Therapists with expired subscriptions are switched to a read-only mode with a persistent UI banner, blocking all data modification actions.
+A full-stack application with a FastAPI backend, React frontend, and MongoDB database. All previously reported P0 blockers have been resolved.
+-   **Multi-Role Authentication**: Secure login for Super Admin, Therapist, and Client roles.
+-   **Super Admin Panel**: A functional dashboard for approving/managing therapists, full CRUD on clients, and a now-functional subscription management system. A search bar was added to the therapist management page.
+-   **Therapist Dashboard**: Therapists can manage clients, a full-featured appointment calendar with availability settings, create/edit session notes with SOAP/DAP templates and quick-insert functionality, and set up recurring appointments.
+-   **Messaging**: A basic messaging system exists, which is currently being enhanced to add security and new features.
+-   **Security**: Data isolation ensures therapists only see their own clients. A read-only mode is enforced for therapists with expired subscriptions.
 
 **Last working item**:
--   **Last item agent was working**: The agent was about to begin work on two user-requested P0 items:
-    1.  Fixing the critical subscription assignment issue where Super Admins cannot assign/change therapist subscriptions and new therapists don't get a default plan.
-    2.  Adding a search/filter option to the Therapist Management page in the Super Admin panel.
--   **Status**: NOT STARTED
+-   **Last item agent was working**: The agent was working on enhancing the secure messaging feature as requested by the user. The goal was to implement therapist-controlled visibility, restrict messaging to assigned clients only, and respect the subscription read-only mode. The agent updated the backend models and endpoints in  and overwrote the frontend  component to add the new logic.
+-   **Status**: IN PROGRESS
 -   **Agent Testing Done**: N
 -   **Which testing method agent to use?**: both
 -   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
--   Issue 1: (P0) Subscription Management is Broken
--   Issue 2: (P0) Search Functionality is Missing in Therapist Management
+-   Issue 1: (P0) Complete Secure Messaging Implementation
 
 **Issues Detail**:
 -   **Issue 1**:
-    -   **Description**: A critical business blocker where the Super Admin is unable to assign, change, or extend subscriptions for therapists. New therapists (both approved and manually created) are not automatically assigned a default subscription, and there's no mechanism to handle existing therapists who lack a subscription plan.
-    -   **Attempted fixes**: The agent identified that an  endpoint exists but has not been integrated into the admin UI flow. The agent overwrote the  component with code intended to fix this, but it has not been tested or fully implemented.
+    -   **Description**: The messaging feature needs to be finalized to meet the user's P0 requirements: therapist-controlled visibility, restriction to assigned clients, and read-only mode enforcement.
+    -   **Attempted fixes**: Backend models and endpoints in  were updated. The frontend  component was overwritten. No testing has been performed yet.
     -   **Next debug checklist**:
-        1.  Implement a startup migration in  to automatically assign a default free_trial subscription to any existing therapist missing one.
-        2.  Create or verify backend endpoints for the Super Admin to assign, change, and extend therapist subscriptions (e.g., ).
-        3.  Update the  component to include a robust UI (e.g., a modal with a dropdown of plans and a duration field) for managing subscriptions.
-        4.  End-to-end test the flow: approve a new therapist and verify subscription, change an existing therapist's plan, and check the migration works on startup.
-    -   **Why fix this issue and what will be achieved with the fix?**: This is a P0 blocker preventing the core subscription business model from functioning.
+        1.  Restart the backend service to apply the latest changes in .
+        2.  Using , test the new backend logic:
+            -  Verify a therapist can enable/disable messaging for a client.
+            -  Verify a therapist can only start a conversation with an assigned client.
+            -  Verify an attempt to send a message by a therapist in read-only mode fails.
+        3.  Using the screenshot tool, test the frontend UI flow:
+            -  Log in as a therapist.
+            -  Navigate to the client management section and verify the UI for enabling/disabling messaging.
+            -  Navigate to the Messaging page and verify that only clients with messaging enabled appear.
+            -  Test sending and receiving messages.
+    -   **Why fix this issue and what will be achieved with the fix?**: This is a P0 feature required for secure communication between therapists and clients.
     -   **Status**: IN PROGRESS
-    -   **Is recurring issue?**: Y
+    -   **Is recurring issue?**: N
     -   **Should Test frontend/backend/both after fix?**: both
     -   **Blocked on other issue**: None
 
--   **Issue 2**:
-    -   **Description**: The Therapist Management page in the Super Admin panel lacks a search or filter input, making it difficult for the admin to find specific therapists as the list grows.
-    -   **Attempted fixes**: None. This is a new request.
-    -   **Next debug checklist**:
-        1.  Add a search input field to the  component.
-        2.  Implement client-side filtering logic using React state (, ) to filter the list of therapists by name or email as the admin types in the search box.
-    -   **Why fix this issue and what will be achieved with the fix?**: Improves usability and efficiency for the Super Admin.
-    -   **Status**: NOT STARTED
-    -   **Is recurring issue?**: N
-    -   **Should Test frontend/backend/both after fix?**: frontend
-    -   **Blocked on other issue**: None
-
 **In progress Task List**:
--   **Task 1**: Enhance Super Admin Therapist Management
-    -   **Where to resume**: Integrate the search functionality into the newly overwritten  file, then implement and test the subscription assignment UI and logic.
-    -   **What will be achieved with this?**: A fully functional Therapist Management panel where Super Admins can easily find therapists and manage their subscription plans.
+-   **Task 1**: (P0) Secure Therapist-Client Messaging
+    -   **Where to resume**: The backend and frontend code has been written. The next step is to test it thoroughly, first with  for the backend and then with the screenshot tool for the end-to-end frontend flow.
+    -   **What will be achieved with this?**: A fully functional and secure in-app messaging system.
     -   **Status**: IN PROGRESS
     -   **Blocked on something**: None.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks**:
     -   (P1) Fix and test the Coupon Code management module in the Super Admin panel.
-    -   (P2) Implement the full Appointment Calendar feature, including creation, viewing, and double-booking prevention.
 -   **Future Tasks**:
-    -   Build out the Session Notes feature with SOAP and DAP templates.
-    -   Develop the secure therapist-client messaging interface.
-    -   Implement the clinical support features: Assessment suggestion engine and Therapy protocol builder.
+    -   Build out the Session Notes feature with pre-filled common phrases/templates.
+    -   Build out the clinical support features: Assessment suggestion engine and Therapy protocol builder.
     -   Implement payment tracking functionality.
+    -   Implement template sharing between therapists.
 
 **Completed work in this session**
--   **P0 Security Fix: Data Isolation**: Implemented and verified that therapists can only access their own assigned clients. Disabled client self-registration. (DONE)
--   **P0 Feature: Subscription Read-Only Mode**: Therapists with expired subscriptions are now put in a read-only mode and see a persistent banner, instead of being completely blocked. (DONE)
--   **P0 Bugfix: Super Admin Approval Flow**: Fixed frontend bugs and a backend logic issue preventing the Super Admin from approving new therapist applications. (DONE)
--   **P1 Feature: Full Client Management**: Implemented and UI-verified full CRUD functionality for client profiles (including photo URLs) and credentials, available to both assigned therapists and Super Admins. (DONE)
--   **P1 Feature: Therapist Profile Photo**: Added the ability for Super Admins to edit a therapist's profile photo URL. (DONE)
--   **P1 Bugfix: Backend Stability ()**: Patched the backend to safely handle legacy client records without a  field, preventing crashes. (DONE)
+-   **P0 Search in Therapist Management**: Added a search bar with client-side filtering to the Super Admin's therapist management page. (DONE)
+-   **P0 Subscription Management**: Fully fixed and verified the subscription assignment workflow, including startup migration and UI controls for the Super Admin. (DONE & VERIFIED)
+-   **P0 Appointment Calendar**: Implemented a comprehensive scheduling system with appointment creation, status updates (complete, cancel), and double-booking prevention. (DONE & VERIFIED)
+-   **P0 Therapist Availability & Slot-Based Scheduling**: Implemented a system for therapists to define working hours, session duration, and buffer times, which automatically generates bookable slots. (DONE & VERIFIED)
+-   **P0 Session Notes**: Enhanced the feature to include SOAP/DAP templates, linking to appointments, and respecting read-only mode. (DONE & VERIFIED)
+-   **Recurring Appointments**: Added functionality for therapists to create recurring appointment series. (DONE & VERIFIED)
+-   **Note Templates (Quick Insert)**: Added a feature for therapists to create and use text templates to speed up note-taking. (DONE & VERIFIED)
 
 **Earlier issues found/mentioned but not fixed**
-None. All previously known issues have been addressed.
+-   None.
 
 **Known issue recurrence from previous fork**
--   **Issue recurrence in previous fork**: The Subscription and Coupon modules have been problematic. The agent fixed initial loading errors, but the core business logic for assigning/managing plans was still broken, leading to the current P0 issue.
+-   **Issue recurrence in previous fork**: The Subscription module was a recurring problem.
 -   **Recurrence count**: 2
--   **Status**: IN PROGRESS
+-   **Status**: RESOLVED (The entire workflow was rebuilt and verified by the testing agent).
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Backend**: FastAPI, Pydantic, MongoDB
+-   **Backend**: FastAPI, Pydantic, MongoDB, Slot-generation logic
 -   **Frontend**: React, Tailwind CSS, Shadcn UI, Axios
 -   **Authentication**: JWT-based, Role-Based Access Control (Client, Therapist, Super Admin)
--   **Access Control**: Implemented custom dependencies () to enforce read-only vs. write access based on subscription status.
+-   **Access Control**: Custom FastAPI dependencies () to enforce read-only vs. write access.
 
 **key DB schema**
 -   **User**: 
--   **Client**:  (therapist_id is mandatory and enforced)
--   **TherapistApplication**: 
--   **SubscriptionPlan**: 
--   **UserSubscription**: 
+-   **Client**: 
+-   **Appointment**: 
+-   **SessionNote**: 
+-   **NoteTemplate**: (New) 
+-   **RecurringPattern**: (New) 
+-   **BlockedTime**: (New) 
+-   **Message**: 
 
 **changes in tech stack**
 -   None.
 
 **All files of reference**
--   : Heavily modified with new endpoints for client/therapist management, data isolation logic, and subscription access control.
--   : Overwritten to add subscription and photo management features. Requires adding search functionality.
--   : Overwritten to add full client CRUD capabilities for the Super Admin.
--   : Updated to fetch subscription status and display the read-only banner.
--   : Simplified to remove the client self-registration tab and add an informational message.
--   : Created and updated to track project progress.
+-   : Heavily modified with new endpoints and models for all completed features.
+-   : Updated with search functionality.
+-   : Rewritten to support slot-based booking.
+-   : New file for therapist availability management.
+-   : Rewritten to support templates, appointment linking, and quick-insert templates.
+-   : New file for managing recurring appointments.
+-   : Overwritten to add new security and UI features.
+-   : Updated to include routing for new components.
+-   : Updated with progress on all completed tasks.
 
 **Areas that need refactoring**:
--    is critically monolithic and should be broken down into separate files for routes, models, dependencies, and services to improve maintainability.
--   Large React components like  and  should be decomposed into smaller, more manageable sub-components (e.g., , , ).
+-    is critically monolithic and should be broken down into separate files for routes, models, and services.
+-   Large React components (, ) could be further decomposed.
 
 **key api endpoints**
--   : Assign/change a therapist's subscription.
--   : Reset a client's password (for admins).
--   : Update a client's profile (for admins).
--   : Returns the current therapist's subscription details and read-only status.
--   : Now filters to return only clients assigned to the logged-in therapist.
--   : Endpoint is now disabled for clients.
+-   **Availability**: , 
+-   **Blocked Time**: , 
+-   **Session Notes**: , 
+-   **Note Templates**: , 
+-   **Recurring Appointments**: , 
+-   **Messaging**: , ,  (new)
 
 **Critical Info for New Agent**
--   **P0 Priority**: The immediate focus must be on fixing the subscription assignment workflow (Issue 1) and adding search to the therapist management page (Issue 2). These are user-mandated P0 tasks.
--   **Data Isolation is Sacrosanct**: The logic ensuring therapists only see their own clients is a critical security feature. Any new backend endpoint accessing client data must respect this rule.
--   **Two Login Portals**: Remember to use  for the Super Admin and  for therapists. They are separate pages with different authentication logic.
--   **Test Credentials**:
-    -   **Super Admin**: Username , Password .
-    -   **Therapist**: Find credentials by querying the  collection in the database. A common test account is .
+-   **P0 Priority**: The immediate and only focus is to complete and verify the **Secure Messaging** feature (Issue 1).
+-   **Testing is Key**: The agent successfully used the  to validate large features. This should be done for messaging once implemented.
+-   **Read-Only & Data Isolation**: These security features are paramount. All new features must continue to respect them.
 
 **documents and test reports created in this job**
 -   
--   
--   
--   
--   
--   
+-    (Subscription)
+-    (Appointments)
+-    (Availability)
+-    (Session Notes & Recurring)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: Requested read-only mode for expired subscriptions instead of a hard block. **Status: DONE**.
-2.  **User**: Requested client profile editing, credential editing, and photo support. **Status: DONE**.
-3.  **User**: Reported that client creation/editing and profile photos were still not working. **Status: ADDRESSED** (Agent performed UI verification and fixed remaining issues).
-4.  **User**: Confirmed the P0 fixes were complete and provided a summary. **Status: DONE**.
-5.  **User**: Reported Super Admin couldn't edit client details. **Status: ADDRESSED** (Agent implemented admin-specific endpoints and UI).
-6.  **User**: Confirmed admin client management was working. **Status: DONE**.
-7.  **User**: Reported a critical P0 data isolation issue where therapists could see all clients. **Status: ADDRESSED** (Agent implemented therapist-specific data filtering and disabled client self-registration).
-8.  **User**: Asked how to log in as Super Admin. **Status: DONE**.
-9.  **User**: Reported a critical P0 issue with subscription assignment for therapists. **Status: IN PROGRESS**.
-10. **User**: Requested a search option in the Super Admin's Therapist Management page. **Status: NOT STARTED**.
+1.  **User**: Confirmed calendar work and requested full Therapist Availability & Slot-Based Scheduling. **Status: DONE**.
+2.  **User**: Replied to agent's clarification on the scope of availability features and approved the implementation plan. **Status: DONE**.
+3.  **User**: Confirmed availability/scheduling is complete and requested work on Session Notes with recurring appointments. **Status: DONE**.
+4.  **User**: Responded yes to the agent's suggestion to add quick-insert note templates. **Status: DONE**.
+5.  **User**: Acknowledged the agent's work with ?. **Status: ADDRESSED**.
+6.  **User**: Acknowledged agent's work with plz update ?. **Status: ADDRESSED**.
+7.  **User**: Confirmed note templates are done and requested work on the next P0: Secure therapist-client messaging. **Status: IN PROGRESS**.
+8.  **User**: Acknowledged agent's search feature fix and reiterated the need to focus on the P0 subscription blocker. **Status: ADDRESSED**.
+9.  **User**: Confirmed P0 subscription work is complete and requested work on the next P0: Appointment Calendar. **Status: ADDRESSED**.
+10. **User**: Provided yes as a response to start working on note templates. **Status: DONE**.
 
 **Project Health Check:**
 -   **Broken**:
-    -   The core business logic for a Super Admin to assign, change, or extend therapist subscriptions is non-functional.
+    -   None.
 -   **Mocked**:
-    -   Appointment Calendar, Session Notes, and Secure Messaging features are UI placeholders without backend logic.
+    -   Coupon Code management UI exists but the workflow is untested.
+    -   Clinical support features (Assessment engine, Therapy protocol builder).
+    -   Payment tracking.
 
 **3rd Party Integrations**
 -   None.
 
 **Testing status**
--   **Testing agent used after significant changes**: YES (5 times)
+-   **Testing agent used after significant changes**: YES (4 times for major features in this session)
 -   **Troubleshoot agent used after agent stuck in loop**: NO
 -   **Test files created**: Test reports were generated at .
 -   **Known regressions**: None.
@@ -183,7 +177,7 @@ None. All previously known issues have been addressed.
     -   **Password**: 
 -   **Therapist**:
     -   **URL**: 
-    -   Query the  database collection for therapist credentials. A common test user has the mobile .
+    -   Query the  database collection for therapist credentials. A known working user has mobile .
 
 **What agent forgot to execute**
--   The agent overwrote  to begin work on subscription management but did not incorporate the user's immediately preceding request to add a search bar to that same component. The next agent must reconcile these two requirements.</analysis>
+-   The agent has written the code for the messaging feature enhancements but has not yet tested or verified that they work. This is the immediate next step.</analysis>
