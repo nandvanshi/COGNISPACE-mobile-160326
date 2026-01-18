@@ -2673,45 +2673,41 @@ async def verify_messaging_allowed(sender_id: str, sender_role: str, recipient_i
     """Verify that messaging is allowed between two users.
     Returns (is_allowed, error_message, recipient_doc)
     """
-    # Find recipient - could be in users or clients collection
+    # Find recipient in users collection
     recipient = await db.users.find_one({"id": recipient_id}, {"_id": 0})
-    if not recipient:
-        recipient = await db.clients.find_one({"id": recipient_id}, {"_id": 0})
     
     if not recipient:
         return False, "Recipient not found", None
     
-    recipient_role = recipient.get("role", "client")  # clients collection entries are clients
+    recipient_role = recipient.get("role", "client")
     
     # Therapists can only message their assigned clients
     if sender_role == "therapist":
         if recipient_role != "client":
             return False, "Therapists can only message their assigned clients", None
         
-        # Check if client is assigned to this therapist
-        client_therapist_id = recipient.get("therapist_id")
-        if client_therapist_id != sender_id:
+        # Check if client is assigned to this therapist via client_profiles
+        profile = await db.client_profiles.find_one({"user_id": recipient_id, "therapist_id": sender_id}, {"_id": 0})
+        if not profile:
             return False, "This client is not assigned to you", None
         
         # Check if messaging is enabled for this client
-        if not recipient.get("messaging_enabled", True):
+        if not profile.get("messaging_enabled", True):
             return False, "Messaging is disabled for this client", None
     
     # Clients can only message their assigned therapist
     if sender_role == "client":
-        sender_doc = await db.clients.find_one({"id": sender_id}, {"_id": 0})
-        if not sender_doc:
-            sender_doc = await db.users.find_one({"id": sender_id}, {"_id": 0})
+        # Get client's profile to find their therapist
+        sender_profile = await db.client_profiles.find_one({"user_id": sender_id}, {"_id": 0})
         
-        if not sender_doc:
-            return False, "Sender not found", None
+        if not sender_profile:
+            return False, "Client profile not found", None
         
-        client_therapist_id = sender_doc.get("therapist_id")
-        if recipient_id != client_therapist_id:
+        if recipient_id != sender_profile.get("therapist_id"):
             return False, "You can only message your assigned therapist", None
         
         # Check if messaging is enabled for this client
-        if not sender_doc.get("messaging_enabled", True):
+        if not sender_profile.get("messaging_enabled", True):
             return False, "Messaging has been disabled by your therapist", None
     
     return True, None, recipient
