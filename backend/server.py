@@ -293,7 +293,6 @@ class Message(BaseModel):
     created_at: datetime
 
 class ClientMessagingSettings(BaseModel):
-    client_id: str
     messaging_enabled: bool
 
 # Assessment Models
