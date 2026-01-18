@@ -502,24 +502,11 @@ const AvailabilitySettings = ({ isReadOnly = false }) => {
               >
                 <div>
                   <p className="font-medium text-foreground">
-                    {new Date(block.start_datetime).toLocaleDateString('en-US', {
-                      weekday: 'short',
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                    })}
+                    {formatDateWithDay(block.start_datetime)}
                     {!block.is_all_day && (
                       <>
                         {' '}
-                        {new Date(block.start_datetime).toLocaleTimeString([], {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}{' '}
-                        -{' '}
-                        {new Date(block.end_datetime).toLocaleTimeString([], {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
+                        {formatTimeRange(block.start_datetime, block.end_datetime)}
                       </>
                     )}
                     {block.is_all_day && ' (All Day)'}
