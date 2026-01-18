@@ -441,43 +441,14 @@ async def log_audit(user_id: str, user_role: str, action: str, resource_type: st
 
 @api_router.post("/auth/register", response_model=TokenResponse)
 async def register(user_data: UserRegister):
-    # Only clients can self-register
-    if user_data.role != "client":
-        raise HTTPException(status_code=400, detail="Only clients can self-register. Therapists must apply separately.")
-    
-    # Validate mobile number
-    if not validate_mobile(user_data.mobile):
-        raise HTTPException(status_code=400, detail="Mobile number must be exactly 10 digits")
-    
-    # Check if mobile already exists
-    existing_mobile = await db.users.find_one({"mobile": user_data.mobile})
-    if existing_mobile:
-        raise HTTPException(status_code=400, detail="Mobile number already registered")
-    
-    # Check if email exists (if provided)
-    if user_data.email:
-        existing_email = await db.users.find_one({"email": user_data.email})
-        if existing_email:
-            raise HTTPException(status_code=400, detail="Email already registered")
-    
-    user_id = str(uuid.uuid4())
-    client_id = generate_client_id()
-    
-    user_doc = {
-        "id": user_id,
-        "client_id": client_id,
-        "mobile": user_data.mobile,
-        "email": user_data.email,
-        "password_hash": hash_password(user_data.password),
-        "full_name": user_data.full_name,
-        "role": user_data.role,
-        "created_at": datetime.now(timezone.utc).isoformat()
-    }
-    
-    await db.users.insert_one(user_doc)
-    await log_audit(user_id, user_data.role, "register", "user", user_id)
-    
-    token = create_token(user_id, user_data.mobile, user_data.role)
+    """
+    Client self-registration is DISABLED for security and data isolation.
+    Clients must be created by their assigned therapist or Super Admin.
+    """
+    raise HTTPException(
+        status_code=403, 
+        detail="Client self-registration is disabled. Please contact your therapist to create an account for you."
+    )
     user = User(
         id=user_id,
         client_id=client_id,
