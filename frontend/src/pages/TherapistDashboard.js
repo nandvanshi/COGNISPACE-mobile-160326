@@ -48,6 +48,7 @@ const TherapistDashboard = () => {
     { id: 'assessments', label: 'Assessments', icon: ClipboardList },
     { id: 'protocols', label: 'Protocols', icon: BookOpen },
     { id: 'payments', label: 'Payments', icon: DollarSign },
+    { id: 'assistants', label: 'Assistants', icon: UserCog },
   ];
 
   const handleLogout = () => {
