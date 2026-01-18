@@ -2136,8 +2136,17 @@ async def get_available_slots(therapist_id: str, date: str, current_user: dict =
             # Check if this slot overlaps with any existing appointment
             is_booked = False
             for appt in existing_appointments:
-                appt_start = datetime.fromisoformat(appt["start_time"].replace('Z', '+00:00'))
-                appt_end = datetime.fromisoformat(appt["end_time"].replace('Z', '+00:00'))
+                appt_start_str = appt["start_time"]
+                appt_end_str = appt["end_time"]
+                # Handle both 'Z' suffix and no timezone
+                if appt_start_str.endswith('Z'):
+                    appt_start = datetime.fromisoformat(appt_start_str.replace('Z', '+00:00'))
+                else:
+                    appt_start = datetime.fromisoformat(appt_start_str).replace(tzinfo=timezone.utc)
+                if appt_end_str.endswith('Z'):
+                    appt_end = datetime.fromisoformat(appt_end_str.replace('Z', '+00:00'))
+                else:
+                    appt_end = datetime.fromisoformat(appt_end_str).replace(tzinfo=timezone.utc)
                 
                 if current_start < appt_end and slot_end > appt_start:
                     is_booked = True
@@ -2146,8 +2155,17 @@ async def get_available_slots(therapist_id: str, date: str, current_user: dict =
             # Check if this slot is blocked
             is_blocked = False
             for bt in blocked_times:
-                bt_start = datetime.fromisoformat(bt["start_datetime"].replace('Z', '+00:00'))
-                bt_end = datetime.fromisoformat(bt["end_datetime"].replace('Z', '+00:00'))
+                bt_start_str = bt["start_datetime"]
+                bt_end_str = bt["end_datetime"]
+                # Handle both 'Z' suffix and no timezone
+                if bt_start_str.endswith('Z'):
+                    bt_start = datetime.fromisoformat(bt_start_str.replace('Z', '+00:00'))
+                else:
+                    bt_start = datetime.fromisoformat(bt_start_str).replace(tzinfo=timezone.utc)
+                if bt_end_str.endswith('Z'):
+                    bt_end = datetime.fromisoformat(bt_end_str.replace('Z', '+00:00'))
+                else:
+                    bt_end = datetime.fromisoformat(bt_end_str).replace(tzinfo=timezone.utc)
                 
                 if current_start < bt_end and slot_end > bt_start:
                     is_blocked = True
