@@ -9,6 +9,7 @@ import { Switch } from './ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { toast } from 'sonner';
 import { Clock, Plus, Trash2, Calendar, Settings, Ban, Copy } from 'lucide-react';
+import { formatDateWithDay, formatTime, formatTimeRange } from '../utils/formatUtils';
 
 const DAYS = [
   { key: 'monday', label: 'Monday', short: 'Mon' },
