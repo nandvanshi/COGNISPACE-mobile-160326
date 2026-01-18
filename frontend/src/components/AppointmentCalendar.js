@@ -530,15 +530,7 @@ const AppointmentCalendar = ({ isReadOnly = false }) => {
                             <p className="font-medium text-lg text-foreground">{appt.client_name}</p>
                             <p className="text-sm text-muted-foreground flex items-center gap-1">
                               <Clock size={14} />
-                              {new Date(appt.start_time).toLocaleTimeString([], {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              })}{' '}
-                              -{' '}
-                              {new Date(appt.end_time).toLocaleTimeString([], {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              })}
+                              {formatTimeRange(appt.start_time, appt.end_time)}
                             </p>
                           </div>
                         </div>
