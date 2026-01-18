@@ -7,21 +7,25 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Textarea } from './ui/textarea';
 import { toast } from 'sonner';
-import { Plus, Calendar as CalendarIcon, Clock, User, Edit, Check, X, Trash2, ChevronLeft, ChevronRight, Settings } from 'lucide-react';
+import { Plus, Calendar as CalendarIcon, Clock, User, Edit, Check, X, Trash2, ChevronLeft, ChevronRight, Settings, Ban, AlertTriangle } from 'lucide-react';
 
 const AppointmentCalendar = ({ isReadOnly = false }) => {
   const { user } = useAuth();
   const [appointments, setAppointments] = useState([]);
+  const [blockedTimes, setBlockedTimes] = useState([]);
   const [clients, setClients] = useState([]);
   const [availability, setAvailability] = useState(null);
   const [availableSlots, setAvailableSlots] = useState([]);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showBlockDialog, setShowBlockDialog] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [selectedDate, setSelectedDate] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [bookingMode, setBookingMode] = useState('slots'); // 'slots' or 'manual'
+  const [viewMode, setViewMode] = useState('appointments'); // 'appointments' or 'blocked'
+  const [bookingMode, setBookingMode] = useState('slots');
   const [newAppt, setNewAppt] = useState({
     client_id: '',
     selected_slot: null,
@@ -34,6 +38,13 @@ const AppointmentCalendar = ({ isReadOnly = false }) => {
     end_time: '',
     notes: '',
     status: '',
+  });
+  const [newBlock, setNewBlock] = useState({
+    is_all_day: false,
+    date: '',
+    start_time: '',
+    end_time: '',
+    reason: '',
   });
   const [loading, setLoading] = useState(true);
   const [loadingSlots, setLoadingSlots] = useState(false);
@@ -50,16 +61,18 @@ const AppointmentCalendar = ({ isReadOnly = false }) => {
 
   const fetchData = async () => {
     try {
-      const [apptsRes, clientsRes, availRes] = await Promise.all([
+      const [apptsRes, clientsRes, availRes, blockedRes] = await Promise.all([
         axios.get(`${API}/appointments`),
         axios.get(`${API}/clients`),
         axios.get(`${API}/availability`).catch(() => ({ data: null })),
+        axios.get(`${API}/blocked-times`).catch(() => ({ data: [] })),
       ]);
       setAppointments(apptsRes.data.sort((a, b) => new Date(a.start_time) - new Date(b.start_time)));
       setClients(clientsRes.data);
       setAvailability(availRes.data);
+      setBlockedTimes(blockedRes.data || []);
     } catch (error) {
-      toast.error('Failed to load appointments');
+      toast.error('Failed to load calendar data');
     } finally {
       setLoading(false);
     }
@@ -69,7 +82,9 @@ const AppointmentCalendar = ({ isReadOnly = false }) => {
     if (!user?.id) return;
     setLoadingSlots(true);
     try {
-      const response = await axios.get(`${API}/available-slots/${user.id}?date=${date}`);
+      // For assistants, use the therapist_id
+      const therapistId = user.role === 'assistant' ? user.therapist_id : user.id;
+      const response = await axios.get(`${API}/available-slots/${therapistId}?date=${date}`);
       setAvailableSlots(response.data);
     } catch (error) {
       console.error('Failed to fetch available slots:', error);
@@ -196,6 +211,76 @@ const AppointmentCalendar = ({ isReadOnly = false }) => {
     }
   };
 
+  // Calendar Blocking Functions
+  const handleBlockTime = async (e) => {
+    e.preventDefault();
+
+    if (!newBlock.date) {
+      toast.error('Please select a date');
+      return;
+    }
+
+    let startDatetime, endDatetime;
+
+    if (newBlock.is_all_day) {
+      // Full day block
+      startDatetime = new Date(`${newBlock.date}T00:00:00`);
+      endDatetime = new Date(`${newBlock.date}T23:59:59`);
+    } else {
+      if (!newBlock.start_time || !newBlock.end_time) {
+        toast.error('Please enter start and end times');
+        return;
+      }
+      startDatetime = new Date(`${newBlock.date}T${newBlock.start_time}`);
+      endDatetime = new Date(`${newBlock.date}T${newBlock.end_time}`);
+      
+      if (endDatetime <= startDatetime) {
+        toast.error('End time must be after start time');
+        return;
+      }
+    }
+
+    // Check for conflicting appointments
+    const conflictingAppts = appointments.filter(appt => {
+      if (appt.status === 'cancelled') return false;
+      const apptStart = new Date(appt.start_time);
+      const apptEnd = new Date(appt.end_time);
+      return apptStart < endDatetime && apptEnd > startDatetime;
+    });
+
+    if (conflictingAppts.length > 0) {
+      toast.error(`Cannot block this time: ${conflictingAppts.length} existing appointment(s) would be affected. Please cancel or reschedule them first.`);
+      return;
+    }
+
+    try {
+      await axios.post(`${API}/blocked-times`, {
+        start_datetime: startDatetime.toISOString(),
+        end_datetime: endDatetime.toISOString(),
+        reason: newBlock.reason || 'Blocked',
+        is_all_day: newBlock.is_all_day,
+      });
+      toast.success('Time blocked successfully');
+      setShowBlockDialog(false);
+      setNewBlock({ is_all_day: false, date: '', start_time: '', end_time: '', reason: '' });
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to block time');
+    }
+  };
+
+  const handleUnblockTime = async (blockId) => {
+    if (!window.confirm('Are you sure you want to remove this time block?')) return;
+    
+    try {
+      await axios.delete(`${API}/blocked-times/${blockId}`);
+      toast.success('Time block removed');
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to remove block');
+    }
+  };
+
   const openEditDialog = (appt) => {
     setSelectedAppointment(appt);
     setEditAppt({
@@ -231,6 +316,21 @@ const AppointmentCalendar = ({ isReadOnly = false }) => {
     return grouped;
   };
 
+  const groupBlockedTimesByDate = () => {
+    const grouped = {};
+    blockedTimes.forEach((block) => {
+      const date = new Date(block.start_datetime).toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      if (!grouped[date]) grouped[date] = [];
+      grouped[date].push(block);
+    });
+    return grouped;
+  };
+
   const getStatusBadge = (status) => {
     const styles = {
       scheduled: 'bg-info/10 text-info border-info/20',
@@ -252,6 +352,11 @@ const AppointmentCalendar = ({ isReadOnly = false }) => {
     return appointments.filter(a => new Date(a.start_time).toDateString() === today);
   };
 
+  const getUpcomingBlockedTimes = () => {
+    const now = new Date();
+    return blockedTimes.filter(b => new Date(b.end_datetime) >= now);
+  };
+
   const hasAvailabilitySetup = () => {
     if (!availability) return false;
     const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -259,8 +364,10 @@ const AppointmentCalendar = ({ isReadOnly = false }) => {
   };
 
   const groupedAppointments = groupAppointmentsByDate();
+  const groupedBlockedTimes = groupBlockedTimesByDate();
   const upcomingAppointments = getUpcomingAppointments();
   const todaysAppointments = getTodaysAppointments();
+  const upcomingBlocks = getUpcomingBlockedTimes();
 
   if (loading) {
     return <div className="text-center py-12">Loading appointments...</div>;
@@ -274,20 +381,33 @@ const AppointmentCalendar = ({ isReadOnly = false }) => {
           <h2 className="text-4xl font-serif text-primary mb-2">Appointments</h2>
           <p className="text-muted-foreground">Schedule and manage client sessions</p>
         </div>
-        {!isReadOnly && (
-          <Button
-            onClick={() => setShowCreateDialog(true)}
-            className="bg-primary hover:bg-primary-700 rounded-full"
-            data-testid="create-appointment-button"
-          >
-            <Plus size={20} className="mr-2" />
-            New Appointment
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {!isReadOnly && (
+            <>
+              <Button
+                onClick={() => setShowBlockDialog(true)}
+                variant="outline"
+                className="border-warning text-warning hover:bg-warning/10"
+                data-testid="block-time-button"
+              >
+                <Ban size={20} className="mr-2" />
+                Block Time
+              </Button>
+              <Button
+                onClick={() => setShowCreateDialog(true)}
+                className="bg-primary hover:bg-primary-700 rounded-full"
+                data-testid="create-appointment-button"
+              >
+                <Plus size={20} className="mr-2" />
+                New Appointment
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Availability Setup Notice */}
-      {!hasAvailabilitySetup() && !isReadOnly && (
+      {!hasAvailabilitySetup() && !isReadOnly && user?.role === 'therapist' && (
         <Card className="p-4 mb-6 bg-warning/10 border-warning/30">
           <div className="flex items-center gap-3">
             <Settings size={20} className="text-warning" />
@@ -302,7 +422,7 @@ const AppointmentCalendar = ({ isReadOnly = false }) => {
       )}
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <Card className="p-4 bg-white/70 backdrop-blur-xl border border-border/40">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-info/10 flex items-center justify-center">
@@ -338,145 +458,282 @@ const AppointmentCalendar = ({ isReadOnly = false }) => {
             </div>
           </div>
         </Card>
-      </div>
-
-      {/* Filter */}
-      <div className="mb-6 flex items-center gap-4">
-        <Label className="text-sm font-medium">Filter by status:</Label>
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-40" data-testid="filter-status-select">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="scheduled">Scheduled</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-            <SelectItem value="cancelled">Cancelled</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Appointments List */}
-      <div className="space-y-8">
-        {Object.entries(groupedAppointments).map(([date, appts]) => (
-          <div key={date}>
-            <h3 className="text-xl font-serif text-primary mb-4 flex items-center gap-2">
-              <CalendarIcon size={20} />
-              {date}
-            </h3>
-            <div className="space-y-3">
-              {appts.map((appt) => (
-                <Card
-                  key={appt.id}
-                  className={`p-6 bg-white/70 backdrop-blur-xl border border-border/40 rounded-xl transition-all hover:shadow-md ${
-                    appt.status === 'cancelled' ? 'opacity-60' : ''
-                  }`}
-                  data-testid={`appointment-${appt.id}`}
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                          <User size={18} className="text-primary" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-lg text-foreground">{appt.client_name}</p>
-                          <p className="text-sm text-muted-foreground flex items-center gap-1">
-                            <Clock size={14} />
-                            {new Date(appt.start_time).toLocaleTimeString([], {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}{' '}
-                            -{' '}
-                            {new Date(appt.end_time).toLocaleTimeString([], {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </p>
-                        </div>
-                      </div>
-                      {appt.notes && (
-                        <p className="text-sm text-muted-foreground mt-2 pl-13 ml-13">{appt.notes}</p>
-                      )}
-                    </div>
-                    
-                    <div className="flex flex-col items-end gap-2">
-                      <span
-                        className={`inline-block px-3 py-1 rounded-full text-xs font-medium border ${getStatusBadge(appt.status)}`}
-                        data-testid={`appointment-status-${appt.id}`}
-                      >
-                        {appt.status.charAt(0).toUpperCase() + appt.status.slice(1)}
-                      </span>
-                      
-                      {!isReadOnly && appt.status === 'scheduled' && (
-                        <div className="flex gap-1 mt-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openEditDialog(appt)}
-                            className="h-8 w-8 p-0"
-                            data-testid={`edit-appointment-${appt.id}`}
-                          >
-                            <Edit size={14} />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleCompleteAppointment(appt.id)}
-                            className="h-8 w-8 p-0 text-success hover:text-success hover:bg-success/10"
-                            data-testid={`complete-appointment-${appt.id}`}
-                          >
-                            <Check size={14} />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleCancelAppointment(appt.id)}
-                            className="h-8 w-8 p-0 text-error hover:text-error hover:bg-error/10"
-                            data-testid={`cancel-appointment-${appt.id}`}
-                          >
-                            <X size={14} />
-                          </Button>
-                        </div>
-                      )}
-                      
-                      {!isReadOnly && appt.status !== 'scheduled' && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteAppointment(appt.id)}
-                          className="h-8 w-8 p-0 text-muted-foreground hover:text-error"
-                          data-testid={`delete-appointment-${appt.id}`}
-                        >
-                          <Trash2 size={14} />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </Card>
-              ))}
+        <Card className="p-4 bg-white/70 backdrop-blur-xl border border-border/40">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-error/10 flex items-center justify-center">
+              <Ban size={20} className="text-error" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-foreground">{upcomingBlocks.length}</p>
+              <p className="text-sm text-muted-foreground">Blocked Times</p>
             </div>
           </div>
-        ))}
+        </Card>
+      </div>
 
-        {Object.keys(groupedAppointments).length === 0 && (
-          <div className="text-center py-12">
-            <CalendarIcon size={48} className="mx-auto text-muted-foreground/30 mb-4" />
-            <p className="text-muted-foreground">
-              {filterStatus === 'all' ? 'No appointments scheduled' : `No ${filterStatus} appointments`}
-            </p>
-            {!isReadOnly && filterStatus === 'all' && (
-              <Button
-                onClick={() => setShowCreateDialog(true)}
-                variant="outline"
-                className="mt-4"
-              >
-                Schedule your first appointment
-              </Button>
-            )}
+      {/* View Toggle & Filter */}
+      <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
+        <div className="flex gap-2">
+          <Button
+            variant={viewMode === 'appointments' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode('appointments')}
+            data-testid="view-appointments-btn"
+          >
+            <CalendarIcon size={16} className="mr-2" />
+            Appointments
+          </Button>
+          <Button
+            variant={viewMode === 'blocked' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode('blocked')}
+            data-testid="view-blocked-btn"
+          >
+            <Ban size={16} className="mr-2" />
+            Blocked Times ({blockedTimes.length})
+          </Button>
+        </div>
+        
+        {viewMode === 'appointments' && (
+          <div className="flex items-center gap-4">
+            <Label className="text-sm font-medium">Filter:</Label>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-40" data-testid="filter-status-select">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="scheduled">Scheduled</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         )}
       </div>
+
+      {/* Appointments View */}
+      {viewMode === 'appointments' && (
+        <div className="space-y-8">
+          {Object.entries(groupedAppointments).map(([date, appts]) => (
+            <div key={date}>
+              <h3 className="text-xl font-serif text-primary mb-4 flex items-center gap-2">
+                <CalendarIcon size={20} />
+                {date}
+              </h3>
+              <div className="space-y-3">
+                {appts.map((appt) => (
+                  <Card
+                    key={appt.id}
+                    className={`p-6 bg-white/70 backdrop-blur-xl border border-border/40 rounded-xl transition-all hover:shadow-md ${
+                      appt.status === 'cancelled' ? 'opacity-60' : ''
+                    }`}
+                    data-testid={`appointment-${appt.id}`}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                            <User size={18} className="text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-lg text-foreground">{appt.client_name}</p>
+                            <p className="text-sm text-muted-foreground flex items-center gap-1">
+                              <Clock size={14} />
+                              {new Date(appt.start_time).toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}{' '}
+                              -{' '}
+                              {new Date(appt.end_time).toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </p>
+                          </div>
+                        </div>
+                        {appt.notes && (
+                          <p className="text-sm text-muted-foreground mt-2 pl-13 ml-13">{appt.notes}</p>
+                        )}
+                      </div>
+                      
+                      <div className="flex flex-col items-end gap-2">
+                        <span
+                          className={`inline-block px-3 py-1 rounded-full text-xs font-medium border ${getStatusBadge(appt.status)}`}
+                          data-testid={`appointment-status-${appt.id}`}
+                        >
+                          {appt.status.charAt(0).toUpperCase() + appt.status.slice(1)}
+                        </span>
+                        
+                        {!isReadOnly && appt.status === 'scheduled' && (
+                          <div className="flex gap-1 mt-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openEditDialog(appt)}
+                              className="h-8 w-8 p-0"
+                              data-testid={`edit-appointment-${appt.id}`}
+                            >
+                              <Edit size={14} />
+                            </Button>
+                            {user?.role === 'therapist' && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleCompleteAppointment(appt.id)}
+                                className="h-8 w-8 p-0 text-success hover:text-success hover:bg-success/10"
+                                data-testid={`complete-appointment-${appt.id}`}
+                              >
+                                <Check size={14} />
+                              </Button>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleCancelAppointment(appt.id)}
+                              className="h-8 w-8 p-0 text-error hover:text-error hover:bg-error/10"
+                              data-testid={`cancel-appointment-${appt.id}`}
+                            >
+                              <X size={14} />
+                            </Button>
+                          </div>
+                        )}
+                        
+                        {!isReadOnly && appt.status !== 'scheduled' && user?.role === 'therapist' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteAppointment(appt.id)}
+                            className="h-8 w-8 p-0 text-muted-foreground hover:text-error"
+                            data-testid={`delete-appointment-${appt.id}`}
+                          >
+                            <Trash2 size={14} />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          ))}
+
+          {Object.keys(groupedAppointments).length === 0 && (
+            <div className="text-center py-12">
+              <CalendarIcon size={48} className="mx-auto text-muted-foreground/30 mb-4" />
+              <p className="text-muted-foreground">
+                {filterStatus === 'all' ? 'No appointments scheduled' : `No ${filterStatus} appointments`}
+              </p>
+              {!isReadOnly && filterStatus === 'all' && (
+                <Button
+                  onClick={() => setShowCreateDialog(true)}
+                  variant="outline"
+                  className="mt-4"
+                >
+                  Schedule your first appointment
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Blocked Times View */}
+      {viewMode === 'blocked' && (
+        <div className="space-y-8">
+          {/* Info Banner */}
+          <Card className="p-4 bg-error/5 border-error/20">
+            <div className="flex items-center gap-3">
+              <AlertTriangle size={20} className="text-error" />
+              <div>
+                <p className="font-medium">Blocked times prevent new bookings</p>
+                <p className="text-sm text-muted-foreground">
+                  Use this for holidays, leave, personal time, or offline bookings.
+                </p>
+              </div>
+            </div>
+          </Card>
+
+          {Object.entries(groupedBlockedTimes).length > 0 ? (
+            Object.entries(groupedBlockedTimes).map(([date, blocks]) => (
+              <div key={date}>
+                <h3 className="text-xl font-serif text-primary mb-4 flex items-center gap-2">
+                  <Ban size={20} />
+                  {date}
+                </h3>
+                <div className="space-y-3">
+                  {blocks.map((block) => (
+                    <Card
+                      key={block.id}
+                      className="p-6 bg-error/5 border-error/20 rounded-xl"
+                      data-testid={`blocked-time-${block.id}`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-full bg-error/10 flex items-center justify-center">
+                            <Ban size={18} className="text-error" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-lg">
+                              {block.is_all_day ? (
+                                <span className="text-error">Full Day Blocked</span>
+                              ) : (
+                                <>
+                                  {new Date(block.start_datetime).toLocaleTimeString([], {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })}{' '}
+                                  -{' '}
+                                  {new Date(block.end_datetime).toLocaleTimeString([], {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })}
+                                </>
+                              )}
+                            </p>
+                            {block.reason && (
+                              <p className="text-sm text-muted-foreground">
+                                Reason: {block.reason}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {!isReadOnly && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleUnblockTime(block.id)}
+                            className="text-error hover:bg-error/10"
+                            data-testid={`unblock-${block.id}`}
+                          >
+                            <Trash2 size={16} className="mr-2" />
+                            Remove
+                          </Button>
+                        )}
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-12">
+              <Ban size={48} className="mx-auto text-muted-foreground/30 mb-4" />
+              <p className="text-muted-foreground">No blocked times</p>
+              {!isReadOnly && (
+                <Button
+                  onClick={() => setShowBlockDialog(true)}
+                  variant="outline"
+                  className="mt-4"
+                >
+                  Block your first time slot
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Create Appointment Dialog */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
@@ -758,6 +1015,122 @@ const AppointmentCalendar = ({ isReadOnly = false }) => {
               </div>
             </form>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Block Time Dialog */}
+      <Dialog open={showBlockDialog} onOpenChange={setShowBlockDialog}>
+        <DialogContent data-testid="block-time-dialog">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-serif text-primary flex items-center gap-2">
+              <Ban size={24} />
+              Block Calendar Time
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleBlockTime} className="space-y-4">
+            <div className="p-4 bg-warning/10 border border-warning/30 rounded-lg">
+              <p className="text-sm text-warning-foreground">
+                Blocked time will prevent new appointments from being scheduled during this period. 
+                Existing appointments will not be affected.
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="block-date">Date *</Label>
+              <Input
+                id="block-date"
+                type="date"
+                min={new Date().toISOString().split('T')[0]}
+                value={newBlock.date}
+                onChange={(e) => setNewBlock({ ...newBlock, date: e.target.value })}
+                required
+                className="mt-1"
+                data-testid="block-date-input"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="is-all-day"
+                checked={newBlock.is_all_day}
+                onChange={(e) => setNewBlock({ ...newBlock, is_all_day: e.target.checked })}
+                className="w-4 h-4 rounded border-border"
+                data-testid="block-all-day-checkbox"
+              />
+              <Label htmlFor="is-all-day" className="cursor-pointer">
+                Block entire day (holiday/leave)
+              </Label>
+            </div>
+
+            {!newBlock.is_all_day && (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="block-start">Start Time *</Label>
+                  <Input
+                    id="block-start"
+                    type="time"
+                    value={newBlock.start_time}
+                    onChange={(e) => setNewBlock({ ...newBlock, start_time: e.target.value })}
+                    required={!newBlock.is_all_day}
+                    className="mt-1"
+                    data-testid="block-start-input"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="block-end">End Time *</Label>
+                  <Input
+                    id="block-end"
+                    type="time"
+                    value={newBlock.end_time}
+                    onChange={(e) => setNewBlock({ ...newBlock, end_time: e.target.value })}
+                    required={!newBlock.is_all_day}
+                    className="mt-1"
+                    data-testid="block-end-input"
+                  />
+                </div>
+              </div>
+            )}
+
+            <div>
+              <Label htmlFor="block-reason">Reason (optional)</Label>
+              <Select
+                value={newBlock.reason}
+                onValueChange={(value) => setNewBlock({ ...newBlock, reason: value })}
+              >
+                <SelectTrigger className="mt-1" data-testid="block-reason-select">
+                  <SelectValue placeholder="Select a reason" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Leave">Leave</SelectItem>
+                  <SelectItem value="Holiday">Holiday</SelectItem>
+                  <SelectItem value="Personal">Personal</SelectItem>
+                  <SelectItem value="Offline Booking">Offline Booking</SelectItem>
+                  <SelectItem value="Training">Training</SelectItem>
+                  <SelectItem value="Meeting">Meeting</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <Button type="submit" className="flex-1 bg-warning hover:bg-warning/90" data-testid="confirm-block-button">
+                <Ban size={16} className="mr-2" />
+                Block Time
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setShowBlockDialog(false);
+                  setNewBlock({ is_all_day: false, date: '', start_time: '', end_time: '', reason: '' });
+                }}
+                data-testid="cancel-block-button"
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
     </div>
