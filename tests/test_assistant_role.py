@@ -344,9 +344,9 @@ class TestAssistantAccessControl:
         
         client_id = clients[0]["id"]
         
-        # Create appointment
-        tomorrow = datetime.now() + timedelta(days=1)
-        start_time = tomorrow.replace(hour=10, minute=0, second=0, microsecond=0)
+        # Create appointment - use a unique time slot far in the future to avoid conflicts
+        future_date = datetime.now() + timedelta(days=30)
+        start_time = future_date.replace(hour=9, minute=0, second=0, microsecond=0)
         end_time = start_time + timedelta(hours=1)
         
         appointment_data = {
@@ -357,6 +357,14 @@ class TestAssistantAccessControl:
         }
         
         response = requests.post(f"{BASE_URL}/api/appointments", json=appointment_data, headers=self.assistant_headers)
+        
+        # If time slot is taken, try another time
+        if response.status_code == 400 and "already booked" in response.text:
+            start_time = start_time + timedelta(hours=3)
+            end_time = start_time + timedelta(hours=1)
+            appointment_data["start_time"] = start_time.isoformat()
+            appointment_data["end_time"] = end_time.isoformat()
+            response = requests.post(f"{BASE_URL}/api/appointments", json=appointment_data, headers=self.assistant_headers)
         
         assert response.status_code in [200, 201], f"Expected 200/201, got {response.status_code}: {response.text}"
         
