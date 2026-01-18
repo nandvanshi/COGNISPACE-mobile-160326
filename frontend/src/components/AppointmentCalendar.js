@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Textarea } from './ui/textarea';
 import { toast } from 'sonner';
 import { Plus, Calendar as CalendarIcon, Clock, User, Edit, Check, X, Trash2, ChevronLeft, ChevronRight, Settings, Ban, AlertTriangle } from 'lucide-react';
+import { formatDate, formatTime, formatTimeRange, formatGroupDate, getTodayInputFormat, isoToInputFormat } from '../utils/formatUtils';
 
 const AppointmentCalendar = ({ isReadOnly = false }) => {
   const { user } = useAuth();
