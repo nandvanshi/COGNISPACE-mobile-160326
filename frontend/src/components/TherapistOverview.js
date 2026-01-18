@@ -9,6 +9,7 @@ import {
   CheckCircle, BookOpen, User, ClipboardList
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { formatDate, formatTime, formatTimeRange, formatDateLong, getRelativeDate, getTimeUntil, toIST, nowIST } from '../utils/formatUtils';
 
 const TherapistOverview = ({ isReadOnly = false }) => {
   const { user } = useAuth();
