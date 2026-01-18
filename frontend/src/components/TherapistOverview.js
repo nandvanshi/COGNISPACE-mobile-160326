@@ -201,7 +201,7 @@ const TherapistOverview = ({ isReadOnly = false }) => {
             <div className="flex items-center gap-2 mt-1">
               {getSubscriptionBadge()}
               <span className="text-sm text-muted-foreground">
-                {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                {formatDateLong(nowIST())}
               </span>
             </div>
           </div>
