@@ -2810,30 +2810,34 @@ async def get_messaging_contacts(current_user: dict = Depends(get_current_user))
     contacts = []
     
     if current_user["role"] == "therapist":
-        # Get all assigned clients with messaging enabled
-        clients = await db.clients.find(
+        # Get all client profiles assigned to this therapist
+        client_profiles = await db.client_profiles.find(
             {"therapist_id": current_user["id"], "messaging_enabled": {"$ne": False}},
-            {"_id": 0, "id": 1, "full_name": 1, "client_id": 1, "profile_photo": 1}
+            {"_id": 0}
         ).to_list(1000)
         
-        for client in clients:
-            contacts.append({
-                "id": client["id"],
-                "name": client["full_name"],
-                "display_id": client.get("client_id", ""),
-                "photo": client.get("profile_photo"),
-                "type": "client"
-            })
+        for profile in client_profiles:
+            # Get user data for each client
+            client_user = await db.users.find_one(
+                {"id": profile["user_id"], "role": "client"},
+                {"_id": 0, "id": 1, "full_name": 1, "client_id": 1}
+            )
+            if client_user:
+                contacts.append({
+                    "id": client_user["id"],
+                    "name": client_user["full_name"],
+                    "display_id": client_user.get("client_id", ""),
+                    "photo": profile.get("profile_photo"),
+                    "type": "client"
+                })
     
     elif current_user["role"] == "client":
-        # Get assigned therapist
-        client_doc = await db.clients.find_one({"id": current_user["id"]}, {"_id": 0})
-        if not client_doc:
-            client_doc = await db.users.find_one({"id": current_user["id"]}, {"_id": 0})
+        # Get client profile to find therapist
+        client_profile = await db.client_profiles.find_one({"user_id": current_user["id"]}, {"_id": 0})
         
-        if client_doc and client_doc.get("therapist_id"):
+        if client_profile and client_profile.get("therapist_id"):
             therapist = await db.users.find_one(
-                {"id": client_doc["therapist_id"]},
+                {"id": client_profile["therapist_id"]},
                 {"_id": 0, "id": 1, "full_name": 1, "credentials": 1, "profile_photo": 1}
             )
             if therapist:
