@@ -1463,6 +1463,16 @@ async def get_client(client_id: str, current_user: dict = Depends(require_therap
 
 @api_router.put("/clients/{client_id}", response_model=ClientProfile)
 async def update_client(client_id: str, update_data: ClientProfileUpdate, current_user: dict = Depends(require_active_therapist)):
+    """Update client - must be assigned to current therapist"""
+    therapist_id = current_user["id"]
+    
+    # Verify client is assigned to this therapist
+    profile = await db.client_profiles.find_one(
+        {"user_id": client_id, "therapist_id": therapist_id},
+        {"_id": 0}
+    )
+    if not profile:
+        raise HTTPException(status_code=404, detail="Client not found or not assigned to you")
     
     client = await db.users.find_one({"id": client_id, "role": "client"}, {"_id": 0})
     if not client:
