@@ -738,7 +738,8 @@ class TestCleanup:
             appointments = response.json()
             deleted = 0
             for appt in appointments:
-                if appt.get("notes", "").startswith("TEST_"):
+                notes = appt.get("notes") or ""
+                if notes.startswith("TEST_"):
                     requests.delete(f"{BASE_URL}/api/appointments/{appt['id']}", headers=therapist_headers)
                     deleted += 1
             print(f"✓ Cleaned up {deleted} test appointments")
@@ -750,7 +751,8 @@ class TestCleanup:
             blocked_times = response.json()
             deleted = 0
             for bt in blocked_times:
-                if bt.get("reason", "").startswith("TEST_"):
+                reason = bt.get("reason") or ""
+                if reason.startswith("TEST_"):
                     requests.delete(f"{BASE_URL}/api/blocked-times/{bt['id']}", headers=therapist_headers)
                     deleted += 1
             print(f"✓ Cleaned up {deleted} test blocked times")
