@@ -1068,10 +1068,17 @@ async def super_admin_login(login_data: SuperAdminLogin):
 
 @api_router.get("/auth/me", response_model=User)
 async def get_me(current_user: dict = Depends(get_current_user)):
+    # For clients, fetch their therapist_id from client_profiles
+    user_therapist_id = current_user.get("therapist_id")  # For assistants
+    if current_user["role"] == "client":
+        profile = await db.client_profiles.find_one({"user_id": current_user["id"]}, {"_id": 0})
+        if profile:
+            user_therapist_id = profile.get("therapist_id")
+    
     return User(
         id=current_user["id"],
         client_id=current_user.get("client_id"),
-        therapist_id=current_user.get("therapist_id"),
+        therapist_id=user_therapist_id,  # Updated to include client's therapist
         mobile=current_user.get("mobile", ""),
         email=current_user.get("email"),
         full_name=current_user["full_name"],
