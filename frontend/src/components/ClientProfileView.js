@@ -125,6 +125,176 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
     }
   };
 
+  // ========== Session Note Functions ==========
+  
+  const handleViewNote = (note) => {
+    setSelectedNote(note);
+    setShowViewNoteDialog(true);
+  };
+
+  const handleEditNoteClick = (note) => {
+    setSelectedNote(note);
+    setEditingNote({
+      template_type: note.template_type || 'SOAP',
+      subjective: note.subjective || '',
+      objective: note.objective || '',
+      assessment: note.assessment || '',
+      plan: note.plan || '',
+      data: note.data || '',
+    });
+    setShowEditNoteDialog(true);
+  };
+
+  const handleEditNoteSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.put(`${API}/session-notes/${selectedNote.id}`, editingNote);
+      toast.success('Session note updated');
+      setShowEditNoteDialog(false);
+      setSelectedNote(null);
+      fetchAllClientData();
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Failed to update session note'));
+    }
+  };
+
+  const handleStartNewNote = () => {
+    // Check if case history is complete first
+    if (!profileData.caseHistory?.is_complete) {
+      toast.error('Case History must be completed before creating session notes');
+      setShowCaseHistoryDialog(true);
+      return;
+    }
+    
+    // Check if consent is signed
+    if (!profileData.consent?.is_signed) {
+      toast.error('Therapy Consent must be signed before creating session notes');
+      setShowConsentDialog(true);
+      return;
+    }
+
+    // Find today's appointment
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const todayAppointments = profileData.appointments.filter(a => {
+      const apptDate = new Date(a.start_time);
+      return apptDate >= today && apptDate < tomorrow && a.status !== 'cancelled';
+    });
+
+    if (todayAppointments.length === 0) {
+      toast.warning('No appointment scheduled for today. Please book an appointment first.');
+      setShowBookAppointmentDialog(true);
+      return;
+    }
+
+    // Pre-fill with today's appointment
+    setNewNote({
+      appointment_id: todayAppointments[0].id,
+      template_type: 'SOAP',
+      subjective: '',
+      objective: '',
+      assessment: '',
+      plan: '',
+      data: '',
+    });
+    setShowCreateNoteDialog(true);
+  };
+
+  const handleCreateNoteSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post(`${API}/session-notes`, {
+        client_id: client.id,
+        ...newNote,
+      });
+      toast.success('Session note created');
+      setShowCreateNoteDialog(false);
+      setNewNote({
+        appointment_id: '',
+        template_type: 'SOAP',
+        subjective: '',
+        objective: '',
+        assessment: '',
+        plan: '',
+        data: '',
+      });
+      fetchAllClientData();
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Failed to create session note'));
+    }
+  };
+
+  // Find the appointment linked to a note
+  const getLinkedAppointment = (note) => {
+    if (!note.appointment_id) return null;
+    return profileData.appointments.find(a => a.id === note.appointment_id);
+  };
+
+  // ========== Appointment Booking Functions ==========
+  
+  const handleBookAppointment = () => {
+    const today = new Date();
+    const dateStr = today.toISOString().split('T')[0];
+    setSelectedDate(dateStr);
+    setSelectedSlot(null);
+    setAppointmentNotes('');
+    setShowBookAppointmentDialog(true);
+    fetchAvailableSlots(dateStr);
+  };
+
+  const fetchAvailableSlots = async (date) => {
+    setLoadingSlots(true);
+    try {
+      // Get therapist ID from client's assigned therapist
+      const response = await axios.get(`${API}/available-slots/${client.therapist_id}?date=${date}`);
+      setAvailableSlots(response.data.slots || []);
+    } catch (error) {
+      toast.error('Failed to load available slots');
+      setAvailableSlots([]);
+    } finally {
+      setLoadingSlots(false);
+    }
+  };
+
+  const handleDateChange = (e) => {
+    const date = e.target.value;
+    setSelectedDate(date);
+    setSelectedSlot(null);
+    if (date) {
+      fetchAvailableSlots(date);
+    }
+  };
+
+  const handleSlotSelect = (slot) => {
+    setSelectedSlot(slot);
+  };
+
+  const handleCreateAppointment = async () => {
+    if (!selectedSlot) {
+      toast.error('Please select a time slot');
+      return;
+    }
+
+    try {
+      await axios.post(`${API}/appointments`, {
+        client_id: client.id,
+        start_time: selectedSlot.start,
+        end_time: selectedSlot.end,
+        notes: appointmentNotes,
+      });
+      toast.success('Appointment booked successfully');
+      setShowBookAppointmentDialog(false);
+      setSelectedSlot(null);
+      setAppointmentNotes('');
+      fetchAllClientData();
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Failed to book appointment'));
+    }
+  };
+
   if (!isOpen) return null;
 
   // Calculate statistics
