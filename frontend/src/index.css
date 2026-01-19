@@ -4,13 +4,32 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* Default theme: Calm Professional (Sage Green + Teal) */
+  --primary: 142 45% 35%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 174 42% 40%;
+  --secondary-foreground: 0 0% 100%;
+  --background: 120 20% 98%;
+  --foreground: 142 20% 15%;
+  --card: 0 0% 100%;
+  --card-foreground: 142 20% 15%;
+  --muted: 142 15% 92%;
+  --muted-foreground: 142 10% 45%;
+  --accent: 142 30% 90%;
+  --accent-foreground: 142 45% 25%;
+  --border: 142 15% 85%;
+  --input: 142 15% 85%;
+  --ring: 142 45% 35%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+}
+
 body {
   margin: 0;
   font-family: 'Manrope', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #FDFCF8;
-  color: #1A1C1A;
 }
 
 code {
