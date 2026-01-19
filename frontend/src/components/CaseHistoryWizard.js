@@ -219,11 +219,26 @@ const CaseHistoryWizard = ({ clientId, clientName, onComplete, onClose, isReadOn
         await axios.post(`${API}/case-history`, savePayload);
       }
       
-      // Then mark as complete
+      // Then mark as complete (this also generates consent)
       await axios.patch(`${API}/case-history/${clientId}/complete`);
       
-      toast.success('Case history completed successfully!');
+      // Sync basic info back to client profile
+      try {
+        await axios.post(`${API}/case-history/${clientId}/sync-to-profile`);
+      } catch (syncError) {
+        console.warn('Profile sync failed:', syncError);
+      }
+      
+      toast.success('Case history completed! Consent form generated for client signature.');
       setIsComplete(true);
+      
+      // Update consent status
+      try {
+        const consentRes = await axios.get(`${API}/therapy-consent/check/${clientId}`);
+        setConsentStatus(consentRes.data);
+      } catch (e) {
+        // Ignore
+      }
       
       if (onComplete) {
         onComplete();
