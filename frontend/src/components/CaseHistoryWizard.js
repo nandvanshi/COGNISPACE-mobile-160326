@@ -244,7 +244,11 @@ const CaseHistoryWizard = ({ clientId, clientName, onComplete, onClose, isReadOn
         onComplete();
       }
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to complete case history');
+      const errorDetail = error.response?.data?.detail;
+      const errorMessage = typeof errorDetail === 'string' 
+        ? errorDetail 
+        : (Array.isArray(errorDetail) ? errorDetail[0]?.msg : 'Failed to complete case history');
+      toast.error(errorMessage || 'Failed to complete case history');
     } finally {
       setSaving(false);
     }
