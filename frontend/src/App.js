@@ -53,18 +53,35 @@ const AuthProvider = ({ children }) => {
     }
   };
 
+  const loadUserTheme = async () => {
+    try {
+      const response = await axios.get(`${API}/user/preferences`);
+      if (response.data?.theme) {
+        applyTheme(response.data.theme);
+      }
+    } catch (error) {
+      // Use stored theme if API fails
+      applyTheme(getStoredTheme());
+    }
+  };
+
   const login = (token, userData) => {
     localStorage.setItem('token', token);
     setToken(token);
     setUser(userData);
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    // Load user's theme preference after login
+    loadUserTheme();
   };
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user-theme');
     setToken(null);
     setUser(null);
     delete axios.defaults.headers.common['Authorization'];
+    // Reset to default theme on logout
+    applyTheme('calm-professional');
   };
 
   return (
