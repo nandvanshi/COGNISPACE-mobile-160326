@@ -105,6 +105,8 @@ const SuperAdminDashboard = () => {
           {currentView === 'coupons' && <CouponManagement />}
         </div>
       </main>
+
+      <Settings isOpen={showSettings} onClose={() => setShowSettings(false)} />
     </div>
   );
 };
