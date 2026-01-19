@@ -3192,7 +3192,296 @@ async def mark_case_history_complete(client_id: str, current_user: dict = Depend
         {"$set": {"is_complete": True, "updated_at": now}}
     )
     
+    # Auto-generate therapy consent when case history is completed
+    # Check if consent already exists
+    existing_consent = await db.therapy_consents.find_one(
+        {"client_id": client_id, "therapist_id": therapist_id},
+        {"_id": 0}
+    )
+    
+    if not existing_consent:
+        # Get client and therapist names
+        client_user = await db.users.find_one({"id": client_id}, {"_id": 0, "full_name": 1})
+        therapist_user = await db.users.find_one({"id": therapist_id}, {"_id": 0, "full_name": 1})
+        
+        client_name = client_user.get("full_name", "Client") if client_user else "Client"
+        therapist_name = therapist_user.get("full_name", "Therapist") if therapist_user else "Therapist"
+        
+        # Generate consent text
+        consent_text = CONSENT_TEXT_TEMPLATE.format(
+            client_name=client_name,
+            therapist_name=therapist_name,
+            date=datetime.now(IST).strftime("%d/%m/%Y")
+        )
+        
+        consent_doc = {
+            "id": str(uuid.uuid4()),
+            "client_id": client_id,
+            "therapist_id": therapist_id,
+            "therapist_name": therapist_name,
+            "client_name": client_name,
+            "consent_text": consent_text,
+            "consent_text_version": "1.0",
+            "signature_method": None,
+            "signed_at": None,
+            "is_signed": False,
+            "case_history_id": existing["id"],
+            "created_at": now,
+            "updated_at": now
+        }
+        
+        await db.therapy_consents.insert_one(consent_doc)
+    
     return {"message": "Case history marked as complete", "is_complete": True}
+
+@api_router.get("/case-history/{client_id}/seed-from-profile")
+async def seed_case_history_from_profile(client_id: str, current_user: dict = Depends(get_current_user)):
+    """Get client profile data to seed Basic Identification in Case History"""
+    if current_user["role"] not in ["therapist"]:
+        raise HTTPException(status_code=403, detail="Only therapists can access this")
+    
+    therapist_id = current_user["id"]
+    
+    # Get client from users collection
+    client_user = await db.users.find_one({"id": client_id}, {"_id": 0})
+    if not client_user:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    # Get client profile
+    client_profile = await db.client_profiles.find_one(
+        {"user_id": client_id, "therapist_id": therapist_id},
+        {"_id": 0}
+    )
+    
+    # Build basic identification from available data
+    basic_info = {
+        "name": client_user.get("full_name", ""),
+        "contact": client_user.get("mobile", ""),
+        "dob": client_profile.get("dob") if client_profile else None,
+        "gender": client_profile.get("gender") if client_profile else None,
+        "address": client_profile.get("address") if client_profile else None,
+        "city": client_profile.get("city") if client_profile else None,
+        "emergency_contact": client_profile.get("emergency_contact") if client_profile else None,
+        "emergency_contact_relation": client_profile.get("emergency_contact_relation") if client_profile else None,
+        "referred_by": client_profile.get("referred_by") if client_profile else None,
+        "occupation": client_profile.get("occupation") if client_profile else None,
+        "education": client_profile.get("education") if client_profile else None,
+        "marital_status": client_profile.get("marital_status") if client_profile else None,
+    }
+    
+    # Filter out None values
+    basic_info = {k: v for k, v in basic_info.items() if v is not None}
+    
+    return {"basic_identification": basic_info}
+
+@api_router.post("/case-history/{client_id}/sync-to-profile")
+async def sync_case_history_to_profile(client_id: str, current_user: dict = Depends(require_active_therapist)):
+    """Sync Basic Identification from Case History back to Client Profile"""
+    therapist_id = current_user["id"]
+    
+    # Get case history
+    case_history = await db.case_histories.find_one(
+        {"client_id": client_id, "therapist_id": therapist_id},
+        {"_id": 0, "basic_identification": 1}
+    )
+    
+    if not case_history:
+        raise HTTPException(status_code=404, detail="Case history not found")
+    
+    basic_info = case_history.get("basic_identification", {})
+    
+    # Update client profile with relevant fields
+    profile_updates = {}
+    
+    if basic_info.get("dob"):
+        profile_updates["dob"] = basic_info["dob"]
+    if basic_info.get("gender"):
+        profile_updates["gender"] = basic_info["gender"]
+    if basic_info.get("address"):
+        profile_updates["address"] = basic_info["address"]
+    if basic_info.get("city"):
+        profile_updates["city"] = basic_info["city"]
+    if basic_info.get("emergency_contact"):
+        profile_updates["emergency_contact"] = basic_info["emergency_contact"]
+    if basic_info.get("emergency_contact_relation"):
+        profile_updates["emergency_contact_relation"] = basic_info["emergency_contact_relation"]
+    if basic_info.get("referred_by"):
+        profile_updates["referred_by"] = basic_info["referred_by"]
+    if basic_info.get("occupation"):
+        profile_updates["occupation"] = basic_info["occupation"]
+    if basic_info.get("education"):
+        profile_updates["education"] = basic_info["education"]
+    if basic_info.get("marital_status"):
+        profile_updates["marital_status"] = basic_info["marital_status"]
+    
+    if profile_updates:
+        profile_updates["updated_at"] = datetime.now(timezone.utc).isoformat()
+        
+        await db.client_profiles.update_one(
+            {"user_id": client_id, "therapist_id": therapist_id},
+            {"$set": profile_updates}
+        )
+    
+    # Also update user's full_name if changed
+    if basic_info.get("name"):
+        await db.users.update_one(
+            {"id": client_id},
+            {"$set": {"full_name": basic_info["name"]}}
+        )
+    
+    return {"message": "Client profile synced successfully", "updated_fields": list(profile_updates.keys())}
+
+# ============= THERAPY CONSENT ENDPOINTS =============
+
+@api_router.get("/therapy-consent/{client_id}", response_model=TherapyConsent)
+async def get_therapy_consent(client_id: str, current_user: dict = Depends(get_current_user)):
+    """Get therapy consent for a client - Therapist or Client can view"""
+    if current_user["role"] == "therapist":
+        therapist_id = current_user["id"]
+    elif current_user["role"] == "client":
+        # Client can only view their own consent
+        if current_user["id"] != client_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+        # Get therapist_id from client_profile
+        profile = await db.client_profiles.find_one({"user_id": client_id}, {"_id": 0, "therapist_id": 1})
+        if not profile:
+            raise HTTPException(status_code=404, detail="Client profile not found")
+        therapist_id = profile["therapist_id"]
+    else:
+        raise HTTPException(status_code=403, detail="Only therapists and clients can view consent")
+    
+    consent = await db.therapy_consents.find_one(
+        {"client_id": client_id, "therapist_id": therapist_id},
+        {"_id": 0}
+    )
+    
+    if not consent:
+        raise HTTPException(status_code=404, detail="Therapy consent not found. Case history may not be complete.")
+    
+    return TherapyConsent(**{k: datetime.fromisoformat(v) if k in ["created_at", "updated_at", "signed_at"] and v else v for k, v in consent.items()})
+
+@api_router.get("/therapy-consent/check/{client_id}")
+async def check_therapy_consent(client_id: str, current_user: dict = Depends(get_current_user)):
+    """Check if therapy consent exists and is signed"""
+    if current_user["role"] == "therapist":
+        therapist_id = current_user["id"]
+    elif current_user["role"] == "client":
+        if current_user["id"] != client_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+        profile = await db.client_profiles.find_one({"user_id": client_id}, {"_id": 0, "therapist_id": 1})
+        if not profile:
+            return {"exists": False, "is_signed": False}
+        therapist_id = profile["therapist_id"]
+    else:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    consent = await db.therapy_consents.find_one(
+        {"client_id": client_id, "therapist_id": therapist_id},
+        {"_id": 0, "id": 1, "is_signed": 1, "signature_method": 1}
+    )
+    
+    return {
+        "exists": consent is not None,
+        "is_signed": consent.get("is_signed", False) if consent else False,
+        "signature_method": consent.get("signature_method") if consent else None,
+        "consent_id": consent.get("id") if consent else None
+    }
+
+@api_router.post("/therapy-consent/{client_id}/sign")
+async def sign_therapy_consent(client_id: str, signature_method: str, current_user: dict = Depends(get_current_user)):
+    """Sign therapy consent - Client signs digitally or Therapist marks as signed offline"""
+    if signature_method not in ["digital", "paper"]:
+        raise HTTPException(status_code=400, detail="Signature method must be 'digital' or 'paper'")
+    
+    if current_user["role"] == "client":
+        # Client can only sign their own consent digitally
+        if current_user["id"] != client_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+        if signature_method != "digital":
+            raise HTTPException(status_code=400, detail="Clients can only sign digitally")
+        
+        profile = await db.client_profiles.find_one({"user_id": client_id}, {"_id": 0, "therapist_id": 1})
+        if not profile:
+            raise HTTPException(status_code=404, detail="Client profile not found")
+        therapist_id = profile["therapist_id"]
+    elif current_user["role"] == "therapist":
+        # Therapist can mark as signed (paper) for their clients
+        therapist_id = current_user["id"]
+    else:
+        raise HTTPException(status_code=403, detail="Only therapists and clients can sign consent")
+    
+    consent = await db.therapy_consents.find_one(
+        {"client_id": client_id, "therapist_id": therapist_id},
+        {"_id": 0}
+    )
+    
+    if not consent:
+        raise HTTPException(status_code=404, detail="Therapy consent not found")
+    
+    if consent.get("is_signed"):
+        raise HTTPException(status_code=400, detail="Consent is already signed")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    await db.therapy_consents.update_one(
+        {"client_id": client_id, "therapist_id": therapist_id},
+        {"$set": {
+            "is_signed": True,
+            "signature_method": signature_method,
+            "signed_at": now,
+            "updated_at": now
+        }}
+    )
+    
+    return {
+        "message": "Consent signed successfully",
+        "signature_method": signature_method,
+        "signed_at": now
+    }
+
+@api_router.post("/therapy-consent/{client_id}/regenerate")
+async def regenerate_therapy_consent(client_id: str, current_user: dict = Depends(require_active_therapist)):
+    """Regenerate consent text (only if not yet signed)"""
+    therapist_id = current_user["id"]
+    
+    consent = await db.therapy_consents.find_one(
+        {"client_id": client_id, "therapist_id": therapist_id},
+        {"_id": 0}
+    )
+    
+    if not consent:
+        raise HTTPException(status_code=404, detail="Therapy consent not found")
+    
+    if consent.get("is_signed"):
+        raise HTTPException(status_code=400, detail="Cannot regenerate consent that is already signed")
+    
+    # Get names
+    client_user = await db.users.find_one({"id": client_id}, {"_id": 0, "full_name": 1})
+    therapist_user = await db.users.find_one({"id": therapist_id}, {"_id": 0, "full_name": 1})
+    
+    client_name = client_user.get("full_name", "Client") if client_user else "Client"
+    therapist_name = therapist_user.get("full_name", "Therapist") if therapist_user else "Therapist"
+    
+    # Regenerate consent text
+    consent_text = CONSENT_TEXT_TEMPLATE.format(
+        client_name=client_name,
+        therapist_name=therapist_name,
+        date=datetime.now(IST).strftime("%d/%m/%Y")
+    )
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    await db.therapy_consents.update_one(
+        {"client_id": client_id, "therapist_id": therapist_id},
+        {"$set": {
+            "consent_text": consent_text,
+            "client_name": client_name,
+            "therapist_name": therapist_name,
+            "updated_at": now
+        }}
+    )
+    
+    return {"message": "Consent text regenerated", "updated_at": now}
 
 # ============= SESSION NOTES ENDPOINTS =============
 
