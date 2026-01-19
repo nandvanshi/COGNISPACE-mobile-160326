@@ -725,19 +725,46 @@ I understand that:
 class PaymentCreate(BaseModel):
     client_id: str
     amount: float
-    payment_method: str
+    payment_method: Literal["cash", "upi", "card", "bank", "other"]
+    payment_status: Literal["paid", "partial", "pending"] = "paid"
+    appointment_id: Optional[str] = None
+    session_note_id: Optional[str] = None
     notes: Optional[str] = None
 
 class Payment(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str
+    bill_number: str  # Unique bill/receipt number
     therapist_id: str
+    therapist_name: Optional[str] = None
     client_id: str
     client_name: str
+    client_code: Optional[str] = None  # Client ID like CL-123456
     amount: float
-    payment_method: str
+    payment_method: str  # cash, upi, card, bank, other
+    payment_status: str = "paid"  # paid, partial, pending
+    appointment_id: Optional[str] = None
+    session_note_id: Optional[str] = None
     notes: Optional[str] = None
     created_at: datetime
+
+class PaymentReceipt(BaseModel):
+    """Receipt data for PDF generation"""
+    bill_number: str
+    clinic_name: str
+    therapist_name: str
+    therapist_phone: Optional[str] = None
+    therapist_email: Optional[str] = None
+    client_name: str
+    client_id: str  # CL-123456 format
+    date: str
+    time: str
+    session_date: Optional[str] = None
+    session_time: Optional[str] = None
+    amount: float
+    payment_method: str
+    payment_status: str
+    notes: Optional[str] = None
 
 # Audit Log
 class AuditLog(BaseModel):
