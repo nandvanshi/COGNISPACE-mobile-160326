@@ -175,7 +175,11 @@ const CaseHistoryWizard = ({ clientId, clientName, onComplete, onClose, isReadOn
       await axios.patch(`${API}/case-history/${clientId}/section?section=${section}`, formData[section]);
       toast.success('Section saved');
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to save section');
+      const errorDetail = error.response?.data?.detail;
+      const errorMessage = typeof errorDetail === 'string' 
+        ? errorDetail 
+        : (Array.isArray(errorDetail) ? errorDetail[0]?.msg : 'Failed to save section');
+      toast.error(errorMessage || 'Failed to save section');
     } finally {
       setSaving(false);
     }
