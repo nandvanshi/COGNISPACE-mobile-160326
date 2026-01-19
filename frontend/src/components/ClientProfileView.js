@@ -598,7 +598,31 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
 
                 {/* Sessions Tab */}
                 <TabsContent value="sessions" className="mt-0 space-y-4">
-                  <div className="grid grid-cols-3 gap-4 mb-4">
+                  {/* Action Buttons */}
+                  <div className="flex gap-2 justify-end">
+                    <Button
+                      onClick={handleBookAppointment}
+                      disabled={isReadOnly}
+                      variant="outline"
+                      size="sm"
+                      data-testid="sessions-book-appointment-btn"
+                    >
+                      <CalendarPlus size={14} className="mr-1" /> Book Appointment
+                    </Button>
+                    {!isAssistant && (
+                      <Button
+                        onClick={handleStartNewNote}
+                        disabled={isReadOnly}
+                        size="sm"
+                        data-testid="sessions-start-note-btn"
+                      >
+                        <PenSquare size={14} className="mr-1" /> Start Session Note
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Stats Cards */}
+                  <div className="grid grid-cols-4 gap-4 mb-4">
                     <Card className="p-4 text-center bg-green-50">
                       <p className="text-3xl font-bold text-green-600">{completedSessions}</p>
                       <p className="text-sm text-green-700">Completed</p>
@@ -606,6 +630,10 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
                     <Card className="p-4 text-center bg-blue-50">
                       <p className="text-3xl font-bold text-blue-600">{upcomingAppointments.length}</p>
                       <p className="text-sm text-blue-700">Upcoming</p>
+                    </Card>
+                    <Card className="p-4 text-center bg-purple-50">
+                      <p className="text-3xl font-bold text-purple-600">{profileData.sessionNotes.length}</p>
+                      <p className="text-sm text-purple-700">Session Notes</p>
                     </Card>
                     <Card className="p-4 text-center bg-gray-50">
                       <p className="text-3xl font-bold text-gray-600">
@@ -615,38 +643,140 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
                     </Card>
                   </div>
 
+                  {/* Session Notes Section */}
+                  {!isAssistant && profileData.sessionNotes.length > 0 && (
+                    <div className="mb-4">
+                      <h4 className="font-semibold mb-2 flex items-center gap-2">
+                        <FileText size={16} /> Session Notes ({profileData.sessionNotes.length})
+                      </h4>
+                      <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                        {profileData.sessionNotes
+                          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                          .map((note, idx) => {
+                            const linkedAppt = getLinkedAppointment(note);
+                            return (
+                              <Card key={idx} className="p-3 border-purple-200 bg-purple-50/30 hover:bg-purple-50/50 transition-colors">
+                                <div className="flex justify-between items-start">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2">
+                                      <p className="font-medium">{formatDate(note.created_at)}</p>
+                                      <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                        note.template_type === 'SOAP' ? 'bg-blue-100 text-blue-700' : 'bg-teal-100 text-teal-700'
+                                      }`}>
+                                        {note.template_type}
+                                      </span>
+                                      {linkedAppt && (
+                                        <span className="flex items-center text-xs text-muted-foreground">
+                                          <LinkIcon size={10} className="mr-1" /> Linked to {formatDate(linkedAppt.start_time)}
+                                        </span>
+                                      )}
+                                    </div>
+                                    {note.assessment && (
+                                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{note.assessment}</p>
+                                    )}
+                                  </div>
+                                  <div className="flex gap-1 ml-2">
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      onClick={() => handleViewNote(note)}
+                                      data-testid={`view-note-${note.id}`}
+                                    >
+                                      <Eye size={14} />
+                                    </Button>
+                                    {!isReadOnly && (
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        onClick={() => handleEditNoteClick(note)}
+                                        data-testid={`edit-note-${note.id}`}
+                                      >
+                                        <Edit size={14} />
+                                      </Button>
+                                    )}
+                                  </div>
+                                </div>
+                              </Card>
+                            );
+                          })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* No Session Notes Message for Therapists */}
+                  {!isAssistant && profileData.sessionNotes.length === 0 && (
+                    <Card className="p-4 border-dashed border-2 text-center mb-4">
+                      <FileText className="mx-auto text-muted-foreground mb-2" size={32} />
+                      <p className="text-muted-foreground text-sm">No session notes yet</p>
+                      {!isReadOnly && profileData.caseHistory?.is_complete && profileData.consent?.is_signed && (
+                        <Button 
+                          variant="link" 
+                          size="sm" 
+                          onClick={handleStartNewNote}
+                          className="mt-2"
+                        >
+                          Create your first session note
+                        </Button>
+                      )}
+                    </Card>
+                  )}
+
+                  {/* All Appointments Section */}
                   <h4 className="font-semibold">All Appointments</h4>
-                  <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                  <div className="space-y-2 max-h-[250px] overflow-y-auto">
                     {profileData.appointments.length > 0 ? (
                       profileData.appointments
                         .sort((a, b) => new Date(b.start_time) - new Date(a.start_time))
-                        .map((appt, idx) => (
-                          <Card key={idx} className={`p-3 ${
-                            appt.status === 'completed' ? 'border-green-200 bg-green-50/30' :
-                            appt.status === 'cancelled' ? 'border-red-200 bg-red-50/30' :
-                            'border-blue-200 bg-blue-50/30'
-                          }`}>
-                            <div className="flex justify-between items-center">
-                              <div>
-                                <p className="font-medium">{formatDate(appt.start_time)}</p>
-                                <p className="text-sm text-muted-foreground">
-                                  {formatTime(appt.start_time)} - {formatTime(appt.end_time)}
-                                </p>
+                        .map((appt, idx) => {
+                          // Check if this appointment has a linked session note
+                          const linkedNote = profileData.sessionNotes.find(n => n.appointment_id === appt.id);
+                          return (
+                            <Card key={idx} className={`p-3 ${
+                              appt.status === 'completed' ? 'border-green-200 bg-green-50/30' :
+                              appt.status === 'cancelled' ? 'border-red-200 bg-red-50/30' :
+                              'border-blue-200 bg-blue-50/30'
+                            }`}>
+                              <div className="flex justify-between items-center">
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <p className="font-medium">{formatDate(appt.start_time)}</p>
+                                    {linkedNote && !isAssistant && (
+                                      <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded flex items-center gap-1">
+                                        <FileText size={10} /> Note
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-sm text-muted-foreground">
+                                    {formatTime(appt.start_time)} - {formatTime(appt.end_time)}
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className={`text-xs px-2 py-1 rounded-full capitalize ${
+                                    appt.status === 'completed' ? 'bg-green-100 text-green-700' :
+                                    appt.status === 'cancelled' ? 'bg-red-100 text-red-700' :
+                                    appt.status === 'scheduled' ? 'bg-blue-100 text-blue-700' :
+                                    'bg-gray-100 text-gray-700'
+                                  }`}>
+                                    {appt.status}
+                                  </span>
+                                  {linkedNote && !isAssistant && (
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      onClick={() => handleViewNote(linkedNote)}
+                                      title="View session note"
+                                    >
+                                      <Eye size={14} />
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
-                              <span className={`text-xs px-2 py-1 rounded-full capitalize ${
-                                appt.status === 'completed' ? 'bg-green-100 text-green-700' :
-                                appt.status === 'cancelled' ? 'bg-red-100 text-red-700' :
-                                appt.status === 'scheduled' ? 'bg-blue-100 text-blue-700' :
-                                'bg-gray-100 text-gray-700'
-                              }`}>
-                                {appt.status}
-                              </span>
-                            </div>
-                            {appt.notes && (
-                              <p className="text-xs text-muted-foreground mt-1">{appt.notes}</p>
-                            )}
-                          </Card>
-                        ))
+                              {appt.notes && (
+                                <p className="text-xs text-muted-foreground mt-1">{appt.notes}</p>
+                              )}
+                            </Card>
+                          );
+                        })
                     ) : (
                       <p className="text-muted-foreground text-center py-8">No appointments yet</p>
                     )}
