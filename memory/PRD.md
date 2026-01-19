@@ -563,6 +563,55 @@ Build a secure, therapist-first web application for managing a therapy practice 
   - /app/tests/test_client_profile_view.py - Backend endpoint tests
   - /app/test_reports/iteration_16.json, iteration_17.json
 
+### Phase 21: Session Check-In/Check-Out & Payment Workflow (COMPLETED - Jan 19, 2026)
+- [x] **Session Check-In (Start Session)**:
+  - `POST /api/appointments/{id}/check-in` endpoint
+  - Records actual_start_time (IST timestamp)
+  - Changes status from "scheduled" to "in_progress"
+  - Records checked_in_by (user ID)
+  - Both Therapist AND Assistant can check-in
+- [x] **Session Check-Out (End Session)**:
+  - `POST /api/appointments/{id}/check-out` endpoint
+  - Records actual_end_time (IST timestamp)
+  - Calculates actual_duration_minutes
+  - Changes status from "in_progress" to "completed"
+  - Records checked_out_by (user ID)
+  - Both Therapist AND Assistant can check-out
+  - Optional payment recording at check-out
+- [x] **Enhanced Payment Model**:
+  - New fields: bill_number (unique), payment_status (paid/partial/pending), payment_method (cash/upi/card/bank/other)
+  - Linked to: appointment_id, session_note_id, client_id, therapist_id
+  - client_code (CL-XXXXXX), therapist_name stored for receipts
+  - `POST /api/payments` - Both Therapist AND Assistant can record payments
+  - `GET /api/payments` - Therapist, Assistant, AND Client can view
+  - `GET /api/payments/{id}` - Single payment with access control
+- [x] **Unique Bill Number Generation**:
+  - Format: BILL-YYYYMMDD-XXXX (e.g., BILL-20260119-0001)
+  - Auto-incrementing daily sequence
+  - `generate_bill_number()` async function
+- [x] **Payment Receipt System**:
+  - `GET /api/payments/{id}/receipt` endpoint returns PaymentReceipt model
+  - Receipt includes: bill_number, clinic_name, therapist details, client details, date/time, session reference, amount, payment_method, payment_status, notes
+  - Accessible by Therapist, Assistant, AND Client (read-only)
+- [x] **Frontend Components**:
+  - `SessionActionButtons` - Check In / Check Out buttons for appointment cards
+  - `AppointmentStatusBadge` - Color-coded status (blue=scheduled, amber=in_progress, green=completed, red=cancelled)
+  - `PaymentCard` - Payment listing with receipt button
+  - `PaymentReceiptView` - Modal with printable receipt, Print and Download PDF buttons
+- [x] **UI Integration**:
+  - Sessions tab shows Check In button for scheduled appointments
+  - Sessions tab shows Check Out button for in_progress appointments
+  - Check Out dialog includes optional payment recording (amount, mode, status, notes)
+  - Payments tab uses PaymentCard with receipt icon
+  - Receipt dialog with formatted layout, Print and Download PDF functionality
+- [x] **Access Control**:
+  - Therapist & Assistant: Check-in/out, record payments, view/download receipts
+  - Client: View payments, view/download receipts (read-only, no edit)
+  - Subscription read-only mode respected
+- [x] **Appointment Model Updates**:
+  - New status: "in_progress" (between scheduled and completed)
+  - New fields: actual_start_time, actual_end_time, actual_duration_minutes, checked_in_by, checked_out_by
+
 ---
 
 ## Technical Architecture
