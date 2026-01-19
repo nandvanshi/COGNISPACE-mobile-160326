@@ -281,6 +281,16 @@ const ClientManagement = ({ isReadOnly = false, isAssistant = false }) => {
             
             <div className="flex gap-2 mt-4 pt-4 border-t border-border/40">
               <Button
+                onClick={() => handleViewProfile(client)}
+                variant="default"
+                size="sm"
+                className="flex-1"
+                data-testid={`view-profile-${client.id}`}
+              >
+                <Eye size={16} className="mr-1" />
+                View Profile
+              </Button>
+              <Button
                 onClick={() => handleSelectClient(client)}
                 variant="outline"
                 size="sm"
@@ -295,12 +305,10 @@ const ClientManagement = ({ isReadOnly = false, isAssistant = false }) => {
                 onClick={() => handleResetPassword(client)}
                 variant="outline"
                 size="sm"
-                className="flex-1"
                 disabled={isReadOnly}
                 data-testid={`reset-pw-${client.id}`}
               >
-                <Key size={16} className="mr-1" />
-                Reset PW
+                <Key size={16} />
               </Button>
             </div>
           </Card>
