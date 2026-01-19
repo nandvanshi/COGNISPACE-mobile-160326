@@ -240,7 +240,7 @@ const SessionNotes = ({ isReadOnly = false }) => {
       setSelectedNote(null);
       fetchData();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to update session note');
+      toast.error(getErrorMessage(error, 'Failed to update session note'));
     }
   };
 
