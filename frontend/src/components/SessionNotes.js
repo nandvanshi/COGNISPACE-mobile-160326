@@ -1284,13 +1284,29 @@ const SessionNotes = ({ isReadOnly = false }) => {
               onComplete={() => {
                 setShowCaseHistoryDialog(false);
                 fetchData();
-                toast.success('Case history completed! You can now create session notes.');
+                toast.success('Case history completed! Consent form generated.');
               }}
               onClose={() => setShowCaseHistoryDialog(false)}
             />
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Therapy Consent Dialog */}
+      {selectedClientForConsent && (
+        <TherapyConsent
+          clientId={selectedClientForConsent.id}
+          clientName={selectedClientForConsent.full_name}
+          isOpen={showConsentDialog}
+          onClose={() => {
+            setShowConsentDialog(false);
+            setSelectedClientForConsent(null);
+            fetchData();
+          }}
+          isReadOnly={isReadOnly}
+          userRole="therapist"
+        />
+      )}
     </div>
   );
 };
