@@ -172,6 +172,11 @@ const ClientManagement = ({ isReadOnly = false, isAssistant = false }) => {
     setShowPasswordDialog(true);
   };
 
+  const handleViewProfile = (client) => {
+    setProfileViewClient(client);
+    setShowProfileView(true);
+  };
+
   const generatePassword = () => {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
     let password = '';
