@@ -2920,11 +2920,235 @@ async def get_therapist_availability_public(therapist_id: str, current_user: dic
         "available_days": available_days
     }
 
+# ============= CASE HISTORY ENDPOINTS =============
+
+@api_router.post("/case-history", response_model=CaseHistory)
+async def create_case_history(case_data: CaseHistoryCreate, current_user: dict = Depends(require_active_therapist)):
+    """Create case history for a client - First session mandatory"""
+    therapist_id = current_user["id"]
+    
+    # Verify client belongs to this therapist
+    client_profile = await db.client_profiles.find_one(
+        {"user_id": case_data.client_id, "therapist_id": therapist_id},
+        {"_id": 0}
+    )
+    if not client_profile:
+        raise HTTPException(status_code=404, detail="Client not found or not assigned to you")
+    
+    # Check if case history already exists
+    existing = await db.case_histories.find_one(
+        {"client_id": case_data.client_id, "therapist_id": therapist_id},
+        {"_id": 0}
+    )
+    if existing:
+        raise HTTPException(status_code=400, detail="Case history already exists for this client. Use PUT to update.")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    case_doc = {
+        "id": str(uuid.uuid4()),
+        "client_id": case_data.client_id,
+        "therapist_id": therapist_id,
+        "basic_identification": case_data.basic_identification.model_dump() if case_data.basic_identification else {},
+        "presenting_complaints": case_data.presenting_complaints.model_dump() if case_data.presenting_complaints else {},
+        "history_of_present_illness": case_data.history_of_present_illness.model_dump() if case_data.history_of_present_illness else None,
+        "past_psychiatric_history": case_data.past_psychiatric_history.model_dump() if case_data.past_psychiatric_history else None,
+        "medical_history": case_data.medical_history.model_dump() if case_data.medical_history else None,
+        "family_history": case_data.family_history.model_dump() if case_data.family_history else None,
+        "personal_developmental_history": case_data.personal_developmental_history.model_dump() if case_data.personal_developmental_history else None,
+        "mental_status_examination": case_data.mental_status_examination.model_dump() if case_data.mental_status_examination else None,
+        "provisional_formulation": case_data.provisional_formulation.model_dump() if case_data.provisional_formulation else None,
+        "initial_therapy_plan": case_data.initial_therapy_plan.model_dump() if case_data.initial_therapy_plan else None,
+        "consent_disclaimer": case_data.consent_disclaimer.model_dump() if case_data.consent_disclaimer else None,
+        "is_complete": case_data.is_complete,
+        "created_at": now,
+        "updated_at": now
+    }
+    
+    await db.case_histories.insert_one(case_doc)
+    
+    return CaseHistory(**{k: datetime.fromisoformat(v) if k in ["created_at", "updated_at"] else v for k, v in case_doc.items()})
+
+@api_router.get("/case-history/{client_id}", response_model=CaseHistory)
+async def get_case_history(client_id: str, current_user: dict = Depends(get_current_user)):
+    """Get case history for a client - Therapist only"""
+    # Only therapists can view case history
+    if current_user["role"] not in ["therapist"]:
+        raise HTTPException(status_code=403, detail="Only therapists can view case history")
+    
+    therapist_id = current_user["id"]
+    
+    case_history = await db.case_histories.find_one(
+        {"client_id": client_id, "therapist_id": therapist_id},
+        {"_id": 0}
+    )
+    
+    if not case_history:
+        raise HTTPException(status_code=404, detail="Case history not found")
+    
+    return CaseHistory(**{k: datetime.fromisoformat(v) if k in ["created_at", "updated_at"] else v for k, v in case_history.items()})
+
+@api_router.get("/case-history/check/{client_id}")
+async def check_case_history_exists(client_id: str, current_user: dict = Depends(get_current_user)):
+    """Check if case history exists for a client"""
+    if current_user["role"] not in ["therapist"]:
+        raise HTTPException(status_code=403, detail="Only therapists can check case history")
+    
+    therapist_id = current_user["id"]
+    
+    case_history = await db.case_histories.find_one(
+        {"client_id": client_id, "therapist_id": therapist_id},
+        {"_id": 0, "id": 1, "is_complete": 1}
+    )
+    
+    return {
+        "exists": case_history is not None,
+        "is_complete": case_history.get("is_complete", False) if case_history else False,
+        "case_history_id": case_history.get("id") if case_history else None
+    }
+
+@api_router.put("/case-history/{client_id}", response_model=CaseHistory)
+async def update_case_history(client_id: str, case_data: CaseHistoryCreate, current_user: dict = Depends(require_active_therapist)):
+    """Update case history - Therapist only, editable anytime"""
+    therapist_id = current_user["id"]
+    
+    # Check if case history exists
+    existing = await db.case_histories.find_one(
+        {"client_id": client_id, "therapist_id": therapist_id},
+        {"_id": 0}
+    )
+    if not existing:
+        raise HTTPException(status_code=404, detail="Case history not found")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    update_doc = {
+        "basic_identification": case_data.basic_identification.model_dump() if case_data.basic_identification else existing.get("basic_identification", {}),
+        "presenting_complaints": case_data.presenting_complaints.model_dump() if case_data.presenting_complaints else existing.get("presenting_complaints", {}),
+        "history_of_present_illness": case_data.history_of_present_illness.model_dump() if case_data.history_of_present_illness else existing.get("history_of_present_illness"),
+        "past_psychiatric_history": case_data.past_psychiatric_history.model_dump() if case_data.past_psychiatric_history else existing.get("past_psychiatric_history"),
+        "medical_history": case_data.medical_history.model_dump() if case_data.medical_history else existing.get("medical_history"),
+        "family_history": case_data.family_history.model_dump() if case_data.family_history else existing.get("family_history"),
+        "personal_developmental_history": case_data.personal_developmental_history.model_dump() if case_data.personal_developmental_history else existing.get("personal_developmental_history"),
+        "mental_status_examination": case_data.mental_status_examination.model_dump() if case_data.mental_status_examination else existing.get("mental_status_examination"),
+        "provisional_formulation": case_data.provisional_formulation.model_dump() if case_data.provisional_formulation else existing.get("provisional_formulation"),
+        "initial_therapy_plan": case_data.initial_therapy_plan.model_dump() if case_data.initial_therapy_plan else existing.get("initial_therapy_plan"),
+        "consent_disclaimer": case_data.consent_disclaimer.model_dump() if case_data.consent_disclaimer else existing.get("consent_disclaimer"),
+        "is_complete": case_data.is_complete,
+        "updated_at": now
+    }
+    
+    await db.case_histories.update_one(
+        {"client_id": client_id, "therapist_id": therapist_id},
+        {"$set": update_doc}
+    )
+    
+    updated = await db.case_histories.find_one(
+        {"client_id": client_id, "therapist_id": therapist_id},
+        {"_id": 0}
+    )
+    
+    return CaseHistory(**{k: datetime.fromisoformat(v) if k in ["created_at", "updated_at"] else v for k, v in updated.items()})
+
+@api_router.patch("/case-history/{client_id}/section")
+async def update_case_history_section(client_id: str, section: str, data: dict, current_user: dict = Depends(require_active_therapist)):
+    """Update a specific section of case history - For auto-save"""
+    therapist_id = current_user["id"]
+    
+    valid_sections = [
+        "basic_identification", "presenting_complaints", "history_of_present_illness",
+        "past_psychiatric_history", "medical_history", "family_history",
+        "personal_developmental_history", "mental_status_examination",
+        "provisional_formulation", "initial_therapy_plan", "consent_disclaimer"
+    ]
+    
+    if section not in valid_sections:
+        raise HTTPException(status_code=400, detail=f"Invalid section. Must be one of: {valid_sections}")
+    
+    # Check if case history exists
+    existing = await db.case_histories.find_one(
+        {"client_id": client_id, "therapist_id": therapist_id},
+        {"_id": 0}
+    )
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    if not existing:
+        # Create new case history with just this section
+        case_doc = {
+            "id": str(uuid.uuid4()),
+            "client_id": client_id,
+            "therapist_id": therapist_id,
+            section: data,
+            "is_complete": False,
+            "created_at": now,
+            "updated_at": now
+        }
+        await db.case_histories.insert_one(case_doc)
+    else:
+        # Update existing
+        await db.case_histories.update_one(
+            {"client_id": client_id, "therapist_id": therapist_id},
+            {"$set": {section: data, "updated_at": now}}
+        )
+    
+    return {"message": f"Section '{section}' updated successfully", "updated_at": now}
+
+@api_router.patch("/case-history/{client_id}/complete")
+async def mark_case_history_complete(client_id: str, current_user: dict = Depends(require_active_therapist)):
+    """Mark case history as complete - Required before session notes"""
+    therapist_id = current_user["id"]
+    
+    existing = await db.case_histories.find_one(
+        {"client_id": client_id, "therapist_id": therapist_id},
+        {"_id": 0}
+    )
+    
+    if not existing:
+        raise HTTPException(status_code=404, detail="Case history not found")
+    
+    # Validate required fields are present
+    if not existing.get("basic_identification") or not existing.get("basic_identification", {}).get("name"):
+        raise HTTPException(status_code=400, detail="Basic Identification (name) is required")
+    
+    if not existing.get("presenting_complaints") or not existing.get("presenting_complaints", {}).get("main_problems"):
+        raise HTTPException(status_code=400, detail="Presenting Complaints (main problems) is required")
+    
+    if not existing.get("consent_disclaimer") or not existing.get("consent_disclaimer", {}).get("informed_consent_taken"):
+        raise HTTPException(status_code=400, detail="Informed consent must be taken")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    await db.case_histories.update_one(
+        {"client_id": client_id, "therapist_id": therapist_id},
+        {"$set": {"is_complete": True, "updated_at": now}}
+    )
+    
+    return {"message": "Case history marked as complete", "is_complete": True}
+
 # ============= SESSION NOTES ENDPOINTS =============
 
 @api_router.post("/session-notes", response_model=SessionNote)
 async def create_session_note(note_data: SessionNoteCreate, current_user: dict = Depends(require_active_therapist)):
-    """Create a new session note - respects subscription read-only mode"""
+    """Create a new session note - Requires completed case history first"""
+    # Check if case history exists and is complete
+    case_history = await db.case_histories.find_one(
+        {"client_id": note_data.client_id, "therapist_id": current_user["id"]},
+        {"_id": 0, "is_complete": 1}
+    )
+    
+    if not case_history:
+        raise HTTPException(
+            status_code=400, 
+            detail="Case history must be completed before creating session notes. Please complete the initial case history first."
+        )
+    
+    if not case_history.get("is_complete", False):
+        raise HTTPException(
+            status_code=400, 
+            detail="Case history is incomplete. Please complete all required sections and mark it as complete before creating session notes."
+        )
+    
     # Find client in clients collection first, then users
     client = await db.clients.find_one({"id": note_data.client_id}, {"_id": 0})
     if not client:
