@@ -140,6 +140,7 @@ const TherapistDashboard = () => {
           {currentView === 'messages' && <Messaging isReadOnly={isReadOnly} />}
           {currentView === 'assessments' && <Assessments isReadOnly={isReadOnly} />}
           {currentView === 'protocols' && <Protocols isReadOnly={isReadOnly} />}
+          {currentView === 'ai-support' && <AIClinicalSupport isReadOnly={isReadOnly} />}
           {currentView === 'payments' && <Payments isReadOnly={isReadOnly} />}
           {currentView === 'assistants' && <AssistantManagement isReadOnly={isReadOnly} />}
         </div>
