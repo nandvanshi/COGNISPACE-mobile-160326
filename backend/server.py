@@ -4276,7 +4276,7 @@ async def assign_assessment(assessment_data: AssessmentCreate, current_user: dic
     return Assessment(**result)
 
 @api_router.get("/assessments", response_model=List[Assessment])
-async def get_assessments(current_user: dict = Depends(get_current_user)):
+async def get_assessments(client_id: Optional[str] = None, current_user: dict = Depends(get_current_user)):
     # Assistants cannot access clinical data
     if current_user["role"] == "assistant":
         raise HTTPException(status_code=403, detail="Assistants cannot access assessments")
@@ -4284,6 +4284,8 @@ async def get_assessments(current_user: dict = Depends(get_current_user)):
     query = {}
     if current_user["role"] == "therapist":
         query["therapist_id"] = current_user["id"]
+        if client_id:
+            query["client_id"] = client_id
     else:
         query["client_id"] = current_user["id"]
     
