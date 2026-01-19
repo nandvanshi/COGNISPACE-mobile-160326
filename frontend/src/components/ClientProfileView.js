@@ -301,8 +301,9 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
 
   // Calculate statistics
   const completedSessions = profileData.appointments.filter(a => a.status === 'completed').length;
+  const inProgressSessions = profileData.appointments.filter(a => a.status === 'in_progress').length;
   const upcomingAppointments = profileData.appointments.filter(a => 
-    new Date(a.start_time) > new Date() && a.status !== 'cancelled'
+    new Date(a.start_time) > new Date() && a.status !== 'cancelled' && a.status !== 'completed'
   ).sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
   const nextAppointment = upcomingAppointments[0];
   const pastAppointments = profileData.appointments.filter(a => 
@@ -313,8 +314,12 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
   const completedAssessments = profileData.assessments.filter(a => a.status === 'completed').length;
   const pendingAssessments = profileData.assessments.filter(a => a.status === 'assigned').length;
   
-  const totalPayments = profileData.payments.reduce((sum, p) => sum + (p.amount || 0), 0);
-  const pendingPayments = profileData.payments.filter(p => p.status === 'pending').reduce((sum, p) => sum + (p.amount || 0), 0);
+  const totalPayments = profileData.payments
+    .filter(p => p.payment_status === 'paid')
+    .reduce((sum, p) => sum + (p.amount || 0), 0);
+  const pendingPayments = profileData.payments
+    .filter(p => p.payment_status === 'pending' || p.payment_status === 'partial')
+    .reduce((sum, p) => sum + (p.amount || 0), 0);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
