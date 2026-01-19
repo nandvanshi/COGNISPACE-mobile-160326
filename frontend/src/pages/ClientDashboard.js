@@ -48,6 +48,9 @@ const ClientDashboard = () => {
   const [showReceiptDialog, setShowReceiptDialog] = useState(false);
   const [selectedPaymentId, setSelectedPaymentId] = useState(null);
 
+  // Settings state
+  const [showSettings, setShowSettings] = useState(false);
+
   useEffect(() => {
     checkConsentStatus();
   }, []);
