@@ -2,179 +2,168 @@
 
 **PRODUCT REQUIREMENTS**
 - **User Roles**: Therapist, Client, Super Admin, and Therapist Assistant.
-- **Authentication**: Secure JWT-based login for all roles. Clients and Assistants are created by Therapists or Super Admins. Therapist registration requires Super Admin approval.
+- **Authentication**: Secure JWT-based login for all roles.
 - **Practice Management**: Client profiles (editable), appointment scheduling (with availability, slot generation, and calendar blocking), session notes (SOAP & DAP), secure messaging, and payment tracking.
-- **Clinical Support**: Assessment suggestion engine, therapy protocol builder, and homework/resource sharing.
-- **Super Admin & Subscriptions**: A Super Admin role to manage therapists (approval, suspension, manual creation, profile edits), clients (full CRUD), and a subscription module (assigning/changing plans).
-- **Therapist Assistant Role**: A restricted role linked to a single therapist to manage operational tasks (clients, appointments) without access to clinical data. Includes audit logging for assistant actions.
-- **Data Isolation & Security**: Therapists can only see their own assigned clients. Assistants can only access their assigned therapist's data. Expired/cancelled subscriptions result in read-only access.
-- **Global Standards**: The entire application must use India Standard Time (IST), DD/MM/YYYY date format, 24-hour (HH:mm) time format, and Indian Rupee (₹) currency.
-- **UI/UX**: Profile photo support, search functionality, a redesigned therapist dashboard, and productivity features like Copy Day for availability.
+- **Clinical Support**: AI-powered assessment suggestion engine, therapy protocol builder, and homework/resource sharing.
+- **Super Admin & Subscriptions**: A Super Admin role to manage therapists, clients, and a subscription module.
+- **Therapist Assistant Role**: A restricted role to manage operational tasks without access to clinical data.
+- **Clinical Workflow**: A mandatory, multi-step **Case History** must be completed by the therapist before any session notes can be created. Following this, a **Therapy Consent** form is generated, which the client must digitally sign before therapy can proceed.
+- **Data Isolation & Security**: Therapists can only see their own assigned clients. Assistants are restricted. Clinical notes are not accessible to clients.
+- **Global Standards**: The application must use India Standard Time (IST), DD/MM/YYYY date format, 24-hour (HH:mm) time format, and Indian Rupee (₹) currency.
+- **UI/UX**: Profile photo support, search functionality, a comprehensive client profile view, and productivity features.
 
 **User's preferred language**: English
 
 **what currently exists?**
 A full-stack application with a FastAPI backend, React frontend, and MongoDB database. Key features include:
--   **Multi-Role Authentication**: Secure login for Super Admin, Therapist, Client, and the newly added Therapist Assistant role.
--   **Super Admin Panel**: A functional dashboard for approving/managing therapists, full CRUD on clients, and subscription management.
--   **Therapist Dashboard**: A redesigned overview page with at a glance stats. Therapists can manage clients, a full-featured appointment calendar (including availability settings, slot-based scheduling, and calendar blocking), create/edit session notes with templates, and manage their assistants.
--   **Therapist Assistant**: Assistants can be created and managed by therapists. They have their own dashboard with a limited sidebar and can manage clients and appointments on behalf of their assigned therapist, with all clinical data access restricted at the backend level. Basic audit logging for assistant actions is in place.
--   **Secure Messaging**: A complete and tested messaging system allowing therapists to communicate with their clients, with controls for enabling/disabling messaging and respecting read-only mode.
--   **Global Standards**: An effort is underway to standardize timezone, date/time formats, and currency across the app. A utility file () has been created, and many frontend components have been modified.
+-   **Multi-Role Authentication**: Secure login for Super Admin, Therapist, Client, and Therapist Assistant.
+-   **Super Admin & Therapist Panels**: Functional dashboards for managing users, clients, appointments, and assistants.
+-   **AI-Powered Clinical Suite**: Integrated with Gemini 3 Flash, the app provides an assessment suggestion engine, a therapy protocol builder, and a homework/resource sharing module.
+-   **Complete Clinical Notes Workflow**: A mandatory, multi-step Case History wizard must be completed by the therapist. This triggers the generation of a legal consent form.
+-   **Client Consent Flow**: Upon their next login, clients are presented with the consent form and cannot access any other part of the application until they digitally sign it.
+-   **Bug Fixes**: A critical timezone bug in appointment slot generation was fixed and verified. A React UI error was also resolved.
 
 **Last working item**:
--   **Last item agent was working**: The agent was implementing global standards for timezone (IST), date format (DD/MM/YYYY), time format (24-hour), and currency (INR/₹). It created a central utility file  and overwrote numerous frontend components to use these new formatting functions. The work involved modifying , , , , , , and .
+-   **Last item agent was working**: The user requested a comprehensive client profile view for the therapist panel. This view should aggregate all client-related data in one place (e.g., upcoming appointments, session history, case history status, etc.). The agent had just started this task by creating the component file .
 -   **Status**: IN PROGRESS
 -   **Agent Testing Done**: N
--   **Which testing method agent to use?**: both. First, use  to verify backend API responses return dates in a consistent format (ideally ISO strings) and that any currency values are stored as numbers. Then, use the frontend testing agent to perform a comprehensive regression test, ensuring all UI components display dates, times, and currency in the correct IST, DD/MM/YYYY, HH:mm, and ₹ formats.
+-   **Which testing method agent to use?**: both. First, backend testing using  to verify a new data aggregation endpoint. Then, frontend testing using the  to check the layout and data presentation in the new  component.
 -   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
--   Issue 1: (P0) Complete and Verify Global Standards Implementation
+-   Issue 1: (P0) Implement Comprehensive Client Profile View
 
 **Issues Detail**:
 -   **Issue 1**:
-    -   **Description**: The application-wide standardization of timezone, date/time formats, and currency is incomplete. Many frontend files were modified, but the changes have not been tested, and the backend has not been fully reviewed for consistency.
-    -   **Attempted fixes**: Created  and updated many frontend components to use it.
+    -   **Description**: The therapist needs a single dashboard for each client that consolidates all their information: personal details, upcoming/past appointments, session count, case history and consent status, payment history, and assessments. This requires a new backend endpoint to gather this data efficiently and a new frontend component to display it.
+    -   **Attempted fixes**: A placeholder file  was created.
     -   **Next debug checklist**:
-        1.  **Backend Review**: Examine  to ensure all  operations are timezone-aware and consistently handled. The best practice is to store all timestamps in UTC in MongoDB and convert them to IST in API responses.
-        2.  **Frontend Finalization**: Use  to find any remaining instances of , , or  formatting outside of  and refactor them.
-        3.  **Backend Currency**: Ensure all currency/price fields in Pydantic models (e.g., ) are  or  and that the backend doesn't handle currency symbols.
-        4.  **Testing**: Restart services. Then, systematically take screenshots of every page that displays a date, time, or currency amount to visually verify the correct formatting. This includes the Therapist Dashboard, Appointments Calendar, Session Notes, Messaging, Availability, Payments, and the Admin Subscription panel.
-        5.  **Subagent Testing**: Call the  to run a full regression test on the frontend, specifically tasking it to verify all date, time, and currency formats across the application.
-    -   **Why fix this issue and what will be achieved with the fix?**: This is a mandatory requirement to ensure data consistency and a uniform user experience across the entire application.
-    -   **Status**: IN PROGRESS
+        1.  **Backend**: In , create a new data aggregation endpoint (e.g., ). This endpoint should query the , , , , and  collections to build a single JSON response.
+        2.  **Frontend**: Implement the  component to fetch data from the new endpoint and display it in a well-organized layout with distinct sections or cards.
+        3.  **Integration**: Modify  to trigger the display of this new component (e.g., in a modal or a full-page view) when a therapist clicks on a client.
+    -   **Why fix this issue and what will be achieved with the fix?**: This is a major usability enhancement for therapists, providing a single pane of glass view for each client and dramatically improving workflow efficiency.
+    -   **Status**: NOT STARTED
     -   **Is recurring issue?**: N
     -   **Should Test frontend/backend/both after fix?**: both
     -   **Blocked on other issue**: None
 
 **In progress Task List**:
--   **Task 1**: (P0) Implement Global Standards
-    -   **Where to resume**: The frontend modifications are largely done but untested. The next step is to review the backend for date/time consistency and then begin thorough testing of all the changes.
-    -   **What will be achieved with this?**: A fully compliant application that adheres to the user's required standards for time zone, date/time formats, and currency.
+-   **Task 1**: (P0) Implement Comprehensive Client Profile View
+    -   **Where to resume**: The backend. The next step is to create the new API endpoint in  to aggregate all the necessary client data.
+    -   **What will be achieved with this?**: A complete, all-in-one dashboard for therapists to view all relevant information about a specific client, fulfilling a key user request.
     -   **Status**: IN PROGRESS
     -   **Should Test frontend/backend/both after fix?**: both
-    -   **Blocked on something**: None.
+    -   **Blocked on something**: None
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks**:
-    -   (P1) Fix and test the Coupon Code management module in the Super Admin panel.
+    -   (P1) Complete and verify the **Global Standards Implementation** (IST timezone, DD/MM/YYYY, HH:mm, ₹). This task was started but superseded by higher-priority items and remains unverified.
+    -   (P2) Implement the **Coupon Code** management module in the Super Admin panel.
 -   **Future Tasks**:
-    -   Build out the clinical support features: Assessment suggestion engine and Therapy protocol builder.
-    -   Implement full backend logic for payment tracking.
-    -   Implement homework/resource sharing between therapists and clients.
-    -   Implement template sharing between therapists.
+    -   Implement full backend logic for **payment tracking**.
+    -   Add **AI-powered SOAP/DAP note generation** from session transcripts.
+    -   Allow therapists to **download/print** the completed Case History.
+    -   Implement **usage tracking/rate limiting** for AI features.
+    -   Build a feature for therapists to **share note templates**.
+    -   Add **profile photo uploads**.
 
 **Completed work in this session**
--   **Therapist Assistant Role**: Implemented the assistant role with restricted permissions, separate dashboard, and audit logging. (DONE & VERIFIED)
--   **Calendar Blocking Feature**: Added UI and functionality for therapists and assistants to block time in the appointment calendar. (DONE & VERIFIED)
--   **Therapist Dashboard Redesign**: Overhauled the therapist's main overview page with a modern layout and new components. (DONE & VERIFIED)
--   **Copy Day Feature**: Added a productivity feature in Availability Settings for therapists to duplicate a day's schedule. (DONE & VERIFIED)
--   **Secure Messaging Feature**: Fixed a bug where messaging endpoints were using an incorrect database collection and fully tested the feature, including security rules. (DONE & VERIFIED)
--   **Appointment Calendar Regression**: Ran a full regression test on the appointment and availability features to confirm stability. (DONE & VERIFIED)
+-   **P0 Bug Fix**: Resolved a critical timezone mismatch in the appointment slot generation logic.
+-   **AI Clinical Suite**: Implemented an Assessment Suggestion Engine, Therapy Protocol Builder, and Homework/Resource sharing feature using Gemini 3 Flash.
+-   **Case History & Consent Workflow**:
+    -   Built a mandatory, multi-step Case History wizard for therapists.
+    -   Implemented an automated Therapy Consent generation upon Case History completion.
+    -   Created a client-side flow where clients are forced to digitally sign the consent form before they can access their dashboard.
+-   **Bug Fix**: Corrected a React error where raw error objects were being rendered to the UI.
 
 **Earlier issues found/mentioned but not fixed**
--   None.
+-   The application-wide standardization of timezone, date/time formats, and currency is incomplete. While the timezone was fixed for a critical bug, a full audit and verification across the app has not been performed.
 
 **Known issue recurrence from previous fork**
--   **Issue recurrence in previous fork**: The Subscription module was a recurring problem.
--   **Recurrence count**: 2
--   **Status**: RESOLVED (The entire workflow was rebuilt and verified by the testing agent in a previous session).
+-   None.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Backend**: FastAPI, Pydantic, MongoDB, JWT
--   **Frontend**: React, Tailwind CSS, Shadcn UI, Axios
--   **Authentication**: JWT-based, Role-Based Access Control (Client, Therapist, Super Admin, Assistant).
--   **Access Control**: Custom FastAPI dependencies (, , ) to enforce permissions.
--   **Global Formatting**: Centralized formatting for dates, times, and currency via a frontend utility module.
+-   **Timezone Handling**: Correctly implemented timezone-aware logic in Python using  to ensure IST times are handled accurately for appointments.
+-   **LLM Integration**: Used the  library to integrate with the Gemini 3 Flash model via the .
+-   **Complex Clinical Workflow**: Engineered a stateful, multi-step workflow spanning different user roles (Therapist completes history -> Client signs consent).
+-   **Conditional UI Rendering**: Used React state to enforce the clinical workflow, blocking UI elements until prerequisites (case history, consent) are met.
 
 **key DB schema**
--   **users**:  (Now includes  for assistants)
--   **client_profiles**: 
--   **appointments**: 
--   **audit_logs**:  (New collection)
--   **blocked_times**: 
+-   **case_histories**: 
+-   **therapy_consents**: 
+-   **resources**: 
+-   **resource_assignments**: 
 
 **changes in tech stack**
--   None.
+-    library added for LLM access.
+-    added to the frontend for UI utility functions (debounce).
 
 **All files of reference**
--   : Heavily modified to add the Assistant role, new auth dependencies, CRUD endpoints for assistants, audit logging, and permission checks on existing endpoints.
--   : New file for global date, time, and currency formatting.
--   : New page for the assistant role.
--   : New component for therapists to manage assistants.
--   : Overwritten with a completely new dashboard design.
--   : Overwritten to add the Block Time feature and UI.
--   : Overwritten to add the Copy Day feature.
--   : Updated to handle routing for the new assistant role.
--   : Updated to include a link to Assistant Management.
--   The following files were all updated to use : , , , , , , .
--   : Updated to reflect completion of the Assistant role, Calendar Blocking, and Dashboard Redesign.
+-   : Major additions for AI, Case History, and Consent endpoints.
+-   : New component for AI features.
+-   : New component for the multi-step case history form.
+-   : New component for displaying consent.
+-   : Overwritten to implement the consent-first workflow for clients.
+-   : Significantly updated to enforce the case history and consent checks.
+-   : Updated to reflect newly completed features.
 
 **Areas that need refactoring**:
--    remains a large, monolithic file. It should be broken down into separate files for routes, models, and services to improve maintainability.
+-    has grown to over 3800 lines and is a high-priority candidate for refactoring. It should be broken down into a more maintainable structure (e.g., separate files for routes, models, and services).
 
 **key api endpoints**
--   **Assistants**: , , , 
--   **Audit Logs**: 
--   **Dependencies**: ,  (new helper functions for auth)
+-   **AI Support**: , 
+-   **Case History**: , 
+-   **Therapy Consent**: , 
+-   **Client Profile Sync**: , 
 
 **Critical Info for New Agent**
--   **P0 Priority**: The immediate and only focus is to complete and verify the **Global Standards Implementation** (Issue 1). This is a hard requirement from the user.
--   **Backend Dates**: Pay close attention to how dates are handled in the backend. Storing all  objects in UTC and converting to IST only in API responses is the most robust approach. Verify this is the case.
--   **Comprehensive Testing**: After making any remaining code changes for the standardization task, perform extensive testing. Use screenshots to quickly verify the UI on all relevant pages, then delegate a full regression test to the . Do not mark the task as complete until this is done.
+-   Your immediate priority is to **implement the comprehensive Client Profile View**. This involves creating a new backend endpoint to aggregate all client data and then building out the frontend component () to display it.
+-   The monolithic  file is a significant source of technical debt. After completing the client profile view, you should strongly consider proposing a refactoring of the backend into a more structured format (routes, models, services) to improve maintainability.
+-   The Global Standards task (P1) is still pending final verification and should be addressed after the current P0 task is complete.
 
 **documents and test reports created in this job**
 -   
--    (Messaging Feature)
--    (Appointment Calendar Regression)
+-   
+-   
+-   
+-   
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: Requested Copy Day feature in Availability Settings. **Status: DONE**.
-2.  **User**: Requested global standards for Time Zone (IST), Date Format (DD/MM/YYYY), Time Format (24-hour), and Currency (₹). **Status: IN PROGRESS**.
-3.  **User**: Approved the plan for the Assistant role with refinements. **Status: DONE**.
-4.  **User**: Requested to add a Therapist Assistant role with specific permissions. **Status: DONE**.
-5.  **User**: Requested regression testing for the Appointment Calendar. **Status: DONE**.
-6.  **User**: Acknowledged that appointment features exist and requested regression testing. **Status: ADDRESSED**.
-7.  **User**: Questioned why the agent was working on messaging when the priority was the Appointment Calendar. **Status: ADDRESSED** (Agent explained calendar was already done and verified it).
-8.  **User**: Stated messaging is complete and redirected priority to the P0 Appointment Calendar. **Status: ADDRESSED**.
-9.  **User**: Requested to add a Calendar Blocking feature to the Appointment Calendar. **Status: DONE**.
-10. **User**: Requested a complete redesign of the Therapist Dashboard. **Status: DONE**.
+1.  **User**: Requested a comprehensive client profile view in the therapist panel. **Status: IN PROGRESS**.
+2.  **User**: Sent a screenshot of a React error. **Status: DONE** (Agent fixed the error handling).
+3.  **User**: Requested credentials for testing. **Status: DONE**.
+4.  **User**: Replied  to a  message. **Status: ADDRESSED**.
+5.  **User**: Stated you have already develped client protal... **Status: ADDRESSED**.
+6.  **User**: Agreed to add the consent signing feature to the Client Dashboard and provided the exact consent text. **Status: DONE**.
+7.  **User**: Asked if AI features will have a cost. **Status: ADDRESSED**.
+8.  **User**: Provided detailed specs for a P0 Clinical Notes and mandatory Case History flow. **Status: DONE**.
+9.  **User**: Chose Gemini 3 Flash for the AI features. **Status: ADDRESSED**.
+10. **User**: Asked to implement AI Clinical support features. **Status: DONE**.
 
 **Project Health Check:**
 -   **Broken**: None.
 -   **Mocked**:
-    -   Coupon Code management UI exists, but the workflow is not implemented or tested.
-    -   Clinical support features (Assessment engine, Therapy protocol builder).
-    -   Homework tracking (UI exists on dashboard, but no backend logic).
-    -   Payment tracking has a basic UI but needs full backend implementation.
+    -   Coupon Code management.
+    -   Payment tracking backend logic.
 
 **3rd Party Integrations**
--   None.
+-   **Gemini 3 Flash** — uses Emergent LLM Key.
 
 **Testing status**
--   **Testing agent used after significant changes**: YES (For messaging and appointment regression)
+-   **Testing agent used after significant changes**: YES
 -   **Troubleshoot agent used after agent stuck in loop**: NO
--   **Test files created**: , .
+-   **Test files created**: , , , .
 -   **Known regressions**: None.
 
 **Credentials to test flow:**
--   **Super Admin**:
-    -   **URL**: 
-    -   **Username**: 
-    -   **Password**: 
--   **Therapist**:
-    -   **URL**: 
-    -   **Mobile**: 
-    -   **Password**: 
--   **Therapist Assistant**:
-    -   Can be created by a logged-in Therapist via the Assistants tab.
-    -   **URL**: 
-    -   **Example Mobile**: 
-    -   **Password**: 
+-   **Super Admin**:  / 
+-   **Therapist 1**:  / 
+-   **Therapist 2**:  / 
+-   **Test Client**:  / 
 
 **What agent forgot to execute**
--   The agent modified a large number of frontend files to implement global formatting standards but did not test any of the changes. It also did not perform a corresponding review or update of the backend to ensure date/time data is stored and processed consistently (e.g., using UTC). This testing and backend review is the critical next step.</analysis>
+-   The agent did not complete the full verification of the **Global Standards** implementation (timezone, date/time formats, currency), which was a P0 task from a previous session.
+-   The agent has not addressed the growing technical debt of the monolithic  file, which needs to be refactored.</analysis>
