@@ -1019,11 +1019,18 @@ async def login(login_data: UserLogin):
     
     await log_audit(user["id"], user["role"], "login", "user", user["id"])
     
+    # For clients, fetch their therapist_id from client_profiles
+    user_therapist_id = user.get("therapist_id")  # For assistants
+    if user["role"] == "client":
+        profile = await db.client_profiles.find_one({"user_id": user["id"]}, {"_id": 0})
+        if profile:
+            user_therapist_id = profile.get("therapist_id")
+    
     token = create_token(user["id"], user.get("mobile", user.get("email", "")), user["role"])
     user_obj = User(
         id=user["id"],
         client_id=user.get("client_id"),
-        therapist_id=user.get("therapist_id"),  # For assistants
+        therapist_id=user_therapist_id,  # For assistants AND clients
         mobile=user.get("mobile", ""),
         email=user.get("email"),
         full_name=user["full_name"],
