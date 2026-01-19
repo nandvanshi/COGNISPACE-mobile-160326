@@ -12,6 +12,8 @@ import uuid
 from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
 from passlib.context import CryptContext
+from emergentintegrations.llm.chat import LlmChat, UserMessage
+import json
 
 # IST timezone for India Standard Time
 IST = ZoneInfo("Asia/Kolkata")
@@ -25,6 +27,9 @@ load_dotenv(ROOT_DIR / '.env')
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
+
+# AI/LLM Configuration
+EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY')
 
 # Security
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
