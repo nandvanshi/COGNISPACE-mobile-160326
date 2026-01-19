@@ -5,9 +5,18 @@ import { useAuth, API } from '../App';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { Checkbox } from '../components/ui/checkbox';
-import { LogOut, Calendar, MessageSquare, ClipboardCheck, BookCheck, FileCheck, Pen, Check, AlertCircle, Loader2, Shield } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Textarea } from '../components/ui/textarea';
+import { 
+  LogOut, Calendar, MessageSquare, ClipboardCheck, BookCheck, 
+  FileCheck, Pen, Check, AlertCircle, Loader2, Shield, 
+  CalendarPlus, Receipt, CreditCard, Clock, ChevronRight
+} from 'lucide-react';
 import { toast } from 'sonner';
-import { formatDate, formatTime } from '../utils/formatUtils';
+import { formatDate, formatTime, formatCurrency } from '../utils/formatUtils';
+import { PaymentReceiptView } from '../components/PaymentReceipt';
 
 const ClientDashboard = () => {
   const { user, logout } = useAuth();
@@ -15,8 +24,8 @@ const ClientDashboard = () => {
   const [appointments, setAppointments] = useState([]);
   const [homework, setHomework] = useState([]);
   const [assessments, setAssessments] = useState([]);
+  const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [currentView, setCurrentView] = useState('overview');
   
   // Consent state
   const [consentStatus, setConsentStatus] = useState({ exists: false, is_signed: false });
@@ -24,6 +33,19 @@ const ClientDashboard = () => {
   const [consentLoading, setConsentLoading] = useState(true);
   const [signing, setSigning] = useState(false);
   const [consentAgreed, setConsentAgreed] = useState(false);
+
+  // Appointment booking state
+  const [showBookingDialog, setShowBookingDialog] = useState(false);
+  const [availableSlots, setAvailableSlots] = useState([]);
+  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [bookingNotes, setBookingNotes] = useState('');
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [booking, setBooking] = useState(false);
+
+  // Receipt view state
+  const [showReceiptDialog, setShowReceiptDialog] = useState(false);
+  const [selectedPaymentId, setSelectedPaymentId] = useState(null);
 
   useEffect(() => {
     checkConsentStatus();
@@ -35,17 +57,14 @@ const ClientDashboard = () => {
       setConsentStatus(response.data);
       
       if (response.data.exists && !response.data.is_signed) {
-        // Fetch full consent to display
         const consentRes = await axios.get(`${API}/therapy-consent/${user?.id}`);
         setConsent(consentRes.data);
       }
       
-      // Only fetch dashboard data if consent is signed
       if (response.data.is_signed) {
         fetchDashboardData();
       }
     } catch (error) {
-      // If 404, consent doesn't exist yet (therapist hasn't completed case history)
       if (error.response?.status === 404) {
         setConsentStatus({ exists: false, is_signed: false });
       } else {
@@ -59,14 +78,16 @@ const ClientDashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const [apptsRes, hwRes, assessRes] = await Promise.all([
+      const [apptsRes, hwRes, assessRes, paymentsRes] = await Promise.all([
         axios.get(`${API}/appointments`),
         axios.get(`${API}/homework`),
         axios.get(`${API}/assessments`),
+        axios.get(`${API}/payments`),
       ]);
       setAppointments(apptsRes.data);
       setHomework(hwRes.data);
       setAssessments(assessRes.data);
+      setPayments(paymentsRes.data);
     } catch (error) {
       toast.error('Failed to load data');
     }
@@ -83,7 +104,6 @@ const ClientDashboard = () => {
       await axios.post(`${API}/therapy-consent/${user?.id}/sign?signature_method=digital`);
       toast.success('Consent signed successfully!');
       setConsentStatus({ ...consentStatus, is_signed: true });
-      // Now fetch dashboard data
       fetchDashboardData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to sign consent');
@@ -128,6 +148,69 @@ const ClientDashboard = () => {
     }
   };
 
+  // Appointment Booking Functions
+  const handleOpenBooking = () => {
+    const today = new Date();
+    const dateStr = today.toISOString().split('T')[0];
+    setSelectedDate(dateStr);
+    setSelectedSlot(null);
+    setBookingNotes('');
+    setShowBookingDialog(true);
+    fetchAvailableSlots(dateStr);
+  };
+
+  const fetchAvailableSlots = async (date) => {
+    setLoadingSlots(true);
+    try {
+      const response = await axios.get(`${API}/available-slots/${user?.therapist_id}?date=${date}`);
+      setAvailableSlots(response.data.slots || []);
+    } catch (error) {
+      toast.error('Failed to load available slots');
+      setAvailableSlots([]);
+    } finally {
+      setLoadingSlots(false);
+    }
+  };
+
+  const handleDateChange = (e) => {
+    const date = e.target.value;
+    setSelectedDate(date);
+    setSelectedSlot(null);
+    if (date) {
+      fetchAvailableSlots(date);
+    }
+  };
+
+  const handleBookAppointment = async () => {
+    if (!selectedSlot) {
+      toast.error('Please select a time slot');
+      return;
+    }
+
+    setBooking(true);
+    try {
+      await axios.post(`${API}/appointments/client-request`, {
+        start_time: selectedSlot.start,
+        end_time: selectedSlot.end,
+        notes: bookingNotes,
+      });
+      toast.success('Appointment booked successfully!');
+      setShowBookingDialog(false);
+      setSelectedSlot(null);
+      setBookingNotes('');
+      fetchDashboardData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to book appointment');
+    } finally {
+      setBooking(false);
+    }
+  };
+
+  const handleViewReceipt = (paymentId) => {
+    setSelectedPaymentId(paymentId);
+    setShowReceiptDialog(true);
+  };
+
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -169,7 +252,7 @@ const ClientDashboard = () => {
             <h2 className="text-2xl font-serif text-primary mb-4">Waiting for Your Therapist</h2>
             <p className="text-muted-foreground mb-6">
               Your therapist is preparing your case history and consent documentation. 
-              Once complete, you'll be able to review and sign your informed consent for therapy.
+              Once complete, you&apos;ll be able to review and sign your informed consent for therapy.
             </p>
             <p className="text-sm text-muted-foreground">
               Please check back later or contact your therapist if you have questions.
@@ -198,7 +281,6 @@ const ClientDashboard = () => {
 
         <main className="max-w-3xl mx-auto p-6 md:p-12">
           <Card className="bg-white/80 backdrop-blur-xl border border-border/40 rounded-2xl shadow-xl overflow-hidden">
-            {/* Header */}
             <div className="bg-gradient-to-r from-primary to-primary/80 p-6 text-white">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
@@ -212,7 +294,6 @@ const ClientDashboard = () => {
             </div>
 
             <div className="p-6 md:p-8">
-              {/* Therapist Info */}
               {consent && (
                 <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg mb-6">
                   <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
@@ -225,41 +306,32 @@ const ClientDashboard = () => {
                 </div>
               )}
 
-              {/* Consent Text */}
               <div className="prose prose-sm max-w-none mb-8">
                 <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 max-h-[400px] overflow-y-auto">
                   {consent?.consent_text?.split('\n').map((line, idx) => {
-                    // Format headings
                     if (line.match(/^\d+\.\s/)) {
                       return <h3 key={idx} className="text-lg font-semibold text-primary mt-4 mb-2">{line}</h3>;
                     }
-                    // Format bullet points
                     if (line.startsWith('•') || line.startsWith('-')) {
                       return <p key={idx} className="ml-4 text-slate-600">{line}</p>;
                     }
-                    // Format indented items
                     if (line.startsWith('  -')) {
                       return <p key={idx} className="ml-8 text-slate-500 text-sm">{line}</p>;
                     }
-                    // Main title
                     if (line.includes('INFORMED CONSENT')) {
                       return <h2 key={idx} className="text-xl font-bold text-center text-primary mb-4">{line}</h2>;
                     }
-                    // Client/Therapist/Date info
                     if (line.startsWith('Client Name:') || line.startsWith('Therapist Name:') || line.startsWith('Date:')) {
                       return <p key={idx} className="text-sm text-slate-500">{line}</p>;
                     }
-                    // Empty lines
                     if (!line.trim()) {
                       return <div key={idx} className="h-2" />;
                     }
-                    // Regular text
                     return <p key={idx} className="text-slate-700">{line}</p>;
                   })}
                 </div>
               </div>
 
-              {/* Agreement Checkbox */}
               <div className="bg-primary/5 p-4 rounded-xl border border-primary/20 mb-6">
                 <div className="flex items-start gap-3">
                   <Checkbox
@@ -280,7 +352,6 @@ const ClientDashboard = () => {
                 </div>
               </div>
 
-              {/* Sign Button */}
               <Button
                 onClick={handleSignConsent}
                 disabled={signing || !consentAgreed}
@@ -301,7 +372,7 @@ const ClientDashboard = () => {
               </Button>
 
               <p className="text-xs text-center text-muted-foreground mt-4">
-                By clicking "Sign Consent Digitally", you are providing your electronic signature 
+                By clicking &quot;Sign Consent Digitally&quot;, you are providing your electronic signature 
                 which has the same legal effect as a handwritten signature.
               </p>
             </div>
@@ -313,12 +384,13 @@ const ClientDashboard = () => {
 
   // CONSENT SIGNED - Show full dashboard
   const upcomingAppointments = appointments
-    .filter((a) => new Date(a.start_time) > new Date())
+    .filter((a) => new Date(a.start_time) > new Date() && a.status !== 'cancelled')
     .sort((a, b) => new Date(a.start_time) - new Date(b.start_time))
     .slice(0, 3);
 
   const pendingHomework = homework.filter((h) => h.status === 'assigned');
   const pendingAssessments = assessments.filter((a) => a.status === 'assigned');
+  const recentPayments = payments.slice(0, 3);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -342,33 +414,67 @@ const ClientDashboard = () => {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto p-6 md:p-12">
-        <div className="mb-8">
-          <h2 className="text-4xl font-serif text-primary mb-2">Your Dashboard</h2>
-          <p className="text-muted-foreground">Manage your therapy journey</p>
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h2 className="text-4xl font-serif text-primary mb-2">Your Dashboard</h2>
+            <p className="text-muted-foreground">Manage your therapy journey</p>
+          </div>
+          <Button 
+            onClick={handleOpenBooking}
+            className="bg-gradient-to-r from-primary to-primary/80"
+            data-testid="book-appointment-button"
+          >
+            <CalendarPlus size={18} className="mr-2" /> Book Appointment
+          </Button>
         </div>
 
         {/* Bento Grid Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
           {/* Upcoming Appointments - Span 8 cols */}
           <Card className="md:col-span-8 p-6 bg-white/70 backdrop-blur-xl border border-border/40 rounded-xl shadow-lg" data-testid="upcoming-appointments-card">
-            <div className="flex items-center gap-3 mb-4">
-              <Calendar className="text-primary" size={24} />
-              <h3 className="text-2xl font-serif text-primary">Upcoming Appointments</h3>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <Calendar className="text-primary" size={24} />
+                <h3 className="text-2xl font-serif text-primary">Upcoming Appointments</h3>
+              </div>
+              <Button variant="ghost" size="sm" onClick={handleOpenBooking}>
+                <CalendarPlus size={16} className="mr-1" /> Book
+              </Button>
             </div>
             {upcomingAppointments.length === 0 ? (
-              <p className="text-muted-foreground">No upcoming appointments</p>
+              <div className="text-center py-8">
+                <Calendar className="mx-auto text-muted-foreground mb-3" size={40} />
+                <p className="text-muted-foreground mb-4">No upcoming appointments</p>
+                <Button onClick={handleOpenBooking} variant="outline">
+                  <CalendarPlus size={16} className="mr-2" /> Schedule Your First Appointment
+                </Button>
+              </div>
             ) : (
               <div className="space-y-3">
                 {upcomingAppointments.map((appt) => (
                   <div
                     key={appt.id}
-                    className="p-4 bg-surface rounded-lg border border-border"
+                    className="p-4 bg-surface rounded-lg border border-border hover:border-primary/50 transition-colors"
                     data-testid={`appointment-${appt.id}`}
                   >
-                    <p className="font-medium">
-                      {formatDate(appt.start_time)} at {formatTime(appt.start_time)}
-                    </p>
-                    {appt.notes && <p className="text-sm text-muted-foreground mt-1">{appt.notes}</p>}
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="font-medium text-lg">
+                          {formatDate(appt.start_time)}
+                        </p>
+                        <p className="text-sm text-muted-foreground flex items-center gap-1">
+                          <Clock size={14} /> {formatTime(appt.start_time)} - {formatTime(appt.end_time)}
+                        </p>
+                      </div>
+                      <span className={`text-xs px-2 py-1 rounded-full ${
+                        appt.status === 'scheduled' ? 'bg-blue-100 text-blue-700' :
+                        appt.status === 'in_progress' ? 'bg-amber-100 text-amber-700' :
+                        'bg-gray-100 text-gray-700'
+                      }`}>
+                        {appt.status === 'in_progress' ? 'In Progress' : 'Scheduled'}
+                      </span>
+                    </div>
+                    {appt.notes && <p className="text-sm text-muted-foreground mt-2">{appt.notes}</p>}
                   </div>
                 ))}
               </div>
@@ -435,16 +541,48 @@ const ClientDashboard = () => {
             )}
           </Card>
 
-          {/* Messages - Span 6 cols */}
-          <Card className="md:col-span-6 p-6 bg-white/70 backdrop-blur-xl border border-border/40 rounded-xl shadow-lg" data-testid="messages-card">
+          {/* Payments - Span 6 cols */}
+          <Card className="md:col-span-6 p-6 bg-white/70 backdrop-blur-xl border border-border/40 rounded-xl shadow-lg" data-testid="payments-card">
             <div className="flex items-center gap-3 mb-4">
-              <MessageSquare className="text-success" size={24} />
-              <h3 className="text-2xl font-serif text-primary">Messages</h3>
+              <CreditCard className="text-success" size={24} />
+              <h3 className="text-2xl font-serif text-primary">Recent Payments</h3>
             </div>
-            <p className="text-muted-foreground mb-4">Secure messaging with your therapist</p>
-            <Button className="w-full" data-testid="view-messages-button">
-              View Messages
-            </Button>
+            {recentPayments.length === 0 ? (
+              <p className="text-muted-foreground">No payment records</p>
+            ) : (
+              <div className="space-y-3">
+                {recentPayments.map((payment) => (
+                  <div key={payment.id} className="p-4 bg-surface rounded-lg border border-border flex justify-between items-center">
+                    <div>
+                      <p className="font-medium">{formatCurrency(payment.amount)}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {formatDate(payment.created_at)} • {payment.payment_method?.toUpperCase()}
+                      </p>
+                      {payment.bill_number && (
+                        <p className="text-xs text-muted-foreground">Bill #: {payment.bill_number}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs px-2 py-1 rounded-full capitalize ${
+                        payment.payment_status === 'paid' ? 'bg-green-100 text-green-700' :
+                        payment.payment_status === 'partial' ? 'bg-amber-100 text-amber-700' :
+                        'bg-red-100 text-red-700'
+                      }`}>
+                        {payment.payment_status}
+                      </span>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleViewReceipt(payment.id)}
+                        data-testid={`view-receipt-${payment.id}`}
+                      >
+                        <Receipt size={16} />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </Card>
         </div>
 
@@ -456,6 +594,106 @@ const ClientDashboard = () => {
           </p>
         </div>
       </main>
+
+      {/* Appointment Booking Dialog */}
+      <Dialog open={showBookingDialog} onOpenChange={setShowBookingDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CalendarPlus size={20} /> Book an Appointment
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label>Select Date</Label>
+              <Input
+                type="date"
+                value={selectedDate}
+                onChange={handleDateChange}
+                min={new Date().toISOString().split('T')[0]}
+                className="mt-1"
+              />
+            </div>
+
+            {selectedDate && (
+              <div>
+                <Label className="mb-2 block">Available Time Slots</Label>
+                {loadingSlots ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="animate-spin text-primary" size={24} />
+                  </div>
+                ) : availableSlots.length > 0 ? (
+                  <div className="grid grid-cols-3 gap-2 max-h-[200px] overflow-y-auto">
+                    {availableSlots.map((slot, idx) => (
+                      <Button
+                        key={idx}
+                        type="button"
+                        variant={selectedSlot?.start === slot.start ? 'default' : 'outline'}
+                        size="sm"
+                        className="text-xs"
+                        onClick={() => setSelectedSlot(slot)}
+                      >
+                        {formatTime(slot.start)}
+                      </Button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-sm text-center py-4">
+                    No available slots for this date. Please try another date.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {selectedSlot && (
+              <div className="p-3 bg-primary/10 rounded-lg text-sm">
+                <p className="font-medium text-primary">
+                  Selected: {formatDate(selectedSlot.start)} at {formatTime(selectedSlot.start)}
+                </p>
+              </div>
+            )}
+
+            <div>
+              <Label>Notes (optional)</Label>
+              <Textarea
+                value={bookingNotes}
+                onChange={(e) => setBookingNotes(e.target.value)}
+                placeholder="Any topics you'd like to discuss..."
+                rows={2}
+                className="mt-1"
+              />
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <Button 
+                onClick={handleBookAppointment} 
+                disabled={!selectedSlot || booking}
+                className="flex-1"
+              >
+                {booking ? (
+                  <>
+                    <Loader2 className="animate-spin mr-2" size={16} />
+                    Booking...
+                  </>
+                ) : (
+                  'Confirm Booking'
+                )}
+              </Button>
+              <Button variant="outline" onClick={() => setShowBookingDialog(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Receipt View Dialog */}
+      <PaymentReceiptView
+        paymentId={selectedPaymentId}
+        isOpen={showReceiptDialog}
+        onClose={() => setShowReceiptDialog(false)}
+      />
     </div>
   );
 };
