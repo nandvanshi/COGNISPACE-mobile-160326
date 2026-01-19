@@ -888,7 +888,7 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
                     <div className="text-center py-12">
                       <FileText className="mx-auto text-muted-foreground mb-4" size={48} />
                       <h4 className="font-medium mb-2">No Case History</h4>
-                      <p className="text-muted-foreground mb-4">Create a case history to document the client's background</p>
+                      <p className="text-muted-foreground mb-4">Create a case history to document the client&apos;s background</p>
                       {!isReadOnly && (
                         <Button onClick={() => setShowCaseHistoryDialog(true)}>
                           Create Case History
