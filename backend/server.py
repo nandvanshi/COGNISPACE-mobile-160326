@@ -4431,10 +4431,12 @@ async def assign_homework(hw_data: HomeworkCreate, current_user: dict = Depends(
     return Homework(**result)
 
 @api_router.get("/homework", response_model=List[Homework])
-async def get_homework(current_user: dict = Depends(get_current_user)):
+async def get_homework(client_id: Optional[str] = None, current_user: dict = Depends(get_current_user)):
     query = {}
     if current_user["role"] == "therapist":
         query["therapist_id"] = current_user["id"]
+        if client_id:
+            query["client_id"] = client_id
     else:
         query["client_id"] = current_user["id"]
     
