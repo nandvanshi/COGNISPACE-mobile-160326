@@ -3781,6 +3781,499 @@ async def get_payments(client_id: Optional[str] = None, current_user: dict = Dep
     payments = await db.payments.find(query, {"_id": 0}).to_list(1000)
     return [Payment(**{k: datetime.fromisoformat(v) if k == "created_at" else v for k, v in payment.items()}) for payment in payments]
 
+# ============= AI CLINICAL SUPPORT ENDPOINTS =============
+
+# Standard assessments for reference
+STANDARD_ASSESSMENTS = {
+    "PHQ-9": {"name": "Patient Health Questionnaire-9", "conditions": ["depression", "mood disorders"]},
+    "GAD-7": {"name": "Generalized Anxiety Disorder-7", "conditions": ["anxiety", "worry", "nervousness"]},
+    "PCL-5": {"name": "PTSD Checklist for DSM-5", "conditions": ["trauma", "PTSD", "flashbacks"]},
+    "ASRS": {"name": "Adult ADHD Self-Report Scale", "conditions": ["ADHD", "attention", "focus"]},
+    "BDI-II": {"name": "Beck Depression Inventory-II", "conditions": ["depression", "hopelessness"]},
+    "DASS-21": {"name": "Depression Anxiety Stress Scales", "conditions": ["depression", "anxiety", "stress"]},
+    "YBOCS": {"name": "Yale-Brown Obsessive Compulsive Scale", "conditions": ["OCD", "obsessions", "compulsions"]},
+    "PSS": {"name": "Perceived Stress Scale", "conditions": ["stress", "overwhelm", "coping"]}
+}
+
+async def get_ai_chat(session_id: str, system_message: str):
+    """Initialize AI chat with Gemini 3 Flash"""
+    if not EMERGENT_LLM_KEY:
+        raise HTTPException(status_code=500, detail="AI service not configured")
+    
+    chat = LlmChat(
+        api_key=EMERGENT_LLM_KEY,
+        session_id=session_id,
+        system_message=system_message
+    ).with_model("gemini", "gemini-3-flash-preview")
+    
+    return chat
+
+@api_router.post("/ai/suggest-assessments", response_model=AIAssessmentSuggestionResponse)
+async def ai_suggest_assessments(request: AIAssessmentSuggestionRequest, current_user: dict = Depends(require_active_therapist)):
+    """AI-powered assessment suggestion based on client data and/or therapist query"""
+    therapist_id = current_user["id"]
+    data_sources = []
+    client_context = ""
+    
+    # Gather client data if client_id provided
+    if request.client_id:
+        # Get client profile
+        client = await db.client_profiles.find_one(
+            {"id": request.client_id, "therapist_id": therapist_id},
+            {"_id": 0}
+        )
+        if not client:
+            raise HTTPException(status_code=404, detail="Client not found")
+        
+        client_context += f"Client: {client.get('full_name', 'Unknown')}\n"
+        
+        if request.include_intake and client.get("intake_summary"):
+            client_context += f"Intake Summary: {client['intake_summary']}\n"
+            data_sources.append("intake_summary")
+        
+        # Get recent session notes
+        if request.include_notes:
+            notes = await db.session_notes.find(
+                {"therapist_id": therapist_id, "client_id": request.client_id},
+                {"_id": 0, "subjective": 1, "objective": 1, "assessment": 1, "data": 1, "created_at": 1}
+            ).sort("created_at", -1).to_list(5)
+            
+            if notes:
+                client_context += "\nRecent Session Notes:\n"
+                for i, note in enumerate(notes):
+                    note_text = ""
+                    if note.get("subjective"):
+                        note_text += f"Subjective: {note['subjective'][:500]}\n"
+                    if note.get("assessment"):
+                        note_text += f"Assessment: {note['assessment'][:500]}\n"
+                    if note.get("data"):
+                        note_text += f"Data: {note['data'][:500]}\n"
+                    if note_text:
+                        client_context += f"Note {i+1}: {note_text}\n"
+                data_sources.append("session_notes")
+        
+        # Get completed assessments
+        completed_assessments = await db.assessments.find(
+            {"therapist_id": therapist_id, "client_id": request.client_id, "status": "completed"},
+            {"_id": 0, "assessment_type": 1, "score": 1}
+        ).to_list(20)
+        
+        if completed_assessments:
+            client_context += "\nPreviously Completed Assessments:\n"
+            for a in completed_assessments:
+                client_context += f"- {a['assessment_type']}: Score {a.get('score', 'N/A')}\n"
+            data_sources.append("previous_assessments")
+    
+    # Add therapist's manual query
+    if request.query:
+        client_context += f"\nTherapist's Observation/Query: {request.query}\n"
+        data_sources.append("therapist_query")
+    
+    if not client_context.strip():
+        raise HTTPException(status_code=400, detail="Please provide client_id or a query")
+    
+    # Prepare AI prompt
+    assessments_list = "\n".join([f"- {k}: {v['name']} (for {', '.join(v['conditions'])})" for k, v in STANDARD_ASSESSMENTS.items()])
+    
+    system_prompt = f"""You are a clinical psychology assessment consultant. Your role is to suggest appropriate standardized assessments based on client information.
+
+Available Assessments:
+{assessments_list}
+
+Important Guidelines:
+1. Suggest assessments that would provide valuable clinical information
+2. Prioritize based on presenting concerns
+3. Consider what assessments have already been completed
+4. Provide clear rationale for each suggestion
+5. Be specific about which symptoms/concerns each assessment would address
+
+Respond in valid JSON format only with this structure:
+{{
+    "analysis_summary": "Brief summary of clinical observations",
+    "suggestions": [
+        {{
+            "assessment_name": "Full assessment name",
+            "assessment_type": "Assessment code (e.g., PHQ-9)",
+            "reason": "Why this assessment is recommended",
+            "priority": "high/medium/low",
+            "relevant_symptoms": ["symptom1", "symptom2"]
+        }}
+    ]
+}}"""
+
+    try:
+        chat = await get_ai_chat(f"assessment-{therapist_id}-{uuid.uuid4()}", system_prompt)
+        user_message = UserMessage(text=f"Based on the following client information, suggest appropriate clinical assessments:\n\n{client_context}")
+        response = await chat.send_message(user_message)
+        
+        # Parse JSON response
+        response_text = response.strip()
+        if response_text.startswith("```json"):
+            response_text = response_text[7:]
+        if response_text.startswith("```"):
+            response_text = response_text[3:]
+        if response_text.endswith("```"):
+            response_text = response_text[:-3]
+        
+        result = json.loads(response_text.strip())
+        
+        return AIAssessmentSuggestionResponse(
+            suggestions=[AIAssessmentSuggestion(**s) for s in result.get("suggestions", [])],
+            analysis_summary=result.get("analysis_summary", ""),
+            data_sources_used=data_sources
+        )
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=500, detail=f"AI response parsing error: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI service error: {str(e)}")
+
+@api_router.post("/ai/generate-protocol", response_model=AIProtocolResponse)
+async def ai_generate_protocol(request: AIProtocolRequest, current_user: dict = Depends(require_active_therapist)):
+    """AI-powered therapy protocol generation"""
+    therapist_id = current_user["id"]
+    context = ""
+    
+    # Gather client information
+    if request.client_id:
+        client = await db.client_profiles.find_one(
+            {"id": request.client_id, "therapist_id": therapist_id},
+            {"_id": 0}
+        )
+        if not client:
+            raise HTTPException(status_code=404, detail="Client not found")
+        
+        context += f"Client: {client.get('full_name', 'Unknown')}\n"
+        if client.get("intake_summary"):
+            context += f"Intake: {client['intake_summary']}\n"
+    
+    # Get assessment results if provided
+    if request.assessment_ids:
+        assessments = await db.assessments.find(
+            {"id": {"$in": request.assessment_ids}, "therapist_id": therapist_id, "status": "completed"},
+            {"_id": 0}
+        ).to_list(10)
+        
+        if assessments:
+            context += "\nAssessment Results:\n"
+            for a in assessments:
+                context += f"- {a['assessment_type']}: Score {a.get('score', 'N/A')}\n"
+    
+    # Add therapist's description
+    if request.query:
+        context += f"\nTherapist's Description: {request.query}\n"
+    
+    if request.modality_preference:
+        context += f"\nPreferred Modality: {request.modality_preference}\n"
+    
+    if not context.strip():
+        raise HTTPException(status_code=400, detail="Please provide client_id, assessment_ids, or a query")
+    
+    system_prompt = """You are an expert clinical psychologist specializing in treatment planning. Generate evidence-based therapy protocols.
+
+Modalities you can recommend: CBT (Cognitive Behavioral Therapy), DBT (Dialectical Behavior Therapy), ACT (Acceptance and Commitment Therapy), EMDR, Psychodynamic, Interpersonal Therapy, Mindfulness-Based.
+
+Important Guidelines:
+1. Create structured, session-by-session treatment plans
+2. Include specific interventions and techniques
+3. Provide homework assignments for each session
+4. Note any contraindications or special considerations
+5. Include measurable progress markers
+
+Respond in valid JSON format only:
+{
+    "protocol_name": "Name of the protocol",
+    "target_condition": "Primary condition being addressed",
+    "recommended_modality": "CBT/DBT/ACT/etc",
+    "rationale": "Why this approach is recommended",
+    "estimated_sessions": 8,
+    "sessions": [
+        {
+            "session_number": 1,
+            "title": "Session title",
+            "objectives": ["objective1", "objective2"],
+            "interventions": ["intervention1", "intervention2"],
+            "homework": "Homework assignment",
+            "duration_minutes": 60
+        }
+    ],
+    "contraindications": ["If any"],
+    "progress_markers": ["marker1", "marker2"]
+}"""
+
+    try:
+        chat = await get_ai_chat(f"protocol-{therapist_id}-{uuid.uuid4()}", system_prompt)
+        user_message = UserMessage(text=f"Generate a therapy protocol based on:\n\n{context}")
+        response = await chat.send_message(user_message)
+        
+        # Parse JSON response
+        response_text = response.strip()
+        if response_text.startswith("```json"):
+            response_text = response_text[7:]
+        if response_text.startswith("```"):
+            response_text = response_text[3:]
+        if response_text.endswith("```"):
+            response_text = response_text[:-3]
+        
+        result = json.loads(response_text.strip())
+        
+        return AIProtocolResponse(
+            protocol_name=result.get("protocol_name", ""),
+            target_condition=result.get("target_condition", ""),
+            recommended_modality=result.get("recommended_modality", ""),
+            rationale=result.get("rationale", ""),
+            estimated_sessions=result.get("estimated_sessions", 8),
+            sessions=[AIProtocolSession(**s) for s in result.get("sessions", [])],
+            contraindications=result.get("contraindications"),
+            progress_markers=result.get("progress_markers", [])
+        )
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=500, detail=f"AI response parsing error: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI service error: {str(e)}")
+
+@api_router.post("/ai/generate-homework", response_model=AIHomeworkResponse)
+async def ai_generate_homework(request: AIHomeworkRequest, current_user: dict = Depends(require_active_therapist)):
+    """AI-powered homework/worksheet generation"""
+    therapist_id = current_user["id"]
+    
+    # Get client info
+    client = await db.client_profiles.find_one(
+        {"id": request.client_id, "therapist_id": therapist_id},
+        {"_id": 0}
+    )
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    context = f"Client: {client.get('full_name', 'Unknown')}\n"
+    
+    # Get recent session notes for context
+    recent_note = await db.session_notes.find_one(
+        {"therapist_id": therapist_id, "client_id": request.client_id},
+        {"_id": 0},
+        sort=[("created_at", -1)]
+    )
+    if recent_note:
+        if recent_note.get("plan"):
+            context += f"Recent Session Plan: {recent_note['plan'][:500]}\n"
+        if recent_note.get("assessment"):
+            context += f"Recent Assessment: {recent_note['assessment'][:500]}\n"
+    
+    # Get protocol if provided
+    if request.protocol_id:
+        protocol = await db.protocols.find_one(
+            {"id": request.protocol_id, "therapist_id": therapist_id},
+            {"_id": 0}
+        )
+        if protocol:
+            context += f"Current Protocol: {protocol.get('modality', '')} for {protocol.get('condition', '')}\n"
+    
+    if request.context:
+        context += f"Session Context: {request.context}\n"
+    
+    homework_type = request.homework_type or "exercise"
+    
+    system_prompt = f"""You are a clinical psychologist creating therapeutic homework assignments. 
+The homework type requested is: {homework_type}
+
+Types of homework:
+- worksheet: Structured forms with questions for self-reflection
+- exercise: Behavioral or cognitive exercises to practice
+- reading: Psychoeducational material to read
+- reflection: Journaling or reflection prompts
+- meditation: Mindfulness or relaxation exercises
+
+Guidelines:
+1. Make it specific and actionable
+2. Include clear step-by-step instructions
+3. Keep it achievable (15-30 minutes typically)
+4. Explain the therapeutic purpose
+5. Make it relevant to the client's concerns
+
+Respond in valid JSON format only:
+{{
+    "title": "Homework title",
+    "description": "Brief description",
+    "instructions": "Detailed instructions for the client",
+    "exercises": [
+        {{
+            "name": "Exercise name",
+            "description": "What to do",
+            "steps": ["step1", "step2", "step3"]
+        }}
+    ],
+    "estimated_time_minutes": 20,
+    "therapeutic_rationale": "Why this homework will help"
+}}"""
+
+    try:
+        chat = await get_ai_chat(f"homework-{therapist_id}-{uuid.uuid4()}", system_prompt)
+        user_message = UserMessage(text=f"Generate therapeutic homework based on:\n\n{context}")
+        response = await chat.send_message(user_message)
+        
+        # Parse JSON response
+        response_text = response.strip()
+        if response_text.startswith("```json"):
+            response_text = response_text[7:]
+        if response_text.startswith("```"):
+            response_text = response_text[3:]
+        if response_text.endswith("```"):
+            response_text = response_text[:-3]
+        
+        result = json.loads(response_text.strip())
+        
+        return AIHomeworkResponse(
+            title=result.get("title", ""),
+            description=result.get("description", ""),
+            instructions=result.get("instructions", ""),
+            exercises=result.get("exercises", []),
+            estimated_time_minutes=result.get("estimated_time_minutes", 20),
+            therapeutic_rationale=result.get("therapeutic_rationale", "")
+        )
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=500, detail=f"AI response parsing error: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI service error: {str(e)}")
+
+# ============= RESOURCE LIBRARY ENDPOINTS =============
+
+@api_router.post("/resources", response_model=Resource)
+async def create_resource(resource: ResourceCreate, current_user: dict = Depends(require_active_therapist)):
+    """Create a new resource in the library"""
+    resource_doc = {
+        "id": str(uuid.uuid4()),
+        "therapist_id": current_user["id"],
+        "title": resource.title,
+        "category": resource.category,
+        "content": resource.content,
+        "tags": resource.tags,
+        "is_downloadable": resource.is_downloadable,
+        "usage_count": 0,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.resources.insert_one(resource_doc)
+    
+    return Resource(**{k: datetime.fromisoformat(v) if k == "created_at" else v for k, v in resource_doc.items()})
+
+@api_router.get("/resources", response_model=List[Resource])
+async def get_resources(category: Optional[str] = None, current_user: dict = Depends(get_current_user)):
+    """Get all resources (therapist's own + system resources)"""
+    if current_user["role"] not in ["therapist", "assistant"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    therapist_id = current_user["id"] if current_user["role"] == "therapist" else current_user.get("therapist_id")
+    
+    query = {"$or": [{"therapist_id": therapist_id}, {"therapist_id": "system"}]}
+    if category:
+        query["category"] = category
+    
+    resources = await db.resources.find(query, {"_id": 0}).sort("usage_count", -1).to_list(500)
+    return [Resource(**{k: datetime.fromisoformat(v) if k == "created_at" else v for k, v in r.items()}) for r in resources]
+
+@api_router.delete("/resources/{resource_id}")
+async def delete_resource(resource_id: str, current_user: dict = Depends(require_active_therapist)):
+    """Delete a resource"""
+    result = await db.resources.delete_one({"id": resource_id, "therapist_id": current_user["id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Resource not found or you don't have permission")
+    return {"message": "Resource deleted"}
+
+@api_router.post("/resources/{resource_id}/assign")
+async def assign_resource(resource_id: str, client_id: str, notes: Optional[str] = None, current_user: dict = Depends(require_active_therapist)):
+    """Assign a resource to a client"""
+    therapist_id = current_user["id"]
+    
+    # Verify resource exists
+    resource = await db.resources.find_one({"id": resource_id}, {"_id": 0})
+    if not resource:
+        raise HTTPException(status_code=404, detail="Resource not found")
+    
+    # Verify client belongs to therapist
+    client = await db.client_profiles.find_one(
+        {"id": client_id, "therapist_id": therapist_id},
+        {"_id": 0, "full_name": 1}
+    )
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    assignment_doc = {
+        "id": str(uuid.uuid4()),
+        "therapist_id": therapist_id,
+        "client_id": client_id,
+        "client_name": client["full_name"],
+        "resource_id": resource_id,
+        "resource_title": resource["title"],
+        "notes": notes,
+        "status": "assigned",
+        "assigned_at": datetime.now(timezone.utc).isoformat(),
+        "viewed_at": None,
+        "completed_at": None
+    }
+    
+    await db.resource_assignments.insert_one(assignment_doc)
+    
+    # Increment usage count
+    await db.resources.update_one({"id": resource_id}, {"$inc": {"usage_count": 1}})
+    
+    return {"message": "Resource assigned", "assignment_id": assignment_doc["id"]}
+
+@api_router.get("/resources/assignments", response_model=List[ResourceAssignment])
+async def get_resource_assignments(client_id: Optional[str] = None, current_user: dict = Depends(get_current_user)):
+    """Get resource assignments"""
+    if current_user["role"] == "therapist":
+        query = {"therapist_id": current_user["id"]}
+    elif current_user["role"] == "assistant":
+        query = {"therapist_id": current_user.get("therapist_id")}
+    elif current_user["role"] == "client":
+        query = {"client_id": current_user["id"]}
+    else:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    if client_id and current_user["role"] in ["therapist", "assistant"]:
+        query["client_id"] = client_id
+    
+    assignments = await db.resource_assignments.find(query, {"_id": 0}).sort("assigned_at", -1).to_list(500)
+    
+    def parse_assignment(a):
+        for k in ["assigned_at", "viewed_at", "completed_at"]:
+            if a.get(k):
+                a[k] = datetime.fromisoformat(a[k])
+        return ResourceAssignment(**a)
+    
+    return [parse_assignment(a) for a in assignments]
+
+@api_router.post("/resources/assignments/{assignment_id}/view")
+async def mark_resource_viewed(assignment_id: str, current_user: dict = Depends(get_current_user)):
+    """Mark a resource assignment as viewed (for clients)"""
+    if current_user["role"] != "client":
+        raise HTTPException(status_code=403, detail="Only clients can mark resources as viewed")
+    
+    result = await db.resource_assignments.update_one(
+        {"id": assignment_id, "client_id": current_user["id"]},
+        {"$set": {"status": "viewed", "viewed_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Assignment not found")
+    
+    return {"message": "Marked as viewed"}
+
+@api_router.post("/resources/assignments/{assignment_id}/complete")
+async def mark_resource_completed(assignment_id: str, current_user: dict = Depends(get_current_user)):
+    """Mark a resource assignment as completed"""
+    if current_user["role"] != "client":
+        raise HTTPException(status_code=403, detail="Only clients can mark resources as completed")
+    
+    result = await db.resource_assignments.update_one(
+        {"id": assignment_id, "client_id": current_user["id"]},
+        {"$set": {"status": "completed", "completed_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Assignment not found")
+    
+    return {"message": "Marked as completed"}
+
 app.include_router(api_router)
 
 app.add_middleware(
