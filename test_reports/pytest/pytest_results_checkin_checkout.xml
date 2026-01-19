@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="17" skipped="1" tests="22" time="9.090" timestamp="2026-01-19T15:53:11.382070+00:00" hostname="agent-env-26526512-d23b-4b9e-876d-06982a5e7da1"><testcase classname="tests.test_session_checkin_checkout_payments.TestSessionCheckInCheckOut" name="test_check_in_changes_status_to_in_progress" time="0.404"><failure message="KeyError: 'status'">tests/test_session_checkin_checkout_payments.py:93: in test_check_in_changes_status_to_in_progress
+    assert result["status"] == "in_progress", f"Expected in_progress, got {result['status']}"
+           ^^^^^^^^^^^^^^^^
+E   KeyError: 'status'</failure></testcase><testcase classname="tests.test_session_checkin_checkout_payments.TestSessionCheckInCheckOut" name="test_check_in_records_actual_start_time" time="0.306"><failure message="AssertionError: Failed to create appointment: {&quot;detail&quot;:&quot;Time slot already booked. Please choose a different time.&quot;}&#10;assert 400 == 200&#10; +  where 400 = &lt;Response [400]&gt;.status_code">tests/test_session_checkin_checkout_payments.py:98: in test_check_in_records_actual_start_time
+    appointment = self.create_test_appointment()
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_session_checkin_checkout_payments.py:74: in create_test_appointment
+    assert response.status_code == 200, f"Failed to create appointment: {response.text}"
+E   AssertionError: Failed to create appointment: {"detail":"Time slot already booked. Please choose a different time."}
+E   assert 400 == 200
+E    +  where 400 = &lt;Response [400]&gt;.status_code</failure></testcase><testcase classname="tests.test_session_checkin_checkout_payments.TestSessionCheckInCheckOut" name="test_check_in_records_checked_in_by" time="0.300"><failure message="AssertionError: Failed to create appointment: {&quot;detail&quot;:&quot;Time slot already booked. Please choose a different time.&quot;}&#10;assert 400 == 200&#10; +  where 400 = &lt;Response [400]&gt;.status_code">tests/test_session_checkin_checkout_payments.py:115: in test_check_in_records_checked_in_by
+    appointment = self.create_test_appointment()
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_session_checkin_checkout_payments.py:74: in create_test_appointment
+    assert response.status_code == 200, f"Failed to create appointment: {response.text}"
+E   AssertionError: Failed to create appointment: {"detail":"Time slot already booked. Please choose a different time."}
+E   assert 400 == 200
+E    +  where 400 = &lt;Response [400]&gt;.status_code</failure></testcase><testcase classname="tests.test_session_checkin_checkout_payments.TestSessionCheckInCheckOut" name="test_cannot_check_in_cancelled_appointment" time="0.288"><failure message="AssertionError: Failed to create appointment: {&quot;detail&quot;:&quot;Time slot already booked. Please choose a different time.&quot;}&#10;assert 400 == 200&#10; +  where 400 = &lt;Response [400]&gt;.status_code">tests/test_session_checkin_checkout_payments.py:127: in test_cannot_check_in_cancelled_appointment
+    appointment = self.create_test_appointment()
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_session_checkin_checkout_payments.py:74: in create_test_appointment
+    assert response.status_code == 200, f"Failed to create appointment: {response.text}"
+E   AssertionError: Failed to create appointment: {"detail":"Time slot already booked. Please choose a different time."}
+E   assert 400 == 200
+E    +  where 400 = &lt;Response [400]&gt;.status_code</failure></testcase><testcase classname="tests.test_session_checkin_checkout_payments.TestSessionCheckInCheckOut" name="test_check_out_changes_status_to_completed" time="0.327"><failure message="AssertionError: Failed to create appointment: {&quot;detail&quot;:&quot;Time slot already booked. Please choose a different time.&quot;}&#10;assert 400 == 200&#10; +  where 400 = &lt;Response [400]&gt;.status_code">tests/test_session_checkin_checkout_payments.py:144: in test_check_out_changes_status_to_completed
+    appointment = self.create_test_appointment()
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_session_checkin_checkout_payments.py:74: in create_test_appointment
+    assert response.status_code == 200, f"Failed to create appointment: {response.text}"
+E   AssertionError: Failed to create appointment: {"detail":"Time slot already booked. Please choose a different time."}
+E   assert 400 == 200
+E    +  where 400 = &lt;Response [400]&gt;.status_code</failure></testcase><testcase classname="tests.test_session_checkin_checkout_payments.TestSessionCheckInCheckOut" name="test_check_out_records_actual_end_time" time="0.330"><failure message="AssertionError: Failed to create appointment: {&quot;detail&quot;:&quot;Time slot already booked. Please choose a different time.&quot;}&#10;assert 400 == 200&#10; +  where 400 = &lt;Response [400]&gt;.status_code">tests/test_session_checkin_checkout_payments.py:162: in test_check_out_records_actual_end_time
+    appointment = self.create_test_appointment()
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_session_checkin_checkout_payments.py:74: in create_test_appointment
+    assert response.status_code == 200, f"Failed to create appointment: {response.text}"
+E   AssertionError: Failed to create appointment: {"detail":"Time slot already booked. Please choose a different time."}
+E   assert 400 == 200
+E    +  where 400 = &lt;Response [400]&gt;.status_code</failure></testcase><testcase classname="tests.test_session_checkin_checkout_payments.TestSessionCheckInCheckOut" name="test_check_out_calculates_duration" time="0.288"><failure message="AssertionError: Failed to create appointment: {&quot;detail&quot;:&quot;Time slot already booked. Please choose a different time.&quot;}&#10;assert 400 == 200&#10; +  where 400 = &lt;Response [400]&gt;.status_code">tests/test_session_checkin_checkout_payments.py:178: in test_check_out_calculates_duration
+    appointment = self.create_test_appointment()
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_session_checkin_checkout_payments.py:74: in create_test_appointment
+    assert response.status_code == 200, f"Failed to create appointment: {response.text}"
+E   AssertionError: Failed to create appointment: {"detail":"Time slot already booked. Please choose a different time."}
+E   assert 400 == 200
+E    +  where 400 = &lt;Response [400]&gt;.status_code</failure></testcase><testcase classname="tests.test_session_checkin_checkout_payments.TestSessionCheckInCheckOut" name="test_cannot_check_out_without_check_in" time="0.329"><failure message="AssertionError: Failed to create appointment: {&quot;detail&quot;:&quot;Time slot already booked. Please choose a different time.&quot;}&#10;assert 400 == 200&#10; +  where 400 = &lt;Response [400]&gt;.status_code">tests/test_session_checkin_checkout_payments.py:198: in test_cannot_check_out_without_check_in
+    appointment = self.create_test_appointment()
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_session_checkin_checkout_payments.py:74: in create_test_appointment
+    assert response.status_code == 200, f"Failed to create appointment: {response.text}"
+E   AssertionError: Failed to create appointment: {"detail":"Time slot already booked. Please choose a different time."}
+E   assert 400 == 200
+E    +  where 400 = &lt;Response [400]&gt;.status_code</failure></testcase><testcase classname="tests.test_session_checkin_checkout_payments.TestSessionCheckInCheckOut" name="test_check_out_with_payment_creates_payment" time="0.284"><failure message="AssertionError: Failed to create appointment: {&quot;detail&quot;:&quot;Time slot already booked. Please choose a different time.&quot;}&#10;assert 400 == 200&#10; +  where 400 = &lt;Response [400]&gt;.status_code">tests/test_session_checkin_checkout_payments.py:209: in test_check_out_with_payment_creates_payment
+    appointment = self.create_test_appointment()
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_session_checkin_checkout_payments.py:74: in create_test_appointment
+    assert response.status_code == 200, f"Failed to create appointment: {response.text}"
+E   AssertionError: Failed to create appointment: {"detail":"Time slot already booked. Please choose a different time."}
+E   assert 400 == 200
+E    +  where 400 = &lt;Response [400]&gt;.status_code</failure></testcase><testcase classname="tests.test_session_checkin_checkout_payments.TestSessionCheckInCheckOut" name="test_bill_number_format" time="0.324"><failure message="AssertionError: Failed to create appointment: {&quot;detail&quot;:&quot;Time slot already booked. Please choose a different time.&quot;}&#10;assert 400 == 200&#10; +  where 400 = &lt;Response [400]&gt;.status_code">tests/test_session_checkin_checkout_payments.py:239: in test_bill_number_format
+    appointment = self.create_test_appointment()
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_session_checkin_checkout_payments.py:74: in create_test_appointment
+    assert response.status_code == 200, f"Failed to create appointment: {response.text}"
+E   AssertionError: Failed to create appointment: {"detail":"Time slot already booked. Please choose a different time."}
+E   assert 400 == 200
+E    +  where 400 = &lt;Response [400]&gt;.status_code</failure></testcase><testcase classname="tests.test_session_checkin_checkout_payments.TestPaymentEndpoints" name="test_therapist_can_record_payment" time="0.287"><failure message="AssertionError: Failed to record payment: {&quot;detail&quot;:&quot;Access denied - client not assigned to you&quot;}&#10;assert 403 == 200&#10; +  where 403 = &lt;Response [403]&gt;.status_code">tests/test_session_checkin_checkout_payments.py:303: in test_therapist_can_record_payment
+    assert response.status_code == 200, f"Failed to record payment: {response.text}"
+E   AssertionError: Failed to record payment: {"detail":"Access denied - client not assigned to you"}
+E   assert 403 == 200
+E    +  where 403 = &lt;Response [403]&gt;.status_code</failure></testcase><testcase classname="tests.test_session_checkin_checkout_payments.TestPaymentEndpoints" name="test_payment_modes" time="0.337"><failure message="AssertionError: Failed to record cash payment: {&quot;detail&quot;:&quot;Access denied - client not assigned to you&quot;}&#10;assert 403 == 200&#10; +  where 403 = &lt;Response [403]&gt;.status_code">tests/test_session_checkin_checkout_payments.py:329: in test_payment_modes
+    assert response.status_code == 200, f"Failed to record {mode} payment: {response.text}"
+E   AssertionError: Failed to record cash payment: {"detail":"Access denied - client not assigned to you"}
+E   assert 403 == 200
+E    +  where 403 = &lt;Response [403]&gt;.status_code</failure></testcase><testcase classname="tests.test_session_checkin_checkout_payments.TestPaymentEndpoints" name="test_payment_statuses" time="0.290"><failure message="AssertionError: Failed to record paid payment: {&quot;detail&quot;:&quot;Access denied - client not assigned to you&quot;}&#10;assert 403 == 200&#10; +  where 403 = &lt;Response [403]&gt;.status_code">tests/test_session_checkin_checkout_payments.py:348: in test_payment_statuses
+    assert response.status_code == 200, f"Failed to record {status} payment: {response.text}"
+E   AssertionError: Failed to record paid payment: {"detail":"Access denied - client not assigned to you"}
+E   assert 403 == 200
+E    +  where 403 = &lt;Response [403]&gt;.status_code</failure></testcase><testcase classname="tests.test_session_checkin_checkout_payments.TestPaymentEndpoints" name="test_get_payments_by_client" time="0.345" /><testcase classname="tests.test_session_checkin_checkout_payments.TestAssistantPaymentAccess" name="test_assistant_can_record_payment" time="0.925"><failure message="AssertionError: Assistant failed to record payment: {&quot;detail&quot;:&quot;Access denied - client not assigned to you&quot;}&#10;assert 403 == 200&#10; +  where 403 = &lt;Response [403]&gt;.status_code">tests/test_session_checkin_checkout_payments.py:457: in test_assistant_can_record_payment
+    assert response.status_code == 200, f"Assistant failed to record payment: {response.text}"
+E   AssertionError: Assistant failed to record payment: {"detail":"Access denied - client not assigned to you"}
+E   assert 403 == 200
+E    +  where 403 = &lt;Response [403]&gt;.status_code</failure></testcase><testcase classname="tests.test_session_checkin_checkout_payments.TestAssistantPaymentAccess" name="test_assistant_can_check_in_appointment" time="0.636"><failure message="KeyError: 'status'">tests/test_session_checkin_checkout_payments.py:504: in test_assistant_can_check_in_appointment
+    assert result["status"] == "in_progress"
+           ^^^^^^^^^^^^^^^^
+E   KeyError: 'status'</failure></testcase><testcase classname="tests.test_session_checkin_checkout_payments.TestAssistantPaymentAccess" name="test_assistant_can_check_out_with_payment" time="0.682"><failure message="KeyError: 'status'">tests/test_session_checkin_checkout_payments.py:556: in test_assistant_can_check_out_with_payment
+    assert result["status"] == "completed"
+           ^^^^^^^^^^^^^^^^
+E   KeyError: 'status'</failure></testcase><testcase classname="tests.test_session_checkin_checkout_payments.TestClientPaymentAccess" name="test_client_can_view_own_payments" time="0.570" /><testcase classname="tests.test_session_checkin_checkout_payments.TestClientPaymentAccess" name="test_client_can_access_own_receipt" time="0.323"><skipped type="pytest.skip" message="No test payment created">/app/tests/test_session_checkin_checkout_payments.py:638: No test payment created</skipped></testcase><testcase classname="tests.test_session_checkin_checkout_payments.TestPaymentReceipt" name="test_receipt_contains_all_required_fields" time="0.331"><failure message="assert 403 == 200&#10; +  where 403 = &lt;Response [403]&gt;.status_code">tests/test_session_checkin_checkout_payments.py:702: in test_receipt_contains_all_required_fields
+    assert payment_response.status_code == 200
+E   assert 403 == 200
+E    +  where 403 = &lt;Response [403]&gt;.status_code</failure></testcase><testcase classname="tests.test_session_checkin_checkout_payments.TestPaymentReceipt" name="test_receipt_with_linked_appointment" time="0.418" /><testcase classname="tests.test_session_checkin_checkout_payments.TestPaymentReceipt" name="test_receipt_not_found" time="0.333" /></testsuite></testsuites>
