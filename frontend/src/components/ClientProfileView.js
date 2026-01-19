@@ -344,6 +344,31 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
                       </span>
                     )}
                   </div>
+                  {/* Quick Action Buttons */}
+                  <div className="flex gap-2 mt-3">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="bg-white/20 hover:bg-white/30 text-white border-0"
+                      onClick={handleBookAppointment}
+                      disabled={isReadOnly}
+                      data-testid="book-appointment-btn"
+                    >
+                      <CalendarPlus size={14} className="mr-1" /> Book Appointment
+                    </Button>
+                    {!isAssistant && (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="bg-white/20 hover:bg-white/30 text-white border-0"
+                        onClick={handleStartNewNote}
+                        disabled={isReadOnly}
+                        data-testid="start-session-note-btn"
+                      >
+                        <PenSquare size={14} className="mr-1" /> Start Session Note
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 <div className="text-right">
                   <div className="flex items-center gap-2">
