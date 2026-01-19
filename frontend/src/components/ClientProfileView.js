@@ -5,18 +5,32 @@ import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Label } from './ui/label';
+import { Textarea } from './ui/textarea';
+import { Input } from './ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { toast } from 'sonner';
 import { 
   User, Phone, Mail, MapPin, Calendar, FileText, CreditCard, 
   ClipboardCheck, Clock, CheckCircle, AlertCircle, ChevronRight,
   Brain, History, Loader2, Edit, MessageSquare, BookOpen,
-  ArrowRight, TrendingUp, FileCheck, Users
+  ArrowRight, TrendingUp, FileCheck, Users, Plus, Eye, CalendarPlus,
+  Link as LinkIcon, PenSquare
 } from 'lucide-react';
 import { formatDate, formatTime, formatCurrency } from '../utils/formatUtils';
 import CaseHistoryWizard from './CaseHistoryWizard';
 import TherapyConsent from './TherapyConsent';
 
-const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefresh }) => {
+// Helper to safely extract error message from API response
+const getErrorMessage = (error, fallback = 'An error occurred') => {
+  const detail = error.response?.data?.detail;
+  if (typeof detail === 'string') return detail;
+  if (Array.isArray(detail) && detail.length > 0) return detail[0]?.msg || fallback;
+  if (typeof detail === 'object' && detail?.msg) return detail.msg;
+  return fallback;
+};
+
+const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefresh, isAssistant = false }) => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [profileData, setProfileData] = useState({
@@ -30,6 +44,37 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
   });
   const [showCaseHistoryDialog, setShowCaseHistoryDialog] = useState(false);
   const [showConsentDialog, setShowConsentDialog] = useState(false);
+  
+  // Session Note dialogs
+  const [showViewNoteDialog, setShowViewNoteDialog] = useState(false);
+  const [showEditNoteDialog, setShowEditNoteDialog] = useState(false);
+  const [showCreateNoteDialog, setShowCreateNoteDialog] = useState(false);
+  const [selectedNote, setSelectedNote] = useState(null);
+  const [editingNote, setEditingNote] = useState({
+    template_type: 'SOAP',
+    subjective: '',
+    objective: '',
+    assessment: '',
+    plan: '',
+    data: '',
+  });
+  const [newNote, setNewNote] = useState({
+    appointment_id: '',
+    template_type: 'SOAP',
+    subjective: '',
+    objective: '',
+    assessment: '',
+    plan: '',
+    data: '',
+  });
+  
+  // Appointment booking dialog
+  const [showBookAppointmentDialog, setShowBookAppointmentDialog] = useState(false);
+  const [availableSlots, setAvailableSlots] = useState([]);
+  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [appointmentNotes, setAppointmentNotes] = useState('');
+  const [loadingSlots, setLoadingSlots] = useState(false);
 
   useEffect(() => {
     if (isOpen && client?.id) {
