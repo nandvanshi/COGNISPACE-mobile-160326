@@ -640,6 +640,68 @@ const SessionNotes = ({ isReadOnly = false }) => {
               </div>
             )}
 
+            {/* Consent Status Warning - only show if case history is complete */}
+            {newNote.client_id && caseHistoryStatus[newNote.client_id]?.is_complete && !consentStatus[newNote.client_id]?.is_signed && (
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <FileCheck className="text-blue-600 flex-shrink-0" size={20} />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-blue-800">
+                      Consent Signature Required
+                    </p>
+                    <p className="text-sm text-blue-700 mt-1">
+                      {consentStatus[newNote.client_id]?.exists 
+                        ? "Therapy consent is awaiting client signature."
+                        : "Therapy consent has been generated and needs to be signed."}
+                    </p>
+                    <div className="flex gap-2 mt-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="text-blue-700 border-blue-400 hover:bg-blue-100"
+                        onClick={() => {
+                          const client = clients.find(c => c.id === newNote.client_id);
+                          openConsent(client);
+                        }}
+                      >
+                        <FileCheck size={14} className="mr-2" />
+                        View Consent
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Quick Actions for Case History & Consent */}
+            {newNote.client_id && caseHistoryStatus[newNote.client_id]?.is_complete && consentStatus[newNote.client_id]?.is_signed && (
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const client = clients.find(c => c.id === newNote.client_id);
+                    openCaseHistory(client);
+                  }}
+                >
+                  <Eye size={14} className="mr-2" /> View Case History
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const client = clients.find(c => c.id === newNote.client_id);
+                    openConsent(client);
+                  }}
+                >
+                  <FileCheck size={14} className="mr-2" /> View Consent
+                </Button>
+              </div>
+            )}
+
             <div>
               <Label>Template</Label>
               <Select
