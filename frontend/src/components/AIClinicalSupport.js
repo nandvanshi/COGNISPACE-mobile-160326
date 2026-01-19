@@ -485,7 +485,7 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
               <div>
                 <Label>Select Client *</Label>
                 <Select 
-                  value={homeworkRequest.client_id} 
+                  value={homeworkRequest.client_id || undefined} 
                   onValueChange={(v) => setHomeworkRequest({...homeworkRequest, client_id: v})}
                 >
                   <SelectTrigger data-testid="homework-client-select">
@@ -501,7 +501,7 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
               <div>
                 <Label>Homework Type</Label>
                 <Select 
-                  value={homeworkRequest.homework_type} 
+                  value={homeworkRequest.homework_type || "exercise"} 
                   onValueChange={(v) => setHomeworkRequest({...homeworkRequest, homework_type: v})}
                 >
                   <SelectTrigger>
