@@ -414,6 +414,9 @@ const ClientDashboard = () => {
             <span className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
               <Check size={12} /> Consent Signed
             </span>
+            <Button onClick={() => setShowSettings(true)} variant="ghost" data-testid="client-settings-button">
+              <SettingsIcon size={20} />
+            </Button>
             <Button onClick={handleLogout} variant="ghost" data-testid="client-logout-button">
               <LogOut size={20} className="mr-2" /> Logout
             </Button>
