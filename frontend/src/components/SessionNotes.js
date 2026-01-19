@@ -148,6 +148,11 @@ const SessionNotes = ({ isReadOnly = false }) => {
     setShowCaseHistoryDialog(true);
   };
 
+  const openConsent = (client) => {
+    setSelectedClientForConsent(client);
+    setShowConsentDialog(true);
+  };
+
   const getClientAppointments = (clientId) => {
     if (!clientId) return [];
     return appointments.filter(a => a.client_id === clientId);
@@ -162,11 +167,18 @@ const SessionNotes = ({ isReadOnly = false }) => {
     }
 
     // Check case history is complete before allowing note creation
-    const status = caseHistoryStatus[newNote.client_id];
-    if (!status?.is_complete) {
+    const caseStatus = caseHistoryStatus[newNote.client_id];
+    if (!caseStatus?.is_complete) {
       const client = clients.find(c => c.id === newNote.client_id);
       toast.error('Case history must be completed before creating session notes');
       openCaseHistory(client);
+      return;
+    }
+
+    // Check consent is signed
+    const consentStat = consentStatus[newNote.client_id];
+    if (!consentStat?.is_signed) {
+      toast.error('Therapy consent must be signed before creating session notes');
       return;
     }
 
