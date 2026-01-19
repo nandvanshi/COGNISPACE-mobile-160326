@@ -4200,19 +4200,23 @@ async def assign_resource(resource_id: str, client_id: str, notes: Optional[str]
     if not resource:
         raise HTTPException(status_code=404, detail="Resource not found")
     
-    # Verify client belongs to therapist
-    client = await db.client_profiles.find_one(
-        {"id": client_id, "therapist_id": therapist_id},
-        {"_id": 0, "full_name": 1}
+    # Verify client belongs to therapist - client_id is the user_id from users collection
+    client_profile = await db.client_profiles.find_one(
+        {"user_id": client_id, "therapist_id": therapist_id},
+        {"_id": 0}
     )
-    if not client:
+    if not client_profile:
         raise HTTPException(status_code=404, detail="Client not found")
+    
+    # Get client user info for name
+    client_user = await db.users.find_one({"id": client_id}, {"_id": 0, "full_name": 1})
+    client_name = client_user.get("full_name", "Unknown") if client_user else "Unknown"
     
     assignment_doc = {
         "id": str(uuid.uuid4()),
         "therapist_id": therapist_id,
         "client_id": client_id,
-        "client_name": client["full_name"],
+        "client_name": client_name,
         "resource_id": resource_id,
         "resource_title": resource["title"],
         "notes": notes,
