@@ -1237,10 +1237,10 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
                 </div>
                 <div>
                   <Label>Link to Appointment</Label>
-                  <Select value={newNote.appointment_id} onValueChange={(v) => setNewNote({ ...newNote, appointment_id: v })}>
+                  <Select value={newNote.appointment_id || 'none'} onValueChange={(v) => setNewNote({ ...newNote, appointment_id: v === 'none' ? '' : v })}>
                     <SelectTrigger><SelectValue placeholder="Select appointment..." /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">No appointment</SelectItem>
+                      <SelectItem value="none">No appointment</SelectItem>
                       {profileData.appointments
                         .filter(a => a.status !== 'cancelled')
                         .sort((a, b) => new Date(b.start_time) - new Date(a.start_time))
