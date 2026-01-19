@@ -4,8 +4,10 @@ import axios from 'axios';
 import { useAuth, API } from '../App';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
-import { LogOut, Calendar, MessageSquare, ClipboardCheck, Home, BookCheck } from 'lucide-react';
+import { Checkbox } from '../components/ui/checkbox';
+import { LogOut, Calendar, MessageSquare, ClipboardCheck, BookCheck, FileCheck, Pen, Check, AlertCircle, Loader2, Shield } from 'lucide-react';
 import { toast } from 'sonner';
+import { formatDate, formatTime } from '../utils/formatUtils';
 
 const ClientDashboard = () => {
   const { user, logout } = useAuth();
@@ -15,12 +17,47 @@ const ClientDashboard = () => {
   const [assessments, setAssessments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentView, setCurrentView] = useState('overview');
+  
+  // Consent state
+  const [consentStatus, setConsentStatus] = useState({ exists: false, is_signed: false });
+  const [consent, setConsent] = useState(null);
+  const [consentLoading, setConsentLoading] = useState(true);
+  const [signing, setSigning] = useState(false);
+  const [consentAgreed, setConsentAgreed] = useState(false);
 
   useEffect(() => {
-    fetchData();
+    checkConsentStatus();
   }, []);
 
-  const fetchData = async () => {
+  const checkConsentStatus = async () => {
+    try {
+      const response = await axios.get(`${API}/therapy-consent/check/${user?.id}`);
+      setConsentStatus(response.data);
+      
+      if (response.data.exists && !response.data.is_signed) {
+        // Fetch full consent to display
+        const consentRes = await axios.get(`${API}/therapy-consent/${user?.id}`);
+        setConsent(consentRes.data);
+      }
+      
+      // Only fetch dashboard data if consent is signed
+      if (response.data.is_signed) {
+        fetchDashboardData();
+      }
+    } catch (error) {
+      // If 404, consent doesn't exist yet (therapist hasn't completed case history)
+      if (error.response?.status === 404) {
+        setConsentStatus({ exists: false, is_signed: false });
+      } else {
+        console.error('Error checking consent:', error);
+      }
+    } finally {
+      setConsentLoading(false);
+      setLoading(false);
+    }
+  };
+
+  const fetchDashboardData = async () => {
     try {
       const [apptsRes, hwRes, assessRes] = await Promise.all([
         axios.get(`${API}/appointments`),
@@ -32,8 +69,26 @@ const ClientDashboard = () => {
       setAssessments(assessRes.data);
     } catch (error) {
       toast.error('Failed to load data');
+    }
+  };
+
+  const handleSignConsent = async () => {
+    if (!consentAgreed) {
+      toast.error('Please read and agree to the consent by checking the box');
+      return;
+    }
+
+    setSigning(true);
+    try {
+      await axios.post(`${API}/therapy-consent/${user?.id}/sign?signature_method=digital`);
+      toast.success('Consent signed successfully!');
+      setConsentStatus({ ...consentStatus, is_signed: true });
+      // Now fetch dashboard data
+      fetchDashboardData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to sign consent');
     } finally {
-      setLoading(false);
+      setSigning(false);
     }
   };
 
@@ -44,7 +99,7 @@ const ClientDashboard = () => {
     try {
       await axios.post(`${API}/homework/${hwId}/complete`, { client_notes: notes });
       toast.success('Homework marked as complete');
-      fetchData();
+      fetchDashboardData();
     } catch (error) {
       toast.error('Failed to complete homework');
     }
@@ -67,7 +122,7 @@ const ClientDashboard = () => {
     try {
       await axios.post(`${API}/assessments/${assessment.id}/submit`, { answers });
       toast.success('Assessment submitted successfully');
-      fetchData();
+      fetchDashboardData();
     } catch (error) {
       toast.error('Failed to submit assessment');
     }
@@ -78,6 +133,185 @@ const ClientDashboard = () => {
     navigate('/login');
   };
 
+  // Loading state
+  if (loading || consentLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+        <div className="text-center">
+          <Loader2 className="inline-block animate-spin h-8 w-8 text-primary" />
+          <p className="mt-4 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Consent not yet created by therapist
+  if (!consentStatus.exists) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+        <header className="bg-white/80 backdrop-blur-lg border-b border-border/40">
+          <div className="max-w-4xl mx-auto px-6 py-4 flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl font-serif text-primary">Haven</h1>
+              <p className="text-sm text-muted-foreground">Welcome, {user?.full_name}</p>
+            </div>
+            <Button onClick={handleLogout} variant="ghost" data-testid="client-logout-button">
+              <LogOut size={20} className="mr-2" /> Logout
+            </Button>
+          </div>
+        </header>
+
+        <main className="max-w-2xl mx-auto p-6 md:p-12">
+          <Card className="p-8 bg-white/80 backdrop-blur-xl border border-border/40 rounded-2xl shadow-xl text-center">
+            <div className="w-16 h-16 mx-auto bg-amber-100 rounded-full flex items-center justify-center mb-6">
+              <AlertCircle className="text-amber-600" size={32} />
+            </div>
+            <h2 className="text-2xl font-serif text-primary mb-4">Waiting for Your Therapist</h2>
+            <p className="text-muted-foreground mb-6">
+              Your therapist is preparing your case history and consent documentation. 
+              Once complete, you'll be able to review and sign your informed consent for therapy.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Please check back later or contact your therapist if you have questions.
+            </p>
+          </Card>
+        </main>
+      </div>
+    );
+  }
+
+  // Consent exists but not signed - SHOW CONSENT FORM
+  if (!consentStatus.is_signed) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+        <header className="bg-white/80 backdrop-blur-lg border-b border-border/40">
+          <div className="max-w-4xl mx-auto px-6 py-4 flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl font-serif text-primary">Haven</h1>
+              <p className="text-sm text-muted-foreground">Welcome, {user?.full_name}</p>
+            </div>
+            <Button onClick={handleLogout} variant="ghost" data-testid="client-logout-button">
+              <LogOut size={20} className="mr-2" /> Logout
+            </Button>
+          </div>
+        </header>
+
+        <main className="max-w-3xl mx-auto p-6 md:p-12">
+          <Card className="bg-white/80 backdrop-blur-xl border border-border/40 rounded-2xl shadow-xl overflow-hidden">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-primary to-primary/80 p-6 text-white">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                  <FileCheck size={24} />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-serif">Informed Consent</h2>
+                  <p className="text-white/80 text-sm">Please review and sign to begin your therapy journey</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 md:p-8">
+              {/* Therapist Info */}
+              {consent && (
+                <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg mb-6">
+                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                    <Shield className="text-primary" size={20} />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Your Therapist</p>
+                    <p className="font-medium">{consent.therapist_name}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Consent Text */}
+              <div className="prose prose-sm max-w-none mb-8">
+                <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 max-h-[400px] overflow-y-auto">
+                  {consent?.consent_text?.split('\n').map((line, idx) => {
+                    // Format headings
+                    if (line.match(/^\d+\.\s/)) {
+                      return <h3 key={idx} className="text-lg font-semibold text-primary mt-4 mb-2">{line}</h3>;
+                    }
+                    // Format bullet points
+                    if (line.startsWith('•') || line.startsWith('-')) {
+                      return <p key={idx} className="ml-4 text-slate-600">{line}</p>;
+                    }
+                    // Format indented items
+                    if (line.startsWith('  -')) {
+                      return <p key={idx} className="ml-8 text-slate-500 text-sm">{line}</p>;
+                    }
+                    // Main title
+                    if (line.includes('INFORMED CONSENT')) {
+                      return <h2 key={idx} className="text-xl font-bold text-center text-primary mb-4">{line}</h2>;
+                    }
+                    // Client/Therapist/Date info
+                    if (line.startsWith('Client Name:') || line.startsWith('Therapist Name:') || line.startsWith('Date:')) {
+                      return <p key={idx} className="text-sm text-slate-500">{line}</p>;
+                    }
+                    // Empty lines
+                    if (!line.trim()) {
+                      return <div key={idx} className="h-2" />;
+                    }
+                    // Regular text
+                    return <p key={idx} className="text-slate-700">{line}</p>;
+                  })}
+                </div>
+              </div>
+
+              {/* Agreement Checkbox */}
+              <div className="bg-primary/5 p-4 rounded-xl border border-primary/20 mb-6">
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    id="consent-agree"
+                    checked={consentAgreed}
+                    onCheckedChange={setConsentAgreed}
+                    className="mt-1"
+                    data-testid="consent-agree-checkbox"
+                  />
+                  <label htmlFor="consent-agree" className="text-sm cursor-pointer">
+                    <span className="font-semibold text-primary">Client Consent Declaration</span>
+                    <br />
+                    <span className="text-slate-600">
+                      I hereby confirm that I have read, understood, and agree to the terms described above 
+                      and provide my informed consent to participate in psychotherapy.
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Sign Button */}
+              <Button
+                onClick={handleSignConsent}
+                disabled={signing || !consentAgreed}
+                className="w-full py-6 text-lg bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                data-testid="sign-consent-button"
+              >
+                {signing ? (
+                  <>
+                    <Loader2 className="animate-spin mr-2" size={20} />
+                    Signing...
+                  </>
+                ) : (
+                  <>
+                    <Pen className="mr-2" size={20} />
+                    Sign Consent Digitally
+                  </>
+                )}
+              </Button>
+
+              <p className="text-xs text-center text-muted-foreground mt-4">
+                By clicking "Sign Consent Digitally", you are providing your electronic signature 
+                which has the same legal effect as a handwritten signature.
+              </p>
+            </div>
+          </Card>
+        </main>
+      </div>
+    );
+  }
+
+  // CONSENT SIGNED - Show full dashboard
   const upcomingAppointments = appointments
     .filter((a) => new Date(a.start_time) > new Date())
     .sort((a, b) => new Date(a.start_time) - new Date(b.start_time))
@@ -86,34 +320,23 @@ const ClientDashboard = () => {
   const pendingHomework = homework.filter((h) => h.status === 'assigned');
   const pendingAssessments = assessments.filter((a) => a.status === 'assigned');
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          <p className="mt-4 text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Header */}
-      <header className="bg-surface border-b border-border">
+      <header className="bg-white/80 backdrop-blur-lg border-b border-border/40">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-serif text-primary">Haven</h1>
             <p className="text-sm text-muted-foreground">Welcome, {user?.full_name}</p>
           </div>
-          <Button
-            onClick={handleLogout}
-            variant="ghost"
-            data-testid="client-logout-button"
-          >
-            <LogOut size={20} className="mr-2" />
-            Logout
-          </Button>
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
+              <Check size={12} /> Consent Signed
+            </span>
+            <Button onClick={handleLogout} variant="ghost" data-testid="client-logout-button">
+              <LogOut size={20} className="mr-2" /> Logout
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -143,11 +366,7 @@ const ClientDashboard = () => {
                     data-testid={`appointment-${appt.id}`}
                   >
                     <p className="font-medium">
-                      {new Date(appt.start_time).toLocaleDateString()} at{' '}
-                      {new Date(appt.start_time).toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
+                      {formatDate(appt.start_time)} at {formatTime(appt.start_time)}
                     </p>
                     {appt.notes && <p className="text-sm text-muted-foreground mt-1">{appt.notes}</p>}
                   </div>
@@ -199,7 +418,7 @@ const ClientDashboard = () => {
                     <p className="text-sm text-muted-foreground mt-1">{hw.description}</p>
                     {hw.due_date && (
                       <p className="text-xs text-warning mt-2">
-                        Due: {new Date(hw.due_date).toLocaleDateString()}
+                        Due: {formatDate(hw.due_date)}
                       </p>
                     )}
                     <Button
