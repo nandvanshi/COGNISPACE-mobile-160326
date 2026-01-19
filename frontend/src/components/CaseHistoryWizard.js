@@ -66,11 +66,13 @@ const CaseHistoryWizard = ({ clientId, clientName, onComplete, onClose, isReadOn
   const [isComplete, setIsComplete] = useState(false);
   const [expandedSections, setExpandedSections] = useState({});
   const [caseHistoryExists, setCaseHistoryExists] = useState(false);
+  const [consentStatus, setConsentStatus] = useState({ exists: false, is_signed: false });
 
-  // Fetch existing case history
+  // Fetch existing case history or seed from client profile
   useEffect(() => {
     const fetchCaseHistory = async () => {
       try {
+        // First try to get existing case history
         const response = await axios.get(`${API}/case-history/${clientId}`);
         if (response.data) {
           setFormData({
@@ -88,16 +90,39 @@ const CaseHistoryWizard = ({ clientId, clientName, onComplete, onClose, isReadOn
           });
           setIsComplete(response.data.is_complete || false);
           setCaseHistoryExists(true);
+          
+          // Check consent status
+          try {
+            const consentRes = await axios.get(`${API}/therapy-consent/check/${clientId}`);
+            setConsentStatus(consentRes.data);
+          } catch (e) {
+            // Ignore consent check errors
+          }
         }
       } catch (error) {
-        if (error.response?.status !== 404) {
+        if (error.response?.status === 404) {
+          // Case history doesn't exist - seed from client profile
+          try {
+            const seedResponse = await axios.get(`${API}/case-history/${clientId}/seed-from-profile`);
+            if (seedResponse.data?.basic_identification) {
+              setFormData(prev => ({
+                ...prev,
+                basic_identification: { 
+                  ...prev.basic_identification, 
+                  ...seedResponse.data.basic_identification 
+                }
+              }));
+            }
+          } catch (seedError) {
+            // If seeding fails, just use the client name
+            setFormData(prev => ({
+              ...prev,
+              basic_identification: { ...prev.basic_identification, name: clientName || '' }
+            }));
+          }
+        } else {
           console.error('Error fetching case history:', error);
         }
-        // Pre-fill name from client
-        setFormData(prev => ({
-          ...prev,
-          basic_identification: { ...prev.basic_identification, name: clientName || '' }
-        }));
       } finally {
         setLoading(false);
       }
