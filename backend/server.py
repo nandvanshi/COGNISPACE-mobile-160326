@@ -3817,18 +3817,22 @@ async def ai_suggest_assessments(request: AIAssessmentSuggestionRequest, current
     
     # Gather client data if client_id provided
     if request.client_id:
-        # Get client profile
-        client = await db.client_profiles.find_one(
-            {"id": request.client_id, "therapist_id": therapist_id},
+        # Get client profile - client_id is the user_id from users collection
+        client_profile = await db.client_profiles.find_one(
+            {"user_id": request.client_id, "therapist_id": therapist_id},
             {"_id": 0}
         )
-        if not client:
+        if not client_profile:
             raise HTTPException(status_code=404, detail="Client not found")
         
-        client_context += f"Client: {client.get('full_name', 'Unknown')}\n"
+        # Get client user info for name
+        client_user = await db.users.find_one({"id": request.client_id}, {"_id": 0, "full_name": 1})
+        client_name = client_user.get("full_name", "Unknown") if client_user else "Unknown"
         
-        if request.include_intake and client.get("intake_summary"):
-            client_context += f"Intake Summary: {client['intake_summary']}\n"
+        client_context += f"Client: {client_name}\n"
+        
+        if request.include_intake and client_profile.get("intake_summary"):
+            client_context += f"Intake Summary: {client_profile['intake_summary']}\n"
             data_sources.append("intake_summary")
         
         # Get recent session notes
