@@ -1143,6 +1143,28 @@ const SessionNotes = ({ isReadOnly = false }) => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Case History Dialog */}
+      <Dialog open={showCaseHistoryDialog} onOpenChange={setShowCaseHistoryDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Case History</DialogTitle>
+          </DialogHeader>
+          {selectedClientForCaseHistory && (
+            <CaseHistoryWizard
+              clientId={selectedClientForCaseHistory.id}
+              clientName={selectedClientForCaseHistory.full_name}
+              isReadOnly={isReadOnly}
+              onComplete={() => {
+                setShowCaseHistoryDialog(false);
+                fetchData();
+                toast.success('Case history completed! You can now create session notes.');
+              }}
+              onClose={() => setShowCaseHistoryDialog(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
