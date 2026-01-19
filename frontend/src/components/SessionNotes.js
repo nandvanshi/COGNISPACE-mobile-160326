@@ -14,6 +14,15 @@ import { formatDate, formatTime, formatDateLong } from '../utils/formatUtils';
 import CaseHistoryWizard from './CaseHistoryWizard';
 import TherapyConsent from './TherapyConsent';
 
+// Helper to safely extract error message from API response
+const getErrorMessage = (error, fallback = 'An error occurred') => {
+  const detail = error.response?.data?.detail;
+  if (typeof detail === 'string') return detail;
+  if (Array.isArray(detail) && detail.length > 0) return detail[0]?.msg || fallback;
+  if (typeof detail === 'object' && detail?.msg) return detail.msg;
+  return fallback;
+};
+
 const TEMPLATE_CATEGORIES = [
   { value: 'subjective', label: 'Subjective (S)', color: 'bg-blue-100 text-blue-700' },
   { value: 'objective', label: 'Objective (O)', color: 'bg-green-100 text-green-700' },
@@ -22,6 +31,7 @@ const TEMPLATE_CATEGORIES = [
   { value: 'data', label: 'Data (D)', color: 'bg-teal-100 text-teal-700' },
   { value: 'general', label: 'General', color: 'bg-gray-100 text-gray-700' },
 ];
+
 
 const SessionNotes = ({ isReadOnly = false }) => {
   const [notes, setNotes] = useState([]);
