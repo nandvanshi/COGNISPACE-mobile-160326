@@ -438,6 +438,45 @@ Build a secure, therapist-first web application for managing a therapy practice 
   - Protocol dialog shows full session plan
   - Homework dialog with exercises and instructions
 
+### Phase 19: Clinical Notes with Case History (COMPLETED - Jan 19, 2026)
+- [x] **Mandatory Case History Flow**:
+  - Case History MUST be completed before any session notes
+  - Uses structured MMS-style format (form-based, not free text)
+  - One-time creation per client, editable by therapist only
+  - Session notes creation blocked with 400 error if case history incomplete
+- [x] **Case History Sections (11 sections)**:
+  1. **Basic Identification**: Name*, Age/DOB, Gender, Marital Status, Education, Occupation, Address, Contact, Emergency Contact, Referred By
+  2. **Presenting Complaints** (Required): Main problems in client's words*, Duration, Severity, Frequency, Triggers
+  3. **History of Present Illness**: Onset, Course, Previous episodes, Factors improving/worsening, Prior therapy/medication
+  4. **Past Psychiatric History**: Previous therapy, diagnosis, hospitalizations, past/current medications
+  5. **Medical History**: Chronic illnesses, Current medications, Sleep pattern (dropdown), Appetite, Substance use
+  6. **Family History**: Family structure, Mental illness in family (Yes/No), Relationship dynamics
+  7. **Personal & Developmental History**: Childhood, Education, Work history, Major life events (optional), Trauma (optional)
+  8. **Mental Status Examination (MSE)**: Appearance, Behavior, Speech, Mood, Affect, Thought process, Thought content, Perception, Cognition, Insight, Judgment (dropdowns + short text)
+  9. **Provisional Formulation**: Clinical formulation*, Stressors, Strengths, Risk indicators
+  10. **Initial Therapy Plan**: Therapy modality, Session frequency, Initial goals, Homework
+  11. **Consent & Disclaimer**: Informed consent taken* (checkbox), Confidentiality explained (checkbox), Consent date, Notes
+- [x] **Backend Endpoints**:
+  - `POST /api/case-history` - Create case history
+  - `GET /api/case-history/{client_id}` - Get case history
+  - `GET /api/case-history/check/{client_id}` - Check if case history exists & is complete
+  - `PUT /api/case-history/{client_id}` - Update full case history
+  - `PATCH /api/case-history/{client_id}/section` - Auto-save individual sections
+  - `PATCH /api/case-history/{client_id}/complete` - Mark complete (validates required fields)
+- [x] **Frontend UI**:
+  - Multi-step wizard with collapsible sections
+  - Progress navigation showing all 11 steps with icons
+  - Auto-save on field changes (2-second debounce)
+  - Required field validation before completion
+  - "Complete Case History" action with validation
+  - Case History warning in Session Notes dialog with "Start Case History" button
+- [x] **Security & Access Control**:
+  - Therapist-only access (no clients, no assistants)
+  - All content editable and approved by therapist only
+  - Respects subscription read-only mode
+  - No client access to therapist notes
+- [x] **Testing**: 23/25 backend tests passed (92%), 2 skipped due to test setup
+
 ### Phase 17: Therapist Assistant Role (COMPLETED - Jan 18, 2026)
 - [x] **Role Definition**:
   - Stored in `users` collection with `role: "assistant"` and `therapist_id`
