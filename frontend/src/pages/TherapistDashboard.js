@@ -3,7 +3,7 @@ import { Routes, Route, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth, API } from '../App';
 import { Button } from '../components/ui/button';
-import { LogOut, Users, Calendar, FileText, MessageSquare, ClipboardList, BookOpen, DollarSign, Home, AlertTriangle, Clock, Repeat, UserCog, Brain } from 'lucide-react';
+import { LogOut, Users, Calendar, FileText, MessageSquare, ClipboardList, BookOpen, DollarSign, Home, AlertTriangle, Clock, Repeat, UserCog, Brain, Settings as SettingsIcon } from 'lucide-react';
 import TherapistOverview from '../components/TherapistOverview';
 import ClientManagement from '../components/ClientManagement';
 import AppointmentCalendar from '../components/AppointmentCalendar';
@@ -16,6 +16,7 @@ import AvailabilitySettings from '../components/AvailabilitySettings';
 import RecurringAppointments from '../components/RecurringAppointments';
 import AssistantManagement from '../components/AssistantManagement';
 import AIClinicalSupport from '../components/AIClinicalSupport';
+import Settings from '../components/Settings';
 
 const TherapistDashboard = () => {
   const { user, logout } = useAuth();
@@ -23,6 +24,7 @@ const TherapistDashboard = () => {
   const [currentView, setCurrentView] = useState('overview');
   const [subscriptionStatus, setSubscriptionStatus] = useState(null);
   const [isReadOnly, setIsReadOnly] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     fetchSubscriptionStatus();
