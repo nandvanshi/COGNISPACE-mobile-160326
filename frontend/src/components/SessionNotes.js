@@ -538,8 +538,8 @@ const SessionNotes = ({ isReadOnly = false }) => {
               <div>
                 <Label>Client *</Label>
                 <Select
-                  value={newNote.client_id}
-                  onValueChange={(value) => setNewNote({ ...newNote, client_id: value, appointment_id: '' })}
+                  value={newNote.client_id || undefined}
+                  onValueChange={(value) => handleClientSelect(value)}
                 >
                   <SelectTrigger className="mt-1" data-testid="note-client-select">
                     <SelectValue placeholder="Select a client" />
@@ -575,6 +575,38 @@ const SessionNotes = ({ isReadOnly = false }) => {
                 </Select>
               </div>
             </div>
+
+            {/* Case History Status Warning */}
+            {newNote.client_id && !caseHistoryStatus[newNote.client_id]?.is_complete && (
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="text-amber-600 flex-shrink-0" size={20} />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-amber-800">
+                      Case History Required
+                    </p>
+                    <p className="text-sm text-amber-700 mt-1">
+                      {caseHistoryStatus[newNote.client_id]?.exists 
+                        ? "Case history is incomplete. Please complete all required sections first."
+                        : "No case history exists for this client. You must complete the initial case history before creating session notes."}
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="mt-2 text-amber-700 border-amber-400 hover:bg-amber-100"
+                      onClick={() => {
+                        const client = clients.find(c => c.id === newNote.client_id);
+                        openCaseHistory(client);
+                      }}
+                    >
+                      <ClipboardList size={14} className="mr-2" />
+                      {caseHistoryStatus[newNote.client_id]?.exists ? "Complete Case History" : "Start Case History"}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div>
               <Label>Template</Label>
