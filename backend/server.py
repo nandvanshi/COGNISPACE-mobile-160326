@@ -153,7 +153,7 @@ class AppointmentUpdate(BaseModel):
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
     notes: Optional[str] = None
-    status: Optional[Literal["scheduled", "completed", "cancelled"]] = None
+    status: Optional[Literal["scheduled", "in_progress", "completed", "cancelled"]] = None
 
 class Appointment(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -164,8 +164,24 @@ class Appointment(BaseModel):
     start_time: datetime
     end_time: datetime
     notes: Optional[str] = None
-    status: str = "scheduled"  # scheduled, completed, cancelled
+    status: str = "scheduled"  # scheduled, in_progress, completed, cancelled
+    actual_start_time: Optional[datetime] = None
+    actual_end_time: Optional[datetime] = None
+    actual_duration_minutes: Optional[int] = None
+    checked_in_by: Optional[str] = None
+    checked_out_by: Optional[str] = None
     created_at: datetime
+
+class CheckInRequest(BaseModel):
+    notes: Optional[str] = None
+
+class CheckOutRequest(BaseModel):
+    notes: Optional[str] = None
+    record_payment: bool = False
+    payment_amount: Optional[float] = None
+    payment_mode: Optional[Literal["cash", "upi", "card", "bank", "other"]] = None
+    payment_status: Optional[Literal["paid", "partial", "pending"]] = None
+    payment_notes: Optional[str] = None
 
 # Therapist Availability Models
 class TimeBlock(BaseModel):
