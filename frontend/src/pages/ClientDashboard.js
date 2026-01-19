@@ -706,6 +706,9 @@ const ClientDashboard = () => {
         isOpen={showReceiptDialog}
         onClose={() => setShowReceiptDialog(false)}
       />
+
+      {/* Settings Dialog */}
+      <Settings isOpen={showSettings} onClose={() => setShowSettings(false)} />
     </div>
   );
 };
