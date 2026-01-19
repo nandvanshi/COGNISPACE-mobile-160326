@@ -3939,16 +3939,20 @@ async def ai_generate_protocol(request: AIProtocolRequest, current_user: dict = 
     
     # Gather client information
     if request.client_id:
-        client = await db.client_profiles.find_one(
-            {"id": request.client_id, "therapist_id": therapist_id},
+        client_profile = await db.client_profiles.find_one(
+            {"user_id": request.client_id, "therapist_id": therapist_id},
             {"_id": 0}
         )
-        if not client:
+        if not client_profile:
             raise HTTPException(status_code=404, detail="Client not found")
         
-        context += f"Client: {client.get('full_name', 'Unknown')}\n"
-        if client.get("intake_summary"):
-            context += f"Intake: {client['intake_summary']}\n"
+        # Get client user info for name
+        client_user = await db.users.find_one({"id": request.client_id}, {"_id": 0, "full_name": 1})
+        client_name = client_user.get("full_name", "Unknown") if client_user else "Unknown"
+        
+        context += f"Client: {client_name}\n"
+        if client_profile.get("intake_summary"):
+            context += f"Intake: {client_profile['intake_summary']}\n"
     
     # Get assessment results if provided
     if request.assessment_ids:
