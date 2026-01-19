@@ -1133,6 +1133,35 @@ async def get_subscription_status(current_user: dict = Depends(get_current_user)
         "subscription_end_date": subscription_end_date
     }
 
+# ============= USER PREFERENCES ENDPOINTS =============
+
+class UserPreferences(BaseModel):
+    theme: Optional[str] = "calm-professional"
+
+VALID_THEMES = ["calm-professional", "soft-reassuring", "warm-approachable", "clean-saas", "dark-calm"]
+
+@api_router.get("/user/preferences")
+async def get_user_preferences(current_user: dict = Depends(get_current_user)):
+    """Get current user's preferences (theme, etc.)"""
+    prefs = await db.user_preferences.find_one({"user_id": current_user["id"]}, {"_id": 0})
+    if not prefs:
+        return {"theme": "calm-professional"}
+    return {"theme": prefs.get("theme", "calm-professional")}
+
+@api_router.put("/user/preferences")
+async def update_user_preferences(prefs: UserPreferences, current_user: dict = Depends(get_current_user)):
+    """Update current user's preferences"""
+    if prefs.theme and prefs.theme not in VALID_THEMES:
+        raise HTTPException(status_code=400, detail=f"Invalid theme. Must be one of: {', '.join(VALID_THEMES)}")
+    
+    await db.user_preferences.update_one(
+        {"user_id": current_user["id"]},
+        {"$set": {"user_id": current_user["id"], "theme": prefs.theme, "updated_at": datetime.now(timezone.utc).isoformat()}},
+        upsert=True
+    )
+    
+    return {"message": "Preferences updated", "theme": prefs.theme}
+
 # ============= SUPER ADMIN ENDPOINTS =============
 
 async def require_super_admin(current_user: dict = Depends(get_current_user)):
