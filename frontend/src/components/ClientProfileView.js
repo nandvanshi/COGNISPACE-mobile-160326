@@ -979,29 +979,18 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
                       profileData.payments
                         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
                         .map((payment, idx) => (
-                          <Card key={idx} className="p-4">
-                            <div className="flex justify-between items-center">
-                              <div>
-                                <p className="font-medium">{formatCurrency(payment.amount)}</p>
-                                <p className="text-sm text-muted-foreground">
-                                  {formatDate(payment.created_at)}
-                                </p>
-                                {payment.description && (
-                                  <p className="text-xs text-muted-foreground">{payment.description}</p>
-                                )}
-                              </div>
-                              <span className={`text-xs px-2 py-1 rounded-full capitalize ${
-                                payment.status === 'completed' ? 'bg-green-100 text-green-700' :
-                                payment.status === 'pending' ? 'bg-amber-100 text-amber-700' :
-                                'bg-gray-100 text-gray-700'
-                              }`}>
-                                {payment.status || 'recorded'}
-                              </span>
-                            </div>
-                          </Card>
+                          <PaymentCard 
+                            key={idx}
+                            payment={payment}
+                            showReceipt={true}
+                          />
                         ))
                     ) : (
-                      <p className="text-muted-foreground text-center py-8">No payment records</p>
+                      <Card className="p-8 border-dashed border-2 text-center">
+                        <CreditCard className="mx-auto text-muted-foreground mb-2" size={32} />
+                        <p className="text-muted-foreground text-sm">No payment records</p>
+                        <p className="text-xs text-muted-foreground mt-1">Payments will appear here after session check-out</p>
+                      </Card>
                     )}
                   </div>
                 </TabsContent>
