@@ -9,8 +9,9 @@ import { Input } from './ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { toast } from 'sonner';
-import { Plus, FileText, Edit, Trash2, Calendar, Clock, Link, User, Zap, BookmarkPlus, Settings } from 'lucide-react';
+import { Plus, FileText, Edit, Trash2, Calendar, Clock, Link, User, Zap, BookmarkPlus, Settings, AlertTriangle, ClipboardList } from 'lucide-react';
 import { formatDate, formatTime, formatDateLong } from '../utils/formatUtils';
+import CaseHistoryWizard from './CaseHistoryWizard';
 
 const TEMPLATE_CATEGORIES = [
   { value: 'subjective', label: 'Subjective (S)', color: 'bg-blue-100 text-blue-700' },
@@ -31,6 +32,9 @@ const SessionNotes = ({ isReadOnly = false }) => {
   const [showViewDialog, setShowViewDialog] = useState(false);
   const [showTemplateDialog, setShowTemplateDialog] = useState(false);
   const [showManageTemplatesDialog, setShowManageTemplatesDialog] = useState(false);
+  const [showCaseHistoryDialog, setShowCaseHistoryDialog] = useState(false);
+  const [selectedClientForCaseHistory, setSelectedClientForCaseHistory] = useState(null);
+  const [caseHistoryStatus, setCaseHistoryStatus] = useState({});  // {clientId: {exists, is_complete}}
   const [selectedNote, setSelectedNote] = useState(null);
   const [filterClient, setFilterClient] = useState('all');
   const [activeField, setActiveField] = useState(null);
@@ -75,11 +79,53 @@ const SessionNotes = ({ isReadOnly = false }) => {
       setClients(clientsRes.data);
       setAppointments(apptsRes.data.filter(a => a.status === 'completed' || a.status === 'scheduled'));
       setTemplates(templatesRes.data);
+      
+      // Check case history status for all clients
+      const statusPromises = clientsRes.data.map(async (client) => {
+        try {
+          const res = await axios.get(`${API}/case-history/check/${client.id}`);
+          return { clientId: client.id, ...res.data };
+        } catch {
+          return { clientId: client.id, exists: false, is_complete: false };
+        }
+      });
+      const statuses = await Promise.all(statusPromises);
+      const statusMap = {};
+      statuses.forEach(s => { statusMap[s.clientId] = s; });
+      setCaseHistoryStatus(statusMap);
     } catch (error) {
       toast.error('Failed to load session notes');
     } finally {
       setLoading(false);
     }
+  };
+
+  const checkCaseHistory = async (clientId) => {
+    try {
+      const res = await axios.get(`${API}/case-history/check/${clientId}`);
+      setCaseHistoryStatus(prev => ({ ...prev, [clientId]: res.data }));
+      return res.data;
+    } catch {
+      return { exists: false, is_complete: false };
+    }
+  };
+
+  const handleOpenCreateDialog = async () => {
+    setShowCreateDialog(true);
+  };
+
+  const handleClientSelect = async (clientId) => {
+    setNewNote(prev => ({ ...prev, client_id: clientId, appointment_id: '' }));
+    
+    // Check case history status for this client
+    if (clientId) {
+      await checkCaseHistory(clientId);
+    }
+  };
+
+  const openCaseHistory = (client) => {
+    setSelectedClientForCaseHistory(client);
+    setShowCaseHistoryDialog(true);
   };
 
   const getClientAppointments = (clientId) => {
@@ -92,6 +138,15 @@ const SessionNotes = ({ isReadOnly = false }) => {
 
     if (!newNote.client_id) {
       toast.error('Please select a client');
+      return;
+    }
+
+    // Check case history is complete before allowing note creation
+    const status = caseHistoryStatus[newNote.client_id];
+    if (!status?.is_complete) {
+      const client = clients.find(c => c.id === newNote.client_id);
+      toast.error('Case history must be completed before creating session notes');
+      openCaseHistory(client);
       return;
     }
 
