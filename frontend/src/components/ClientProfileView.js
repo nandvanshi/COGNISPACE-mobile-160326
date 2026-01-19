@@ -735,10 +735,11 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
                           return (
                             <Card key={idx} className={`p-3 ${
                               appt.status === 'completed' ? 'border-green-200 bg-green-50/30' :
+                              appt.status === 'in_progress' ? 'border-amber-200 bg-amber-50/30' :
                               appt.status === 'cancelled' ? 'border-red-200 bg-red-50/30' :
                               'border-blue-200 bg-blue-50/30'
                             }`}>
-                              <div className="flex justify-between items-center">
+                              <div className="flex justify-between items-start">
                                 <div>
                                   <div className="flex items-center gap-2">
                                     <p className="font-medium">{formatDate(appt.start_time)}</p>
@@ -751,26 +752,37 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
                                   <p className="text-sm text-muted-foreground">
                                     {formatTime(appt.start_time)} - {formatTime(appt.end_time)}
                                   </p>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <span className={`text-xs px-2 py-1 rounded-full capitalize ${
-                                    appt.status === 'completed' ? 'bg-green-100 text-green-700' :
-                                    appt.status === 'cancelled' ? 'bg-red-100 text-red-700' :
-                                    appt.status === 'scheduled' ? 'bg-blue-100 text-blue-700' :
-                                    'bg-gray-100 text-gray-700'
-                                  }`}>
-                                    {appt.status}
-                                  </span>
-                                  {linkedNote && !isAssistant && (
-                                    <Button 
-                                      variant="ghost" 
-                                      size="sm" 
-                                      onClick={() => handleViewNote(linkedNote)}
-                                      title="View session note"
-                                    >
-                                      <Eye size={14} />
-                                    </Button>
+                                  {/* Show actual duration for completed sessions */}
+                                  {appt.status === 'completed' && appt.actual_duration_minutes && (
+                                    <p className="text-xs text-green-600 flex items-center gap-1 mt-1">
+                                      <Clock size={10} /> Actual: {appt.actual_duration_minutes} min
+                                    </p>
                                   )}
+                                </div>
+                                <div className="flex flex-col items-end gap-2">
+                                  <AppointmentStatusBadge 
+                                    status={appt.status}
+                                    actualStartTime={appt.actual_start_time}
+                                    actualDurationMinutes={appt.actual_duration_minutes}
+                                  />
+                                  <div className="flex items-center gap-1">
+                                    {/* Check-In / Check-Out Buttons */}
+                                    <SessionActionButtons
+                                      appointment={appt}
+                                      onRefresh={fetchAllClientData}
+                                      isReadOnly={isReadOnly}
+                                    />
+                                    {linkedNote && !isAssistant && (
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        onClick={() => handleViewNote(linkedNote)}
+                                        title="View session note"
+                                      >
+                                        <Eye size={14} />
+                                      </Button>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                               {appt.notes && (
