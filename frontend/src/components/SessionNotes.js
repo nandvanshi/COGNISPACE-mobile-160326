@@ -9,9 +9,10 @@ import { Input } from './ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { toast } from 'sonner';
-import { Plus, FileText, Edit, Trash2, Calendar, Clock, Link, User, Zap, BookmarkPlus, Settings, AlertTriangle, ClipboardList } from 'lucide-react';
+import { Plus, FileText, Edit, Trash2, Calendar, Clock, Link, User, Zap, BookmarkPlus, Settings, AlertTriangle, ClipboardList, FileCheck, Eye } from 'lucide-react';
 import { formatDate, formatTime, formatDateLong } from '../utils/formatUtils';
 import CaseHistoryWizard from './CaseHistoryWizard';
+import TherapyConsent from './TherapyConsent';
 
 const TEMPLATE_CATEGORIES = [
   { value: 'subjective', label: 'Subjective (S)', color: 'bg-blue-100 text-blue-700' },
@@ -33,8 +34,11 @@ const SessionNotes = ({ isReadOnly = false }) => {
   const [showTemplateDialog, setShowTemplateDialog] = useState(false);
   const [showManageTemplatesDialog, setShowManageTemplatesDialog] = useState(false);
   const [showCaseHistoryDialog, setShowCaseHistoryDialog] = useState(false);
+  const [showConsentDialog, setShowConsentDialog] = useState(false);
   const [selectedClientForCaseHistory, setSelectedClientForCaseHistory] = useState(null);
+  const [selectedClientForConsent, setSelectedClientForConsent] = useState(null);
   const [caseHistoryStatus, setCaseHistoryStatus] = useState({});  // {clientId: {exists, is_complete}}
+  const [consentStatus, setConsentStatus] = useState({});  // {clientId: {exists, is_signed}}
   const [selectedNote, setSelectedNote] = useState(null);
   const [filterClient, setFilterClient] = useState('all');
   const [activeField, setActiveField] = useState(null);
