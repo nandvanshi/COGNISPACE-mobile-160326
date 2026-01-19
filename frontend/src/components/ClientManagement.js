@@ -20,6 +20,8 @@ const ClientManagement = ({ isReadOnly = false, isAssistant = false }) => {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [showProfileView, setShowProfileView] = useState(false);
+  const [profileViewClient, setProfileViewClient] = useState(null);
   const [newPassword, setNewPassword] = useState('');
   const [newClient, setNewClient] = useState({
     mobile: '',
