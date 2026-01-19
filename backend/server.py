@@ -4700,42 +4700,202 @@ async def complete_homework(homework_id: str, completion: HomeworkComplete, curr
 # ============= PAYMENT ENDPOINTS =============
 
 @api_router.post("/payments", response_model=Payment)
-async def record_payment(payment_data: PaymentCreate, current_user: dict = Depends(get_current_user)):
-    if current_user["role"] != "therapist":
-        raise HTTPException(status_code=403, detail="Only therapists can record payments")
+async def record_payment(payment_data: PaymentCreate, current_user: dict = Depends(require_active_therapist_or_assistant)):
+    """
+    Record a payment - both therapists AND assistants can record payments.
+    """
+    therapist_id = get_effective_therapist_id(current_user)
     
     client = await db.users.find_one({"id": payment_data.client_id}, {"_id": 0})
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")
     
+    # Verify client belongs to therapist
+    if client.get("therapist_id") != therapist_id:
+        raise HTTPException(status_code=403, detail="Access denied - client not assigned to you")
+    
+    # Get therapist info for receipt
+    therapist = await db.users.find_one({"id": therapist_id}, {"_id": 0})
+    
+    bill_number = await generate_bill_number()
     payment_id = str(uuid.uuid4())
+    
     payment_doc = {
         "id": payment_id,
-        "therapist_id": current_user["id"],
+        "bill_number": bill_number,
+        "therapist_id": therapist_id,
+        "therapist_name": therapist.get("full_name") if therapist else None,
         "client_id": payment_data.client_id,
         "client_name": client["full_name"],
+        "client_code": client.get("client_id"),  # CL-123456 format
         "amount": payment_data.amount,
         "payment_method": payment_data.payment_method,
+        "payment_status": payment_data.payment_status or "paid",
+        "appointment_id": payment_data.appointment_id,
+        "session_note_id": payment_data.session_note_id,
         "notes": payment_data.notes,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     
     await db.payments.insert_one(payment_doc)
-    await log_audit(current_user["id"], current_user["role"], "record", "payment", payment_id)
+    await log_audit(current_user["id"], current_user["role"], "record", "payment", payment_id,
+                   {"recorded_by_assistant": current_user["role"] == "assistant"})
     
     return Payment(**{k: datetime.fromisoformat(v) if k == "created_at" else v for k, v in payment_doc.items()})
 
 @api_router.get("/payments", response_model=List[Payment])
 async def get_payments(client_id: Optional[str] = None, current_user: dict = Depends(get_current_user)):
-    if current_user["role"] != "therapist":
-        raise HTTPException(status_code=403, detail="Only therapists can view payments")
-    
-    query = {"therapist_id": current_user["id"]}
-    if client_id:
-        query["client_id"] = client_id
+    """
+    Get payments - therapists, assistants, and clients can view.
+    """
+    if current_user["role"] == "therapist":
+        query = {"therapist_id": current_user["id"]}
+        if client_id:
+            query["client_id"] = client_id
+    elif current_user["role"] == "assistant":
+        query = {"therapist_id": current_user.get("therapist_id")}
+        if client_id:
+            query["client_id"] = client_id
+    elif current_user["role"] == "client":
+        query = {"client_id": current_user["id"]}
+    else:
+        raise HTTPException(status_code=403, detail="Access denied")
     
     payments = await db.payments.find(query, {"_id": 0}).to_list(1000)
-    return [Payment(**{k: datetime.fromisoformat(v) if k == "created_at" else v for k, v in payment.items()}) for payment in payments]
+    result = []
+    for payment in payments:
+        # Handle legacy payments without new fields
+        payment_dict = {
+            "id": payment.get("id"),
+            "bill_number": payment.get("bill_number", f"BILL-LEGACY-{payment.get('id', '')[:8]}"),
+            "therapist_id": payment.get("therapist_id"),
+            "therapist_name": payment.get("therapist_name"),
+            "client_id": payment.get("client_id"),
+            "client_name": payment.get("client_name"),
+            "client_code": payment.get("client_code"),
+            "amount": payment.get("amount"),
+            "payment_method": payment.get("payment_method"),
+            "payment_status": payment.get("payment_status", "paid"),
+            "appointment_id": payment.get("appointment_id"),
+            "session_note_id": payment.get("session_note_id"),
+            "notes": payment.get("notes"),
+            "created_at": datetime.fromisoformat(payment["created_at"]) if payment.get("created_at") else datetime.now(timezone.utc)
+        }
+        result.append(Payment(**payment_dict))
+    return result
+
+@api_router.get("/payments/{payment_id}")
+async def get_payment_by_id(payment_id: str, current_user: dict = Depends(get_current_user)):
+    """Get a single payment by ID"""
+    payment = await db.payments.find_one({"id": payment_id}, {"_id": 0})
+    if not payment:
+        raise HTTPException(status_code=404, detail="Payment not found")
+    
+    # Access control
+    if current_user["role"] == "therapist":
+        if payment.get("therapist_id") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Access denied")
+    elif current_user["role"] == "assistant":
+        if payment.get("therapist_id") != current_user.get("therapist_id"):
+            raise HTTPException(status_code=403, detail="Access denied")
+    elif current_user["role"] == "client":
+        if payment.get("client_id") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Access denied")
+    else:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    payment_dict = {
+        "id": payment.get("id"),
+        "bill_number": payment.get("bill_number", f"BILL-LEGACY-{payment.get('id', '')[:8]}"),
+        "therapist_id": payment.get("therapist_id"),
+        "therapist_name": payment.get("therapist_name"),
+        "client_id": payment.get("client_id"),
+        "client_name": payment.get("client_name"),
+        "client_code": payment.get("client_code"),
+        "amount": payment.get("amount"),
+        "payment_method": payment.get("payment_method"),
+        "payment_status": payment.get("payment_status", "paid"),
+        "appointment_id": payment.get("appointment_id"),
+        "session_note_id": payment.get("session_note_id"),
+        "notes": payment.get("notes"),
+        "created_at": datetime.fromisoformat(payment["created_at"]) if payment.get("created_at") else datetime.now(timezone.utc)
+    }
+    return Payment(**payment_dict)
+
+@api_router.get("/payments/{payment_id}/receipt")
+async def get_payment_receipt(payment_id: str, current_user: dict = Depends(get_current_user)):
+    """
+    Get payment receipt data for rendering/printing.
+    Accessible by therapist, assistant, and client.
+    """
+    payment = await db.payments.find_one({"id": payment_id}, {"_id": 0})
+    if not payment:
+        raise HTTPException(status_code=404, detail="Payment not found")
+    
+    # Access control
+    if current_user["role"] == "therapist":
+        if payment.get("therapist_id") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Access denied")
+    elif current_user["role"] == "assistant":
+        if payment.get("therapist_id") != current_user.get("therapist_id"):
+            raise HTTPException(status_code=403, detail="Access denied")
+    elif current_user["role"] == "client":
+        if payment.get("client_id") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Access denied")
+    else:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Get therapist info
+    therapist = await db.users.find_one({"id": payment.get("therapist_id")}, {"_id": 0})
+    
+    # Get appointment info if linked
+    session_date = None
+    session_time = None
+    if payment.get("appointment_id"):
+        appointment = await db.appointments.find_one({"id": payment["appointment_id"]}, {"_id": 0})
+        if appointment:
+            ist = ZoneInfo("Asia/Kolkata")
+            start_time = appointment.get("start_time")
+            if isinstance(start_time, str):
+                start_dt = datetime.fromisoformat(start_time)
+            else:
+                start_dt = start_time
+            if start_dt.tzinfo is None:
+                start_dt = start_dt.replace(tzinfo=ist)
+            session_date = start_dt.strftime("%d/%m/%Y")
+            session_time = start_dt.strftime("%H:%M")
+    
+    # Parse payment timestamp
+    created_at = payment.get("created_at")
+    if isinstance(created_at, str):
+        created_dt = datetime.fromisoformat(created_at)
+    else:
+        created_dt = created_at
+    
+    ist = ZoneInfo("Asia/Kolkata")
+    if created_dt.tzinfo is None:
+        created_dt = created_dt.replace(tzinfo=timezone.utc)
+    created_dt_ist = created_dt.astimezone(ist)
+    
+    receipt = PaymentReceipt(
+        bill_number=payment.get("bill_number", f"BILL-LEGACY-{payment.get('id', '')[:8]}"),
+        clinic_name=therapist.get("clinic_name", "Therapy Practice") if therapist else "Therapy Practice",
+        therapist_name=therapist.get("full_name", "Unknown") if therapist else "Unknown",
+        therapist_phone=therapist.get("mobile") if therapist else None,
+        therapist_email=therapist.get("email") if therapist else None,
+        client_name=payment.get("client_name", "Unknown"),
+        client_id=payment.get("client_code") or payment.get("client_id", "")[:12],
+        date=created_dt_ist.strftime("%d/%m/%Y"),
+        time=created_dt_ist.strftime("%H:%M"),
+        session_date=session_date,
+        session_time=session_time,
+        amount=payment.get("amount", 0),
+        payment_method=payment.get("payment_method", "cash").upper(),
+        payment_status=payment.get("payment_status", "paid").upper(),
+        notes=payment.get("notes")
+    )
+    
+    return receipt
 
 # ============= AI CLINICAL SUPPORT ENDPOINTS =============
 
