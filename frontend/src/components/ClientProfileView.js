@@ -15,11 +15,13 @@ import {
   ClipboardCheck, Clock, CheckCircle, AlertCircle, ChevronRight,
   Brain, History, Loader2, Edit, MessageSquare, BookOpen,
   ArrowRight, TrendingUp, FileCheck, Users, Plus, Eye, CalendarPlus,
-  Link as LinkIcon, PenSquare
+  Link as LinkIcon, PenSquare, Receipt, PlayCircle, StopCircle
 } from 'lucide-react';
 import { formatDate, formatTime, formatCurrency } from '../utils/formatUtils';
 import CaseHistoryWizard from './CaseHistoryWizard';
 import TherapyConsent from './TherapyConsent';
+import { SessionActionButtons, AppointmentStatusBadge } from './SessionCheckInOut';
+import { PaymentCard } from './PaymentReceipt';
 
 // Helper to safely extract error message from API response
 const getErrorMessage = (error, fallback = 'An error occurred') => {
