@@ -2691,6 +2691,180 @@ async def complete_appointment(appointment_id: str, current_user: dict = Depends
     
     return {"message": "Appointment marked as completed"}
 
+@api_router.post("/appointments/{appointment_id}/check-in")
+async def check_in_appointment(appointment_id: str, request: CheckInRequest = None, current_user: dict = Depends(require_active_therapist_or_assistant)):
+    """
+    Check-in to an appointment (Start Session).
+    Both therapists AND assistants can check-in.
+    Records actual start time and marks as In Progress.
+    """
+    therapist_id = get_effective_therapist_id(current_user)
+    
+    appointment = await db.appointments.find_one({"id": appointment_id}, {"_id": 0})
+    if not appointment:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+    
+    if appointment["therapist_id"] != therapist_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    if appointment["status"] == "cancelled":
+        raise HTTPException(status_code=400, detail="Cannot check-in to a cancelled appointment")
+    
+    if appointment["status"] == "completed":
+        raise HTTPException(status_code=400, detail="Appointment already completed")
+    
+    if appointment["status"] == "in_progress":
+        raise HTTPException(status_code=400, detail="Session already in progress")
+    
+    # Get IST timezone
+    ist = ZoneInfo("Asia/Kolkata")
+    actual_start = datetime.now(ist)
+    
+    update_fields = {
+        "status": "in_progress",
+        "actual_start_time": actual_start.isoformat(),
+        "checked_in_by": current_user["id"]
+    }
+    
+    if request and request.notes:
+        update_fields["notes"] = (appointment.get("notes", "") + "\n[Check-in] " + request.notes).strip()
+    
+    await db.appointments.update_one({"id": appointment_id}, {"$set": update_fields})
+    await log_audit(current_user["id"], current_user["role"], "check_in", "appointment", appointment_id,
+                   {"checked_in_by_assistant": current_user["role"] == "assistant"})
+    
+    # Get updated appointment
+    updated = await db.appointments.find_one({"id": appointment_id}, {"_id": 0})
+    return {
+        "message": "Session started (checked in)",
+        "actual_start_time": actual_start.isoformat(),
+        "appointment": {k: v for k, v in updated.items() if k != "_id"}
+    }
+
+async def generate_bill_number():
+    """Generate a unique bill number in format BILL-YYYYMMDD-XXXX"""
+    ist = ZoneInfo("Asia/Kolkata")
+    today = datetime.now(ist)
+    date_prefix = today.strftime("%Y%m%d")
+    
+    # Count today's bills to generate sequence
+    start_of_day = today.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+    end_of_day = today.replace(hour=23, minute=59, second=59, microsecond=999999).isoformat()
+    
+    today_count = await db.payments.count_documents({
+        "created_at": {"$gte": start_of_day, "$lte": end_of_day}
+    })
+    
+    sequence = str(today_count + 1).zfill(4)
+    return f"BILL-{date_prefix}-{sequence}"
+
+@api_router.post("/appointments/{appointment_id}/check-out")
+async def check_out_appointment(appointment_id: str, request: CheckOutRequest = None, current_user: dict = Depends(require_active_therapist_or_assistant)):
+    """
+    Check-out from an appointment (End Session).
+    Both therapists AND assistants can check-out.
+    Records actual end time, calculates duration, marks as Completed.
+    Optionally records payment at check-out.
+    """
+    therapist_id = get_effective_therapist_id(current_user)
+    
+    appointment = await db.appointments.find_one({"id": appointment_id}, {"_id": 0})
+    if not appointment:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+    
+    if appointment["therapist_id"] != therapist_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    if appointment["status"] == "cancelled":
+        raise HTTPException(status_code=400, detail="Cannot check-out from a cancelled appointment")
+    
+    if appointment["status"] == "completed":
+        raise HTTPException(status_code=400, detail="Appointment already completed")
+    
+    if appointment["status"] == "scheduled":
+        raise HTTPException(status_code=400, detail="Please check-in first before checking out")
+    
+    # Get IST timezone
+    ist = ZoneInfo("Asia/Kolkata")
+    actual_end = datetime.now(ist)
+    
+    # Calculate actual duration
+    actual_start = appointment.get("actual_start_time")
+    duration_minutes = None
+    if actual_start:
+        if isinstance(actual_start, str):
+            start_dt = datetime.fromisoformat(actual_start)
+        else:
+            start_dt = actual_start
+        
+        # Make both timezone-aware for comparison
+        if start_dt.tzinfo is None:
+            start_dt = start_dt.replace(tzinfo=ist)
+        
+        duration_minutes = int((actual_end - start_dt).total_seconds() / 60)
+    
+    update_fields = {
+        "status": "completed",
+        "actual_end_time": actual_end.isoformat(),
+        "actual_duration_minutes": duration_minutes,
+        "checked_out_by": current_user["id"]
+    }
+    
+    if request and request.notes:
+        update_fields["notes"] = (appointment.get("notes", "") + "\n[Check-out] " + request.notes).strip()
+    
+    await db.appointments.update_one({"id": appointment_id}, {"$set": update_fields})
+    await log_audit(current_user["id"], current_user["role"], "check_out", "appointment", appointment_id,
+                   {"checked_out_by_assistant": current_user["role"] == "assistant", "duration_minutes": duration_minutes})
+    
+    # Handle payment if requested
+    payment_data = None
+    if request and request.record_payment and request.payment_amount:
+        # Get client info
+        client = await db.users.find_one({"id": appointment["client_id"]}, {"_id": 0})
+        if not client:
+            raise HTTPException(status_code=404, detail="Client not found")
+        
+        # Get therapist info
+        therapist = await db.users.find_one({"id": therapist_id}, {"_id": 0})
+        
+        bill_number = await generate_bill_number()
+        payment_id = str(uuid.uuid4())
+        
+        payment_doc = {
+            "id": payment_id,
+            "bill_number": bill_number,
+            "therapist_id": therapist_id,
+            "therapist_name": therapist.get("full_name") if therapist else None,
+            "client_id": appointment["client_id"],
+            "client_name": client["full_name"],
+            "client_code": client.get("client_id"),  # CL-123456 format
+            "amount": request.payment_amount,
+            "payment_method": request.payment_mode or "cash",
+            "payment_status": request.payment_status or "paid",
+            "appointment_id": appointment_id,
+            "session_note_id": None,  # Can be linked later
+            "notes": request.payment_notes,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.payments.insert_one(payment_doc)
+        await log_audit(current_user["id"], current_user["role"], "record", "payment", payment_id,
+                       {"linked_to_appointment": appointment_id, "recorded_by_assistant": current_user["role"] == "assistant"})
+        
+        payment_data = {k: v for k, v in payment_doc.items() if k != "_id"}
+    
+    # Get updated appointment
+    updated = await db.appointments.find_one({"id": appointment_id}, {"_id": 0})
+    
+    return {
+        "message": "Session completed (checked out)",
+        "actual_end_time": actual_end.isoformat(),
+        "actual_duration_minutes": duration_minutes,
+        "appointment": {k: v for k, v in updated.items() if k != "_id"},
+        "payment": payment_data
+    }
+
 @api_router.post("/appointments/{appointment_id}/cancel")
 async def cancel_appointment(appointment_id: str, current_user: dict = Depends(require_active_therapist_or_assistant)):
     """Cancel an appointment - assistants can cancel appointments"""
