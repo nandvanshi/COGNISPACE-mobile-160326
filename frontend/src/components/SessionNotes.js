@@ -272,7 +272,7 @@ const SessionNotes = ({ isReadOnly = false }) => {
       setNewTemplate({ name: '', category: 'general', content: '' });
       fetchData();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to create template');
+      toast.error(getErrorMessage(error, 'Failed to create template'));
     }
   };
 
