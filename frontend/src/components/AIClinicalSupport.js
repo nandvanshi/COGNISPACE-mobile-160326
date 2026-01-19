@@ -409,7 +409,7 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
               <div>
                 <Label>Select Client</Label>
                 <Select 
-                  value={protocolRequest.client_id} 
+                  value={protocolRequest.client_id || undefined} 
                   onValueChange={(v) => setProtocolRequest({...protocolRequest, client_id: v})}
                 >
                   <SelectTrigger data-testid="protocol-client-select">
@@ -425,14 +425,14 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
               <div>
                 <Label>Preferred Modality (optional)</Label>
                 <Select 
-                  value={protocolRequest.modality_preference} 
-                  onValueChange={(v) => setProtocolRequest({...protocolRequest, modality_preference: v})}
+                  value={protocolRequest.modality_preference || "auto"} 
+                  onValueChange={(v) => setProtocolRequest({...protocolRequest, modality_preference: v === "auto" ? "" : v})}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Let AI decide" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Let AI decide</SelectItem>
+                    <SelectItem value="auto">Let AI decide</SelectItem>
                     <SelectItem value="CBT">CBT (Cognitive Behavioral)</SelectItem>
                     <SelectItem value="DBT">DBT (Dialectical Behavior)</SelectItem>
                     <SelectItem value="ACT">ACT (Acceptance & Commitment)</SelectItem>
