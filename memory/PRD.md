@@ -526,27 +526,42 @@ Build a secure, therapist-first web application for managing a therapy practice 
   - **Header Section**: Client avatar, name, client ID, phone, email
   - **Status Badges**: "Consent Signed/Pending", "Case History Complete/Pending"
   - **Quick Stats Row**: Sessions Done, Upcoming, Session Notes, Assessments, Total Paid (₹)
+  - **Quick Action Buttons**: "Book Appointment", "Start Session Note" (therapist only)
 - [x] **Tabbed Navigation with 5 tabs**:
   - **Overview Tab**: Next Appointment, Last Session, Case History summary, Therapy Consent summary, Recent Session Notes, Pending Items
-  - **Sessions Tab**: Completed/Upcoming/Cancelled stats, All Appointments list sorted by date
+  - **Sessions Tab**: Completed/Upcoming/Session Notes/Cancelled stats, Session Notes list with View/Edit, All Appointments list
   - **Case History Tab**: View/Edit case history, shows all 11 sections if available, Create button if not
   - **Assessments Tab**: Completed/Pending counts, Assessment list with scores
   - **Payments Tab**: Total Paid/Pending/Transaction counts, Payment history list
+- [x] **Session Notes in Client Profile (NEW - Jan 19, 2026)**:
+  - Session Notes displayed in Sessions tab with date, SOAP/DAP type badge, and preview
+  - View Session Note dialog with color-coded sections (S/O/A/P or D/A/P)
+  - Edit Session Note dialog with all fields editable
+  - Session notes hidden from assistants (clinical data restriction)
+- [x] **Start New Session Note Workflow (NEW - Jan 19, 2026)**:
+  - "Start Session Note" button in header and Sessions tab
+  - Validates Case History is complete before allowing note creation
+  - Validates Consent is signed before allowing note creation
+  - Pre-fills appointment link with today's appointment if available
+  - Create Session Note dialog with SOAP/DAP selector and appointment dropdown
+- [x] **Book Appointment from Client Profile (NEW - Jan 19, 2026)**:
+  - "Book Appointment" button in header and Sessions tab
+  - Date picker with available slot fetching
+  - Slot-based booking with `GET /api/available-slots/{therapist_id}?date=`
+  - Optional notes field for appointment description
 - [x] **Backend Endpoint Updates**:
-  - `GET /api/appointments?client_id={id}` - Filter appointments by client (NEW)
-  - `GET /api/assessments?client_id={id}` - Filter assessments by client (ADDED)
-  - `GET /api/homework?client_id={id}` - Filter homework by client (ADDED)
+  - `GET /api/appointments?client_id={id}` - Filter appointments by client
+  - `GET /api/assessments?client_id={id}` - Filter assessments by client
+  - `GET /api/homework?client_id={id}` - Filter homework by client
   - All endpoints now support client_id query parameter for therapists
-- [x] **Integration with Existing Components**:
-  - ClientProfileView component opens CaseHistoryWizard dialog
-  - ClientProfileView component opens TherapyConsent dialog
-  - Data refresh callback when case history or consent changes
-- [x] **Security**:
-  - Read-only mode supported for assistants
-  - Subscription status respected (isReadOnly prop)
+- [x] **Security & Access Control**:
+  - Read-only mode disables action buttons (isReadOnly prop)
+  - Assistants blocked from session notes (isAssistant prop)
+  - Subscription status respected
   - Therapists can only view their assigned clients
-- [x] **Testing**: 17/17 backend tests passed (100%)
-  - /app/tests/test_client_profile_view.py - Comprehensive endpoint tests
+- [x] **Testing**: 17/17 backend tests + 16/16 frontend features passed (100%)
+  - /app/tests/test_client_profile_view.py - Backend endpoint tests
+  - /app/test_reports/iteration_16.json, iteration_17.json
 
 ---
 
