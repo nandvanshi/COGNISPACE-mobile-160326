@@ -156,6 +156,8 @@ const TherapistDashboard = () => {
           {currentView === 'assistants' && <AssistantManagement isReadOnly={isReadOnly} />}
         </div>
       </main>
+
+      <Settings isOpen={showSettings} onClose={() => setShowSettings(false)} />
     </div>
   );
 };
