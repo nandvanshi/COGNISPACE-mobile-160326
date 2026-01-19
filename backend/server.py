@@ -663,46 +663,46 @@ class TherapyConsent(BaseModel):
 
 # Standard consent text template
 CONSENT_TEXT_TEMPLATE = """
-INFORMED CONSENT FOR THERAPY SERVICES
+INFORMED CONSENT FOR PSYCHOTHERAPY
 
 Client Name: {client_name}
 Therapist Name: {therapist_name}
 Date: {date}
 
-1. NATURE OF THERAPY
-I understand that therapy involves a collaborative relationship between therapist and client. The therapist will use their professional judgment to employ therapeutic techniques and interventions deemed appropriate for my situation.
+1. Purpose of Therapy
+I understand that psychotherapy involves discussing my thoughts, emotions, behaviors, and personal experiences with a qualified therapist for the purpose of improving my mental and emotional well-being.
 
-2. CONFIDENTIALITY
-I understand that all information shared during therapy sessions is confidential, with the following exceptions:
-• If there is a serious threat of harm to myself or others
-• If there is suspected abuse or neglect of a child, elderly, or dependent adult
-• If required by court order or legal proceedings
-• If I provide written authorization to release information
+2. Nature of Therapy
+I understand that:
+• Therapy is a collaborative process.
+• Results cannot be guaranteed.
+• Therapy may involve discussing difficult or uncomfortable topics.
+• I have the right to ask questions at any time.
 
-3. RISKS AND BENEFITS
-I understand that therapy may involve discussing difficult emotions and experiences. While therapy aims to improve well-being, there is no guarantee of specific outcomes.
+3. Confidentiality
+I understand that:
+• All information shared during therapy is confidential.
+• Confidentiality may be legally breached only in situations such as:
+  - Risk of serious harm to self or others
+  - Court orders or legal requirements
+  - Suspected abuse (as required by law)
 
-4. FEES AND CANCELLATION
-I understand the fee structure and agree to provide 24 hours notice for cancellations. Missed appointments without notice may be charged.
+4. Records & Documentation
+I understand that:
+• The therapist will maintain clinical notes for professional purposes.
+• These notes are not accessible to me unless required by law.
+• My personal and clinical data is stored securely in this application.
 
-5. EMERGENCY CONTACT
-I understand that my therapist is not available for crisis situations outside of scheduled sessions. In case of emergency, I will contact emergency services (112) or visit the nearest hospital.
+5. Consent for Services
+I confirm that:
+• I am voluntarily seeking therapy services.
+• I have had the opportunity to ask questions.
+• I understand the scope and limitations of therapy.
 
-6. TREATMENT PLAN
-I have been informed about my provisional formulation and initial therapy plan as documented in my Case History. I understand that this plan may be modified as therapy progresses.
-
-7. CLIENT RIGHTS
-I understand that I have the right to:
-• Ask questions about the therapy process
-• Refuse any treatment I am not comfortable with
-• Terminate therapy at any time
-• Request a referral to another professional
-
-8. CONSENT
-By signing below, I acknowledge that I have read and understood this consent form. I have had the opportunity to ask questions and all my questions have been answered satisfactorily. I voluntarily consent to participate in therapy services.
-
-Signature: ____________________
-Date: ____________________
+6. Right to Withdraw
+I understand that:
+• I may discontinue therapy at any time.
+• I may withdraw my consent by informing my therapist.
 """
 
 # Payment Models
