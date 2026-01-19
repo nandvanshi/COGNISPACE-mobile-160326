@@ -262,7 +262,7 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
       toast.error('Failed to load available slots');
       setAvailableSlots([]);
     } finally {
-      setLoadingSlots(true);
+      setLoadingSlots(false);
     }
   };
 
