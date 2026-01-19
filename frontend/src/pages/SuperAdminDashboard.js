@@ -73,7 +73,16 @@ const SuperAdminDashboard = () => {
           })}
         </nav>
 
-        <div className="p-4 border-t border-border">
+        <div className="p-4 border-t border-border space-y-2">
+          <Button
+            onClick={() => setShowSettings(true)}
+            variant="ghost"
+            className="w-full justify-start"
+            data-testid="admin-settings-button"
+          >
+            <SettingsIcon size={20} className="mr-3" />
+            Settings
+          </Button>
           <Button
             onClick={handleLogout}
             variant="ghost"
