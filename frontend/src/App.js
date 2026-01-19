@@ -45,6 +45,8 @@ const AuthProvider = ({ children }) => {
     try {
       const response = await axios.get(`${API}/auth/me`);
       setUser(response.data);
+      // Load user's theme preference
+      loadUserTheme();
     } catch (error) {
       console.error('Failed to fetch user:', error);
       logout();
