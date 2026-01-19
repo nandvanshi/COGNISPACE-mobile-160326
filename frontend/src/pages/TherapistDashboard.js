@@ -3,7 +3,7 @@ import { Routes, Route, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth, API } from '../App';
 import { Button } from '../components/ui/button';
-import { LogOut, Users, Calendar, FileText, MessageSquare, ClipboardList, BookOpen, DollarSign, Home, AlertTriangle, Clock, Repeat, UserCog } from 'lucide-react';
+import { LogOut, Users, Calendar, FileText, MessageSquare, ClipboardList, BookOpen, DollarSign, Home, AlertTriangle, Clock, Repeat, UserCog, Brain } from 'lucide-react';
 import TherapistOverview from '../components/TherapistOverview';
 import ClientManagement from '../components/ClientManagement';
 import AppointmentCalendar from '../components/AppointmentCalendar';
@@ -15,6 +15,7 @@ import Payments from '../components/Payments';
 import AvailabilitySettings from '../components/AvailabilitySettings';
 import RecurringAppointments from '../components/RecurringAppointments';
 import AssistantManagement from '../components/AssistantManagement';
+import AIClinicalSupport from '../components/AIClinicalSupport';
 
 const TherapistDashboard = () => {
   const { user, logout } = useAuth();
