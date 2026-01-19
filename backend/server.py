@@ -499,6 +499,144 @@ class ResourceAssignment(BaseModel):
     viewed_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
 
+# ============= CASE HISTORY MODELS (MMS-Style) =============
+
+class BasicIdentification(BaseModel):
+    """Section 1: Basic Identification"""
+    name: str
+    age: Optional[int] = None
+    dob: Optional[str] = None
+    gender: Optional[str] = None  # Male, Female, Other, Prefer not to say
+    marital_status: Optional[str] = None  # Single, Married, Divorced, Widowed, Separated
+    education: Optional[str] = None
+    occupation: Optional[str] = None
+    address: Optional[str] = None
+    city: Optional[str] = None
+    contact: Optional[str] = None
+    emergency_contact: Optional[str] = None
+    emergency_contact_relation: Optional[str] = None
+    referred_by: Optional[str] = None
+
+class PresentingComplaints(BaseModel):
+    """Section 2: Presenting Complaints"""
+    main_problems: str  # Client's main problems in their own words
+    duration: Optional[str] = None  # How long the problem has persisted
+    severity: Optional[str] = None  # Mild, Moderate, Severe
+    frequency: Optional[str] = None  # Daily, Weekly, Occasionally, etc.
+    triggers: Optional[str] = None  # What triggers or worsens the problem
+
+class HistoryOfPresentIllness(BaseModel):
+    """Section 3: History of Present Illness"""
+    onset: Optional[str] = None  # When did it start
+    course: Optional[str] = None  # How has it progressed
+    previous_episodes: Optional[str] = None  # Any previous similar episodes
+    factors_improving: Optional[str] = None  # What makes it better
+    factors_worsening: Optional[str] = None  # What makes it worse
+    prior_therapy: Optional[str] = None  # Previous therapy taken
+    prior_medication: Optional[str] = None  # Previous medications
+
+class PastPsychiatricHistory(BaseModel):
+    """Section 4: Past Psychiatric History"""
+    previous_therapy: Optional[str] = None
+    previous_diagnosis: Optional[str] = None
+    hospitalizations: Optional[str] = None
+    past_medications: Optional[str] = None
+    current_medications: Optional[str] = None
+
+class MedicalHistory(BaseModel):
+    """Section 5: Medical History"""
+    chronic_illnesses: Optional[str] = None
+    current_medications: Optional[str] = None
+    sleep_pattern: Optional[str] = None  # Good, Poor, Insomnia, Hypersomnia
+    appetite: Optional[str] = None  # Normal, Increased, Decreased
+    substance_use: Optional[str] = None  # None, Alcohol, Tobacco, Others
+
+class FamilyHistory(BaseModel):
+    """Section 6: Family History"""
+    family_structure: Optional[str] = None  # Description of family
+    mental_illness_in_family: Optional[str] = None  # Yes/No with details
+    relationship_dynamics: Optional[str] = None  # Quality of family relationships
+
+class PersonalDevelopmentalHistory(BaseModel):
+    """Section 7: Personal & Developmental History"""
+    childhood: Optional[str] = None
+    education_history: Optional[str] = None
+    work_history: Optional[str] = None
+    major_life_events: Optional[str] = None  # Optional, sensitive
+    trauma_history: Optional[str] = None  # Optional, sensitive
+
+class MentalStatusExamination(BaseModel):
+    """Section 8: Mental Status Examination (MSE)"""
+    appearance: Optional[str] = None  # Well-groomed, Disheveled, etc.
+    behavior: Optional[str] = None  # Cooperative, Agitated, Withdrawn, etc.
+    speech: Optional[str] = None  # Normal, Pressured, Slow, etc.
+    mood: Optional[str] = None  # Euthymic, Depressed, Anxious, Irritable, etc.
+    affect: Optional[str] = None  # Appropriate, Flat, Labile, etc.
+    thought_process: Optional[str] = None  # Logical, Tangential, Circumstantial, etc.
+    thought_content: Optional[str] = None  # Normal, Delusions, Obsessions, etc.
+    perception: Optional[str] = None  # Normal, Hallucinations, etc.
+    cognition: Optional[str] = None  # Intact, Impaired
+    insight: Optional[str] = None  # Good, Partial, Poor
+    judgment: Optional[str] = None  # Good, Fair, Poor
+
+class ProvisionalFormulation(BaseModel):
+    """Section 9: Provisional Formulation"""
+    clinical_formulation: str  # Working clinical formulation
+    stressors: Optional[str] = None  # Current stressors
+    strengths: Optional[str] = None  # Client's strengths
+    risk_indicators: Optional[str] = None  # Any risk factors (self-harm, etc.)
+
+class InitialTherapyPlan(BaseModel):
+    """Section 10: Initial Therapy Plan"""
+    therapy_modality: Optional[str] = None  # CBT, DBT, ACT, etc.
+    session_frequency: Optional[str] = None  # Weekly, Bi-weekly, etc.
+    initial_goals: Optional[str] = None
+    homework: Optional[str] = None
+
+class ConsentDisclaimer(BaseModel):
+    """Section 11: Consent & Disclaimer"""
+    informed_consent_taken: bool = False
+    confidentiality_explained: bool = False
+    consent_date: Optional[str] = None
+    additional_notes: Optional[str] = None
+
+class CaseHistoryCreate(BaseModel):
+    """Create Case History - All sections"""
+    client_id: str
+    basic_identification: BasicIdentification
+    presenting_complaints: PresentingComplaints
+    history_of_present_illness: Optional[HistoryOfPresentIllness] = None
+    past_psychiatric_history: Optional[PastPsychiatricHistory] = None
+    medical_history: Optional[MedicalHistory] = None
+    family_history: Optional[FamilyHistory] = None
+    personal_developmental_history: Optional[PersonalDevelopmentalHistory] = None
+    mental_status_examination: Optional[MentalStatusExamination] = None
+    provisional_formulation: Optional[ProvisionalFormulation] = None
+    initial_therapy_plan: Optional[InitialTherapyPlan] = None
+    consent_disclaimer: Optional[ConsentDisclaimer] = None
+    is_complete: bool = False
+
+class CaseHistory(BaseModel):
+    """Full Case History Model"""
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    client_id: str
+    therapist_id: str
+    basic_identification: dict
+    presenting_complaints: dict
+    history_of_present_illness: Optional[dict] = None
+    past_psychiatric_history: Optional[dict] = None
+    medical_history: Optional[dict] = None
+    family_history: Optional[dict] = None
+    personal_developmental_history: Optional[dict] = None
+    mental_status_examination: Optional[dict] = None
+    provisional_formulation: Optional[dict] = None
+    initial_therapy_plan: Optional[dict] = None
+    consent_disclaimer: Optional[dict] = None
+    is_complete: bool = False
+    created_at: datetime
+    updated_at: datetime
+
 # Payment Models
 class PaymentCreate(BaseModel):
     client_id: str
