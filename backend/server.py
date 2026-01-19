@@ -3487,7 +3487,7 @@ async def regenerate_therapy_consent(client_id: str, current_user: dict = Depend
 
 @api_router.post("/session-notes", response_model=SessionNote)
 async def create_session_note(note_data: SessionNoteCreate, current_user: dict = Depends(require_active_therapist)):
-    """Create a new session note - Requires completed case history first"""
+    """Create a new session note - Requires completed case history and signed consent"""
     # Check if case history exists and is complete
     case_history = await db.case_histories.find_one(
         {"client_id": note_data.client_id, "therapist_id": current_user["id"]},
@@ -3504,6 +3504,18 @@ async def create_session_note(note_data: SessionNoteCreate, current_user: dict =
         raise HTTPException(
             status_code=400, 
             detail="Case history is incomplete. Please complete all required sections and mark it as complete before creating session notes."
+        )
+    
+    # Check if therapy consent is signed
+    consent = await db.therapy_consents.find_one(
+        {"client_id": note_data.client_id, "therapist_id": current_user["id"]},
+        {"_id": 0, "is_signed": 1}
+    )
+    
+    if not consent or not consent.get("is_signed", False):
+        raise HTTPException(
+            status_code=400,
+            detail="Therapy consent must be signed before creating session notes. Please ensure the client has signed the consent form."
         )
     
     # Find client in clients collection first, then users
