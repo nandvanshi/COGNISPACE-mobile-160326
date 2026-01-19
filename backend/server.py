@@ -403,6 +403,97 @@ class Homework(BaseModel):
 class HomeworkComplete(BaseModel):
     client_notes: str
 
+# AI Clinical Support Models
+class AIAssessmentSuggestionRequest(BaseModel):
+    client_id: Optional[str] = None  # If provided, uses client's data
+    query: Optional[str] = None  # Manual query from therapist
+    include_intake: bool = True
+    include_notes: bool = True
+
+class AIAssessmentSuggestion(BaseModel):
+    assessment_name: str
+    assessment_type: str  # PHQ-9, GAD-7, etc.
+    reason: str
+    priority: str  # high, medium, low
+    relevant_symptoms: List[str]
+
+class AIAssessmentSuggestionResponse(BaseModel):
+    suggestions: List[AIAssessmentSuggestion]
+    analysis_summary: str
+    data_sources_used: List[str]
+
+class AIProtocolRequest(BaseModel):
+    client_id: Optional[str] = None
+    assessment_ids: Optional[List[str]] = None  # Based on completed assessments
+    query: Optional[str] = None  # Manual description
+    modality_preference: Optional[str] = None  # CBT, DBT, ACT, etc.
+
+class AIProtocolSession(BaseModel):
+    session_number: int
+    title: str
+    objectives: List[str]
+    interventions: List[str]
+    homework: Optional[str] = None
+    duration_minutes: int = 60
+
+class AIProtocolResponse(BaseModel):
+    protocol_name: str
+    target_condition: str
+    recommended_modality: str
+    rationale: str
+    estimated_sessions: int
+    sessions: List[AIProtocolSession]
+    contraindications: Optional[List[str]] = None
+    progress_markers: List[str]
+
+class AIHomeworkRequest(BaseModel):
+    client_id: str
+    context: Optional[str] = None  # What was discussed in session
+    homework_type: Optional[str] = None  # worksheet, exercise, reading, reflection
+    protocol_id: Optional[str] = None  # If following a protocol
+
+class AIHomeworkResponse(BaseModel):
+    title: str
+    description: str
+    instructions: str
+    exercises: List[dict]  # [{name, description, steps}]
+    estimated_time_minutes: int
+    therapeutic_rationale: str
+
+# Resource Library Models
+class ResourceCreate(BaseModel):
+    title: str
+    category: str  # worksheet, exercise, psychoeducation, reading, meditation
+    content: str
+    tags: List[str] = []
+    is_downloadable: bool = True
+
+class Resource(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    therapist_id: str
+    title: str
+    category: str
+    content: str
+    tags: List[str]
+    is_downloadable: bool
+    usage_count: int = 0
+    created_at: datetime
+
+class ResourceAssignment(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    therapist_id: str
+    client_id: str
+    client_name: str
+    resource_id: str
+    resource_title: str
+    notes: Optional[str] = None
+    status: str = "assigned"  # assigned, viewed, completed
+    assigned_at: datetime
+    viewed_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
+
 # Payment Models
 class PaymentCreate(BaseModel):
     client_id: str
