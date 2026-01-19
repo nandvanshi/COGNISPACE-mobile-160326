@@ -668,7 +668,8 @@ const ClientManagement = ({ isReadOnly = false, isAssistant = false }) => {
             setShowProfileView(false);
             setProfileViewClient(null);
           }}
-          isReadOnly={isReadOnly || isAssistant}
+          isReadOnly={isReadOnly}
+          isAssistant={isAssistant}
           onRefresh={fetchClients}
         />
       )}
