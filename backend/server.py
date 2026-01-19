@@ -2541,13 +2541,17 @@ async def create_appointment(appt_data: AppointmentCreate, current_user: dict = 
     return Appointment(**{k: datetime.fromisoformat(v) if k in ["start_time", "end_time", "created_at"] else v for k, v in appt_doc.items()})
 
 @api_router.get("/appointments", response_model=List[Appointment])
-async def get_appointments(current_user: dict = Depends(get_current_user)):
+async def get_appointments(client_id: Optional[str] = None, current_user: dict = Depends(get_current_user)):
     """Get appointments - therapists/assistants see therapist's appointments, clients see theirs"""
     query = {}
     if current_user["role"] == "therapist":
         query["therapist_id"] = current_user["id"]
+        if client_id:
+            query["client_id"] = client_id
     elif current_user["role"] == "assistant":
         query["therapist_id"] = current_user.get("therapist_id")
+        if client_id:
+            query["client_id"] = client_id
     else:
         query["client_id"] = current_user["id"]
     
