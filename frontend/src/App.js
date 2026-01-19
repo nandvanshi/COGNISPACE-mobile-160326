@@ -9,6 +9,7 @@ import TherapistDashboard from './pages/TherapistDashboard';
 import ClientDashboard from './pages/ClientDashboard';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import AssistantDashboard from './pages/AssistantDashboard';
+import { applyTheme, getStoredTheme } from './config/themes';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -25,6 +26,11 @@ const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
+
+  // Apply stored theme on initial load
+  useEffect(() => {
+    applyTheme(getStoredTheme());
+  }, []);
 
   useEffect(() => {
     if (token) {
