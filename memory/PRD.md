@@ -400,6 +400,44 @@ Build a secure, therapist-first web application for managing a therapy practice 
   - A slot booked always falls fully within the defined availability block ✓
   - Displayed slot times exactly match availability configuration ✓
 
+### Phase 18: AI Clinical Support (COMPLETED - Jan 19, 2026)
+- [x] **AI Assessment Suggestion Engine**:
+  - `POST /api/ai/suggest-assessments` - AI analyzes client data and suggests assessments
+  - Input: client_id (optional), query (symptoms/observations), include_intake, include_notes
+  - Output: analysis_summary, suggestions with priority, assessment_type, reason, relevant_symptoms
+  - Suggests PHQ-9, GAD-7, PCL-5, ASRS, BDI-II, DASS-21, YBOCS, PSS based on symptoms
+  - Uses client's intake summary and session notes for context
+- [x] **AI Therapy Protocol Builder**:
+  - `POST /api/ai/generate-protocol` - Generates evidence-based treatment protocols
+  - Input: client_id (optional), query, modality_preference (CBT, DBT, ACT, EMDR, etc.)
+  - Output: protocol_name, target_condition, recommended_modality, rationale, sessions[]
+  - Each session includes: objectives, interventions, homework, duration
+  - Includes progress_markers and contraindications
+- [x] **AI Homework Generator**:
+  - `POST /api/ai/generate-homework` - Creates personalized therapeutic homework
+  - Input: client_id (required), context, homework_type (worksheet, exercise, reflection, reading, meditation)
+  - Output: title, description, instructions, exercises[], estimated_time_minutes, therapeutic_rationale
+  - Can be assigned directly to client after generation
+- [x] **Resource Library**:
+  - `POST /api/resources` - Create resources (worksheets, exercises, psychoeducation)
+  - `GET /api/resources` - List resources with optional category filter
+  - `DELETE /api/resources/{id}` - Delete resource
+  - `POST /api/resources/{id}/assign` - Assign resource to client
+  - `GET /api/resources/assignments` - List assignments
+  - Client can mark resources as viewed/completed
+- [x] **AI Integration**:
+  - Using Gemini 3 Flash via emergentintegrations library
+  - EMERGENT_LLM_KEY configured in backend/.env
+  - Response time: 5-15 seconds typical
+  - 19/19 backend tests passed (100%)
+- [x] **Frontend UI**:
+  - New "AI Clinical" menu item in therapist dashboard
+  - 4 tabs: Assessments, Protocols, Homework, Resources
+  - Beautiful gradient buttons for AI actions
+  - Results display with priority badges, symptom tags
+  - Protocol dialog shows full session plan
+  - Homework dialog with exercises and instructions
+
 ### Phase 17: Therapist Assistant Role (COMPLETED - Jan 18, 2026)
 - [x] **Role Definition**:
   - Stored in `users` collection with `role: "assistant"` and `therapist_id`
