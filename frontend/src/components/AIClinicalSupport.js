@@ -291,14 +291,14 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
               <div>
                 <Label>Select Client (optional)</Label>
                 <Select 
-                  value={assessmentRequest.client_id} 
-                  onValueChange={(v) => setAssessmentRequest({...assessmentRequest, client_id: v})}
+                  value={assessmentRequest.client_id || "none"} 
+                  onValueChange={(v) => setAssessmentRequest({...assessmentRequest, client_id: v === "none" ? "" : v})}
                 >
                   <SelectTrigger data-testid="assessment-client-select">
                     <SelectValue placeholder="Choose a client" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="none">None</SelectItem>
                     {clients.map(c => (
                       <SelectItem key={c.id} value={c.id}>{c.full_name}</SelectItem>
                     ))}
