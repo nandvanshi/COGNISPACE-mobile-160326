@@ -84,19 +84,31 @@ const SessionNotes = ({ isReadOnly = false }) => {
       setAppointments(apptsRes.data.filter(a => a.status === 'completed' || a.status === 'scheduled'));
       setTemplates(templatesRes.data);
       
-      // Check case history status for all clients
+      // Check case history and consent status for all clients
       const statusPromises = clientsRes.data.map(async (client) => {
         try {
-          const res = await axios.get(`${API}/case-history/check/${client.id}`);
-          return { clientId: client.id, ...res.data };
+          const [caseRes, consentRes] = await Promise.all([
+            axios.get(`${API}/case-history/check/${client.id}`).catch(() => ({ data: { exists: false, is_complete: false } })),
+            axios.get(`${API}/therapy-consent/check/${client.id}`).catch(() => ({ data: { exists: false, is_signed: false } }))
+          ]);
+          return { 
+            clientId: client.id, 
+            caseHistory: caseRes.data,
+            consent: consentRes.data
+          };
         } catch {
-          return { clientId: client.id, exists: false, is_complete: false };
+          return { clientId: client.id, caseHistory: { exists: false, is_complete: false }, consent: { exists: false, is_signed: false } };
         }
       });
       const statuses = await Promise.all(statusPromises);
-      const statusMap = {};
-      statuses.forEach(s => { statusMap[s.clientId] = s; });
-      setCaseHistoryStatus(statusMap);
+      const caseStatusMap = {};
+      const consentStatusMap = {};
+      statuses.forEach(s => { 
+        caseStatusMap[s.clientId] = s.caseHistory;
+        consentStatusMap[s.clientId] = s.consent;
+      });
+      setCaseHistoryStatus(caseStatusMap);
+      setConsentStatus(consentStatusMap);
     } catch (error) {
       toast.error('Failed to load session notes');
     } finally {
@@ -106,11 +118,15 @@ const SessionNotes = ({ isReadOnly = false }) => {
 
   const checkCaseHistory = async (clientId) => {
     try {
-      const res = await axios.get(`${API}/case-history/check/${clientId}`);
-      setCaseHistoryStatus(prev => ({ ...prev, [clientId]: res.data }));
-      return res.data;
+      const [caseRes, consentRes] = await Promise.all([
+        axios.get(`${API}/case-history/check/${clientId}`),
+        axios.get(`${API}/therapy-consent/check/${clientId}`).catch(() => ({ data: { exists: false, is_signed: false } }))
+      ]);
+      setCaseHistoryStatus(prev => ({ ...prev, [clientId]: caseRes.data }));
+      setConsentStatus(prev => ({ ...prev, [clientId]: consentRes.data }));
+      return { caseHistory: caseRes.data, consent: consentRes.data };
     } catch {
-      return { exists: false, is_complete: false };
+      return { caseHistory: { exists: false, is_complete: false }, consent: { exists: false, is_signed: false } };
     }
   };
 
@@ -121,7 +137,7 @@ const SessionNotes = ({ isReadOnly = false }) => {
   const handleClientSelect = async (clientId) => {
     setNewNote(prev => ({ ...prev, client_id: clientId, appointment_id: '' }));
     
-    // Check case history status for this client
+    // Check case history and consent status for this client
     if (clientId) {
       await checkCaseHistory(clientId);
     }
