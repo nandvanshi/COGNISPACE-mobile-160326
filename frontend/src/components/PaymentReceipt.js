@@ -44,12 +44,8 @@ export const PaymentReceiptView = ({ paymentId, isOpen, onClose }) => {
     }
   };
 
-  const handlePrint = () => {
-    const printContent = receiptRef.current;
-    if (!printContent) return;
-
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(`
+  const generateReceiptHTML = () => {
+    return `
       <!DOCTYPE html>
       <html>
       <head>
@@ -196,16 +192,65 @@ export const PaymentReceiptView = ({ paymentId, isOpen, onClose }) => {
         </div>
       </body>
       </html>
-    `);
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
-    printWindow.close();
+    `;
+  };
+
+  const handlePrint = () => {
+    if (!receipt) return;
+    
+    const receiptHTML = generateReceiptHTML();
+    
+    // Create a hidden iframe for printing
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'absolute';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = 'none';
+    iframe.style.left = '-9999px';
+    document.body.appendChild(iframe);
+    
+    const iframeDoc = iframe.contentWindow || iframe.contentDocument;
+    const doc = iframeDoc.document || iframeDoc;
+    
+    doc.open();
+    doc.write(receiptHTML);
+    doc.close();
+    
+    // Wait for content to load then print
+    iframe.onload = () => {
+      try {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+      } catch (e) {
+        console.error('Print failed:', e);
+        toast.error('Print failed. Please try downloading instead.');
+      }
+      // Remove iframe after printing
+      setTimeout(() => {
+        document.body.removeChild(iframe);
+      }, 1000);
+    };
   };
 
   const handleDownloadPDF = () => {
-    // For now, print to PDF using browser's print dialog
-    handlePrint();
+    if (!receipt) return;
+    
+    const receiptHTML = generateReceiptHTML();
+    
+    // Create a Blob with HTML content
+    const blob = new Blob([receiptHTML], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    
+    // Create download link
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Receipt-${receipt.bill_number}.html`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    toast.success('Receipt downloaded! Open the file and use browser Print → Save as PDF');
   };
 
   if (!isOpen) return null;
