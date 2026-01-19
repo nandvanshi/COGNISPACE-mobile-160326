@@ -535,10 +535,10 @@ Build a secure, therapist-first web application for managing a therapy practice 
 - [ ] Profile photo upload (currently URL-based)
 
 ### P3 - Future Enhancements
-- [ ] Clinical Support: Assessment suggestion engine
-- [ ] Clinical Support: Therapy protocol builder
+- [x] ~~Clinical Support: Assessment suggestion engine~~ (DONE - Phase 18)
+- [x] ~~Clinical Support: Therapy protocol builder~~ (DONE - Phase 18)
 - [ ] Template sharing between therapists
-- [ ] Homework completion tracking
+- [x] ~~Homework completion tracking~~ (DONE - Phase 18 Resource Library)
 - [ ] Audit log viewer for admins
 - [ ] Email notifications for approvals
 
