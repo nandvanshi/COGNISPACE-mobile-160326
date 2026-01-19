@@ -517,6 +517,37 @@ Build a secure, therapist-first web application for managing a therapy practice 
   - Assistant inherits therapist's subscription status
   - Read-only mode applies when therapist subscription expired
 
+### Phase 20: Comprehensive Client Profile View (COMPLETED - Jan 19, 2026)
+- [x] **Single-pane dashboard for each client**:
+  - All client data aggregated in one modal view
+  - Accessible from "View Profile" button on client cards in Client Management
+  - Replaces multiple navigations with single comprehensive view
+- [x] **Client Profile Modal Components**:
+  - **Header Section**: Client avatar, name, client ID, phone, email
+  - **Status Badges**: "Consent Signed/Pending", "Case History Complete/Pending"
+  - **Quick Stats Row**: Sessions Done, Upcoming, Session Notes, Assessments, Total Paid (₹)
+- [x] **Tabbed Navigation with 5 tabs**:
+  - **Overview Tab**: Next Appointment, Last Session, Case History summary, Therapy Consent summary, Recent Session Notes, Pending Items
+  - **Sessions Tab**: Completed/Upcoming/Cancelled stats, All Appointments list sorted by date
+  - **Case History Tab**: View/Edit case history, shows all 11 sections if available, Create button if not
+  - **Assessments Tab**: Completed/Pending counts, Assessment list with scores
+  - **Payments Tab**: Total Paid/Pending/Transaction counts, Payment history list
+- [x] **Backend Endpoint Updates**:
+  - `GET /api/appointments?client_id={id}` - Filter appointments by client (NEW)
+  - `GET /api/assessments?client_id={id}` - Filter assessments by client (ADDED)
+  - `GET /api/homework?client_id={id}` - Filter homework by client (ADDED)
+  - All endpoints now support client_id query parameter for therapists
+- [x] **Integration with Existing Components**:
+  - ClientProfileView component opens CaseHistoryWizard dialog
+  - ClientProfileView component opens TherapyConsent dialog
+  - Data refresh callback when case history or consent changes
+- [x] **Security**:
+  - Read-only mode supported for assistants
+  - Subscription status respected (isReadOnly prop)
+  - Therapists can only view their assigned clients
+- [x] **Testing**: 17/17 backend tests passed (100%)
+  - /app/tests/test_client_profile_view.py - Comprehensive endpoint tests
+
 ---
 
 ## Technical Architecture
