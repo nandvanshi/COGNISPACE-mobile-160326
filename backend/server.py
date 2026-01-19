@@ -4044,15 +4044,19 @@ async def ai_generate_homework(request: AIHomeworkRequest, current_user: dict = 
     """AI-powered homework/worksheet generation"""
     therapist_id = current_user["id"]
     
-    # Get client info
-    client = await db.client_profiles.find_one(
-        {"id": request.client_id, "therapist_id": therapist_id},
+    # Get client info - client_id is the user_id from users collection
+    client_profile = await db.client_profiles.find_one(
+        {"user_id": request.client_id, "therapist_id": therapist_id},
         {"_id": 0}
     )
-    if not client:
+    if not client_profile:
         raise HTTPException(status_code=404, detail="Client not found")
     
-    context = f"Client: {client.get('full_name', 'Unknown')}\n"
+    # Get client user info for name
+    client_user = await db.users.find_one({"id": request.client_id}, {"_id": 0, "full_name": 1})
+    client_name = client_user.get("full_name", "Unknown") if client_user else "Unknown"
+    
+    context = f"Client: {client_name}\n"
     
     # Get recent session notes for context
     recent_note = await db.session_notes.find_one(
