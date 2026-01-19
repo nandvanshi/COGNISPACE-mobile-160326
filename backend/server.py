@@ -2530,6 +2530,64 @@ async def update_client_photo(client_id: str, photo_url: str, current_user: dict
 
 # ============= APPOINTMENT ENDPOINTS =============
 
+class ClientAppointmentRequest(BaseModel):
+    start_time: datetime
+    end_time: datetime
+    notes: Optional[str] = None
+
+@api_router.post("/appointments/client-request", response_model=Appointment)
+async def client_request_appointment(appt_data: ClientAppointmentRequest, current_user: dict = Depends(get_current_user)):
+    """
+    Client requests an appointment with their assigned therapist.
+    Only clients can use this endpoint.
+    """
+    if current_user["role"] != "client":
+        raise HTTPException(status_code=403, detail="Only clients can request appointments via this endpoint")
+    
+    # Get client's assigned therapist
+    therapist_id = current_user.get("therapist_id")
+    if not therapist_id:
+        raise HTTPException(status_code=400, detail="No therapist assigned to your account")
+    
+    # Validate times
+    if appt_data.start_time >= appt_data.end_time:
+        raise HTTPException(status_code=400, detail="End time must be after start time")
+    
+    # Check for double-booking
+    existing = await db.appointments.find_one({
+        "therapist_id": therapist_id,
+        "status": {"$ne": "cancelled"},
+        "$or": [
+            {"start_time": {"$lt": appt_data.end_time.isoformat()}, "end_time": {"$gt": appt_data.start_time.isoformat()}}
+        ]
+    })
+    
+    if existing:
+        raise HTTPException(status_code=400, detail="Time slot no longer available. Please choose a different time.")
+    
+    appointment_id = str(uuid.uuid4())
+    appointment_doc = {
+        "id": appointment_id,
+        "therapist_id": therapist_id,
+        "client_id": current_user["id"],
+        "client_name": current_user["full_name"],
+        "start_time": appt_data.start_time.isoformat(),
+        "end_time": appt_data.end_time.isoformat(),
+        "notes": appt_data.notes,
+        "status": "scheduled",
+        "actual_start_time": None,
+        "actual_end_time": None,
+        "actual_duration_minutes": None,
+        "checked_in_by": None,
+        "checked_out_by": None,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.appointments.insert_one(appointment_doc)
+    await log_audit(current_user["id"], "client", "create", "appointment", appointment_id, {"booked_by_client": True})
+    
+    return Appointment(**{k: datetime.fromisoformat(v) if k in ["start_time", "end_time", "created_at"] and v else v for k, v in appointment_doc.items()})
+
 @api_router.post("/appointments", response_model=Appointment)
 async def create_appointment(appt_data: AppointmentCreate, current_user: dict = Depends(require_active_therapist_or_assistant)):
     """Create a new appointment - assistants can create appointments for their linked therapist"""
