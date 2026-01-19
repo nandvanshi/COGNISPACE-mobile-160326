@@ -12,11 +12,12 @@ import { Textarea } from '../components/ui/textarea';
 import { 
   LogOut, Calendar, MessageSquare, ClipboardCheck, BookCheck, 
   FileCheck, Pen, Check, AlertCircle, Loader2, Shield, 
-  CalendarPlus, Receipt, CreditCard, Clock, ChevronRight
+  CalendarPlus, Receipt, CreditCard, Clock, ChevronRight, Settings as SettingsIcon
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDate, formatTime, formatCurrency } from '../utils/formatUtils';
 import { PaymentReceiptView } from '../components/PaymentReceipt';
+import Settings from '../components/Settings';
 
 const ClientDashboard = () => {
   const { user, logout } = useAuth();
