@@ -637,6 +637,74 @@ class CaseHistory(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+# ============= THERAPY CONSENT MODELS =============
+
+class TherapyConsentCreate(BaseModel):
+    """Create therapy consent"""
+    client_id: str
+    consent_text_version: str = "1.0"
+
+class TherapyConsent(BaseModel):
+    """Therapy Consent with Signature"""
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    client_id: str
+    therapist_id: str
+    therapist_name: str
+    client_name: str
+    consent_text: str
+    consent_text_version: str
+    signature_method: Optional[str] = None  # "digital" or "paper"
+    signed_at: Optional[datetime] = None
+    is_signed: bool = False
+    case_history_id: str
+    created_at: datetime
+    updated_at: datetime
+
+# Standard consent text template
+CONSENT_TEXT_TEMPLATE = """
+INFORMED CONSENT FOR THERAPY SERVICES
+
+Client Name: {client_name}
+Therapist Name: {therapist_name}
+Date: {date}
+
+1. NATURE OF THERAPY
+I understand that therapy involves a collaborative relationship between therapist and client. The therapist will use their professional judgment to employ therapeutic techniques and interventions deemed appropriate for my situation.
+
+2. CONFIDENTIALITY
+I understand that all information shared during therapy sessions is confidential, with the following exceptions:
+• If there is a serious threat of harm to myself or others
+• If there is suspected abuse or neglect of a child, elderly, or dependent adult
+• If required by court order or legal proceedings
+• If I provide written authorization to release information
+
+3. RISKS AND BENEFITS
+I understand that therapy may involve discussing difficult emotions and experiences. While therapy aims to improve well-being, there is no guarantee of specific outcomes.
+
+4. FEES AND CANCELLATION
+I understand the fee structure and agree to provide 24 hours notice for cancellations. Missed appointments without notice may be charged.
+
+5. EMERGENCY CONTACT
+I understand that my therapist is not available for crisis situations outside of scheduled sessions. In case of emergency, I will contact emergency services (112) or visit the nearest hospital.
+
+6. TREATMENT PLAN
+I have been informed about my provisional formulation and initial therapy plan as documented in my Case History. I understand that this plan may be modified as therapy progresses.
+
+7. CLIENT RIGHTS
+I understand that I have the right to:
+• Ask questions about the therapy process
+• Refuse any treatment I am not comfortable with
+• Terminate therapy at any time
+• Request a referral to another professional
+
+8. CONSENT
+By signing below, I acknowledge that I have read and understood this consent form. I have had the opportunity to ask questions and all my questions have been answered satisfactorily. I voluntarily consent to participate in therapy services.
+
+Signature: ____________________
+Date: ____________________
+"""
+
 # Payment Models
 class PaymentCreate(BaseModel):
     client_id: str
