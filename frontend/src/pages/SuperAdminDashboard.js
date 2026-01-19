@@ -4,18 +4,20 @@ import axios from 'axios';
 import { useAuth, API } from '../App';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
-import { LogOut, Users, UserCheck, UserCog, CreditCard, Tag } from 'lucide-react';
+import { LogOut, Users, UserCheck, UserCog, CreditCard, Tag, Settings as SettingsIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import TherapistApplications from '../components/admin/TherapistApplications';
 import TherapistManagement from '../components/admin/TherapistManagement';
 import ClientManagement from '../components/admin/ClientManagement';
 import SubscriptionManagement from '../components/admin/SubscriptionManagement';
 import CouponManagement from '../components/admin/CouponManagement';
+import Settings from '../components/Settings';
 
 const SuperAdminDashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [currentView, setCurrentView] = useState('applications');
+  const [showSettings, setShowSettings] = useState(false);
 
   const navItems = [
     { id: 'applications', label: 'Therapist Applications', icon: UserCheck },
