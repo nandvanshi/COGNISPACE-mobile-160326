@@ -1028,6 +1028,399 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
           isReadOnly={isReadOnly}
           userRole="therapist"
         />
+
+        {/* View Session Note Dialog */}
+        <Dialog open={showViewNoteDialog} onOpenChange={setShowViewNoteDialog}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <FileText size={20} /> Session Note - {selectedNote?.template_type}
+              </DialogTitle>
+            </DialogHeader>
+            {selectedNote && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <span>Created: {formatDate(selectedNote.created_at)}</span>
+                  {getLinkedAppointment(selectedNote) && (
+                    <span className="flex items-center gap-1">
+                      <LinkIcon size={12} /> Linked: {formatDate(getLinkedAppointment(selectedNote).start_time)}
+                    </span>
+                  )}
+                </div>
+                
+                {selectedNote.template_type === 'SOAP' ? (
+                  <>
+                    {selectedNote.subjective && (
+                      <div className="p-3 bg-blue-50 rounded-lg">
+                        <h4 className="font-semibold text-blue-800 mb-1">Subjective</h4>
+                        <p className="text-sm whitespace-pre-wrap">{selectedNote.subjective}</p>
+                      </div>
+                    )}
+                    {selectedNote.objective && (
+                      <div className="p-3 bg-green-50 rounded-lg">
+                        <h4 className="font-semibold text-green-800 mb-1">Objective</h4>
+                        <p className="text-sm whitespace-pre-wrap">{selectedNote.objective}</p>
+                      </div>
+                    )}
+                    {selectedNote.assessment && (
+                      <div className="p-3 bg-yellow-50 rounded-lg">
+                        <h4 className="font-semibold text-yellow-800 mb-1">Assessment</h4>
+                        <p className="text-sm whitespace-pre-wrap">{selectedNote.assessment}</p>
+                      </div>
+                    )}
+                    {selectedNote.plan && (
+                      <div className="p-3 bg-purple-50 rounded-lg">
+                        <h4 className="font-semibold text-purple-800 mb-1">Plan</h4>
+                        <p className="text-sm whitespace-pre-wrap">{selectedNote.plan}</p>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {selectedNote.data && (
+                      <div className="p-3 bg-teal-50 rounded-lg">
+                        <h4 className="font-semibold text-teal-800 mb-1">Data</h4>
+                        <p className="text-sm whitespace-pre-wrap">{selectedNote.data}</p>
+                      </div>
+                    )}
+                    {selectedNote.assessment && (
+                      <div className="p-3 bg-yellow-50 rounded-lg">
+                        <h4 className="font-semibold text-yellow-800 mb-1">Assessment</h4>
+                        <p className="text-sm whitespace-pre-wrap">{selectedNote.assessment}</p>
+                      </div>
+                    )}
+                    {selectedNote.plan && (
+                      <div className="p-3 bg-purple-50 rounded-lg">
+                        <h4 className="font-semibold text-purple-800 mb-1">Plan</h4>
+                        <p className="text-sm whitespace-pre-wrap">{selectedNote.plan}</p>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                <div className="flex gap-2 pt-4 border-t">
+                  {!isReadOnly && (
+                    <Button onClick={() => {
+                      setShowViewNoteDialog(false);
+                      handleEditNoteClick(selectedNote);
+                    }}>
+                      <Edit size={14} className="mr-1" /> Edit Note
+                    </Button>
+                  )}
+                  <Button variant="outline" onClick={() => setShowViewNoteDialog(false)}>
+                    Close
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Session Note Dialog */}
+        <Dialog open={showEditNoteDialog} onOpenChange={setShowEditNoteDialog}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Edit size={20} /> Edit Session Note
+              </DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleEditNoteSubmit} className="space-y-4">
+              <div>
+                <Label>Note Type</Label>
+                <Select value={editingNote.template_type} onValueChange={(v) => setEditingNote({ ...editingNote, template_type: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="SOAP">SOAP Note</SelectItem>
+                    <SelectItem value="DAP">DAP Note</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {editingNote.template_type === 'SOAP' ? (
+                <>
+                  <div>
+                    <Label className="text-blue-700">Subjective</Label>
+                    <Textarea
+                      value={editingNote.subjective}
+                      onChange={(e) => setEditingNote({ ...editingNote, subjective: e.target.value })}
+                      placeholder="Client's reported symptoms, concerns, experiences..."
+                      rows={3}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-green-700">Objective</Label>
+                    <Textarea
+                      value={editingNote.objective}
+                      onChange={(e) => setEditingNote({ ...editingNote, objective: e.target.value })}
+                      placeholder="Observable behaviors, mental status, appearance..."
+                      rows={3}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-yellow-700">Assessment</Label>
+                    <Textarea
+                      value={editingNote.assessment}
+                      onChange={(e) => setEditingNote({ ...editingNote, assessment: e.target.value })}
+                      placeholder="Clinical impressions, progress, interpretations..."
+                      rows={3}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-purple-700">Plan</Label>
+                    <Textarea
+                      value={editingNote.plan}
+                      onChange={(e) => setEditingNote({ ...editingNote, plan: e.target.value })}
+                      placeholder="Treatment plan, interventions, homework, next steps..."
+                      rows={3}
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <Label className="text-teal-700">Data</Label>
+                    <Textarea
+                      value={editingNote.data}
+                      onChange={(e) => setEditingNote({ ...editingNote, data: e.target.value })}
+                      placeholder="Observations and information gathered..."
+                      rows={3}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-yellow-700">Assessment</Label>
+                    <Textarea
+                      value={editingNote.assessment}
+                      onChange={(e) => setEditingNote({ ...editingNote, assessment: e.target.value })}
+                      placeholder="Clinical impressions and interpretations..."
+                      rows={3}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-purple-700">Plan</Label>
+                    <Textarea
+                      value={editingNote.plan}
+                      onChange={(e) => setEditingNote({ ...editingNote, plan: e.target.value })}
+                      placeholder="Treatment plan and next steps..."
+                      rows={3}
+                    />
+                  </div>
+                </>
+              )}
+
+              <div className="flex gap-2 pt-2">
+                <Button type="submit">Save Changes</Button>
+                <Button type="button" variant="outline" onClick={() => setShowEditNoteDialog(false)}>Cancel</Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Create Session Note Dialog */}
+        <Dialog open={showCreateNoteDialog} onOpenChange={setShowCreateNoteDialog}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <PenSquare size={20} /> New Session Note for {client.full_name}
+              </DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleCreateNoteSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Note Type</Label>
+                  <Select value={newNote.template_type} onValueChange={(v) => setNewNote({ ...newNote, template_type: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="SOAP">SOAP Note</SelectItem>
+                      <SelectItem value="DAP">DAP Note</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Link to Appointment</Label>
+                  <Select value={newNote.appointment_id} onValueChange={(v) => setNewNote({ ...newNote, appointment_id: v })}>
+                    <SelectTrigger><SelectValue placeholder="Select appointment..." /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">No appointment</SelectItem>
+                      {profileData.appointments
+                        .filter(a => a.status !== 'cancelled')
+                        .sort((a, b) => new Date(b.start_time) - new Date(a.start_time))
+                        .slice(0, 10)
+                        .map(appt => (
+                          <SelectItem key={appt.id} value={appt.id}>
+                            {formatDate(appt.start_time)} - {formatTime(appt.start_time)} ({appt.status})
+                          </SelectItem>
+                        ))
+                      }
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {newNote.template_type === 'SOAP' ? (
+                <>
+                  <div>
+                    <Label className="text-blue-700">Subjective *</Label>
+                    <Textarea
+                      value={newNote.subjective}
+                      onChange={(e) => setNewNote({ ...newNote, subjective: e.target.value })}
+                      placeholder="Client's reported symptoms, concerns, experiences..."
+                      rows={3}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-green-700">Objective</Label>
+                    <Textarea
+                      value={newNote.objective}
+                      onChange={(e) => setNewNote({ ...newNote, objective: e.target.value })}
+                      placeholder="Observable behaviors, mental status, appearance..."
+                      rows={3}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-yellow-700">Assessment *</Label>
+                    <Textarea
+                      value={newNote.assessment}
+                      onChange={(e) => setNewNote({ ...newNote, assessment: e.target.value })}
+                      placeholder="Clinical impressions, progress, interpretations..."
+                      rows={3}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-purple-700">Plan *</Label>
+                    <Textarea
+                      value={newNote.plan}
+                      onChange={(e) => setNewNote({ ...newNote, plan: e.target.value })}
+                      placeholder="Treatment plan, interventions, homework, next steps..."
+                      rows={3}
+                      required
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <Label className="text-teal-700">Data *</Label>
+                    <Textarea
+                      value={newNote.data}
+                      onChange={(e) => setNewNote({ ...newNote, data: e.target.value })}
+                      placeholder="Observations and information gathered..."
+                      rows={3}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-yellow-700">Assessment *</Label>
+                    <Textarea
+                      value={newNote.assessment}
+                      onChange={(e) => setNewNote({ ...newNote, assessment: e.target.value })}
+                      placeholder="Clinical impressions and interpretations..."
+                      rows={3}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-purple-700">Plan *</Label>
+                    <Textarea
+                      value={newNote.plan}
+                      onChange={(e) => setNewNote({ ...newNote, plan: e.target.value })}
+                      placeholder="Treatment plan and next steps..."
+                      rows={3}
+                      required
+                    />
+                  </div>
+                </>
+              )}
+
+              <div className="flex gap-2 pt-2">
+                <Button type="submit">Create Session Note</Button>
+                <Button type="button" variant="outline" onClick={() => setShowCreateNoteDialog(false)}>Cancel</Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Book Appointment Dialog */}
+        <Dialog open={showBookAppointmentDialog} onOpenChange={setShowBookAppointmentDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <CalendarPlus size={20} /> Book Appointment for {client.full_name}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Select Date</Label>
+                <Input
+                  type="date"
+                  value={selectedDate}
+                  onChange={handleDateChange}
+                  min={new Date().toISOString().split('T')[0]}
+                  className="mt-1"
+                />
+              </div>
+
+              {selectedDate && (
+                <div>
+                  <Label className="mb-2 block">Available Time Slots</Label>
+                  {loadingSlots ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="animate-spin text-primary" size={24} />
+                    </div>
+                  ) : availableSlots.length > 0 ? (
+                    <div className="grid grid-cols-3 gap-2 max-h-[200px] overflow-y-auto">
+                      {availableSlots.map((slot, idx) => (
+                        <Button
+                          key={idx}
+                          type="button"
+                          variant={selectedSlot?.start === slot.start ? 'default' : 'outline'}
+                          size="sm"
+                          className="text-xs"
+                          onClick={() => handleSlotSelect(slot)}
+                        >
+                          {formatTime(slot.start)}
+                        </Button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground text-sm text-center py-4">No available slots for this date</p>
+                  )}
+                </div>
+              )}
+
+              {selectedSlot && (
+                <div className="p-3 bg-primary/10 rounded-lg text-sm">
+                  <p className="font-medium text-primary">Selected: {formatTime(selectedSlot.start)} - {formatTime(selectedSlot.end)}</p>
+                </div>
+              )}
+
+              <div>
+                <Label>Notes (optional)</Label>
+                <Textarea
+                  value={appointmentNotes}
+                  onChange={(e) => setAppointmentNotes(e.target.value)}
+                  placeholder="Session purpose, reminders..."
+                  rows={2}
+                  className="mt-1"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <Button 
+                  onClick={handleCreateAppointment} 
+                  disabled={!selectedSlot}
+                  className="flex-1"
+                >
+                  Book Appointment
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setShowBookAppointmentDialog(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </DialogContent>
     </Dialog>
   );
