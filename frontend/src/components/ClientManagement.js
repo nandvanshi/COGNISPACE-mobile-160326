@@ -8,7 +8,8 @@ import { Label } from './ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Textarea } from './ui/textarea';
 import { toast } from 'sonner';
-import { UserPlus, Search, Key, Camera, Edit, User, Phone, Mail, MapPin, AlertCircle } from 'lucide-react';
+import { UserPlus, Search, Key, Camera, Edit, User, Phone, Mail, MapPin, AlertCircle, Eye } from 'lucide-react';
+import ClientProfileView from './ClientProfileView';
 
 const ClientManagement = ({ isReadOnly = false, isAssistant = false }) => {
   const [clients, setClients] = useState([]);
