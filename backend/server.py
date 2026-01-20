@@ -5994,6 +5994,10 @@ async def assign_homework(hw_data: HomeworkCreate, current_user: dict = Depends(
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")
     
+    # Validate priority
+    if hw_data.priority not in ["low", "medium", "high"]:
+        raise HTTPException(status_code=400, detail="Priority must be low, medium, or high")
+    
     hw_id = str(uuid.uuid4())
     hw_doc = {
         "id": hw_id,
@@ -6003,6 +6007,7 @@ async def assign_homework(hw_data: HomeworkCreate, current_user: dict = Depends(
         "title": hw_data.title,
         "description": hw_data.description,
         "due_date": hw_data.due_date.isoformat() if hw_data.due_date else None,
+        "priority": hw_data.priority,
         "status": "assigned",
         "client_notes": None,
         "completed_at": None,
