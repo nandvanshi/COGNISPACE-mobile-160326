@@ -259,7 +259,7 @@ const TherapistDashboard = () => {
             />
           )}
           {currentView === 'clients' && <ClientManagement isReadOnly={isReadOnly} />}
-          {currentView === 'appointments' && <AppointmentCalendar isReadOnly={isReadOnly} />}
+          {currentView === 'schedule' && <TherapistSchedule isReadOnly={isReadOnly} />}
           {currentView === 'availability' && <AvailabilitySettings isReadOnly={isReadOnly} />}
           {currentView === 'recurring' && <RecurringAppointments isReadOnly={isReadOnly} />}
           {currentView === 'notes' && <SessionNotes isReadOnly={isReadOnly} />}
