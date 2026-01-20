@@ -142,10 +142,68 @@ def parse_datetime(value):
 
 # ============= ASSESSMENT ENDPOINTS =============
 
+# IMPORTANT: Static routes (/library, /custom) must come BEFORE dynamic routes (/{assessment_id})
+
 @router.get("/library")
 async def get_assessment_library(current_user: dict = Depends(get_current_user)):
     """Get available assessment types"""
     return ASSESSMENT_LIBRARY
+
+
+@router.get("/custom")
+async def get_custom_assessments(current_user: dict = Depends(require_therapist)):
+    """Get therapist's custom assessments"""
+    custom = await db.custom_assessments.find(
+        {"therapist_id": current_user["id"]},
+        {"_id": 0}
+    ).to_list(100)
+    
+    return custom
+
+
+@router.post("/custom")
+async def create_custom_assessment(data: dict, current_user: dict = Depends(require_active_therapist)):
+    """Create a custom assessment"""
+    assessment_id = str(uuid.uuid4())
+    assessment_doc = {
+        "id": assessment_id,
+        "therapist_id": current_user["id"],
+        "name": data.get("name"),
+        "description": data.get("description"),
+        "questions": data.get("questions", []),
+        "is_shared": data.get("is_shared", False),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.custom_assessments.insert_one(assessment_doc)
+    await log_audit(current_user["id"], "therapist", "create", "custom_assessment", assessment_id)
+    
+    return assessment_doc
+
+
+@router.delete("/custom/{assessment_id}")
+async def delete_custom_assessment(assessment_id: str, current_user: dict = Depends(require_active_therapist)):
+    """Delete a custom assessment"""
+    result = await db.custom_assessments.delete_one({
+        "id": assessment_id,
+        "therapist_id": current_user["id"]
+    })
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Custom assessment not found")
+    
+    return {"message": "Custom assessment deleted"}
+
+
+@router.get("/client/{client_id}/history")
+async def get_client_assessment_history(client_id: str, current_user: dict = Depends(require_therapist)):
+    """Get assessment history for a client"""
+    assessments = await db.assessments.find(
+        {"client_id": client_id, "therapist_id": current_user["id"], "status": "completed"},
+        {"_id": 0}
+    ).sort("completed_at", -1).to_list(100)
+    
+    return assessments
 
 
 @router.post("", response_model=AssignedAssessment)
