@@ -36,7 +36,7 @@ const TherapistDashboard = () => {
   const [hasAvailability, setHasAvailability] = useState(true);
   
   // Navigation context for passing data between views
-  const [navContext, setNavContext] = useState({ selectedClientId: null, clientFilter: null });
+  const [navContext, setNavContext] = useState({ selectedClientId: null, clientFilter: null, filterData: null });
   
   // Cash Settlement state
   const [pendingSettlements, setPendingSettlements] = useState([]);
@@ -48,7 +48,11 @@ const TherapistDashboard = () => {
 
   // Handle navigation with optional context
   const handleNavigation = (view, context = {}) => {
-    setNavContext({ selectedClientId: context.clientId || null, clientFilter: context.filter || null });
+    setNavContext({ 
+      selectedClientId: context.clientId || null, 
+      clientFilter: context.filter || null,
+      filterData: context.inactiveClientIds || null
+    });
     setCurrentView(view);
   };
 
@@ -484,7 +488,8 @@ const TherapistDashboard = () => {
               isReadOnly={isReadOnly} 
               initialClientId={navContext.selectedClientId}
               initialFilter={navContext.clientFilter}
-              onClearContext={() => setNavContext({ selectedClientId: null, clientFilter: null })}
+              filterData={navContext.filterData}
+              onClearContext={() => setNavContext({ selectedClientId: null, clientFilter: null, filterData: null })}
             />
           )}
           {currentView === 'schedule' && <TherapistSchedule isReadOnly={isReadOnly} />}
