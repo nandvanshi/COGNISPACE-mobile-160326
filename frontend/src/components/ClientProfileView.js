@@ -1237,13 +1237,10 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
           </div>
         )}
 
-        {/* Case History Dialog */}
-        <Dialog open={showCaseHistoryDialog} onOpenChange={setShowCaseHistoryDialog}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Case History - {client.full_name}</DialogTitle>
-            </DialogHeader>
-            <CaseHistoryWizard
+        {/* Case History Full Screen */}
+        {showCaseHistoryDialog && (
+          <div className="fixed inset-0 z-50 bg-background">
+            <CaseHistoryForm
               clientId={client.id}
               clientName={client.full_name}
               isReadOnly={isReadOnly}
@@ -1254,8 +1251,8 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
               }}
               onClose={() => setShowCaseHistoryDialog(false)}
             />
-          </DialogContent>
-        </Dialog>
+          </div>
+        )}
 
         {/* Consent Dialog */}
         <TherapyConsent
