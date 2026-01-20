@@ -1224,3 +1224,47 @@ Build a secure, therapist-first web application for managing a therapy practice 
 **Next Steps:**
 - Step 3: Move remaining admin routes (subscriptions, support tickets, assistants)
 - Step 4: Client & Appointment routes
+
+**Step 3: Support, Subscriptions & Assistants (COMPLETED)**
+- Created `/app/backend/routes/subscriptions.py` (~532 lines)
+  - Support Ticket CRUD (create, list, get, reply, update status)
+  - Admin dashboard stats
+  - Subscription plan management (CRUD)
+  - Therapist subscription assignment, extension, trial
+  - Coupon management
+- Created `/app/backend/routes/assistants.py` (~301 lines)
+  - Assistant CRUD (create, list, get, update, delete)
+  - Suspend/activate/reset-password
+  - Admin assistant management
+- **Lines reduced**: 6177 → 5449 (~728 lines moved)
+- **Testing**: All moved endpoints verified
+
+**Current Status:**
+- server.py: 5449 lines (from 6919, -1470 total)
+- routes/auth.py: 294 lines
+- routes/admin.py: 526 lines
+- routes/assistants.py: 301 lines
+- routes/subscriptions.py: 532 lines
+- Total in routes: 1653 lines
+
+**Remaining in server.py:**
+- Models (~900 lines)
+- Utility functions (~120 lines)
+- Dependency functions (~100 lines)
+- Assistant Dashboard endpoints (~200 lines)
+- Cash Settlement endpoints (~360 lines)
+- Client endpoints (~280 lines)
+- Appointment endpoints (~430 lines)
+- Availability/Blocked time (~200 lines)
+- Case History endpoints (~340 lines)
+- Consent endpoints (~150 lines)
+- Session Notes endpoints (~160 lines)
+- Note Templates (~95 lines)
+- Recurring Appointments (~175 lines)
+- Messaging (~230 lines)
+- Assessments (~700 lines)
+- Payments (~350 lines)
+- Homework (~120 lines)
+- Therapist Profile (~180 lines)
+- Protocols (~200 lines)
+- AI Clinical (~230 lines)
