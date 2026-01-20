@@ -4691,6 +4691,9 @@ async def get_custom_assessments(current_user: dict = Depends(require_therapist)
 
 @api_router.post("/assessments", response_model=Assessment)
 async def assign_assessment(assessment_data: AssessmentCreate, current_user: dict = Depends(require_active_therapist)):
+    """Assign assessment to client"""
+    # Check feature access
+    await check_feature_enabled(current_user["id"], "assessments")
     
     client = await db.users.find_one({"id": assessment_data.client_id}, {"_id": 0})
     if not client:
