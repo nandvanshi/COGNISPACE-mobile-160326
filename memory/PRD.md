@@ -1176,7 +1176,21 @@ Build a secure, therapist-first web application for managing a therapy practice 
   - Test file: /app/tests/test_homework.py
   - Report: /app/test_reports/iteration_27.json
 
-### Phase 35: Server.py Refactoring - Step 1 (IN PROGRESS - Jan 20, 2026)
+### Phase 35: Assistant Dashboard Crash Fix (COMPLETED - Jan 21, 2026)
+- [x] **Bug Fixed**: Assistant Dashboard crashed on login with TypeError
+  - Root cause: Frontend component accessing potentially null/undefined API response data
+  - Properties affected: `inactive_clients`, `payments_summary`, `needs_attention`, `todays_appointments`
+- [x] **Solution Applied** (AssistantDashboard.js):
+  - Added comprehensive optional chaining (`?.`) on all data access points
+  - Created safe wrapper objects: `safeNeedsAttention`, `safePaymentsSummary`
+  - Added `inactive_clients_count` to destructuring with default value 0
+  - All array properties now have `|| []` fallbacks
+  - All nested property access uses `?.` operator
+- [x] **Testing**: Screenshot verification - Dashboard loads correctly for assistant user
+  - Login: `support@mindlabs.co.in` / `Abcd@1234`
+  - All sections render without crash: Call Reminders, Needs Attention, Inactive Clients, Payments Summary
+
+### Phase 36: Server.py Refactoring - Step 1 (IN PROGRESS - Jan 20, 2026)
 **Goal**: Break monolithic server.py (6919 lines) into modular route files
 
 **Step 1: Auth Routes (COMPLETED)**
