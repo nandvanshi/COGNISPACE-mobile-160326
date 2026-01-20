@@ -5479,6 +5479,9 @@ async def get_ai_chat(session_id: str, system_message: str):
 @api_router.post("/ai/suggest-assessments", response_model=AIAssessmentSuggestionResponse)
 async def ai_suggest_assessments(request: AIAssessmentSuggestionRequest, current_user: dict = Depends(require_active_therapist)):
     """AI-powered assessment suggestion based on client data and/or therapist query"""
+    # Check feature access
+    await check_feature_enabled(current_user["id"], "ai_clinical")
+    
     therapist_id = current_user["id"]
     data_sources = []
     client_context = ""
