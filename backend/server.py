@@ -82,6 +82,7 @@ api_router.include_router(sessions_router)
 api_router.include_router(assessments_router)
 api_router.include_router(clinical_router)
 api_router.include_router(assistant_dashboard_router)
+api_router.include_router(recurring_router)
 
 # ============= MODELS =============
 
