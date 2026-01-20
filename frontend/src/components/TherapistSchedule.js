@@ -357,6 +357,14 @@ const TherapistSchedule = ({ isReadOnly = false, isAssistant = false }) => {
       toast.error('Please select a client');
       return;
     }
+    
+    // Validate slot dates
+    if (!selectedSlot.startDate || !selectedSlot.endDate ||
+        !(selectedSlot.startDate instanceof Date) || !(selectedSlot.endDate instanceof Date) ||
+        isNaN(selectedSlot.startDate.getTime()) || isNaN(selectedSlot.endDate.getTime())) {
+      toast.error('Invalid time slot selected');
+      return;
+    }
 
     try {
       await axios.post(`${API}/appointments`, {
