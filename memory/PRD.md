@@ -893,12 +893,15 @@ Build a secure, therapist-first web application for managing a therapy practice 
 ## Backlog
 
 ### P1 - High Priority
+- [ ] Refactor `server.py` into modular structure (routes, models, services)
+- [ ] Global Standards Verification (IST timezone, DD/MM/YYYY dates, ₹ currency across app)
 - [ ] Coupon Code management validation and testing
-- [ ] Payment tracking for therapists
 
 ### P2 - Medium Priority  
-- [ ] Assessment result visualization
+- [x] ~~Assessment result visualization~~ (DONE - Phase 26)
 - [ ] Profile photo upload (currently URL-based)
+- [ ] AI-powered SOAP/DAP note generation from session transcripts
+- [ ] Case History download/print functionality
 
 ### P3 - Future Enhancements
 - [x] ~~Clinical Support: Assessment suggestion engine~~ (DONE - Phase 18)
@@ -907,6 +910,8 @@ Build a secure, therapist-first web application for managing a therapy practice 
 - [x] ~~Homework completion tracking~~ (DONE - Phase 18 Resource Library)
 - [ ] Audit log viewer for admins
 - [ ] Email notifications for approvals
+- [ ] AI usage tracking/rate limiting
+- [ ] Assessment trends and progress tracking over time
 
 ---
 
