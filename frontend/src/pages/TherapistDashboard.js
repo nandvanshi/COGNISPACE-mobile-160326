@@ -483,6 +483,143 @@ const TherapistDashboard = () => {
       </main>
 
       <Settings isOpen={showSettings} onClose={() => setShowSettings(false)} />
+
+      {/* Confirm Settlement Dialog */}
+      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="text-green-600" size={22} />
+              Confirm Cash Receipt
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedSettlement && (
+            <div className="space-y-4 pt-2">
+              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-sm text-green-700 mb-1">Cash Amount Received</p>
+                <p className="text-2xl font-bold text-green-800">
+                  {formatCurrency(selectedSettlement.cash_amount)}
+                </p>
+                <p className="text-xs text-green-600 mt-2">
+                  From: {selectedSettlement.assistant_name} • Date: {selectedSettlement.date}
+                </p>
+                {selectedSettlement.handover_note && (
+                  <p className="text-xs text-green-600 mt-1 italic">
+                    Note: "{selectedSettlement.handover_note}"
+                  </p>
+                )}
+              </div>
+
+              <div className="p-3 bg-muted/50 rounded-lg text-sm text-muted-foreground">
+                <div className="flex items-start gap-2">
+                  <Lock size={16} className="flex-shrink-0 mt-0.5" />
+                  <p>Confirming will <strong>lock this settlement record</strong>. This action cannot be undone.</p>
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowConfirmDialog(false)}
+                  className="flex-1"
+                  disabled={processingSettlement}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleConfirmSettlement}
+                  className="flex-1 bg-green-600 hover:bg-green-700 gap-2"
+                  disabled={processingSettlement}
+                  data-testid="confirm-receipt-final-btn"
+                >
+                  {processingSettlement ? (
+                    <>
+                      <RefreshCw size={16} className="animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 size={16} />
+                      Confirm & Lock
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Dispute Settlement Dialog */}
+      <Dialog open={showDisputeDialog} onOpenChange={setShowDisputeDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <XCircle className="text-red-600" size={22} />
+              Report Issue
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedSettlement && (
+            <div className="space-y-4 pt-2">
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-700 mb-1">Reported Amount</p>
+                <p className="text-2xl font-bold text-red-800">
+                  {formatCurrency(selectedSettlement.cash_amount)}
+                </p>
+                <p className="text-xs text-red-600 mt-2">
+                  From: {selectedSettlement.assistant_name}
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor="dispute-reason" className="text-red-700">Reason for Dispute *</Label>
+                <Textarea
+                  id="dispute-reason"
+                  placeholder="Please describe the issue (e.g., amount mismatch, cash not received)..."
+                  value={disputeReason}
+                  onChange={(e) => setDisputeReason(e.target.value)}
+                  className="mt-1 border-red-200 focus:border-red-400"
+                  rows={3}
+                  required
+                />
+                <p className="text-xs text-muted-foreground mt-1">Minimum 5 characters required</p>
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowDisputeDialog(false)}
+                  className="flex-1"
+                  disabled={processingSettlement}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleDisputeSettlement}
+                  variant="destructive"
+                  className="flex-1 gap-2"
+                  disabled={processingSettlement || disputeReason.trim().length < 5}
+                  data-testid="submit-dispute-btn"
+                >
+                  {processingSettlement ? (
+                    <>
+                      <RefreshCw size={16} className="animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <AlertTriangle size={16} />
+                      Report Issue
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
