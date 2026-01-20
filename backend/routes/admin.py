@@ -197,16 +197,16 @@ async def get_all_therapists(
     for t in therapists:
         result.append(TherapistProfile(
             id=t["id"],
-            mobile=t["mobile"],
+            mobile=t.get("mobile", ""),
             email=t.get("email"),
-            full_name=t["full_name"],
+            full_name=t.get("full_name", "Unknown"),
             credentials=t.get("credentials", ""),
             specialization=t.get("specialization"),
             years_of_experience=t.get("years_of_experience"),
             status=t.get("status"),
             subscription_status=t.get("subscription_status"),
             subscription_plan=t.get("subscription_plan"),
-            created_at=datetime.fromisoformat(t["created_at"]),
+            created_at=datetime.fromisoformat(t["created_at"]) if t.get("created_at") else datetime.now(timezone.utc),
             approved_at=datetime.fromisoformat(t["approved_at"]) if t.get("approved_at") else None
         ))
     return result
