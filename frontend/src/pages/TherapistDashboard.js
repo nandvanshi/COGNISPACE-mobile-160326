@@ -139,6 +139,58 @@ const TherapistDashboard = () => {
     setMobileMenuOpen(false);
   };
 
+  // Cash Settlement handlers
+  const handleConfirmSettlement = async () => {
+    if (!selectedSettlement) return;
+    setProcessingSettlement(true);
+    try {
+      await axios.post(`${API}/settlements/${selectedSettlement.id}/confirm`);
+      toast.success('Cash settlement confirmed and locked');
+      setShowConfirmDialog(false);
+      setSelectedSettlement(null);
+      fetchPendingSettlements();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to confirm settlement');
+    } finally {
+      setProcessingSettlement(false);
+    }
+  };
+
+  const handleDisputeSettlement = async () => {
+    if (!selectedSettlement || !disputeReason.trim()) {
+      toast.error('Please provide a reason for the dispute');
+      return;
+    }
+    if (disputeReason.trim().length < 5) {
+      toast.error('Dispute reason must be at least 5 characters');
+      return;
+    }
+    setProcessingSettlement(true);
+    try {
+      await axios.post(`${API}/settlements/${selectedSettlement.id}/dispute`, { reason: disputeReason.trim() });
+      toast.success('Issue reported successfully');
+      setShowDisputeDialog(false);
+      setSelectedSettlement(null);
+      setDisputeReason('');
+      fetchPendingSettlements();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to report issue');
+    } finally {
+      setProcessingSettlement(false);
+    }
+  };
+
+  const openConfirmDialog = (settlement) => {
+    setSelectedSettlement(settlement);
+    setShowConfirmDialog(true);
+  };
+
+  const openDisputeDialog = (settlement) => {
+    setSelectedSettlement(settlement);
+    setDisputeReason('');
+    setShowDisputeDialog(true);
+  };
+
   return (
     <div className="flex h-screen bg-background">
       {/* Mobile Header */}
