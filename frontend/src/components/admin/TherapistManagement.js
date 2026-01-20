@@ -8,7 +8,7 @@ import { Label } from '../ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { toast } from 'sonner';
-import { Ban, CheckCircle, Key, Plus, Edit, Users, Eye, Calendar, CreditCard, RefreshCw, Search, X } from 'lucide-react';
+import { Ban, CheckCircle, Key, Plus, Edit, Users, Eye, Calendar, CreditCard, RefreshCw, Search, X, MapPin, Loader2, Building2 } from 'lucide-react';
 
 const TherapistManagement = ({ onViewClients }) => {
   const [therapists, setTherapists] = useState([]);
