@@ -290,19 +290,19 @@ const AssistantOverview = ({ onNavigate }) => {
 
         <div className="space-y-3">
           {/* Upcoming Sessions (next 4 hours) */}
-          {needs_attention.upcoming_sessions.length > 0 && (
+          {safeNeedsAttention.upcoming_sessions.length > 0 && (
             <div className="space-y-2">
               <p className="text-sm font-medium text-muted-foreground">Upcoming Sessions</p>
-              {needs_attention.upcoming_sessions.map((session) => (
+              {safeNeedsAttention.upcoming_sessions.map((session) => (
                 <div 
-                  key={session.id} 
+                  key={session?.id || Math.random()} 
                   className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg cursor-pointer hover:bg-blue-100"
                   onClick={() => onNavigate('schedule')}
                 >
                   <div className="flex items-center gap-2">
                     <Clock size={16} className="text-blue-600" />
-                    <span className="font-medium">{session.client_name}</span>
-                    <span className="text-sm text-blue-600">{formatTime(session.start_time)}</span>
+                    <span className="font-medium">{session?.client_name || 'Unknown Client'}</span>
+                    <span className="text-sm text-blue-600">{formatTime(session?.start_time)}</span>
                   </div>
                   <ArrowRight size={16} className="text-muted-foreground" />
                 </div>
@@ -311,18 +311,18 @@ const AssistantOverview = ({ onNavigate }) => {
           )}
 
           {/* Pending Check-ins */}
-          {needs_attention.pending_checkins.length > 0 && (
+          {safeNeedsAttention.pending_checkins.length > 0 && (
             <div className="space-y-2">
               <p className="text-sm font-medium text-muted-foreground">In Progress - Need Check-out</p>
-              {needs_attention.pending_checkins.map((session) => (
+              {safeNeedsAttention.pending_checkins.map((session) => (
                 <div 
-                  key={session.id} 
+                  key={session?.id || Math.random()} 
                   className="flex items-center justify-between p-3 bg-amber-50 border border-amber-200 rounded-lg cursor-pointer hover:bg-amber-100"
                   onClick={() => onNavigate('schedule')}
                 >
                   <div className="flex items-center gap-2">
                     <AlertTriangle size={16} className="text-amber-600" />
-                    <span className="font-medium">{session.client_name}</span>
+                    <span className="font-medium">{session?.client_name || 'Unknown Client'}</span>
                     <Badge variant="outline" className="bg-amber-100 text-amber-700">In Progress</Badge>
                   </div>
                   <ArrowRight size={16} className="text-muted-foreground" />
@@ -332,22 +332,22 @@ const AssistantOverview = ({ onNavigate }) => {
           )}
 
           {/* Pending Payments */}
-          {needs_attention.pending_payments_count > 0 && (
+          {safeNeedsAttention.pending_payments_count > 0 && (
             <div 
               className="flex items-center justify-between p-3 bg-red-50 border border-red-200 rounded-lg cursor-pointer hover:bg-red-100"
               onClick={() => onNavigate('payments')}
             >
               <div className="flex items-center gap-2">
                 <DollarSign size={16} className="text-red-600" />
-                <span className="font-medium">{needs_attention.pending_payments_count} Pending Payment{needs_attention.pending_payments_count > 1 ? 's' : ''}</span>
+                <span className="font-medium">{safeNeedsAttention.pending_payments_count} Pending Payment{safeNeedsAttention.pending_payments_count > 1 ? 's' : ''}</span>
               </div>
               <ArrowRight size={16} className="text-muted-foreground" />
             </div>
           )}
 
-          {needs_attention.upcoming_sessions.length === 0 && 
-           needs_attention.pending_checkins.length === 0 && 
-           needs_attention.pending_payments_count === 0 && (
+          {safeNeedsAttention.upcoming_sessions.length === 0 && 
+           safeNeedsAttention.pending_checkins.length === 0 && 
+           safeNeedsAttention.pending_payments_count === 0 && (
             <p className="text-muted-foreground text-center py-4">All caught up! Nothing needs attention right now.</p>
           )}
         </div>
