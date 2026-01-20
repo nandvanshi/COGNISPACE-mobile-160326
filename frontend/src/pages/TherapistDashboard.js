@@ -395,6 +395,72 @@ const TherapistDashboard = () => {
           </div>
         )}
 
+        {/* Pending Cash Settlement Alert */}
+        {pendingSettlements.filter(s => s.status === 'handed_over').map((settlement) => (
+          <div 
+            key={settlement.id}
+            className="bg-amber-50 border-b border-amber-200 text-amber-800 px-4 lg:px-6 py-3"
+            data-testid="pending-settlement-banner"
+          >
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              <div className="flex items-center gap-2 flex-1">
+                <HandCoins size={20} className="flex-shrink-0 text-amber-600" />
+                <div>
+                  <p className="font-medium text-sm">
+                    Cash handover pending: <span className="font-bold">{formatCurrency(settlement.cash_amount)}</span>
+                  </p>
+                  <p className="text-xs text-amber-600">
+                    From {settlement.assistant_name} • {settlement.date}
+                    {settlement.handover_note && ` • Note: "${settlement.handover_note}"`}
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2 w-full sm:w-auto">
+                <Button 
+                  size="sm"
+                  onClick={() => openConfirmDialog(settlement)}
+                  className="flex-1 sm:flex-initial gap-1 bg-green-600 hover:bg-green-700"
+                  data-testid="confirm-settlement-btn"
+                >
+                  <CheckCircle2 size={16} />
+                  Confirm Received
+                </Button>
+                <Button 
+                  size="sm"
+                  variant="outline"
+                  onClick={() => openDisputeDialog(settlement)}
+                  className="flex-1 sm:flex-initial gap-1 border-red-300 text-red-700 hover:bg-red-50"
+                  data-testid="dispute-settlement-btn"
+                >
+                  <XCircle size={16} />
+                  Report Issue
+                </Button>
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {/* Disputed Settlement Alert */}
+        {pendingSettlements.filter(s => s.status === 'disputed').map((settlement) => (
+          <div 
+            key={settlement.id}
+            className="bg-red-50 border-b border-red-200 text-red-800 px-4 lg:px-6 py-3"
+            data-testid="disputed-settlement-banner"
+          >
+            <div className="flex items-center gap-2">
+              <AlertTriangle size={20} className="flex-shrink-0 text-red-600" />
+              <div>
+                <p className="font-medium text-sm">
+                  Disputed settlement: {formatCurrency(settlement.cash_amount)} from {settlement.assistant_name}
+                </p>
+                <p className="text-xs text-red-600">
+                  Reason: "{settlement.disputed_reason}" • Please resolve with your assistant
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+
         <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-10">
           {currentView === 'overview' && (
             <TherapistOverview 
