@@ -1147,3 +1147,31 @@ Build a secure, therapist-first web application for managing a therapy practice 
   - Coming Up card → Client Profile navigation verified
   - Inactive Clients alert → Filtered view with banner verified
   - Clear filter button functionality verified
+
+### Phase 34: Manual Homework Feature (COMPLETED - Jan 20, 2026)
+- [x] **Backend Enhancements**:
+  - Added `priority` field to HomeworkCreate model (low/medium/high, default: medium)
+  - Added `HomeworkUpdate` model for editing homework
+  - Added `PUT /api/homework/{id}` - Therapist can update homework (title, description, due_date, priority)
+  - Added `DELETE /api/homework/{id}` - Therapist can delete homework
+  - Existing `POST /api/homework/{id}/complete` - Client marks homework complete
+  - Priority validation enforced (must be low/medium/high)
+- [x] **Therapist UI - Client Profile View**:
+  - New "Homework" tab (6th tab, hidden from assistants)
+  - Stats cards: Pending, Completed, Total homework counts
+  - "Assign Homework" button with dialog: Title, Description, Due Date (optional), Priority selector
+  - Homework list with status badges (Pending/Completed) and priority badges (High/Medium/Low)
+  - Edit/Delete buttons for pending homework
+  - Due date overdue indicator (red styling)
+  - Client notes displayed for completed homework
+- [x] **Client Dashboard Enhancement**:
+  - Homework section shows priority badges (High=red, Medium=amber, Low=gray)
+  - Overdue indicator for past due dates
+  - "Mark Complete" button with notes prompt
+- [x] **Access Control**:
+  - Assistants: No access to Homework tab (isAssistant check on tab and functions)
+  - Assistants: Backend returns 403 for homework create/update/delete
+  - Clients: Can only view/complete their own homework
+- [x] **Testing**: 92% backend (11/12), 100% frontend
+  - Test file: /app/tests/test_homework.py
+  - Report: /app/test_reports/iteration_27.json
