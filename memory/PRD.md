@@ -849,6 +849,55 @@ Build a secure, therapist-first web application for managing a therapy practice 
   - /app/tests/test_assessments.py
   - /app/test_reports/iteration_22.json
 
+### Phase 27: Product Alignment & Feature Toggles (COMPLETED - Jan 20, 2026)
+- [x] **Unified Calendar System**:
+  - TherapistSchedule component now used by both Therapist and Assistant
+  - Removed deprecated AppointmentCalendar component
+  - Assistant has restricted permissions: can view, book, cancel, block time
+  - Assistant CANNOT: modify availability settings, edit recurring rules
+  - `isAssistant` prop controls availability editing permissions
+- [x] **Subscription Plan Feature Toggles** (Super Admin):
+  - New feature: Control which features are available per subscription plan
+  - 8 toggleable features: session_notes, assessments, ai_clinical, protocols, messaging, payments, assistants, reports
+  - Feature Toggles Dialog in Super Admin → Subscription Plans
+  - Each feature has icon, label, and description
+  - Toggle switches to enable/disable features
+  - Changes apply immediately to all therapists on the plan
+- [x] **Backend Feature Enforcement**:
+  - `check_feature_enabled()` function validates feature access
+  - `require_feature()` dependency factory for endpoint protection
+  - Protected endpoints: session-notes, assessments, ai-suggest, protocols, messaging, payments, assistants
+  - Returns 403 "Feature not included in your subscription plan" when disabled
+- [x] **Frontend Feature Enforcement**:
+  - `SubscriptionContext` provides `isFeatureEnabled()` and `featureToggles` state
+  - `SubscriptionProvider` wraps entire app
+  - TherapistDashboard filters sidebar nav items based on feature toggles
+  - Nav items have `feature` property mapped to toggle keys
+- [x] **Subscription Status Endpoint Enhanced**:
+  - `GET /api/auth/subscription-status` now returns:
+    - `is_read_only`, `subscription_status`, `subscription_plan`
+    - `feature_toggles` (all 8 feature states)
+    - `days_remaining` (calculated from end_date)
+    - `expiry_warning` (true if days_remaining <= 7 and > 0)
+- [x] **Expiry Warning Banner**:
+  - Shows when `expiry_warning` is true (< 7 days remaining)
+  - Amber banner with "Your subscription expires in X days" message
+  - "Contact Support" button
+  - Positioned below mobile header, above read-only banner
+- [x] **Availability Setup Prompt**:
+  - Blue banner on Dashboard when therapist has no availability set
+  - "Set up your availability to start accepting appointments"
+  - "Set Availability" button navigates to availability settings
+- [x] **Assessment Trend Chart**:
+  - New `AssessmentTrendChart` component
+  - Bar chart showing score progression over time
+  - Trend analysis: Improving (down), Needs attention (up), Stable
+  - Assessment type selector for clients with multiple assessment types
+  - Integrated in ClientProfileView → Assessments tab (shows when 2+ completed)
+- [x] **Testing**: 20/20 backend tests passed (100%)
+  - /app/tests/test_feature_toggles.py
+  - /app/test_reports/iteration_23.json
+
 ---
 
 ## Technical Architecture
