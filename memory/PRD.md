@@ -1068,7 +1068,7 @@ Build a secure, therapist-first web application for managing a therapy practice 
 ## Backlog
 
 ### P1 - High Priority
-- [ ] Refactor `server.py` into modular structure (routes, models, services) - 6000+ lines, needs splitting
+- [x] ~~Refactor `server.py` into modular structure~~ (DONE - Phase 32 - Partial)
 - [ ] Global Standards Verification (IST timezone, DD/MM/YYYY dates, ₹ currency across app)
 - [ ] Coupon Code management validation and testing
 
@@ -1094,7 +1094,37 @@ Build a secure, therapist-first web application for managing a therapy practice 
 
 ---
 
+## Architecture
+
+### Backend Structure (Refactored - Phase 32)
+```
+/app/backend/
+├── server.py           # Main FastAPI app (6127 lines, reduced from 6856)
+├── database.py         # MongoDB connection
+├── auth.py             # Auth utilities & dependencies  
+├── models/
+│   └── __init__.py     # All Pydantic models (~600 lines)
+├── routes/
+│   └── __init__.py     # Route modules (migration planned)
+├── assessment_library.py
+├── ARCHITECTURE.md     # Architecture documentation
+└── tests/
+```
+
+### Migration Status
+| Component | Status | Location |
+|-----------|--------|----------|
+| Models | ✅ Extracted | models/__init__.py |
+| Auth Utilities | ✅ Extracted | auth.py |
+| Database Config | ✅ Extracted | database.py |
+| Routes | ⏳ Planned | Still in server.py |
+
+---
+
 ## Refactoring Needs
-- Split `server.py` into modular structure (routes, models, services)
-- Add database migration strategy for schema changes
-- Add comprehensive error handling
+- [x] ~~Extract models to separate package~~ (DONE)
+- [x] ~~Extract auth utilities~~ (DONE)
+- [x] ~~Extract database config~~ (DONE)
+- [ ] Split routes into domain-specific modules
+- [ ] Add database migration strategy for schema changes
+- [ ] Add comprehensive error handling
