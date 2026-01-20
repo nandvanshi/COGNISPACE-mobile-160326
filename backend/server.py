@@ -741,7 +741,7 @@ I understand that:
 class PaymentCreate(BaseModel):
     client_id: str
     amount: float
-    payment_method: Literal["cash", "upi", "card", "bank", "other"]
+    payment_method: Literal["cash", "upi", "card", "bank", "bank_transfer", "credit_card", "cheque", "other"]
     payment_status: Literal["paid", "partial", "pending"] = "paid"
     appointment_id: Optional[str] = None
     session_note_id: Optional[str] = None
@@ -757,7 +757,7 @@ class Payment(BaseModel):
     client_name: str
     client_code: Optional[str] = None  # Client ID like CL-123456
     amount: float
-    payment_method: str  # cash, upi, card, bank, other
+    payment_method: str  # cash, upi, card, bank, bank_transfer, credit_card, cheque, other
     payment_status: str = "paid"  # paid, partial, pending
     appointment_id: Optional[str] = None
     session_note_id: Optional[str] = None
