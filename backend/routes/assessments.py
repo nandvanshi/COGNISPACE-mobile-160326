@@ -9,6 +9,7 @@ import uuid
 
 from database import db
 from dependencies import get_current_user, log_audit, check_feature_enabled
+from assessment_library import CLINICAL_ASSESSMENTS, calculate_score, get_severity, get_client_friendly_assessment, ASSESSMENT_CLIENT_INFO
 
 router = APIRouter(prefix="/assessments", tags=["assessments"])
 
