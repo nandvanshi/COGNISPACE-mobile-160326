@@ -138,26 +138,29 @@ const ClientDashboard = () => {
     }
   };
 
-  const handleCompleteAssessment = async (assessment) => {
+  const handleCompleteAssessment = (assessment) => {
     if (assessment.status === 'completed') {
       toast.info('Assessment already completed');
       return;
     }
+    setSelectedAssessmentId(assessment.id);
+    setShowAssessmentTaker(true);
+  };
 
-    const answers = [];
-    for (const question of assessment.questions) {
-      const answer = prompt(`${question.q}\n\nOptions: ${question.options.join(', ')}`);
-      if (!answer) return;
-      const optionIndex = question.options.indexOf(answer);
-      answers.push({ question: question.q, answer, score: optionIndex >= 0 ? optionIndex : 0 });
-    }
+  const handleAssessmentComplete = () => {
+    setShowAssessmentTaker(false);
+    setSelectedAssessmentId(null);
+    fetchDashboardData();
+    toast.success('Assessment completed successfully!');
+  };
 
+  const handleViewSharedReport = async (assessmentId) => {
     try {
-      await axios.post(`${API}/assessments/${assessment.id}/submit`, { answers });
-      toast.success('Assessment submitted successfully');
-      fetchDashboardData();
+      const res = await axios.get(`${API}/assessments/${assessmentId}/results`);
+      setSharedReportData(res.data);
+      setShowSharedReport(true);
     } catch (error) {
-      toast.error('Failed to submit assessment');
+      toast.error(error.response?.data?.detail || 'Report not available');
     }
   };
 
