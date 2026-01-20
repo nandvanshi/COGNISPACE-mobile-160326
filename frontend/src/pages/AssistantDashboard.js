@@ -443,35 +443,35 @@ const AssistantOverview = ({ onNavigate }) => {
           <div className="p-3 bg-green-50 rounded-lg text-center">
             <Banknote size={20} className="mx-auto text-green-600 mb-1" />
             <p className="text-xs text-green-700">Cash</p>
-            <p className="font-bold text-green-800">{formatCurrency(payments_summary.cash_total)}</p>
+            <p className="font-bold text-green-800">{formatCurrency(safePaymentsSummary.cash_total)}</p>
           </div>
           <div className="p-3 bg-blue-50 rounded-lg text-center">
             <CreditCard size={20} className="mx-auto text-blue-600 mb-1" />
             <p className="text-xs text-blue-700">Online</p>
-            <p className="font-bold text-blue-800">{formatCurrency(payments_summary.online_total)}</p>
+            <p className="font-bold text-blue-800">{formatCurrency(safePaymentsSummary.online_total)}</p>
           </div>
           <div className="p-3 bg-primary/10 rounded-lg text-center">
             <DollarSign size={20} className="mx-auto text-primary mb-1" />
             <p className="text-xs text-primary">Total</p>
-            <p className="font-bold text-primary">{formatCurrency(payments_summary.total)}</p>
+            <p className="font-bold text-primary">{formatCurrency(safePaymentsSummary.total)}</p>
           </div>
         </div>
 
         {/* Payment List */}
-        {payments_summary.payments.length === 0 ? (
+        {safePaymentsSummary.payments.length === 0 ? (
           <p className="text-muted-foreground text-center py-4">No payments recorded today</p>
         ) : (
           <div className="space-y-2 max-h-48 overflow-y-auto">
-            {payments_summary.payments.map((payment) => (
+            {safePaymentsSummary.payments.map((payment) => (
               <div 
-                key={payment.id} 
+                key={payment?.id || Math.random()} 
                 className="flex items-center justify-between p-2 bg-surface rounded-lg border border-border"
               >
                 <div>
-                  <p className="font-medium text-sm">{payment.client_name}</p>
-                  <p className="text-xs text-muted-foreground capitalize">{payment.payment_method}</p>
+                  <p className="font-medium text-sm">{payment?.client_name || 'Unknown Client'}</p>
+                  <p className="text-xs text-muted-foreground capitalize">{payment?.payment_method || 'N/A'}</p>
                 </div>
-                <p className="font-semibold text-success">{formatCurrency(payment.amount)}</p>
+                <p className="font-semibold text-success">{formatCurrency(payment?.amount || 0)}</p>
               </div>
             ))}
           </div>
