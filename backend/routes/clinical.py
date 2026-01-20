@@ -230,6 +230,44 @@ async def update_case_history(client_id: str, data: CaseHistoryUpdate, current_u
     return CaseHistoryResponse(**updated)
 
 
+@router.patch("/case-history/{client_id}/section")
+async def update_case_history_section(
+    client_id: str, 
+    section: str,
+    data: dict,
+    current_user: dict = Depends(require_active_therapist)
+):
+    """Update a specific section of case history (auto-save)"""
+    case_history = await db.case_histories.find_one(
+        {"client_id": client_id, "therapist_id": current_user["id"]},
+        {"_id": 0}
+    )
+    
+    if not case_history:
+        # Create new case history
+        ch_id = str(uuid.uuid4())
+        case_history = {
+            "id": ch_id,
+            "client_id": client_id,
+            "therapist_id": current_user["id"],
+            "sections": {},
+            "is_complete": False,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.case_histories.insert_one(case_history)
+    
+    # Update the specific section
+    await db.case_histories.update_one(
+        {"client_id": client_id, "therapist_id": current_user["id"]},
+        {"$set": {
+            f"sections.{section}": data,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {"message": "Section saved", "section": section}
+
+
 @router.post("/case-history/{client_id}/complete")
 async def mark_case_history_complete(client_id: str, current_user: dict = Depends(require_active_therapist)):
     """Mark case history as complete"""
