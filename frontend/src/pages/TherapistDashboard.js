@@ -111,6 +111,7 @@ const TherapistDashboard = () => {
         { id: 'messages', label: 'Messages', icon: MessageSquare, feature: 'messaging' },
         { id: 'payments', label: 'Payments', icon: DollarSign, feature: 'payments' },
         { id: 'assistants', label: 'Assistants', icon: UserCog, feature: 'assistants' },
+        { id: 'support', label: 'Support', icon: HelpCircle },
       ]
     }
   ];
