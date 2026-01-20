@@ -1785,6 +1785,19 @@ class SubscriptionPlanCreate(BaseModel):
     duration_days: int
     features: List[str]
     max_clients: Optional[int] = None
+    feature_toggles: Optional[dict] = None
+
+# Default feature toggles for all plans (all features enabled by default)
+DEFAULT_FEATURE_TOGGLES = {
+    "session_notes": True,
+    "assessments": True,
+    "ai_clinical": True,
+    "protocols": True,
+    "messaging": True,
+    "payments": True,
+    "assistants": True,
+    "reports": True
+}
 
 @api_router.post("/admin/subscription-plans", response_model=SubscriptionPlan)
 async def create_subscription_plan(plan_data: SubscriptionPlanCreate, current_user: dict = Depends(require_super_admin)):
