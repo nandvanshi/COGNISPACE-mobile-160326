@@ -911,15 +911,19 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
                 <TabsContent value="case-history" className="mt-0">
                   {profileData.caseHistory ? (
                     <div className="space-y-4">
-                      <div className="flex justify-between items-center">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                         <div>
                           <h4 className="font-semibold">Case History</h4>
                           <p className="text-sm text-muted-foreground">
                             Created: {formatDate(profileData.caseHistory.created_at)}
                           </p>
                         </div>
-                        <Button onClick={() => setShowCaseHistoryDialog(true)}>
-                          <Edit size={14} className="mr-2" /> View / Edit
+                        <Button 
+                          onClick={() => setShowCaseHistoryDialog(true)}
+                          className="w-full sm:w-auto"
+                          data-testid="case-history-edit-btn"
+                        >
+                          <Edit size={14} className="mr-2" /> View / Edit Case History
                         </Button>
                       </div>
 
