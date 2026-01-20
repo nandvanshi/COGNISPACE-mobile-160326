@@ -320,6 +320,87 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
     }
   };
 
+  // ========== Homework Functions ==========
+  
+  const handleOpenAssignHomework = () => {
+    setNewHomework({
+      title: '',
+      description: '',
+      due_date: '',
+      priority: 'medium'
+    });
+    setShowAssignHomeworkDialog(true);
+  };
+
+  const handleAssignHomework = async (e) => {
+    e.preventDefault();
+    if (!newHomework.title.trim() || !newHomework.description.trim()) {
+      toast.error('Title and description are required');
+      return;
+    }
+
+    try {
+      await axios.post(`${API}/homework`, {
+        client_id: client.id,
+        title: newHomework.title,
+        description: newHomework.description,
+        due_date: newHomework.due_date ? new Date(newHomework.due_date).toISOString() : null,
+        priority: newHomework.priority
+      });
+      toast.success('Homework assigned successfully');
+      setShowAssignHomeworkDialog(false);
+      fetchAllClientData();
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Failed to assign homework'));
+    }
+  };
+
+  const handleEditHomeworkClick = (hw) => {
+    setSelectedHomework(hw);
+    setEditHomework({
+      title: hw.title,
+      description: hw.description,
+      due_date: hw.due_date ? new Date(hw.due_date).toISOString().split('T')[0] : '',
+      priority: hw.priority || 'medium'
+    });
+    setShowEditHomeworkDialog(true);
+  };
+
+  const handleUpdateHomework = async (e) => {
+    e.preventDefault();
+    if (!editHomework.title.trim() || !editHomework.description.trim()) {
+      toast.error('Title and description are required');
+      return;
+    }
+
+    try {
+      await axios.put(`${API}/homework/${selectedHomework.id}`, {
+        title: editHomework.title,
+        description: editHomework.description,
+        due_date: editHomework.due_date ? new Date(editHomework.due_date).toISOString() : null,
+        priority: editHomework.priority
+      });
+      toast.success('Homework updated successfully');
+      setShowEditHomeworkDialog(false);
+      setSelectedHomework(null);
+      fetchAllClientData();
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Failed to update homework'));
+    }
+  };
+
+  const handleDeleteHomework = async (homeworkId) => {
+    if (!confirm('Are you sure you want to delete this homework?')) return;
+    
+    try {
+      await axios.delete(`${API}/homework/${homeworkId}`);
+      toast.success('Homework deleted');
+      fetchAllClientData();
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Failed to delete homework'));
+    }
+  };
+
   if (!isOpen) return null;
 
   // Calculate statistics
