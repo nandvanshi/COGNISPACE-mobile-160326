@@ -54,12 +54,9 @@ const ClientManagement = ({ isReadOnly = false, isAssistant = false, initialClie
     }
   }, [initialClientId, clients]);
 
-  // Handle initial filter - set inactive filter IDs
+  // Update activeFilter when initialFilter prop changes
   useEffect(() => {
-    if (initialFilter === 'inactive' && initialFilter) {
-      // Get inactive client IDs from the filter context passed via props
-      // These will be passed via the navigation context
-    }
+    setActiveFilter(initialFilter);
   }, [initialFilter]);
 
   useEffect(() => {
