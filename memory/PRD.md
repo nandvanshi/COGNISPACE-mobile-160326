@@ -963,6 +963,61 @@ Build a secure, therapist-first web application for managing a therapy practice 
   - /app/tests/test_assistant_dashboard.py
   - /app/test_reports/iteration_24.json
 
+### Phase 29: End-of-Day Cash Settlement (COMPLETED - Jan 20, 2026)
+- [x] **Cash Settlement Data Model** (`cash_settlements` collection):
+  - Fields: id, date, therapist_id, therapist_name, assistant_id, assistant_name
+  - Amounts: cash_amount, online_amount, total_amount (auto-calculated)
+  - Status: "pending" | "handed_over" | "settled" | "disputed"
+  - Handover: handover_note, handover_at
+  - Confirmation: confirmed_at, confirmed_by
+  - Dispute: disputed_at, disputed_reason
+  - Timestamps: created_at, updated_at
+- [x] **Backend Endpoints**:
+  - `GET /api/settlements/today` - Get today's settlement status with auto-calculated amounts
+  - `POST /api/settlements/handover` - Assistant marks cash as handed over (requires cash_amount > 0)
+  - `POST /api/settlements/{id}/confirm` - Therapist confirms receipt (LOCKS the record)
+  - `POST /api/settlements/{id}/dispute` - Therapist reports issue (requires reason, min 5 chars)
+  - `GET /api/settlements/pending` - Get pending/disputed settlements for therapist
+  - `GET /api/settlements/history` - Get settlement audit trail (configurable days param)
+- [x] **Assistant Dashboard - Cash Settlement Card**:
+  - Title: "End-of-Day Cash Settlement" with HandCoins icon
+  - 3-column summary: Cash to Hand Over, Online (Auto-settled), Total Today
+  - Status badge: Pending (amber), Awaiting Confirmation (blue), Settled (green), Disputed (red)
+  - **Pending state**: "Mark Cash Handed Over" button when cash_amount > 0
+  - **No cash state**: "No cash to settle today. All payments were online."
+  - **Handed over state**: Shows waiting message with therapist name and handover time
+  - **Settled state**: Shows "Settlement Complete" with lock icon and confirmation time
+  - **Disputed state**: Shows issue details with disputed reason
+- [x] **Cash Handover Dialog**:
+  - Shows auto-calculated cash amount (cannot be edited)
+  - Optional note field
+  - Warning: "By clicking Confirm Handover, you confirm that you have handed over the cash"
+  - Confirm Handover button
+- [x] **Therapist Dashboard - Pending Settlement Banner**:
+  - Amber banner appears when settlement status is "handed_over"
+  - Shows: Amount, Assistant name, Date, Note (if any)
+  - Two buttons: "Confirm Received" (green) | "Report Issue" (red outline)
+- [x] **Therapist Dashboard - Disputed Settlement Banner**:
+  - Red banner appears when settlement status is "disputed"
+  - Shows amount, assistant name, disputed reason
+- [x] **Confirm Receipt Dialog**:
+  - Shows cash amount, assistant name, date, handover note
+  - Warning: "Confirming will lock this settlement record. This action cannot be undone."
+  - Lock icon to indicate record locking
+  - "Confirm & Lock" button
+- [x] **Dispute Dialog**:
+  - Shows reported amount and assistant name
+  - Required reason field (min 5 characters)
+  - "Report Issue" button (destructive style)
+- [x] **Settlement Rules**:
+  - Online payments (UPI, card, bank) are auto-settled (no manual action needed)
+  - Cash requires manual handover → confirmation flow
+  - Once confirmed, settlement record is LOCKED and cannot be modified
+  - Audit trail maintained: date, amount, assistant, timestamps, status changes
+- [x] **Testing**: 20/20 backend tests passed, 100% frontend features verified
+  - /app/tests/test_cash_settlement.py
+  - /app/test_reports/iteration_25.json
+
 ---
 
 ## Technical Architecture
