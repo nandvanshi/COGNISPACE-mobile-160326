@@ -1200,3 +1200,27 @@ Build a secure, therapist-first web application for managing a therapy practice 
 - Step 3: Client routes
 - Step 4: Appointment routes
 - Step 5: Remaining routes (sessions, assessments, payments, etc.)
+
+**Step 2: Admin Routes (COMPLETED)**
+- Created `/app/backend/routes/admin.py` (~526 lines)
+  - GET /admin/therapist-applications
+  - POST /admin/therapist-applications/{id}/approve
+  - POST /admin/therapist-applications/{id}/reject
+  - GET/POST/PUT /admin/therapists
+  - POST /admin/therapists/{id}/suspend|activate|reset-password|photo
+  - GET /admin/therapists/{id}/clients
+  - GET/PUT /admin/clients
+  - POST /admin/clients/{id}/reset-password
+- **Lines reduced**: 6684 → 6177 (~500+ lines moved)
+- Kept dependency functions in server.py (used by remaining routes)
+- **Testing**: All admin endpoints verified (therapists, clients, applications)
+
+**Current Status:**
+- server.py: 6177 lines (from 6919)
+- routes/auth.py: 294 lines
+- routes/admin.py: 526 lines
+- Total moved: ~820 lines
+
+**Next Steps:**
+- Step 3: Move remaining admin routes (subscriptions, support tickets, assistants)
+- Step 4: Client & Appointment routes
