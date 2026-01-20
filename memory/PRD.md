@@ -1541,4 +1541,52 @@ Build a secure, therapist-first web application for managing a therapy practice 
 - Assessment Results: Modal shows questions, responses, clinical notes, share button
 - Messages: Conversations list shows client names, clicking loads messages
 
+### Phase 38: Indian Address Standards for Therapist Profile (COMPLETED - Jan 21, 2026)
+**Feature:** Structured address fields with Pincode-based auto-fill for Therapist Profile
+
+**Backend Implementation:**
+- Created `/app/backend/routes/therapist_profile.py` (~300 lines)
+- **Endpoints:**
+  - `GET /api/therapist/profile` - Get therapist profile with address fields
+  - `PUT /api/therapist/profile` - Update profile (basic info, clinic info, address, privacy)
+  - `GET /api/therapist/pincode/{pincode}` - Pincode lookup (India Post API)
+  - `GET /api/therapist/profile/receipt-info` - Get receipt-formatted info with privacy settings
+
+**Data Model (TherapistProfile):**
+- Basic Info: full_name, email, mobile, profile_photo
+- Clinic Info: clinic_name, specialization, qualifications, experience_years, consultation_fee
+- Address (Indian Format): address_line_1, address_line_2, pincode, city, state, district
+- Privacy: show_mobile_on_receipt, show_email_on_receipt
+
+**Frontend Implementation:**
+- Created `/app/frontend/src/components/TherapistProfileSettings.js` (~370 lines)
+- **Sections:**
+  1. Basic Information - Name, Email, Mobile, Photo URL
+  2. Clinic Information - Name, Specialization, Qualifications, Experience, Fee (₹)
+  3. Clinic Address (Indian Format) - Address lines, PIN Code, City, District, State
+  4. Receipt Privacy Settings - Toggle switches for mobile/email visibility
+  5. Subscription Status (read-only)
+
+**Pincode Auto-fill Feature:**
+- Enter 6-digit PIN code → Auto-fills City, District, State
+- Uses India Post API: `https://api.postalpincode.in/pincode/{pincode}`
+- Loading spinner during lookup, green checkmark on success
+- Manual entry allowed if pincode lookup fails
+
+**UI/UX:**
+- Added "My Profile" nav item in Operations section of sidebar
+- Consultation Fee field with ₹ symbol
+- "Indian Format" badge on address section
+- Read-only mode respected for expired subscriptions
+
+**Files Created:**
+- `/app/backend/routes/therapist_profile.py`
+- `/app/frontend/src/components/TherapistProfileSettings.js`
+
+**Files Modified:**
+- `/app/backend/server.py` - Added therapist_profile_router
+- `/app/frontend/src/pages/TherapistDashboard.js` - Added My Profile nav and view
+
+**Testing:** Screenshot verified - Pincode 110001 auto-fills "New Delhi", "Delhi"
+
 ---
