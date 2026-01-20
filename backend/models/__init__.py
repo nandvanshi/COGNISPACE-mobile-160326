@@ -1,6 +1,6 @@
 """All Pydantic models for the API"""
 from pydantic import BaseModel, ConfigDict
-from typing import Optional, List, Literal
+from typing import Optional, List, Literal, Any
 from datetime import datetime
 
 # ============= AUTH MODELS =============
@@ -38,7 +38,7 @@ class User(BaseModel):
     therapist_id: Optional[str] = None
     subscription_status: Optional[str] = None
     subscription_plan: Optional[str] = None
-    created_at: Optional[str] = None
+    created_at: Optional[Any] = None  # Can be string or datetime
 
 class TokenResponse(BaseModel):
     token: str
