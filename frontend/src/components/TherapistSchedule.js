@@ -312,18 +312,25 @@ const TherapistSchedule = ({ isReadOnly = false, isAssistant = false }) => {
   };
 
   const handleDateClick = (dayData) => {
-    if (!dayData) return;
-    setSelectedDate(dayData.date);
+    if (!dayData || !dayData.date) return;
+    // Ensure valid date object
+    const clickedDate = dayData.date instanceof Date && !isNaN(dayData.date.getTime())
+      ? dayData.date
+      : new Date(dayData.date);
+    if (isNaN(clickedDate.getTime())) return; // Invalid date, do nothing
+    setSelectedDate(clickedDate);
     setView('day');
   };
 
   const goToPrevDay = () => {
+    if (!selectedDate || !(selectedDate instanceof Date) || isNaN(selectedDate.getTime())) return;
     const prev = new Date(selectedDate);
     prev.setDate(prev.getDate() - 1);
     setSelectedDate(prev);
   };
 
   const goToNextDay = () => {
+    if (!selectedDate || !(selectedDate instanceof Date) || isNaN(selectedDate.getTime())) return;
     const next = new Date(selectedDate);
     next.setDate(next.getDate() + 1);
     setSelectedDate(next);
