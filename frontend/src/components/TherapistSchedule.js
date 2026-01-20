@@ -188,8 +188,8 @@ const TherapistSchedule = ({ isReadOnly = false }) => {
         let isAvailable = false;
         if (dayAvailability?.enabled && dayAvailability.time_blocks) {
           dayAvailability.time_blocks.forEach(avail => {
-            const availStart = avail.start;
-            const availEnd = avail.end;
+            const availStart = avail.start_time;
+            const availEnd = avail.end_time;
             if (timeStr >= availStart && timeStr < availEnd) {
               isAvailable = true;
             }
