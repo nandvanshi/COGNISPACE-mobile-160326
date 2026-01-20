@@ -137,8 +137,8 @@ const TherapistDashboard = () => {
         <div className="p-5 border-b border-border">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
-                <Sparkles size={16} className="text-white" />
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
+                <Sparkles size={18} className="text-white" />
               </div>
               <h1 className="text-xl font-serif text-primary">TheraGenie</h1>
             </div>
@@ -146,14 +146,14 @@ const TherapistDashboard = () => {
               variant="ghost"
               size="sm"
               onClick={() => setMobileMenuOpen(false)}
-              className="lg:hidden p-1"
+              className="lg:hidden p-2"
             >
-              <X size={20} />
+              <X size={22} />
             </Button>
           </div>
-          <p className="text-sm text-muted-foreground mt-2 truncate">{user?.full_name}</p>
+          <p className="text-base text-muted-foreground mt-2 truncate">{user?.full_name}</p>
           {subscriptionStatus && !isReadOnly && (
-            <span className="inline-block mt-2 px-2 py-1 bg-success/10 text-success text-xs rounded-full">
+            <span className="inline-block mt-2 px-2.5 py-1 bg-success/10 text-success text-sm rounded-full">
               {subscriptionStatus.subscription_status === 'trial' ? 'Free Trial' : 'Active'}
             </span>
           )}
@@ -166,13 +166,13 @@ const TherapistDashboard = () => {
               {/* Collapsible group header for mobile */}
               <button
                 onClick={() => setExpandedGroup(expandedGroup === group.label ? '' : group.label)}
-                className="w-full flex items-center justify-between px-3 py-2 lg:py-0 lg:mb-2 rounded-lg lg:rounded-none hover:bg-muted/50 lg:hover:bg-transparent"
+                className="w-full flex items-center justify-between px-3 py-2.5 lg:py-0 lg:mb-2 rounded-lg lg:rounded-none hover:bg-muted/50 lg:hover:bg-transparent"
               >
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
                   {group.label}
                 </p>
                 <ChevronDown 
-                  size={16} 
+                  size={18} 
                   className={`lg:hidden text-muted-foreground transition-transform ${expandedGroup === group.label ? 'rotate-180' : ''}`}
                 />
               </button>
