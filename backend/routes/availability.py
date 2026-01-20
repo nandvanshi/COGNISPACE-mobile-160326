@@ -233,21 +233,31 @@ async def create_blocked_time(data: BlockedTimeCreate, current_user: dict = Depe
 
 
 @router.get("/blocked-time", response_model=List[BlockedTime])
+@router.get("/blocked-times", response_model=List[BlockedTime])
 async def get_blocked_times(current_user: dict = Depends(require_therapist_or_assistant)):
     """Get all blocked time slots"""
     therapist_id = get_effective_therapist_id(current_user)
     
     blocked_times = await db.blocked_times.find({"therapist_id": therapist_id}, {"_id": 0}).to_list(500)
     
-    return [BlockedTime(
-        id=bt["id"],
-        therapist_id=bt["therapist_id"],
-        start_time=parse_datetime(bt["start_time"]),
-        end_time=parse_datetime(bt["end_time"]),
-        reason=bt.get("reason"),
-        is_recurring=bt.get("is_recurring", False),
-        created_at=parse_datetime(bt["created_at"])
-    ) for bt in blocked_times]
+    result = []
+    for bt in blocked_times:
+        # Handle both old (start_datetime) and new (start_time) field names
+        start = bt.get("start_time") or bt.get("start_datetime")
+        end = bt.get("end_time") or bt.get("end_datetime")
+        
+        if start and end:
+            result.append(BlockedTime(
+                id=bt["id"],
+                therapist_id=bt["therapist_id"],
+                start_time=parse_datetime(start),
+                end_time=parse_datetime(end),
+                reason=bt.get("reason"),
+                is_recurring=bt.get("is_recurring", False),
+                created_at=parse_datetime(bt["created_at"])
+            ))
+    
+    return result
 
 
 @router.delete("/blocked-time/{blocked_id}")
