@@ -1102,7 +1102,7 @@ async def get_subscription_status(current_user: dict = Depends(get_current_user)
         # For assistants, get the linked therapist's subscription status
         therapist = await db.users.find_one({"id": current_user.get("therapist_id")}, {"_id": 0})
         if not therapist:
-            return {"is_read_only": True, "subscription_status": None, "subscription_end_date": None}
+            return {"is_read_only": True, "subscription_status": None, "subscription_end_date": None, "feature_toggles": DEFAULT_FEATURE_TOGGLES}
         subscription_status = therapist.get("subscription_status")
         is_read_only = subscription_status not in ["trial", "active"]
         subscription = await db.subscriptions.find_one(
@@ -1111,15 +1111,20 @@ async def get_subscription_status(current_user: dict = Depends(get_current_user)
             sort=[("start_date", -1)]
         )
         subscription_end_date = subscription.get("end_date") if subscription else None
+        feature_toggles = await get_feature_toggles_for_therapist(therapist["id"])
+        days_remaining = calculate_days_remaining(subscription_end_date) if subscription_end_date else 0
         return {
             "is_read_only": is_read_only,
             "subscription_status": subscription_status,
             "subscription_plan": therapist.get("subscription_plan"),
-            "subscription_end_date": subscription_end_date
+            "subscription_end_date": subscription_end_date,
+            "feature_toggles": feature_toggles,
+            "days_remaining": days_remaining,
+            "expiry_warning": days_remaining <= 7 and days_remaining > 0
         }
     
     if current_user["role"] != "therapist":
-        return {"is_read_only": False, "subscription_status": None, "subscription_end_date": None}
+        return {"is_read_only": False, "subscription_status": None, "subscription_end_date": None, "feature_toggles": DEFAULT_FEATURE_TOGGLES}
     
     subscription_status = current_user.get("subscription_status")
     is_read_only = subscription_status not in ["trial", "active"]
@@ -1131,13 +1136,52 @@ async def get_subscription_status(current_user: dict = Depends(get_current_user)
         sort=[("start_date", -1)]
     )
     subscription_end_date = subscription.get("end_date") if subscription else None
+    feature_toggles = await get_feature_toggles_for_therapist(current_user["id"])
+    days_remaining = calculate_days_remaining(subscription_end_date) if subscription_end_date else 0
     
     return {
         "is_read_only": is_read_only,
         "subscription_status": subscription_status,
         "subscription_plan": current_user.get("subscription_plan"),
-        "subscription_end_date": subscription_end_date
+        "subscription_end_date": subscription_end_date,
+        "feature_toggles": feature_toggles,
+        "days_remaining": days_remaining,
+        "expiry_warning": days_remaining <= 7 and days_remaining > 0
     }
+
+def calculate_days_remaining(end_date_str):
+    """Calculate days remaining from end date string"""
+    if not end_date_str:
+        return 0
+    try:
+        end_date = datetime.fromisoformat(end_date_str.replace('Z', '+00:00'))
+        now = datetime.now(timezone.utc)
+        delta = end_date - now
+        return max(0, delta.days)
+    except:
+        return 0
+
+async def get_feature_toggles_for_therapist(therapist_id: str):
+    """Get active feature toggles for a therapist based on their subscription plan"""
+    therapist = await db.users.find_one({"id": therapist_id}, {"_id": 0})
+    if not therapist:
+        return DEFAULT_FEATURE_TOGGLES
+    
+    subscription = await db.subscriptions.find_one(
+        {"therapist_id": therapist_id},
+        {"_id": 0},
+        sort=[("start_date", -1)]
+    )
+    
+    if not subscription:
+        # Free trial gets all features
+        return DEFAULT_FEATURE_TOGGLES
+    
+    plan = await db.subscription_plans.find_one({"id": subscription.get("plan_id")}, {"_id": 0})
+    if not plan or not plan.get("feature_toggles"):
+        return DEFAULT_FEATURE_TOGGLES
+    
+    return {**DEFAULT_FEATURE_TOGGLES, **plan.get("feature_toggles", {})}
 
 # ============= USER PREFERENCES ENDPOINTS =============
 
