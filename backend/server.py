@@ -813,6 +813,43 @@ class CashSettlement(BaseModel):
     created_at: str
     updated_at: str
 
+# Support Ticket Models
+class TicketReplyCreate(BaseModel):
+    message: str
+
+class TicketReply(BaseModel):
+    id: str
+    ticket_id: str
+    message: str
+    author_id: str
+    author_name: str
+    author_role: Literal["therapist", "super_admin"]
+    created_at: str
+
+class TicketCreate(BaseModel):
+    subject: str
+    category: Literal["technical", "billing", "subscription", "other"]
+    description: str
+    priority: Literal["low", "medium", "high"] = "medium"
+
+class TicketStatusUpdate(BaseModel):
+    status: Literal["open", "in_progress", "closed"]
+
+class SupportTicket(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    therapist_id: str
+    therapist_name: str
+    therapist_email: Optional[str] = None
+    subject: str
+    category: Literal["technical", "billing", "subscription", "other"]
+    description: str
+    priority: Literal["low", "medium", "high"]
+    status: Literal["open", "in_progress", "closed"] = "open"
+    replies: List[TicketReply] = []
+    created_at: str
+    updated_at: str
+
 # Audit Log
 class AuditLog(BaseModel):
     model_config = ConfigDict(extra="ignore")
