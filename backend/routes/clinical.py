@@ -121,7 +121,7 @@ def parse_datetime(value):
 
 # ============= CASE HISTORY ENDPOINTS =============
 
-@router.get("/case-history/{client_id}", response_model=CaseHistoryResponse)
+@router.get("/case-history/{client_id}")
 async def get_case_history(client_id: str, current_user: dict = Depends(require_therapist)):
     """Get case history for a client"""
     case_history = await db.case_histories.find_one(
@@ -142,7 +142,31 @@ async def get_case_history(client_id: str, current_user: dict = Depends(require_
         }
         await db.case_histories.insert_one(case_history)
     
-    return CaseHistoryResponse(**case_history)
+    # Flatten sections for frontend compatibility
+    sections = case_history.get("sections", {})
+    response = {
+        "id": case_history.get("id"),
+        "client_id": case_history.get("client_id"),
+        "therapist_id": case_history.get("therapist_id"),
+        "sections": sections,
+        "is_complete": case_history.get("is_complete", False),
+        "created_at": case_history.get("created_at"),
+        "updated_at": case_history.get("updated_at"),
+        # Flattened sections
+        "basic_identification": sections.get("basic_identification", {}),
+        "presenting_complaints": sections.get("presenting_complaints", {}),
+        "history_of_present_illness": sections.get("history_of_present_illness", {}),
+        "past_psychiatric_history": sections.get("past_psychiatric_history", {}),
+        "medical_history": sections.get("medical_history", {}),
+        "family_history": sections.get("family_history", {}),
+        "personal_developmental_history": sections.get("personal_developmental_history", {}),
+        "mental_status_examination": sections.get("mental_status_examination", {}),
+        "provisional_formulation": sections.get("provisional_formulation", {}),
+        "initial_therapy_plan": sections.get("initial_therapy_plan", {}),
+        "consent_disclaimer": sections.get("consent_disclaimer", {})
+    }
+    
+    return response
 
 
 @router.put("/case-history/{client_id}")
