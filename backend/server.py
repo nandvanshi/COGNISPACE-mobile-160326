@@ -6073,6 +6073,56 @@ async def complete_homework(homework_id: str, completion: HomeworkComplete, curr
     
     return {"success": True}
 
+
+@api_router.put("/homework/{homework_id}", response_model=Homework)
+async def update_homework(homework_id: str, hw_data: HomeworkUpdate, current_user: dict = Depends(require_active_therapist)):
+    """Update homework - therapist only"""
+    hw = await db.homework.find_one({"id": homework_id, "therapist_id": current_user["id"]}, {"_id": 0})
+    if not hw:
+        raise HTTPException(status_code=404, detail="Homework not found")
+    
+    update_data = {}
+    if hw_data.title is not None:
+        update_data["title"] = hw_data.title
+    if hw_data.description is not None:
+        update_data["description"] = hw_data.description
+    if hw_data.due_date is not None:
+        update_data["due_date"] = hw_data.due_date.isoformat()
+    if hw_data.priority is not None:
+        if hw_data.priority not in ["low", "medium", "high"]:
+            raise HTTPException(status_code=400, detail="Priority must be low, medium, or high")
+        update_data["priority"] = hw_data.priority
+    
+    if update_data:
+        await db.homework.update_one({"id": homework_id}, {"$set": update_data})
+        await log_audit(current_user["id"], current_user["role"], "update", "homework", homework_id)
+    
+    # Fetch updated homework
+    updated_hw = await db.homework.find_one({"id": homework_id}, {"_id": 0})
+    result = {}
+    for k, v in updated_hw.items():
+        if k in ["due_date", "completed_at"] and v:
+            result[k] = datetime.fromisoformat(v)
+        elif k == "created_at":
+            result[k] = datetime.fromisoformat(v)
+        else:
+            result[k] = v
+    return Homework(**result)
+
+
+@api_router.delete("/homework/{homework_id}")
+async def delete_homework(homework_id: str, current_user: dict = Depends(require_active_therapist)):
+    """Delete homework - therapist only"""
+    hw = await db.homework.find_one({"id": homework_id, "therapist_id": current_user["id"]}, {"_id": 0})
+    if not hw:
+        raise HTTPException(status_code=404, detail="Homework not found")
+    
+    await db.homework.delete_one({"id": homework_id})
+    await log_audit(current_user["id"], current_user["role"], "delete", "homework", homework_id)
+    
+    return {"success": True, "message": "Homework deleted"}
+
+
 # ============= PAYMENT ENDPOINTS =============
 
 @api_router.post("/payments", response_model=Payment)
