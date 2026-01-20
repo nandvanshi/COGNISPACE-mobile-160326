@@ -32,6 +32,18 @@ db = client[os.environ['DB_NAME']]
 # AI/LLM Configuration
 EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY')
 
+# Default feature toggles for all subscription plans (all features enabled by default)
+DEFAULT_FEATURE_TOGGLES = {
+    "session_notes": True,
+    "assessments": True,
+    "ai_clinical": True,
+    "protocols": True,
+    "messaging": True,
+    "payments": True,
+    "assistants": True,
+    "reports": True
+}
+
 # Security
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer()
