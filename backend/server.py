@@ -14,6 +14,7 @@ from zoneinfo import ZoneInfo
 from passlib.context import CryptContext
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 import json
+from assessment_library import CLINICAL_ASSESSMENTS, calculate_score, get_severity, get_client_friendly_assessment, ASSESSMENT_CLIENT_INFO
 
 # IST timezone for India Standard Time
 IST = ZoneInfo("Asia/Kolkata")
