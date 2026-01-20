@@ -102,6 +102,7 @@ const SuperAdminDashboard = () => {
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto">
         <div className="max-w-7xl mx-auto p-6 md:p-12">
+          {currentView === 'overview' && <AdminOverview onNavigate={setCurrentView} />}
           {currentView === 'applications' && <TherapistApplications />}
           {currentView === 'therapists' && <TherapistManagement onViewClients={handleViewTherapistClients} />}
           {currentView === 'clients' && <ClientManagement onViewTherapist={handleViewTherapist} />}
