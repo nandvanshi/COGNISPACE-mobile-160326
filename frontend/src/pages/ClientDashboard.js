@@ -768,6 +768,95 @@ const ClientDashboard = () => {
 
       {/* Settings Dialog */}
       <Settings isOpen={showSettings} onClose={() => setShowSettings(false)} />
+
+      {/* Assessment Taker Dialog - Full Screen for better UX */}
+      <Dialog open={showAssessmentTaker} onOpenChange={(open) => {
+        if (!open) {
+          setShowAssessmentTaker(false);
+          setSelectedAssessmentId(null);
+        }
+      }}>
+        <DialogContent className="max-w-2xl max-h-[95vh] overflow-y-auto p-0" data-testid="assessment-taker-dialog">
+          {selectedAssessmentId && (
+            <ClientAssessmentTaker
+              assessmentId={selectedAssessmentId}
+              onComplete={handleAssessmentComplete}
+              onCancel={() => {
+                setShowAssessmentTaker(false);
+                setSelectedAssessmentId(null);
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Shared Report View Dialog */}
+      <Dialog open={showSharedReport} onOpenChange={setShowSharedReport}>
+        <DialogContent className="max-w-lg" data-testid="shared-report-dialog">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-primary">
+              <FileText size={20} /> Assessment Report
+            </DialogTitle>
+          </DialogHeader>
+          {sharedReportData && (
+            <div className="space-y-4">
+              <div>
+                <p className="text-lg font-medium">{sharedReportData.assessment_type}</p>
+                <p className="text-sm text-muted-foreground">
+                  Completed: {sharedReportData.completed_at ? formatDate(sharedReportData.completed_at) : 'N/A'}
+                </p>
+              </div>
+
+              {/* Score Display */}
+              {sharedReportData.score_details && (
+                <Card className="p-4 bg-surface">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Your Score</p>
+                      <p className="text-2xl font-bold text-primary">{sharedReportData.score}</p>
+                      {sharedReportData.score_details.max_score && (
+                        <p className="text-xs text-muted-foreground">out of {sharedReportData.score_details.max_score}</p>
+                      )}
+                    </div>
+                    {sharedReportData.score_details.severity && (
+                      <Badge className={`text-sm ${
+                        sharedReportData.score_details.severity.color === 'green' ? 'bg-success/10 text-success' :
+                        sharedReportData.score_details.severity.color === 'yellow' ? 'bg-warning/10 text-warning' :
+                        sharedReportData.score_details.severity.color === 'orange' ? 'bg-orange-100 text-orange-800' :
+                        'bg-destructive/10 text-destructive'
+                      }`}>
+                        {sharedReportData.score_details.severity.label}
+                      </Badge>
+                    )}
+                  </div>
+                </Card>
+              )}
+
+              {/* Therapist Notes if any */}
+              {sharedReportData.therapist_notes && (
+                <div>
+                  <p className="text-sm font-medium mb-2">Notes from Your Therapist</p>
+                  <Card className="p-4 bg-blue-50 border-blue-200">
+                    <p className="text-sm text-blue-900">{sharedReportData.therapist_notes}</p>
+                  </Card>
+                </div>
+              )}
+
+              {/* Disclaimer */}
+              <Card className="p-4 bg-amber-50 border-amber-200">
+                <p className="text-sm text-amber-800">
+                  <AlertCircle className="w-4 h-4 inline mr-2" />
+                  Please discuss this report with your therapist for proper interpretation.
+                </p>
+              </Card>
+
+              <Button onClick={() => setShowSharedReport(false)} className="w-full">
+                Close
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
