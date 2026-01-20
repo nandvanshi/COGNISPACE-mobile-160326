@@ -246,9 +246,109 @@ async def mark_case_history_complete(client_id: str, current_user: dict = Depend
 
 # ============= THERAPY CONSENT ENDPOINTS =============
 
+@router.get("/therapy-consent/check/{client_id}")
+async def check_therapy_consent(client_id: str, current_user: dict = Depends(get_current_user)):
+    """Check if therapy consent exists and is signed for a client"""
+    # Allow both therapist and client to check consent
+    consent = None
+    
+    if current_user["role"] == "therapist":
+        consent = await db.therapy_consents.find_one(
+            {"client_id": client_id, "therapist_id": current_user["id"]},
+            {"_id": 0}
+        )
+    elif current_user["role"] == "client":
+        # Client can check their own consent
+        if client_id != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Access denied")
+        consent = await db.therapy_consents.find_one(
+            {"client_id": client_id},
+            {"_id": 0}
+        )
+    
+    if not consent:
+        return {"exists": False, "is_signed": False}
+    
+    return {
+        "exists": True,
+        "is_signed": consent.get("is_signed", False)
+    }
+
+
+@router.get("/therapy-consent/{client_id}")
+async def get_therapy_consent(client_id: str, current_user: dict = Depends(get_current_user)):
+    """Get therapy consent for a client"""
+    consent = None
+    therapist_id = None
+    
+    if current_user["role"] == "therapist":
+        therapist_id = current_user["id"]
+        consent = await db.therapy_consents.find_one(
+            {"client_id": client_id, "therapist_id": therapist_id},
+            {"_id": 0}
+        )
+    elif current_user["role"] == "client":
+        # Client can view their own consent
+        if client_id != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Access denied")
+        consent = await db.therapy_consents.find_one(
+            {"client_id": client_id},
+            {"_id": 0}
+        )
+        if consent:
+            therapist_id = consent.get("therapist_id")
+    
+    if not consent:
+        if not therapist_id:
+            # For clients without consent yet, get their assigned therapist
+            client_profile = await db.client_profiles.find_one({"client_id": client_id}, {"_id": 0})
+            if client_profile:
+                therapist_id = client_profile.get("therapist_id")
+        
+        if therapist_id:
+            consent_id = str(uuid.uuid4())
+            consent = {
+                "id": consent_id,
+                "client_id": client_id,
+                "therapist_id": therapist_id,
+                "is_signed": False,
+                "signature_date": None,
+                "witnessed_by": None,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            await db.therapy_consents.insert_one(consent)
+        else:
+            return {"exists": False, "is_signed": False}
+    
+    return consent
+
+
+@router.post("/therapy-consent/{client_id}/sign")
+async def sign_therapy_consent(client_id: str, signature_method: str = "digital", current_user: dict = Depends(get_current_user)):
+    """Sign therapy consent - can be done by client"""
+    if current_user["role"] == "client" and client_id != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    consent = await db.therapy_consents.find_one({"client_id": client_id}, {"_id": 0})
+    
+    if not consent:
+        raise HTTPException(status_code=404, detail="Consent not found")
+    
+    await db.therapy_consents.update_one(
+        {"client_id": client_id},
+        {"$set": {
+            "is_signed": True,
+            "signature_date": datetime.now(timezone.utc).isoformat(),
+            "signature_method": signature_method
+        }}
+    )
+    
+    return {"message": "Consent signed successfully"}
+
+
 @router.get("/consent/{client_id}", response_model=ConsentResponse)
 async def get_consent(client_id: str, current_user: dict = Depends(require_therapist)):
-    """Get therapy consent for a client"""
+    """Get therapy consent for a client (legacy endpoint)"""
     consent = await db.therapy_consents.find_one(
         {"client_id": client_id, "therapist_id": current_user["id"]},
         {"_id": 0}
