@@ -588,12 +588,31 @@ const ClientDashboard = () => {
             ) : (
               <div className="space-y-2 sm:space-y-3">
                 {pendingHomework.map((hw) => (
-                  <div key={hw.id} className="p-3 sm:p-4 bg-surface rounded-lg border border-border">
-                    <h4 className="font-medium text-sm sm:text-base">{hw.title}</h4>
+                  <div 
+                    key={hw.id} 
+                    className={`p-3 sm:p-4 bg-surface rounded-lg border ${
+                      hw.priority === 'high' ? 'border-red-300 bg-red-50/30' :
+                      hw.priority === 'low' ? 'border-gray-300' :
+                      'border-amber-300 bg-amber-50/20'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <h4 className="font-medium text-sm sm:text-base">{hw.title}</h4>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0 ${
+                        hw.priority === 'high' ? 'bg-red-100 text-red-700' :
+                        hw.priority === 'low' ? 'bg-gray-100 text-gray-700' :
+                        'bg-amber-100 text-amber-700'
+                      }`}>
+                        {hw.priority?.charAt(0).toUpperCase() + hw.priority?.slice(1)}
+                      </span>
+                    </div>
                     <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-2">{hw.description}</p>
                     {hw.due_date && (
-                      <p className="text-[10px] sm:text-xs text-warning mt-2">
+                      <p className={`text-[10px] sm:text-xs mt-2 ${
+                        new Date(hw.due_date) < new Date() ? 'text-red-600 font-medium' : 'text-warning'
+                      }`}>
                         Due: {formatDate(hw.due_date)}
+                        {new Date(hw.due_date) < new Date() && ' (Overdue)'}
                       </p>
                     )}
                     <Button
