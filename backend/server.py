@@ -3127,10 +3127,16 @@ async def delete_appointment(appointment_id: str, current_user: dict = Depends(r
 
 @api_router.get("/availability", response_model=TherapistAvailability)
 async def get_availability(current_user: dict = Depends(get_current_user)):
-    """Get therapist's availability settings"""
-    therapist_id = current_user["id"] if current_user["role"] == "therapist" else None
-    if not therapist_id:
-        raise HTTPException(status_code=403, detail="Only therapists can access availability settings")
+    """Get therapist's availability settings - therapist gets own, assistant gets linked therapist's"""
+    # Determine therapist_id based on role
+    if current_user["role"] == "therapist":
+        therapist_id = current_user["id"]
+    elif current_user["role"] == "assistant":
+        therapist_id = current_user.get("therapist_id")
+        if not therapist_id:
+            raise HTTPException(status_code=403, detail="Assistant not linked to a therapist")
+    else:
+        raise HTTPException(status_code=403, detail="Only therapists and assistants can access availability settings")
     
     availability = await db.therapist_availability.find_one({"therapist_id": therapist_id}, {"_id": 0})
     
