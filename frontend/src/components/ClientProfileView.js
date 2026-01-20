@@ -18,7 +18,7 @@ import {
   Link as LinkIcon, PenSquare, Receipt, PlayCircle, StopCircle, Trash2, BookCheck
 } from 'lucide-react';
 import { formatDate, formatTime, formatCurrency } from '../utils/formatUtils';
-import CaseHistoryWizard from './CaseHistoryWizard';
+import CaseHistoryForm from './CaseHistoryForm';
 import TherapyConsent from './TherapyConsent';
 import { SessionActionButtons, AppointmentStatusBadge } from './SessionCheckInOut';
 import { PaymentCard } from './PaymentReceipt';
