@@ -3,10 +3,9 @@ import axios from 'axios';
 import { useAuth, API } from '../App';
 import { useSubscription } from '../contexts/SubscriptionContext';
 import { Button } from '../components/ui/button';
-import { LogOut, Users, CalendarDays, DollarSign, Home, AlertTriangle, UserCog, Sparkles, Menu, X, Clock } from 'lucide-react';
+import { LogOut, Users, CalendarDays, DollarSign, Home, AlertTriangle, UserCog, Sparkles, Menu, X } from 'lucide-react';
 import ClientManagement from '../components/ClientManagement';
 import TherapistSchedule from '../components/TherapistSchedule';
-import AvailabilitySettings from '../components/AvailabilitySettings';
 import Payments from '../components/Payments';
 import { Card } from '../components/ui/card';
 
