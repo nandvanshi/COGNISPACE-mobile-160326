@@ -250,6 +250,29 @@ const TherapistDashboard = () => {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto bg-background pt-14 lg:pt-0">
+        {/* Expiry Warning Banner */}
+        {expiryWarning && !isReadOnly && (
+          <div 
+            className="bg-amber-50 border-b border-amber-200 text-amber-800 px-4 lg:px-6 py-3 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 sticky top-14 lg:top-0 z-40"
+            data-testid="expiry-warning-banner"
+          >
+            <div className="flex items-center gap-2 flex-1">
+              <AlertCircle size={20} className="flex-shrink-0" />
+              <p className="font-medium text-sm">
+                Your subscription expires in {daysRemaining} day{daysRemaining !== 1 ? 's' : ''}. Renew now to avoid interruption.
+              </p>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => window.open('mailto:support@theragenie.com?subject=Subscription Renewal', '_blank')}
+              className="w-full sm:w-auto border-amber-300 text-amber-800 hover:bg-amber-100"
+            >
+              Contact Support
+            </Button>
+          </div>
+        )}
+
         {/* Read-Only Banner */}
         {isReadOnly && (
           <div 
@@ -272,6 +295,28 @@ const TherapistDashboard = () => {
           </div>
         )}
 
+        {/* Availability Setup Prompt */}
+        {!hasAvailability && currentView === 'overview' && (
+          <div 
+            className="bg-blue-50 border-b border-blue-200 text-blue-800 px-4 lg:px-6 py-3 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4"
+            data-testid="availability-setup-banner"
+          >
+            <div className="flex items-center gap-2 flex-1">
+              <Clock size={20} className="flex-shrink-0" />
+              <p className="font-medium text-sm">
+                Set up your availability to start accepting appointments.
+              </p>
+            </div>
+            <Button 
+              size="sm"
+              onClick={() => setCurrentView('availability')}
+              className="w-full sm:w-auto"
+            >
+              Set Availability
+            </Button>
+          </div>
+        )}
+
         <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-10">
           {currentView === 'overview' && (
             <TherapistOverview 
@@ -281,7 +326,7 @@ const TherapistDashboard = () => {
           )}
           {currentView === 'clients' && <ClientManagement isReadOnly={isReadOnly} />}
           {currentView === 'schedule' && <TherapistSchedule isReadOnly={isReadOnly} />}
-          {currentView === 'availability' && <AvailabilitySettings isReadOnly={isReadOnly} />}
+          {currentView === 'availability' && <AvailabilitySettings isReadOnly={isReadOnly} onSave={() => setHasAvailability(true)} />}
           {currentView === 'recurring' && <RecurringAppointments isReadOnly={isReadOnly} />}
           {currentView === 'notes' && <SessionNotes isReadOnly={isReadOnly} />}
           {currentView === 'messages' && <Messaging isReadOnly={isReadOnly} />}
