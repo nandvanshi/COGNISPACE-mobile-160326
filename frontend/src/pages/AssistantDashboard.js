@@ -452,7 +452,212 @@ const AssistantOverview = ({ onNavigate }) => {
         )}
       </Card>
 
-      {/* 5. ACCESS INFO (Collapsible) */}
+      {/* 5. CASH SETTLEMENT */}
+      <Card className="p-5 bg-white/70 backdrop-blur-xl border border-border/40" data-testid="cash-settlement-section">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <HandCoins className="text-amber-600" size={20} />
+            <h2 className="text-lg font-semibold">End-of-Day Cash Settlement</h2>
+          </div>
+          {settlement && (
+            <Badge 
+              variant="outline" 
+              className={`
+                ${settlement.status === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-200' : ''}
+                ${settlement.status === 'handed_over' ? 'bg-blue-50 text-blue-700 border-blue-200' : ''}
+                ${settlement.status === 'settled' ? 'bg-green-50 text-green-700 border-green-200' : ''}
+                ${settlement.status === 'disputed' ? 'bg-red-50 text-red-700 border-red-200' : ''}
+              `}
+            >
+              {settlement.status === 'pending' && 'Pending'}
+              {settlement.status === 'handed_over' && 'Awaiting Confirmation'}
+              {settlement.status === 'settled' && 'Settled'}
+              {settlement.status === 'disputed' && 'Disputed'}
+            </Badge>
+          )}
+        </div>
+
+        {settlement ? (
+          <>
+            {/* Settlement Summary */}
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              <div className="p-3 bg-green-50 rounded-lg text-center">
+                <Banknote size={18} className="mx-auto text-green-600 mb-1" />
+                <p className="text-xs text-green-700">Cash to Hand Over</p>
+                <p className="font-bold text-green-800">{formatCurrency(settlement.cash_amount)}</p>
+              </div>
+              <div className="p-3 bg-blue-50 rounded-lg text-center">
+                <CreditCard size={18} className="mx-auto text-blue-600 mb-1" />
+                <p className="text-xs text-blue-700">Online (Auto-settled)</p>
+                <p className="font-bold text-blue-800">{formatCurrency(settlement.online_amount)}</p>
+              </div>
+              <div className="p-3 bg-primary/10 rounded-lg text-center">
+                <DollarSign size={18} className="mx-auto text-primary mb-1" />
+                <p className="text-xs text-primary">Total Today</p>
+                <p className="font-bold text-primary">{formatCurrency(settlement.total_amount)}</p>
+              </div>
+            </div>
+
+            {/* Status-based content */}
+            {settlement.status === 'pending' && settlement.cash_amount > 0 && (
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                <p className="text-sm text-amber-800 mb-3">
+                  You have <span className="font-semibold">{formatCurrency(settlement.cash_amount)}</span> in cash to hand over to the therapist.
+                </p>
+                <Button 
+                  onClick={() => setShowHandoverDialog(true)}
+                  className="gap-2 bg-amber-600 hover:bg-amber-700"
+                  data-testid="mark-cash-handover-btn"
+                >
+                  <Send size={16} />
+                  Mark Cash Handed Over
+                </Button>
+              </div>
+            )}
+
+            {settlement.status === 'pending' && settlement.cash_amount === 0 && (
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-center">
+                <CheckCircle2 size={24} className="mx-auto text-blue-600 mb-2" />
+                <p className="text-sm text-blue-800">No cash to settle today. All payments were online.</p>
+              </div>
+            )}
+
+            {settlement.status === 'handed_over' && (
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <Clock size={20} className="text-blue-600 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-blue-800">Handover submitted</p>
+                    <p className="text-sm text-blue-600 mt-1">
+                      Waiting for {settlement.therapist_name} to confirm receipt of {formatCurrency(settlement.cash_amount)}
+                    </p>
+                    {settlement.handover_note && (
+                      <p className="text-sm text-blue-600 mt-2 italic">Note: "{settlement.handover_note}"</p>
+                    )}
+                    <p className="text-xs text-blue-500 mt-2">
+                      Submitted at {new Date(settlement.handover_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {settlement.status === 'settled' && (
+              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <Lock size={20} className="text-green-600 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-green-800">Settlement Complete</p>
+                    <p className="text-sm text-green-600 mt-1">
+                      {settlement.therapist_name} confirmed receipt of {formatCurrency(settlement.cash_amount)}
+                    </p>
+                    <p className="text-xs text-green-500 mt-2">
+                      Confirmed at {new Date(settlement.confirmed_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {settlement.status === 'disputed' && (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle size={20} className="text-red-600 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-red-800">Issue Reported</p>
+                    <p className="text-sm text-red-600 mt-1">
+                      {settlement.therapist_name} reported an issue with the handover.
+                    </p>
+                    {settlement.disputed_reason && (
+                      <p className="text-sm text-red-700 mt-2 p-2 bg-red-100 rounded">
+                        Reason: "{settlement.disputed_reason}"
+                      </p>
+                    )}
+                    <p className="text-xs text-red-500 mt-2">Please contact the therapist to resolve this.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <p className="text-muted-foreground text-center py-4">Loading settlement info...</p>
+        )}
+      </Card>
+
+      {/* Cash Handover Dialog */}
+      <Dialog open={showHandoverDialog} onOpenChange={setShowHandoverDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <HandCoins className="text-amber-600" size={22} />
+              Confirm Cash Handover
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 pt-2">
+            {/* Amount Summary */}
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <p className="text-sm text-amber-700 mb-1">Cash Amount to Hand Over</p>
+              <p className="text-2xl font-bold text-amber-800">
+                {settlement && formatCurrency(settlement.cash_amount)}
+              </p>
+              <p className="text-xs text-amber-600 mt-2">
+                This amount is auto-calculated from today's cash payments
+              </p>
+            </div>
+
+            {/* Note */}
+            <div>
+              <Label htmlFor="handover-note">Note (Optional)</Label>
+              <Textarea
+                id="handover-note"
+                placeholder="Any notes about the handover..."
+                value={handoverNote}
+                onChange={(e) => setHandoverNote(e.target.value)}
+                className="mt-1"
+                rows={3}
+              />
+            </div>
+
+            {/* Warning */}
+            <div className="p-3 bg-muted/50 rounded-lg text-sm text-muted-foreground">
+              <p>By clicking "Confirm Handover", you confirm that you have handed over the cash amount to the therapist.</p>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-2 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowHandoverDialog(false)}
+                className="flex-1"
+                disabled={submittingHandover}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleCashHandover}
+                className="flex-1 bg-amber-600 hover:bg-amber-700 gap-2"
+                disabled={submittingHandover}
+                data-testid="confirm-handover-btn"
+              >
+                {submittingHandover ? (
+                  <>
+                    <RefreshCw size={16} className="animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    <FileCheck size={16} />
+                    Confirm Handover
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 6. ACCESS INFO (Collapsible) */}
       <Card className="p-4 bg-info/5 border border-info/20" data-testid="access-info-section">
         <button 
           onClick={() => setShowAccessInfo(!showAccessInfo)}
@@ -476,6 +681,7 @@ const AssistantOverview = ({ onNavigate }) => {
                 <li>Block calendar time</li>
                 <li>View and record payments</li>
                 <li>Check in/out sessions</li>
+                <li>Submit cash handover</li>
               </ul>
             </div>
             <div>
