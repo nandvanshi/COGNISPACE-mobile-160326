@@ -1072,6 +1072,129 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
                   </div>
                 </TabsContent>
 
+                {/* Homework Tab - Therapist Only */}
+                {!isAssistant && (
+                  <TabsContent value="homework" className="mt-0 space-y-4">
+                    <div className="flex justify-between items-center mb-4">
+                      <div className="grid grid-cols-3 gap-4 flex-1 mr-4">
+                        <Card className="p-3 text-center bg-blue-50">
+                          <p className="text-xl font-bold text-blue-600">{profileData.homework.filter(h => h.status === 'assigned').length}</p>
+                          <p className="text-xs text-blue-700">Pending</p>
+                        </Card>
+                        <Card className="p-3 text-center bg-green-50">
+                          <p className="text-xl font-bold text-green-600">{profileData.homework.filter(h => h.status === 'completed').length}</p>
+                          <p className="text-xs text-green-700">Completed</p>
+                        </Card>
+                        <Card className="p-3 text-center bg-gray-50">
+                          <p className="text-xl font-bold text-gray-600">{profileData.homework.length}</p>
+                          <p className="text-xs text-gray-700">Total</p>
+                        </Card>
+                      </div>
+                      {!isReadOnly && (
+                        <Button 
+                          onClick={handleOpenAssignHomework}
+                          className="gap-2"
+                          data-testid="assign-homework-btn"
+                        >
+                          <Plus size={16} /> Assign Homework
+                        </Button>
+                      )}
+                    </div>
+
+                    <div className="space-y-3">
+                      {profileData.homework.length > 0 ? (
+                        profileData.homework
+                          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                          .map((hw) => (
+                            <Card 
+                              key={hw.id} 
+                              className={`p-4 ${
+                                hw.status === 'completed' ? 'border-green-200 bg-green-50/30' : 
+                                hw.priority === 'high' ? 'border-red-200 bg-red-50/20' :
+                                hw.priority === 'low' ? 'border-gray-200 bg-gray-50/20' :
+                                'border-amber-200 bg-amber-50/20'
+                              }`}
+                              data-testid={`homework-item-${hw.id}`}
+                            >
+                              <div className="flex justify-between items-start gap-3">
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <h4 className="font-semibold text-foreground">{hw.title}</h4>
+                                    <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                      hw.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                                    }`}>
+                                      {hw.status === 'completed' ? 'Completed' : 'Pending'}
+                                    </span>
+                                    <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                      hw.priority === 'high' ? 'bg-red-100 text-red-700' :
+                                      hw.priority === 'low' ? 'bg-gray-100 text-gray-700' :
+                                      'bg-amber-100 text-amber-700'
+                                    }`}>
+                                      {hw.priority?.charAt(0).toUpperCase() + hw.priority?.slice(1)} Priority
+                                    </span>
+                                  </div>
+                                  <p className="text-sm text-muted-foreground line-clamp-2">{hw.description}</p>
+                                  <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                                    <span>Assigned: {formatDate(hw.created_at)}</span>
+                                    {hw.due_date && (
+                                      <span className={hw.status !== 'completed' && new Date(hw.due_date) < new Date() ? 'text-red-600 font-medium' : ''}>
+                                        Due: {formatDate(hw.due_date)}
+                                      </span>
+                                    )}
+                                    {hw.completed_at && (
+                                      <span className="text-green-600">Completed: {formatDate(hw.completed_at)}</span>
+                                    )}
+                                  </div>
+                                  {hw.client_notes && (
+                                    <div className="mt-2 p-2 bg-muted/50 rounded text-sm">
+                                      <span className="font-medium">Client Notes:</span> {hw.client_notes}
+                                    </div>
+                                  )}
+                                </div>
+                                {hw.status !== 'completed' && !isReadOnly && (
+                                  <div className="flex items-center gap-1 flex-shrink-0">
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm"
+                                      onClick={() => handleEditHomeworkClick(hw)}
+                                      data-testid={`edit-homework-${hw.id}`}
+                                    >
+                                      <Edit size={14} />
+                                    </Button>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm"
+                                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                      onClick={() => handleDeleteHomework(hw.id)}
+                                      data-testid={`delete-homework-${hw.id}`}
+                                    >
+                                      <Trash2 size={14} />
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+                            </Card>
+                          ))
+                      ) : (
+                        <Card className="p-8 border-dashed border-2 text-center">
+                          <BookCheck className="mx-auto text-muted-foreground mb-2" size={32} />
+                          <p className="text-muted-foreground text-sm">No homework assigned yet</p>
+                          {!isReadOnly && (
+                            <Button 
+                              variant="link" 
+                              size="sm" 
+                              onClick={handleOpenAssignHomework}
+                              className="mt-2"
+                            >
+                              Assign first homework
+                            </Button>
+                          )}
+                        </Card>
+                      )}
+                    </div>
+                  </TabsContent>
+                )}
+
                 {/* Payments Tab */}
                 <TabsContent value="payments" className="mt-0 space-y-4">
                   <div className="grid grid-cols-3 gap-4 mb-4">
