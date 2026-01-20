@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth, API } from '../App';
 import { useSubscription } from '../contexts/SubscriptionContext';
 import { Button } from '../components/ui/button';
-import { LogOut, Users, Calendar, FileText, MessageSquare, ClipboardList, BookOpen, DollarSign, Home, AlertTriangle, Clock, Repeat, UserCog, Brain, Settings as SettingsIcon, Sparkles, Menu, X, ChevronDown, CalendarDays, AlertCircle } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import { Textarea } from '../components/ui/textarea';
+import { Label } from '../components/ui/label';
+import { LogOut, Users, Calendar, FileText, MessageSquare, ClipboardList, BookOpen, DollarSign, Home, AlertTriangle, Clock, Repeat, UserCog, Brain, Settings as SettingsIcon, Sparkles, Menu, X, ChevronDown, CalendarDays, AlertCircle, HandCoins, CheckCircle2, XCircle, Lock, RefreshCw } from 'lucide-react';
 import TherapistOverview from '../components/TherapistOverview';
 import ClientManagement from '../components/ClientManagement';
 import TherapistSchedule from '../components/TherapistSchedule';
@@ -18,6 +21,8 @@ import RecurringAppointments from '../components/RecurringAppointments';
 import AssistantManagement from '../components/AssistantManagement';
 import AIClinicalSupport from '../components/AIClinicalSupport';
 import Settings from '../components/Settings';
+import { toast } from 'sonner';
+import { formatCurrency } from '../utils/formatUtils';
 
 const TherapistDashboard = () => {
   const { user, logout } = useAuth();
