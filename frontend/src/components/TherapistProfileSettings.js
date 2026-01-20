@@ -538,7 +538,7 @@ const TherapistProfileSettings = ({ isReadOnly = false }) => {
                   </Button>
                   
                   {showSpecDropdown && (
-                    <div className="absolute z-50 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-64 overflow-y-auto">
+                    <div className="absolute z-[100] w-full mt-1 bg-white border rounded-lg shadow-lg max-h-64 overflow-y-auto">
                       {SPECIALIZATION_OPTIONS.map((spec, idx) => (
                         <button
                           key={idx}
