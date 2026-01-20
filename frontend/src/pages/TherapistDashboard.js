@@ -98,13 +98,13 @@ const TherapistDashboard = () => {
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-surface border-b border-border">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
-              <Sparkles size={16} className="text-white" />
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
+              <Sparkles size={18} className="text-white" />
             </div>
-            <span className="font-serif text-lg text-primary">TheraGenie</span>
+            <span className="font-serif text-xl text-primary">TheraGenie</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground hidden sm:block">{getCurrentViewLabel()}</span>
+          <div className="flex items-center gap-3">
+            <span className="text-base text-muted-foreground hidden sm:block">{getCurrentViewLabel()}</span>
             <Button
               variant="ghost"
               size="sm"
@@ -112,7 +112,7 @@ const TherapistDashboard = () => {
               className="p-2"
               data-testid="mobile-menu-toggle"
             >
-              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              {mobileMenuOpen ? <X size={26} /> : <Menu size={26} />}
             </Button>
           </div>
         </div>
