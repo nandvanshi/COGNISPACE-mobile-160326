@@ -1192,28 +1192,6 @@ def calculate_days_remaining(end_date_str):
     except:
         return 0
 
-async def get_feature_toggles_for_therapist(therapist_id: str):
-    """Get active feature toggles for a therapist based on their subscription plan"""
-    therapist = await db.users.find_one({"id": therapist_id}, {"_id": 0})
-    if not therapist:
-        return DEFAULT_FEATURE_TOGGLES
-    
-    subscription = await db.subscriptions.find_one(
-        {"therapist_id": therapist_id},
-        {"_id": 0},
-        sort=[("start_date", -1)]
-    )
-    
-    if not subscription:
-        # Free trial gets all features
-        return DEFAULT_FEATURE_TOGGLES
-    
-    plan = await db.subscription_plans.find_one({"id": subscription.get("plan_id")}, {"_id": 0})
-    if not plan or not plan.get("feature_toggles"):
-        return DEFAULT_FEATURE_TOGGLES
-    
-    return {**DEFAULT_FEATURE_TOGGLES, **plan.get("feature_toggles", {})}
-
 # ============= USER PREFERENCES ENDPOINTS =============
 
 class UserPreferences(BaseModel):
