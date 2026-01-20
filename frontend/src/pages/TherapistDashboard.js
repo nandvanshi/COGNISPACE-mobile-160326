@@ -20,6 +20,7 @@ import AvailabilitySettings from '../components/AvailabilitySettings';
 import RecurringAppointments from '../components/RecurringAppointments';
 import AssistantManagement from '../components/AssistantManagement';
 import AIClinicalSupport from '../components/AIClinicalSupport';
+import TherapistProfileSettings from '../components/TherapistProfileSettings';
 import SupportTickets from '../components/SupportTickets';
 import Settings from '../components/Settings';
 import { toast } from 'sonner';
