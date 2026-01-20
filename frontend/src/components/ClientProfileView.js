@@ -957,7 +957,7 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
                                 <p className="mt-1">{profileData.caseHistory.presenting_complaints.main_problems}</p>
                               </div>
                             )}
-                            <div className="grid grid-cols-3 gap-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                               {profileData.caseHistory.presenting_complaints.duration && (
                                 <p><span className="text-muted-foreground">Duration:</span> {profileData.caseHistory.presenting_complaints.duration}</p>
                               )}
