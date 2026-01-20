@@ -782,6 +782,37 @@ class PaymentReceipt(BaseModel):
     payment_status: str
     notes: Optional[str] = None
 
+# Cash Settlement Models
+class CashSettlementCreate(BaseModel):
+    """Request to hand over cash"""
+    note: Optional[str] = None
+
+class CashSettlementDispute(BaseModel):
+    """Request to dispute a settlement"""
+    reason: str  # Required for disputes
+
+class CashSettlement(BaseModel):
+    """Cash settlement record"""
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    date: str  # YYYY-MM-DD format
+    therapist_id: str
+    therapist_name: str
+    assistant_id: Optional[str] = None
+    assistant_name: Optional[str] = None
+    cash_amount: float  # Auto-calculated from payments
+    online_amount: float  # Auto-calculated from payments
+    total_amount: float
+    status: Literal["pending", "handed_over", "settled", "disputed"] = "pending"
+    handover_note: Optional[str] = None
+    handover_at: Optional[str] = None
+    confirmed_at: Optional[str] = None
+    confirmed_by: Optional[str] = None
+    disputed_at: Optional[str] = None
+    disputed_reason: Optional[str] = None
+    created_at: str
+    updated_at: str
+
 # Audit Log
 class AuditLog(BaseModel):
     model_config = ConfigDict(extra="ignore")
