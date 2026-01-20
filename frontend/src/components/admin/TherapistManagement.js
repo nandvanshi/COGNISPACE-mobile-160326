@@ -276,6 +276,50 @@ const TherapistManagement = ({ onViewClients }) => {
     return diffDays;
   };
 
+  // Pincode lookup function
+  const lookupPincode = async (pincode, isEdit = false) => {
+    if (!pincode || pincode.length !== 6) return;
+    
+    setPincodeLoading(true);
+    try {
+      const response = await axios.get(`${API}/therapist/pincode/${pincode}`);
+      if (isEdit) {
+        setEditData(prev => ({
+          ...prev,
+          city: response.data.city,
+          state: response.data.state,
+          district: response.data.district
+        }));
+      } else {
+        setNewTherapist(prev => ({
+          ...prev,
+          city: response.data.city,
+          state: response.data.state,
+          district: response.data.district
+        }));
+      }
+      toast.success('Address auto-filled from pincode');
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Pincode not found');
+    } finally {
+      setPincodeLoading(false);
+    }
+  };
+
+  const handlePincodeChange = (value, isEdit = false) => {
+    const cleanValue = value.replace(/\D/g, '').slice(0, 6);
+    if (isEdit) {
+      setEditData(prev => ({ ...prev, pincode: cleanValue }));
+    } else {
+      setNewTherapist(prev => ({ ...prev, pincode: cleanValue }));
+    }
+    
+    // Auto-lookup when 6 digits entered
+    if (cleanValue.length === 6) {
+      lookupPincode(cleanValue, isEdit);
+    }
+  };
+
   const getSubscriptionBadge = (therapist) => {
     if (!therapist.subscription_status) {
       return <span className="px-2 py-1 bg-error/10 text-error text-xs rounded-full">No Subscription</span>;
