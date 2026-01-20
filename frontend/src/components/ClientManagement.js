@@ -60,20 +60,26 @@ const ClientManagement = ({ isReadOnly = false, isAssistant = false, initialClie
   }, [initialFilter]);
 
   useEffect(() => {
-    if (searchQuery) {
-      setFilteredClients(
-        clients.filter(
-          (c) =>
-            c.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (c.mobile && c.mobile.includes(searchQuery)) ||
-            (c.email && c.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
-            (c.client_id && c.client_id.toLowerCase().includes(searchQuery.toLowerCase()))
-        )
-      );
-    } else {
-      setFilteredClients(clients);
+    let result = clients;
+    
+    // Apply inactive filter if active
+    if (activeFilter === 'inactive' && filterData && filterData.length > 0) {
+      result = clients.filter(c => filterData.includes(c.id));
     }
-  }, [searchQuery, clients]);
+    
+    // Apply search query
+    if (searchQuery) {
+      result = result.filter(
+        (c) =>
+          c.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (c.mobile && c.mobile.includes(searchQuery)) ||
+          (c.email && c.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          (c.client_id && c.client_id.toLowerCase().includes(searchQuery.toLowerCase()))
+      );
+    }
+    
+    setFilteredClients(result);
+  }, [searchQuery, clients, activeFilter, filterData]);
 
   const fetchClients = async () => {
     try {
