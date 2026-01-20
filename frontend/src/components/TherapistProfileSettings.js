@@ -546,12 +546,12 @@ const TherapistProfileSettings = ({ isReadOnly = false }) => {
                       <div 
                         className="absolute left-0 right-0 z-[100] mt-1 bg-white border-2 border-primary/20 rounded-lg shadow-2xl"
                       >
-                        <div className="overflow-y-auto" style={{ maxHeight: '240px' }}>
+                        <div className="overflow-y-auto" style={{ maxHeight: '300px', minHeight: '200px' }}>
                           {SPECIALIZATION_OPTIONS.map((spec, idx) => (
                             <button
                               key={idx}
                               type="button"
-                              className={`w-full text-left px-4 py-3 text-sm hover:bg-primary/5 flex items-center justify-between border-b border-gray-100 last:border-0 ${
+                              className={`w-full text-left px-4 py-2.5 text-sm hover:bg-primary/5 flex items-center justify-between border-b border-gray-100 last:border-0 ${
                                 formData.specializations.includes(spec) ? 'bg-primary/10 text-primary font-medium' : ''
                               }`}
                               onClick={(e) => {
