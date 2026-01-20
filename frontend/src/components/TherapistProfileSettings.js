@@ -851,13 +851,6 @@ const TherapistProfileSettings = ({ isReadOnly = false }) => {
         )}
       </form>
 
-      {/* Click outside to close dropdown */}
-      {showSpecDropdown && (
-        <div 
-          className="fixed inset-0 z-40" 
-          onClick={() => setShowSpecDropdown(false)}
-        />
-      )}
     </div>
   );
 };
