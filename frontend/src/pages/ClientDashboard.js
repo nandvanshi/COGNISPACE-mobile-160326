@@ -9,15 +9,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
+import { Badge } from '../components/ui/badge';
 import { 
   LogOut, Calendar, MessageSquare, ClipboardCheck, BookCheck, 
   FileCheck, Pen, Check, AlertCircle, Loader2, Shield, 
-  CalendarPlus, Receipt, CreditCard, Clock, ChevronRight, Settings as SettingsIcon
+  CalendarPlus, Receipt, CreditCard, Clock, ChevronRight, Settings as SettingsIcon,
+  Eye, FileText
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDate, formatTime, formatCurrency } from '../utils/formatUtils';
 import { PaymentReceiptView } from '../components/PaymentReceipt';
 import Settings from '../components/Settings';
+import ClientAssessmentTaker from '../components/ClientAssessmentTaker';
 
 const ClientDashboard = () => {
   const { user, logout } = useAuth();
@@ -27,6 +30,12 @@ const ClientDashboard = () => {
   const [assessments, setAssessments] = useState([]);
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // Assessment taking state
+  const [showAssessmentTaker, setShowAssessmentTaker] = useState(false);
+  const [selectedAssessmentId, setSelectedAssessmentId] = useState(null);
+  const [showSharedReport, setShowSharedReport] = useState(false);
+  const [sharedReportData, setSharedReportData] = useState(null);
   
   // Consent state
   const [consentStatus, setConsentStatus] = useState({ exists: false, is_signed: false });
