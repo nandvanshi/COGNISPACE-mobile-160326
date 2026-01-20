@@ -33,11 +33,32 @@ const TherapistDashboard = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [expandedGroup, setExpandedGroup] = useState('Clinical');
   const [hasAvailability, setHasAvailability] = useState(true);
+  
+  // Cash Settlement state
+  const [pendingSettlements, setPendingSettlements] = useState([]);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showDisputeDialog, setShowDisputeDialog] = useState(false);
+  const [selectedSettlement, setSelectedSettlement] = useState(null);
+  const [disputeReason, setDisputeReason] = useState('');
+  const [processingSettlement, setProcessingSettlement] = useState(false);
+
+  const fetchPendingSettlements = useCallback(async () => {
+    try {
+      const res = await axios.get(`${API}/settlements/pending`);
+      setPendingSettlements(res.data.pending_settlements || []);
+    } catch (error) {
+      console.error('Failed to fetch pending settlements:', error);
+    }
+  }, []);
 
   useEffect(() => {
     refreshStatus();
     checkAvailability();
-  }, []);
+    fetchPendingSettlements();
+    // Refresh settlements every 2 minutes
+    const interval = setInterval(fetchPendingSettlements, 2 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [fetchPendingSettlements]);
 
   // Close mobile menu on view change
   useEffect(() => {
