@@ -1220,6 +1220,12 @@ Build a secure, therapist-first web application for managing a therapy practice 
   - GET /api/therapy-consent/check/{client_id} - Check consent status
   - GET /api/therapy-consent/{client_id} - Get consent details
   - POST /api/therapy-consent/{client_id}/sign - Sign consent
+- [x] **Mobile Responsive Fixes** (ClientProfileView.js):
+  - Header buttons now wrap on mobile (flex-wrap)
+  - "View / Edit Case History" button visible as full-width on mobile
+  - Grid columns adapt: 1 col mobile, 2 col tablet, 3 col desktop
+  - Text sizes reduced on mobile (text-xs sm:text-sm)
+  - Email truncated with max-width on mobile
 - [x] **Files Created/Modified**:
   - Created: /app/frontend/src/components/CaseHistoryForm.js
   - Modified: /app/frontend/src/components/ClientProfileView.js
