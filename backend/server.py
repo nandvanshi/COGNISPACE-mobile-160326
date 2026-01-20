@@ -792,6 +792,8 @@ class SubscriptionPlan(BaseModel):
     features: List[str]
     max_clients: Optional[int] = None
     created_at: datetime
+    # Feature toggles - control what features are available in this plan
+    feature_toggles: Optional[dict] = None  # {"session_notes": True, "assessments": True, ...}
 
 class Subscription(BaseModel):
     model_config = ConfigDict(extra="ignore")
