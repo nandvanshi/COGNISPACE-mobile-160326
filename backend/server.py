@@ -1802,6 +1802,8 @@ DEFAULT_FEATURE_TOGGLES = {
 @api_router.post("/admin/subscription-plans", response_model=SubscriptionPlan)
 async def create_subscription_plan(plan_data: SubscriptionPlanCreate, current_user: dict = Depends(require_super_admin)):
     plan_id = str(uuid.uuid4())
+    # Merge provided toggles with defaults
+    toggles = {**DEFAULT_FEATURE_TOGGLES, **(plan_data.feature_toggles or {})}
     plan_doc = {
         "id": plan_id,
         "name": plan_data.name,
@@ -1809,6 +1811,7 @@ async def create_subscription_plan(plan_data: SubscriptionPlanCreate, current_us
         "duration_days": plan_data.duration_days,
         "features": plan_data.features,
         "max_clients": plan_data.max_clients,
+        "feature_toggles": toggles,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     
