@@ -175,8 +175,8 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
     }
   };
 
-  const handleNavigate = (view) => {
-    if (onNavigate) onNavigate(view);
+  const handleNavigate = (view, context = {}) => {
+    if (onNavigate) onNavigate(view, context);
   };
 
   if (loading) {

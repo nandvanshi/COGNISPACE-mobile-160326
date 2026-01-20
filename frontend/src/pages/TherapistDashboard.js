@@ -476,10 +476,17 @@ const TherapistDashboard = () => {
           {currentView === 'overview' && (
             <TherapistOverview 
               isReadOnly={isReadOnly} 
-              onNavigate={setCurrentView}
+              onNavigate={handleNavigation}
             />
           )}
-          {currentView === 'clients' && <ClientManagement isReadOnly={isReadOnly} />}
+          {currentView === 'clients' && (
+            <ClientManagement 
+              isReadOnly={isReadOnly} 
+              initialClientId={navContext.selectedClientId}
+              initialFilter={navContext.clientFilter}
+              onClearContext={() => setNavContext({ selectedClientId: null, clientFilter: null })}
+            />
+          )}
           {currentView === 'schedule' && <TherapistSchedule isReadOnly={isReadOnly} />}
           {currentView === 'availability' && <AvailabilitySettings isReadOnly={isReadOnly} onSave={() => setHasAvailability(true)} />}
           {currentView === 'recurring' && <RecurringAppointments isReadOnly={isReadOnly} />}
