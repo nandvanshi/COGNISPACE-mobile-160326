@@ -1498,4 +1498,47 @@ Build a secure, therapist-first web application for managing a therapy practice 
 | GET /api/messaging-contacts | ✅ FIXED | Missing endpoint |
 | GET /api/blocked-times | ✅ FIXED | Missing alias + field mapping |
 
+### Phase 37: Assessment & Messaging Bug Fixes (COMPLETED - Jan 21, 2026)
+**User Reported Issues:**
+1. Assessment Library forms incomplete - only 3-5 questions instead of full forms
+2. Assessment Results showing "Not Found" on click
+3. Messages showing empty boxes instead of client names
+4. Messages showing "Failed to load messages" on conversation click
+
+**Root Causes & Fixes:**
+
+1. **Assessment Library Incomplete**:
+   - Problem: `routes/assessments.py` had a simplified `ASSESSMENT_LIBRARY` with only 3-5 questions per assessment
+   - Fix: Imported complete `CLINICAL_ASSESSMENTS` from `assessment_library.py` (12 assessments with full questions)
+   - Now includes: PHQ-9 (9 Qs), GAD-7 (7 Qs), DASS-21 (21 Qs), WHO-5, ASRS-v1.1, Y-BOCS, HAM-A, BDI-II (21 Qs), BPRS, ISI, AUDIT, RSES
+
+2. **Assessment Results Endpoint Missing**:
+   - Problem: `/api/assessments/{id}/results` endpoint never existed in `routes/assessments.py`
+   - Fix: Added complete results endpoint with:
+     - Access control (therapist sees all, client sees only if shared)
+     - Score calculation using `calculate_score()` from assessment_library
+     - Severity calculation using `get_severity()`
+     - Returns questions, responses, severity bands, therapist notes
+   - Also added: `/share-report`, `/unshare-report`, `/therapist-notes` endpoints
+
+3. **Messages - Client Names Not Showing**:
+   - Problem: Frontend calls `/api/messages` expecting conversations format (user_id, user_name, last_message, unread_count)
+   - Backend returned raw messages array instead
+   - Fix: Created `/api/messages/conversations` endpoint that groups messages by conversation partner
+
+4. **Messages - "Failed to load messages" on Click**:
+   - Problem: Frontend calls `/api/messages/{userId}` to get conversation messages, endpoint didn't exist
+   - Fix: Added `/api/messages/{user_id}` endpoint in `routes/sessions.py`
+   - Also auto-marks messages as read when fetched
+
+**Files Modified:**
+- `/app/backend/routes/assessments.py` - Use complete library, add results/share/notes endpoints
+- `/app/backend/routes/sessions.py` - Add /messages/conversations, /messages/{user_id} endpoints
+- `/app/frontend/src/components/Messaging.js` - Use /messages/conversations endpoint
+
+**Testing:** All endpoints return 200, frontend verified via screenshots
+- Assessment Library: 12 assessments with complete questions
+- Assessment Results: Modal shows questions, responses, clinical notes, share button
+- Messages: Conversations list shows client names, clicking loads messages
+
 ---
