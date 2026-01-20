@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth, API } from '../App';
+import { useSubscription } from '../contexts/SubscriptionContext';
 import { Button } from '../components/ui/button';
-import { LogOut, Users, Calendar, FileText, MessageSquare, ClipboardList, BookOpen, DollarSign, Home, AlertTriangle, Clock, Repeat, UserCog, Brain, Settings as SettingsIcon, Sparkles, Menu, X, ChevronDown, CalendarDays } from 'lucide-react';
+import { LogOut, Users, Calendar, FileText, MessageSquare, ClipboardList, BookOpen, DollarSign, Home, AlertTriangle, Clock, Repeat, UserCog, Brain, Settings as SettingsIcon, Sparkles, Menu, X, ChevronDown, CalendarDays, AlertCircle } from 'lucide-react';
 import TherapistOverview from '../components/TherapistOverview';
 import ClientManagement from '../components/ClientManagement';
 import TherapistSchedule from '../components/TherapistSchedule';
@@ -20,16 +21,17 @@ import Settings from '../components/Settings';
 
 const TherapistDashboard = () => {
   const { user, logout } = useAuth();
+  const { isFeatureEnabled, isReadOnly, daysRemaining, expiryWarning, refreshStatus } = useSubscription();
   const navigate = useNavigate();
   const [currentView, setCurrentView] = useState('overview');
-  const [subscriptionStatus, setSubscriptionStatus] = useState(null);
-  const [isReadOnly, setIsReadOnly] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [expandedGroup, setExpandedGroup] = useState('Clinical');
+  const [hasAvailability, setHasAvailability] = useState(true);
 
   useEffect(() => {
-    fetchSubscriptionStatus();
+    refreshStatus();
+    checkAvailability();
   }, []);
 
   // Close mobile menu on view change
@@ -37,14 +39,27 @@ const TherapistDashboard = () => {
     setMobileMenuOpen(false);
   }, [currentView]);
 
-  const fetchSubscriptionStatus = async () => {
+  const checkAvailability = async () => {
     try {
-      const response = await axios.get(`${API}/auth/subscription-status`);
-      setSubscriptionStatus(response.data);
-      setIsReadOnly(response.data.is_read_only);
+      const res = await axios.get(`${API}/therapist/availability`);
+      const data = res.data;
+      // Check if therapist has set up any availability
+      const hasSetup = data.weekly_schedule && Object.values(data.weekly_schedule).some(day => day.enabled);
+      setHasAvailability(hasSetup);
     } catch (error) {
-      console.error('Failed to fetch subscription status:', error);
+      console.error('Failed to check availability:', error);
     }
+  };
+
+  // Map nav items to feature flags
+  const featureMap = {
+    'notes': 'session_notes',
+    'assessments': 'assessments',
+    'ai-support': 'ai_clinical',
+    'protocols': 'protocols',
+    'messages': 'messaging',
+    'payments': 'payments',
+    'assistants': 'assistants',
   };
 
   // Organized navigation - Clinical first, then Operations
@@ -55,10 +70,10 @@ const TherapistDashboard = () => {
         { id: 'overview', label: 'Dashboard', icon: Home },
         { id: 'clients', label: 'Clients', icon: Users },
         { id: 'schedule', label: 'Schedule', icon: CalendarDays },
-        { id: 'notes', label: 'Session Notes', icon: FileText },
-        { id: 'assessments', label: 'Assessments', icon: ClipboardList },
-        { id: 'protocols', label: 'Protocols', icon: BookOpen },
-        { id: 'ai-support', label: 'AI Clinical', icon: Brain },
+        { id: 'notes', label: 'Session Notes', icon: FileText, feature: 'session_notes' },
+        { id: 'assessments', label: 'Assessments', icon: ClipboardList, feature: 'assessments' },
+        { id: 'protocols', label: 'Protocols', icon: BookOpen, feature: 'protocols' },
+        { id: 'ai-support', label: 'AI Clinical', icon: Brain, feature: 'ai_clinical' },
       ]
     },
     {
@@ -66,16 +81,22 @@ const TherapistDashboard = () => {
       items: [
         { id: 'availability', label: 'Availability', icon: Clock },
         { id: 'recurring', label: 'Recurring', icon: Repeat },
-        { id: 'messages', label: 'Messages', icon: MessageSquare },
-        { id: 'payments', label: 'Payments', icon: DollarSign },
-        { id: 'assistants', label: 'Assistants', icon: UserCog },
+        { id: 'messages', label: 'Messages', icon: MessageSquare, feature: 'messaging' },
+        { id: 'payments', label: 'Payments', icon: DollarSign, feature: 'payments' },
+        { id: 'assistants', label: 'Assistants', icon: UserCog, feature: 'assistants' },
       ]
     }
   ];
 
+  // Filter nav items based on feature toggles
+  const filteredNavGroups = navGroups.map(group => ({
+    ...group,
+    items: group.items.filter(item => !item.feature || isFeatureEnabled(item.feature))
+  }));
+
   // Get current view label for mobile header
   const getCurrentViewLabel = () => {
-    for (const group of navGroups) {
+    for (const group of filteredNavGroups) {
       const item = group.items.find(i => i.id === currentView);
       if (item) return item.label;
     }
