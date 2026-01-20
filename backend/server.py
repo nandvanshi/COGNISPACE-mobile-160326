@@ -79,6 +79,8 @@ api_router.include_router(availability_router)
 api_router.include_router(payments_router)
 api_router.include_router(sessions_router)
 api_router.include_router(assessments_router)
+api_router.include_router(clinical_router)
+api_router.include_router(assistant_dashboard_router)
 
 # ============= MODELS =============
 
