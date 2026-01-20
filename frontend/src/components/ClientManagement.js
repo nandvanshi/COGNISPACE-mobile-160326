@@ -44,6 +44,25 @@ const ClientManagement = ({ isReadOnly = false, isAssistant = false, initialClie
     fetchClients();
   }, []);
 
+  // Handle initial client ID - open profile view when provided
+  useEffect(() => {
+    if (initialClientId && clients.length > 0) {
+      const client = clients.find(c => c.id === initialClientId);
+      if (client) {
+        handleViewProfile(client);
+        onClearContext(); // Clear context after handling
+      }
+    }
+  }, [initialClientId, clients]);
+
+  // Handle initial filter - set inactive filter IDs
+  useEffect(() => {
+    if (initialFilter === 'inactive' && initialFilter) {
+      // Get inactive client IDs from the filter context passed via props
+      // These will be passed via the navigation context
+    }
+  }, [initialFilter]);
+
   useEffect(() => {
     if (searchQuery) {
       setFilteredClients(
