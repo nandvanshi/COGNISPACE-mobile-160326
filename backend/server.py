@@ -5123,10 +5123,15 @@ PROTOCOL_TEMPLATES = {
 async def get_protocol_templates(current_user: dict = Depends(get_current_user)):
     if current_user["role"] != "therapist":
         raise HTTPException(status_code=403, detail="Only therapists can access this")
+    # Check feature access
+    await check_feature_enabled(current_user["id"], "protocols")
     return PROTOCOL_TEMPLATES
 
 @api_router.post("/protocols", response_model=Protocol)
 async def create_protocol(protocol_data: ProtocolCreate, current_user: dict = Depends(require_active_therapist)):
+    """Create a protocol for a client"""
+    # Check feature access
+    await check_feature_enabled(current_user["id"], "protocols")
     
     client = await db.users.find_one({"id": protocol_data.client_id}, {"_id": 0})
     if not client:
