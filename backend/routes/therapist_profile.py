@@ -248,17 +248,30 @@ async def update_therapist_profile(data: TherapistProfileUpdate, current_user: d
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
     
+    # Profile photo (also save in profile for redundancy)
+    if data.profile_photo is not None:
+        profile_update["profile_photo"] = data.profile_photo
+    
     # Clinic info
     if data.clinic_name is not None:
         profile_update["clinic_name"] = data.clinic_name
-    if data.specialization is not None:
-        profile_update["specialization"] = data.specialization
+    if data.specializations is not None:
+        # Validate: 1-5 specializations
+        if len(data.specializations) < 1:
+            raise HTTPException(status_code=400, detail="At least 1 specialization is required")
+        if len(data.specializations) > 5:
+            raise HTTPException(status_code=400, detail="Maximum 5 specializations allowed")
+        profile_update["specializations"] = data.specializations
     if data.qualifications is not None:
         profile_update["qualifications"] = data.qualifications
     if data.experience_years is not None:
         profile_update["experience_years"] = data.experience_years
-    if data.consultation_fee is not None:
-        profile_update["consultation_fee"] = data.consultation_fee
+    if data.fee_slots is not None:
+        # Convert to dict for MongoDB storage
+        profile_update["fee_slots"] = [
+            {"amount": slot.amount, "duration_minutes": slot.duration_minutes}
+            for slot in data.fee_slots
+        ]
     
     # Address fields
     if data.address_line_1 is not None:
