@@ -99,12 +99,11 @@ const AssistantDashboard = () => {
     }
   };
 
-  // Limited nav items for assistants - using Schedule (unified calendar)
+  // Limited nav items for assistants - can book appointments but NOT modify availability
   const navItems = [
     { id: 'overview', label: 'Overview', icon: Home },
     { id: 'clients', label: 'Clients', icon: Users },
     { id: 'schedule', label: 'Schedule', icon: CalendarDays },
-    { id: 'availability', label: 'Availability', icon: Clock },
     { id: 'payments', label: 'Payments', icon: DollarSign },
   ];
 
