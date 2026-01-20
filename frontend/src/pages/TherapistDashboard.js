@@ -35,6 +35,9 @@ const TherapistDashboard = () => {
   const [expandedGroup, setExpandedGroup] = useState('Clinical');
   const [hasAvailability, setHasAvailability] = useState(true);
   
+  // Navigation context for passing data between views
+  const [navContext, setNavContext] = useState({ selectedClientId: null, clientFilter: null });
+  
   // Cash Settlement state
   const [pendingSettlements, setPendingSettlements] = useState([]);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
@@ -42,6 +45,12 @@ const TherapistDashboard = () => {
   const [selectedSettlement, setSelectedSettlement] = useState(null);
   const [disputeReason, setDisputeReason] = useState('');
   const [processingSettlement, setProcessingSettlement] = useState(false);
+
+  // Handle navigation with optional context
+  const handleNavigation = (view, context = {}) => {
+    setNavContext({ selectedClientId: context.clientId || null, clientFilter: context.filter || null });
+    setCurrentView(view);
+  };
 
   const fetchPendingSettlements = useCallback(async () => {
     try {
