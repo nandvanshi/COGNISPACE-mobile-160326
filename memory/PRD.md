@@ -1,7 +1,10 @@
-# TherapyFlow - Product Requirements Document
+# TheraGenie - Product Requirements Document
 
 ## Original Problem Statement
 Build a secure, therapist-first web application for managing a therapy practice and supporting clinical decision-making.
+
+**App Name**: TheraGenie
+**Tagline**: Clinical intelligence for modern therapists
 
 ## Core Requirements
 
