@@ -186,8 +186,8 @@ const TherapistSchedule = ({ isReadOnly = false }) => {
         
         // Check if slot is within availability
         let isAvailable = false;
-        if (dayAvailability?.enabled && dayAvailability.slots) {
-          dayAvailability.slots.forEach(avail => {
+        if (dayAvailability?.enabled && dayAvailability.time_blocks) {
+          dayAvailability.time_blocks.forEach(avail => {
             const availStart = avail.start;
             const availEnd = avail.end;
             if (timeStr >= availStart && timeStr < availEnd) {
