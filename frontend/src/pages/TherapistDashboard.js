@@ -3,7 +3,7 @@ import { Routes, Route, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth, API } from '../App';
 import { Button } from '../components/ui/button';
-import { LogOut, Users, Calendar, FileText, MessageSquare, ClipboardList, BookOpen, DollarSign, Home, AlertTriangle, Clock, Repeat, UserCog, Brain, Settings as SettingsIcon } from 'lucide-react';
+import { LogOut, Users, Calendar, FileText, MessageSquare, ClipboardList, BookOpen, DollarSign, Home, AlertTriangle, Clock, Repeat, UserCog, Brain, Settings as SettingsIcon, Sparkles } from 'lucide-react';
 import TherapistOverview from '../components/TherapistOverview';
 import ClientManagement from '../components/ClientManagement';
 import AppointmentCalendar from '../components/AppointmentCalendar';
@@ -40,19 +40,30 @@ const TherapistDashboard = () => {
     }
   };
 
-  const navItems = [
-    { id: 'overview', label: 'Overview', icon: Home },
-    { id: 'clients', label: 'Clients', icon: Users },
-    { id: 'appointments', label: 'Appointments', icon: Calendar },
-    { id: 'availability', label: 'Availability', icon: Clock },
-    { id: 'recurring', label: 'Recurring', icon: Repeat },
-    { id: 'notes', label: 'Session Notes', icon: FileText },
-    { id: 'messages', label: 'Messages', icon: MessageSquare },
-    { id: 'assessments', label: 'Assessments', icon: ClipboardList },
-    { id: 'protocols', label: 'Protocols', icon: BookOpen },
-    { id: 'ai-support', label: 'AI Clinical', icon: Brain },
-    { id: 'payments', label: 'Payments', icon: DollarSign },
-    { id: 'assistants', label: 'Assistants', icon: UserCog },
+  // Organized navigation - Clinical first, then Operations
+  const navGroups = [
+    {
+      label: 'Clinical',
+      items: [
+        { id: 'overview', label: 'Dashboard', icon: Home },
+        { id: 'clients', label: 'Clients', icon: Users },
+        { id: 'appointments', label: 'Schedule', icon: Calendar },
+        { id: 'notes', label: 'Session Notes', icon: FileText },
+        { id: 'assessments', label: 'Assessments', icon: ClipboardList },
+        { id: 'protocols', label: 'Protocols', icon: BookOpen },
+        { id: 'ai-support', label: 'AI Clinical', icon: Brain },
+      ]
+    },
+    {
+      label: 'Operations',
+      items: [
+        { id: 'availability', label: 'Availability', icon: Clock },
+        { id: 'recurring', label: 'Recurring', icon: Repeat },
+        { id: 'messages', label: 'Messages', icon: MessageSquare },
+        { id: 'payments', label: 'Payments', icon: DollarSign },
+        { id: 'assistants', label: 'Assistants', icon: UserCog },
+      ]
+    }
   ];
 
   const handleLogout = () => {
@@ -62,11 +73,16 @@ const TherapistDashboard = () => {
 
   return (
     <div className="flex h-screen bg-background">
-      {/* Sidebar */}
+      {/* Sidebar - Organized Navigation */}
       <aside className="w-64 bg-surface border-r border-border flex flex-col">
-        <div className="p-6 border-b border-border">
-          <h1 className="text-2xl font-serif text-primary">Haven</h1>
-          <p className="text-sm text-muted-foreground mt-1">{user?.full_name}</p>
+        <div className="p-5 border-b border-border">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
+              <Sparkles size={16} className="text-white" />
+            </div>
+            <h1 className="text-xl font-serif text-primary">TheraGenie</h1>
+          </div>
+          <p className="text-sm text-muted-foreground mt-2 truncate">{user?.full_name}</p>
           {subscriptionStatus && !isReadOnly && (
             <span className="inline-block mt-2 px-2 py-1 bg-success/10 text-success text-xs rounded-full">
               {subscriptionStatus.subscription_status === 'trial' ? 'Free Trial' : 'Active'}
@@ -74,44 +90,53 @@ const TherapistDashboard = () => {
           )}
         </div>
 
-        <nav className="flex-1 p-4 space-y-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.id}
-                data-testid={`nav-${item.id}`}
-                onClick={() => setCurrentView(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                  currentView === item.id
-                    ? 'bg-primary text-white'
-                    : 'text-foreground hover:bg-white/50'
-                }`}
-              >
-                <Icon size={20} />
-                <span className="font-medium">{item.label}</span>
-              </button>
-            );
-          })}
+        <nav className="flex-1 p-3 overflow-y-auto">
+          {navGroups.map((group, groupIdx) => (
+            <div key={group.label} className={groupIdx > 0 ? 'mt-5' : ''}>
+              <p className="px-3 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                {group.label}
+              </p>
+              <div className="space-y-0.5">
+                {group.items.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <button
+                      key={item.id}
+                      data-testid={`nav-${item.id}`}
+                      onClick={() => setCurrentView(item.id)}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+                        currentView === item.id
+                          ? 'bg-primary text-white shadow-sm'
+                          : 'text-foreground hover:bg-muted/60'
+                      }`}
+                    >
+                      <Icon size={18} />
+                      <span className="text-sm font-medium">{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
 
-        <div className="p-4 border-t border-border space-y-2">
+        <div className="p-3 border-t border-border space-y-1">
           <Button
             onClick={() => setShowSettings(true)}
             variant="ghost"
-            className="w-full justify-start"
+            className="w-full justify-start h-10"
             data-testid="settings-button"
           >
-            <SettingsIcon size={20} className="mr-3" />
+            <SettingsIcon size={18} className="mr-3" />
             Settings
           </Button>
           <Button
             onClick={handleLogout}
             variant="ghost"
-            className="w-full justify-start"
+            className="w-full justify-start h-10 text-muted-foreground hover:text-foreground"
             data-testid="logout-button"
           >
-            <LogOut size={20} className="mr-3" />
+            <LogOut size={18} className="mr-3" />
             Logout
           </Button>
         </div>
