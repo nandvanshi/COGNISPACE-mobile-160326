@@ -765,6 +765,85 @@ Build a secure, therapist-first web application for managing a therapy practice 
 - [x] **Testing**: 100% frontend tests passed
   - /app/test_reports/iteration_20.json
 
+### Phase 26: Clinical Assessments Phase-1 (COMPLETED - Jan 20, 2026)
+- [x] **Expanded Assessment Library (12 Assessments)**:
+  - PHQ-9 (Patient Health Questionnaire-9) - Depression screening
+  - GAD-7 (Generalized Anxiety Disorder-7) - Anxiety screening
+  - DASS-21 (Depression Anxiety Stress Scales) - Tri-dimensional screening with subscales
+  - WHO-5 (Well-Being Index) - General well-being
+  - ASRS-v1.1 (Adult ADHD Self-Report Scale) - ADHD screening
+  - Y-BOCS (Yale-Brown Obsessive Compulsive Scale) - OCD severity
+  - HAM-A (Hamilton Anxiety Rating Scale) - Anxiety assessment
+  - BDI-II (Beck Depression Inventory-II) - Depression severity (21 questions)
+  - **BPRS (Brief Psychiatric Rating Scale)** - NEW: 18-item general psychiatric screening
+  - ISI (Insomnia Severity Index) - Sleep issues
+  - AUDIT (Alcohol Use Disorders Identification Test) - Alcohol use screening
+  - RSES (Rosenberg Self-Esteem Scale) - Self-esteem assessment
+- [x] **Client-Friendly Assessment Names** (ASSESSMENT_CLIENT_INFO):
+  - PHQ-9 → "Mood Check-In"
+  - GAD-7 → "Worry & Anxiety Check-In"
+  - DASS-21 → "Emotional Well-being Check-In"
+  - WHO-5 → "Well-being Check-In"
+  - ASRS-v1.1 → "Focus & Attention Check-In"
+  - Y-BOCS → "Thoughts & Habits Check-In"
+  - HAM-A → "Anxiety Experience Check-In"
+  - BDI-II → "Mood & Feelings Check-In"
+  - BPRS → "Overall Experience Check-In"
+  - ISI → "Sleep Quality Check-In"
+  - AUDIT → "Lifestyle Check-In"
+  - RSES → "Self-Perception Check-In"
+- [x] **Client Assessment Taking UX** (ClientAssessmentTaker.js):
+  - **Start Screen**: Calm, non-clinical intro with reassurance text
+    - Shows friendly name, purpose, time estimate, question count
+    - "There are no right or wrong answers" message
+    - Disclaimer: "This helps your therapist understand your experience. Not a diagnosis."
+  - **One Question Per Screen Flow**:
+    - Large readable text, touch-friendly option buttons
+    - Progress indicator (e.g., "Question 3 of 9")
+    - Answered count display
+    - Back/Next navigation
+    - Auto-save progress every 2 seconds
+  - **Submission Confirmation**:
+    - "Thank you. Your therapist will review this."
+    - NO scores shown to clients
+- [x] **Backend Endpoints (Assessment)**:
+  - `GET /api/assessments/library` - Returns all 12 standard assessments
+  - `POST /api/assessments` - Assign assessment with optional due_date
+  - `GET /api/assessments/{id}/client-view` - Client-friendly assessment view
+  - `POST /api/assessments/{id}/save-progress` - Auto-save answers in progress
+  - `POST /api/assessments/{id}/submit-with-scoring` - Submit and score assessment
+  - `GET /api/assessments/{id}/results` - Full results (therapist) or limited (client if shared)
+  - `POST /api/assessments/{id}/share-report` - Share report with client
+  - `POST /api/assessments/{id}/unshare-report` - Remove client access
+  - `PUT /api/assessments/{id}/therapist-notes` - Add clinical notes
+  - `PUT /api/assessments/{id}/due-date` - Set due date
+  - `GET /api/client/assessments` - Client's assessment list (client-friendly)
+  - `GET /api/client/assessment-history` - Completed assessments (names & dates only)
+- [x] **Scoring System** (assessment_library.py):
+  - Sum-based scoring (PHQ-9, GAD-7, BDI-II, ISI, AUDIT, RSES)
+  - Subscale scoring (DASS-21: Depression, Anxiety, Stress with multiplier)
+  - Percentage scoring (WHO-5: multiplied by 4)
+  - ADHD shaded threshold counting (ASRS-v1.1)
+  - Severity bands with color coding (green, yellow, orange, red, darkred)
+- [x] **Therapist Results View** (Assessments.js):
+  - Score summary with severity label
+  - Subscale breakdown for DASS-21
+  - Detailed response list (question + answer + value)
+  - Clinical notes section (editable)
+  - Share/Unshare toggle with status indicator
+- [x] **Client Shared Report View** (ClientDashboard.js):
+  - Shows only after therapist shares
+  - Score and severity display
+  - Therapist notes (if added)
+  - "Please discuss this report with your therapist" disclaimer
+- [x] **Access Control**:
+  - Clients cannot see scores until therapist shares
+  - Assistants cannot access assessment data
+  - Therapists can only view their clients' assessments
+- [x] **Testing**: 13/13 backend tests passed (100%)
+  - /app/tests/test_assessments.py
+  - /app/test_reports/iteration_22.json
+
 ---
 
 ## Technical Architecture
