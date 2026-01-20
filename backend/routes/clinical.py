@@ -29,6 +29,18 @@ class CaseHistoryResponse(BaseModel):
     is_complete: bool = False
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
+    # Flattened sections for frontend compatibility
+    basic_identification: dict = {}
+    presenting_complaints: dict = {}
+    history_of_present_illness: dict = {}
+    past_psychiatric_history: dict = {}
+    medical_history: dict = {}
+    family_history: dict = {}
+    personal_developmental_history: dict = {}
+    mental_status_examination: dict = {}
+    provisional_formulation: dict = {}
+    initial_therapy_plan: dict = {}
+    consent_disclaimer: dict = {}
 
 
 class ConsentUpdate(BaseModel):
