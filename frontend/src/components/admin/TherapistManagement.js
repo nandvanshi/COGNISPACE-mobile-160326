@@ -746,13 +746,13 @@ const TherapistManagement = ({ onViewClients }) => {
                   <Plus size={14} />
                 </Button>
                 {showSpecDropdown && (
-                  <div className="absolute z-[100] w-full mt-1 bg-white border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                  <div className="absolute z-[100] w-full mt-1 bg-white border rounded-lg shadow-xl" style={{maxHeight: '250px', overflowY: 'auto'}}>
                     {SPECIALIZATION_OPTIONS.map((spec, idx) => (
                       <button
                         key={idx}
                         type="button"
-                        className={`w-full text-left px-3 py-2 text-sm hover:bg-primary/5 flex items-center justify-between ${
-                          (newTherapist.specializations || []).includes(spec) ? 'bg-primary/10 text-primary' : ''
+                        className={`w-full text-left px-3 py-2.5 text-sm hover:bg-primary/5 flex items-center justify-between border-b border-gray-50 last:border-0 ${
+                          (newTherapist.specializations || []).includes(spec) ? 'bg-primary/10 text-primary font-medium' : ''
                         }`}
                         onClick={() => toggleSpecialization(spec)}
                       >
