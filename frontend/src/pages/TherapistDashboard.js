@@ -143,22 +143,21 @@ const TherapistDashboard = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto bg-background">
         {/* Read-Only Banner */}
         {isReadOnly && (
           <div 
-            className="bg-warning text-warning-foreground px-6 py-4 flex items-center gap-4 sticky top-0 z-50 shadow-md"
+            className="bg-warning text-warning-foreground px-6 py-3 flex items-center gap-4 sticky top-0 z-50 shadow-sm"
             data-testid="subscription-expired-banner"
           >
-            <AlertTriangle size={24} className="flex-shrink-0" />
+            <AlertTriangle size={20} className="flex-shrink-0" />
             <div className="flex-1">
-              <p className="font-semibold">Your subscription has expired. You are currently in read-only mode.</p>
-              <p className="text-sm opacity-90">Renew your subscription to regain full access and continue managing your practice.</p>
+              <p className="font-medium text-sm">Your subscription has expired. You are in read-only mode.</p>
             </div>
             <Button 
               variant="secondary" 
               size="sm"
-              onClick={() => window.open('mailto:support@haven.com?subject=Subscription Renewal', '_blank')}
+              onClick={() => window.open('mailto:support@theragenie.com?subject=Subscription Renewal', '_blank')}
               data-testid="contact-support-button"
             >
               Contact Support
@@ -166,8 +165,13 @@ const TherapistDashboard = () => {
           </div>
         )}
 
-        <div className="max-w-7xl mx-auto p-6 md:p-12">
-          {currentView === 'overview' && <TherapistOverview isReadOnly={isReadOnly} />}
+        <div className="max-w-7xl mx-auto p-6 lg:p-10">
+          {currentView === 'overview' && (
+            <TherapistOverview 
+              isReadOnly={isReadOnly} 
+              onNavigate={setCurrentView}
+            />
+          )}
           {currentView === 'clients' && <ClientManagement isReadOnly={isReadOnly} />}
           {currentView === 'appointments' && <AppointmentCalendar isReadOnly={isReadOnly} />}
           {currentView === 'availability' && <AvailabilitySettings isReadOnly={isReadOnly} />}
