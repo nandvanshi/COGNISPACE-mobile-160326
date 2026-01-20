@@ -178,8 +178,8 @@ const TherapistDashboard = () => {
               </button>
               
               {/* Nav items - always visible on desktop, collapsible on mobile */}
-              <div className={`space-y-0.5 overflow-hidden transition-all duration-200 ${
-                expandedGroup === group.label ? 'max-h-96 opacity-100' : 'max-h-0 lg:max-h-96 opacity-0 lg:opacity-100'
+              <div className={`space-y-1 overflow-hidden transition-all duration-200 ${
+                expandedGroup === group.label ? 'max-h-[500px] opacity-100' : 'max-h-0 lg:max-h-[500px] opacity-0 lg:opacity-100'
               }`}>
                 {group.items.map((item) => {
                   const Icon = item.icon;
@@ -188,14 +188,14 @@ const TherapistDashboard = () => {
                       key={item.id}
                       data-testid={`nav-${item.id}`}
                       onClick={() => handleNavClick(item.id)}
-                      className={`w-full flex items-center gap-3 px-3 py-3 lg:py-2.5 rounded-lg transition-all ${
+                      className={`w-full flex items-center gap-3 px-4 py-3.5 lg:py-2.5 rounded-lg transition-all ${
                         currentView === item.id
                           ? 'bg-primary text-white shadow-sm'
                           : 'text-foreground hover:bg-muted/60'
                       }`}
                     >
-                      <Icon size={18} />
-                      <span className="text-sm font-medium">{item.label}</span>
+                      <Icon size={20} />
+                      <span className="text-base lg:text-sm font-medium">{item.label}</span>
                     </button>
                   );
                 })}
@@ -205,14 +205,14 @@ const TherapistDashboard = () => {
         </nav>
 
         {/* Footer Actions */}
-        <div className="p-3 border-t border-border space-y-1">
+        <div className="p-4 border-t border-border space-y-2">
           <Button
             onClick={() => { setShowSettings(true); setMobileMenuOpen(false); }}
             variant="ghost"
-            className="w-full justify-start h-12 lg:h-10"
+            className="w-full justify-start h-14 lg:h-10 text-base lg:text-sm"
             data-testid="settings-button"
           >
-            <SettingsIcon size={18} className="mr-3" />
+            <SettingsIcon size={20} className="mr-3" />
             Settings
           </Button>
           <Button
