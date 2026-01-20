@@ -331,6 +331,59 @@ const TherapistManagement = ({ onViewClients }) => {
     }
   };
 
+  // Specialization handlers
+  const toggleSpecialization = (spec) => {
+    setNewTherapist(prev => {
+      const current = prev.specializations || [];
+      if (current.includes(spec)) {
+        return { ...prev, specializations: current.filter(s => s !== spec) };
+      } else if (current.length < 5) {
+        return { ...prev, specializations: [...current, spec] };
+      } else {
+        toast.error('Maximum 5 specializations allowed');
+        return prev;
+      }
+    });
+  };
+
+  const removeSpecialization = (spec) => {
+    setNewTherapist(prev => ({
+      ...prev,
+      specializations: (prev.specializations || []).filter(s => s !== spec)
+    }));
+  };
+
+  // Fee slot handlers
+  const addFeeSlot = () => {
+    if (newTherapist.fee_slots.length >= 5) {
+      toast.error('Maximum 5 fee options allowed');
+      return;
+    }
+    setNewTherapist(prev => ({
+      ...prev,
+      fee_slots: [...prev.fee_slots, { amount: '', duration_minutes: 30 }]
+    }));
+  };
+
+  const updateFeeSlot = (index, field, value) => {
+    setNewTherapist(prev => {
+      const newSlots = [...prev.fee_slots];
+      newSlots[index] = { ...newSlots[index], [field]: value };
+      return { ...prev, fee_slots: newSlots };
+    });
+  };
+
+  const removeFeeSlot = (index) => {
+    if (newTherapist.fee_slots.length <= 1) {
+      toast.error('At least one fee option required');
+      return;
+    }
+    setNewTherapist(prev => ({
+      ...prev,
+      fee_slots: prev.fee_slots.filter((_, i) => i !== index)
+    }));
+  };
+
   const getSubscriptionBadge = (therapist) => {
     if (!therapist.subscription_status) {
       return <span className="px-2 py-1 bg-error/10 text-error text-xs rounded-full">No Subscription</span>;
