@@ -244,7 +244,7 @@ const ClientDashboard = () => {
         <header className="bg-white/80 backdrop-blur-lg border-b border-border/40">
           <div className="max-w-4xl mx-auto px-6 py-4 flex justify-between items-center">
             <div>
-              <h1 className="text-2xl font-serif text-primary">Haven</h1>
+              <h1 className="text-2xl font-serif text-primary">TheraGenie</h1>
               <p className="text-sm text-muted-foreground">Welcome, {user?.full_name}</p>
             </div>
             <Button onClick={handleLogout} variant="ghost" data-testid="client-logout-button">
@@ -279,7 +279,7 @@ const ClientDashboard = () => {
         <header className="bg-white/80 backdrop-blur-lg border-b border-border/40">
           <div className="max-w-4xl mx-auto px-6 py-4 flex justify-between items-center">
             <div>
-              <h1 className="text-2xl font-serif text-primary">Haven</h1>
+              <h1 className="text-2xl font-serif text-primary">TheraGenie</h1>
               <p className="text-sm text-muted-foreground">Welcome, {user?.full_name}</p>
             </div>
             <Button onClick={handleLogout} variant="ghost" data-testid="client-logout-button">
@@ -407,7 +407,7 @@ const ClientDashboard = () => {
       <header className="bg-white/80 backdrop-blur-lg border-b border-border/40">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-serif text-primary">Haven</h1>
+            <h1 className="text-2xl font-serif text-primary">TheraGenie</h1>
             <p className="text-sm text-muted-foreground">Welcome, {user?.full_name}</p>
           </div>
           <div className="flex items-center gap-3">

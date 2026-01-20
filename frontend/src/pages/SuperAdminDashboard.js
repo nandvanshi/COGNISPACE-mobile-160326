@@ -48,7 +48,7 @@ const SuperAdminDashboard = () => {
       {/* Sidebar */}
       <aside className="w-64 bg-surface border-r border-border flex flex-col">
         <div className="p-6 border-b border-border">
-          <h1 className="text-2xl font-serif text-primary">Haven Admin</h1>
+          <h1 className="text-2xl font-serif text-primary">TheraGenie Admin</h1>
           <p className="text-sm text-muted-foreground mt-1">Super Admin</p>
         </div>
 
