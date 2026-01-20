@@ -80,7 +80,7 @@ const Messaging = ({ isReadOnly = false }) => {
 
   const fetchConversations = async () => {
     try {
-      const response = await axios.get(`${API}/messages`);
+      const response = await axios.get(`${API}/messages/conversations`);
       setConversations(response.data);
     } catch (error) {
       // Silent fail for polling
