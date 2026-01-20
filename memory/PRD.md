@@ -1175,3 +1175,28 @@ Build a secure, therapist-first web application for managing a therapy practice 
 - [x] **Testing**: 92% backend (11/12), 100% frontend
   - Test file: /app/tests/test_homework.py
   - Report: /app/test_reports/iteration_27.json
+
+### Phase 35: Server.py Refactoring - Step 1 (IN PROGRESS - Jan 20, 2026)
+**Goal**: Break monolithic server.py (6919 lines) into modular route files
+
+**Step 1: Auth Routes (COMPLETED)**
+- Created `/app/backend/database.py` - Database connection module
+- Created `/app/backend/dependencies.py` - Shared utilities and dependencies
+- Created `/app/backend/routes/auth.py` - Auth endpoints (~240 lines)
+  - POST /auth/register
+  - POST /auth/therapist-application
+  - POST /auth/login
+  - POST /auth/super-admin-login
+  - GET /auth/me
+  - GET /auth/subscription-status
+  - GET /auth/user/preferences
+  - PUT /auth/user/preferences
+- Updated `server.py` to import and include auth_router
+- **Lines reduced**: 6919 → 6684 (~235 lines moved)
+- **Testing**: All login endpoints verified (Therapist, Admin, Client)
+
+**Pending Steps:**
+- Step 2: Admin routes (Super Admin endpoints)
+- Step 3: Client routes
+- Step 4: Appointment routes
+- Step 5: Remaining routes (sessions, assessments, payments, etc.)
