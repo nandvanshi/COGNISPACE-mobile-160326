@@ -471,17 +471,17 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
                       <Button
                         size="sm"
                         variant="secondary"
-                        className="bg-white/20 hover:bg-white/30 text-white border-0"
+                        className="bg-white/20 hover:bg-white/30 text-white border-0 text-xs sm:text-sm"
                         onClick={handleStartNewNote}
                         disabled={isReadOnly}
                         data-testid="start-session-note-btn"
                       >
-                        <PenSquare size={14} className="mr-1" /> Start Session Note
+                        <PenSquare size={14} className="mr-1" /> Start Session
                       </Button>
                     )}
                   </div>
                 </div>
-                <div className="text-right">
+                <div className="text-right mt-3 sm:mt-0">
                   <div className="flex items-center gap-2">
                     {profileData.consent?.is_signed ? (
                       <span className="flex items-center gap-1 text-xs bg-green-500/30 px-2 py-1 rounded-full">
