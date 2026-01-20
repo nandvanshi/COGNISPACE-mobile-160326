@@ -4398,6 +4398,12 @@ async def verify_messaging_allowed(sender_id: str, sender_role: str, recipient_i
 @api_router.post("/messages", response_model=Message)
 async def send_message(msg_data: MessageCreate, current_user: dict = Depends(get_current_user)):
     """Send a message - enforces therapist-client relationship"""
+    # Check feature access for therapists
+    if current_user["role"] == "therapist":
+        await check_feature_enabled(current_user["id"], "messaging")
+    elif current_user["role"] == "assistant":
+        await check_feature_enabled(current_user.get("therapist_id"), "messaging")
+    
     # Therapists need active subscription to send messages
     if current_user["role"] == "therapist" and not is_subscription_active(current_user):
         raise HTTPException(
@@ -4407,7 +4413,7 @@ async def send_message(msg_data: MessageCreate, current_user: dict = Depends(get
     
     # Verify messaging is allowed
     is_allowed, error_msg, recipient = await verify_messaging_allowed(
-        current_user["id"], 
+        current_user["id"],
         current_user["role"], 
         msg_data.recipient_id
     )
