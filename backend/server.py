@@ -23,6 +23,7 @@ from bson import ObjectId
 
 # Import route modules
 from routes.auth import router as auth_router
+from routes.admin import router as admin_router
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
