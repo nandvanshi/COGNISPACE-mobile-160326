@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 import { 
   ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, 
   User, Plus, Edit2, Trash2, X, Check, Ban, ArrowLeft,
-  CalendarDays, Settings, AlertTriangle
+  CalendarDays, Settings, AlertTriangle, CalendarPlus
 } from 'lucide-react';
 
 // IST timezone offset
@@ -55,9 +55,22 @@ const formatDateLong = (date) => {
   });
 };
 
-// Get day name
+// Get day name (lowercase)
 const getDayName = (date) => {
   return new Date(date).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+};
+
+// Parse time string to minutes from midnight
+const timeToMinutes = (timeStr) => {
+  const [hours, minutes] = timeStr.split(':').map(Number);
+  return hours * 60 + minutes;
+};
+
+// Minutes to time string
+const minutesToTime = (minutes) => {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
 };
 
 const TherapistSchedule = ({ isReadOnly = false }) => {
@@ -76,14 +89,13 @@ const TherapistSchedule = ({ isReadOnly = false }) => {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showBlockDialog, setShowBlockDialog] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showAddAvailabilityDialog, setShowAddAvailabilityDialog] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [selectedSlot, setSelectedSlot] = useState(null);
   
   // Form states
   const [newAppt, setNewAppt] = useState({
     client_id: '',
-    start_time: '',
-    end_time: '',
     notes: ''
   });
   const [newBlock, setNewBlock] = useState({
@@ -91,6 +103,10 @@ const TherapistSchedule = ({ isReadOnly = false }) => {
     end_time: '',
     reason: '',
     is_all_day: false
+  });
+  const [newAvailability, setNewAvailability] = useState({
+    start_time: '',
+    end_time: ''
   });
   const [jumpToDate, setJumpToDate] = useState('');
 
@@ -124,21 +140,18 @@ const TherapistSchedule = ({ isReadOnly = false }) => {
     
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
-    const startDay = firstDay.getDay(); // 0 = Sunday
+    const startDay = firstDay.getDay();
     
     const days = [];
     
-    // Add empty slots for days before the 1st
     for (let i = 0; i < startDay; i++) {
       days.push(null);
     }
     
-    // Add all days of the month
     for (let d = 1; d <= lastDay.getDate(); d++) {
       const date = new Date(year, month, d);
       const dateStr = date.toISOString().split('T')[0];
       
-      // Count appointments for this day
       const dayAppts = appointments.filter(appt => {
         const apptDate = new Date(appt.start_time).toISOString().split('T')[0];
         return apptDate === dateStr && appt.status !== 'cancelled';
@@ -156,15 +169,17 @@ const TherapistSchedule = ({ isReadOnly = false }) => {
     return days;
   }, [currentDate, appointments]);
 
-  // Get schedule for selected day
+  // Generate dynamic schedule for selected day based on availability
   const daySchedule = useMemo(() => {
-    if (!selectedDate || !availability) return { slots: [], appointments: [] };
+    if (!selectedDate || !availability) {
+      return { availableSlots: [], bookedSessions: [], blockedPeriods: [], hasAvailability: false };
+    }
     
     const dateStr = selectedDate.toISOString().split('T')[0];
     const dayName = getDayName(selectedDate);
     const dayAvailability = availability[dayName];
     
-    // Get appointments for the day
+    // Get booked appointments for the day
     const dayAppts = appointments.filter(appt => {
       const apptDate = new Date(appt.start_time).toISOString().split('T')[0];
       return apptDate === dateStr && appt.status !== 'cancelled';
@@ -176,53 +191,80 @@ const TherapistSchedule = ({ isReadOnly = false }) => {
       return blockDate === dateStr;
     });
     
-    // Generate time slots (8 AM to 10 PM in 30-min increments)
-    const slots = [];
-    for (let hour = 8; hour <= 21; hour++) {
-      for (let min = 0; min < 60; min += 30) {
-        const timeStr = `${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
-        const slotStart = new Date(`${dateStr}T${timeStr}:00`);
-        const slotEnd = new Date(slotStart.getTime() + 30 * 60000);
+    // Check if day is fully blocked
+    const isFullDayBlocked = dayBlocks.some(b => b.is_all_day);
+    
+    if (!dayAvailability?.enabled || !dayAvailability.time_blocks?.length || isFullDayBlocked) {
+      return { 
+        availableSlots: [], 
+        bookedSessions: dayAppts, 
+        blockedPeriods: dayBlocks,
+        hasAvailability: false,
+        isFullDayBlocked 
+      };
+    }
+    
+    const sessionDuration = availability.session_duration || 60;
+    const bufferTime = availability.buffer_time || 0;
+    const slotDuration = sessionDuration + bufferTime;
+    
+    const availableSlots = [];
+    
+    // Process each availability time block
+    dayAvailability.time_blocks.forEach(block => {
+      const blockStartMinutes = timeToMinutes(block.start_time);
+      const blockEndMinutes = timeToMinutes(block.end_time);
+      
+      // Generate slots within this block
+      let currentSlotStart = blockStartMinutes;
+      
+      while (currentSlotStart + sessionDuration <= blockEndMinutes) {
+        const slotStartTime = minutesToTime(currentSlotStart);
+        const slotEndTime = minutesToTime(currentSlotStart + sessionDuration);
         
-        // Check if slot is within availability
-        let isAvailable = false;
-        if (dayAvailability?.enabled && dayAvailability.time_blocks) {
-          dayAvailability.time_blocks.forEach(avail => {
-            const availStart = avail.start_time;
-            const availEnd = avail.end_time;
-            if (timeStr >= availStart && timeStr < availEnd) {
-              isAvailable = true;
-            }
+        const slotStartDate = new Date(`${dateStr}T${slotStartTime}:00`);
+        const slotEndDate = new Date(`${dateStr}T${slotEndTime}:00`);
+        
+        // Check if this slot is blocked
+        const isBlocked = dayBlocks.some(blocked => {
+          if (blocked.is_all_day) return true;
+          const blockedStart = new Date(blocked.start_datetime);
+          const blockedEnd = new Date(blocked.end_datetime);
+          return (slotStartDate < blockedEnd && slotEndDate > blockedStart);
+        });
+        
+        // Check if this slot overlaps with any booked appointment
+        const overlappingAppt = dayAppts.find(appt => {
+          const apptStart = new Date(appt.start_time);
+          const apptEnd = new Date(appt.end_time);
+          return (slotStartDate < apptEnd && slotEndDate > apptStart);
+        });
+        
+        if (!isBlocked && !overlappingAppt) {
+          availableSlots.push({
+            id: `slot-${slotStartTime}`,
+            startTime: slotStartTime,
+            endTime: slotEndTime,
+            startDate: slotStartDate,
+            endDate: slotEndDate,
+            availabilityBlock: block
           });
         }
         
-        // Check if slot is blocked
-        const isBlocked = dayBlocks.some(block => {
-          if (block.is_all_day) return true;
-          const blockStart = new Date(block.start_datetime);
-          const blockEnd = new Date(block.end_datetime);
-          return slotStart >= blockStart && slotStart < blockEnd;
-        });
-        
-        // Check if slot has appointment
-        const appointment = dayAppts.find(appt => {
-          const apptStart = new Date(appt.start_time);
-          const apptEnd = new Date(appt.end_time);
-          return slotStart >= apptStart && slotStart < apptEnd;
-        });
-        
-        slots.push({
-          time: timeStr,
-          start: slotStart,
-          end: slotEnd,
-          isAvailable: isAvailable && !isBlocked,
-          isBlocked,
-          appointment
-        });
+        // Move to next slot (include buffer time)
+        currentSlotStart += slotDuration;
       }
-    }
+    });
     
-    return { slots, appointments: dayAppts, blocks: dayBlocks };
+    return { 
+      availableSlots, 
+      bookedSessions: dayAppts, 
+      blockedPeriods: dayBlocks,
+      hasAvailability: true,
+      timeBlocks: dayAvailability.time_blocks,
+      sessionDuration,
+      bufferTime
+    };
   }, [selectedDate, availability, appointments, blockedTimes]);
 
   // Navigation handlers
@@ -280,21 +322,16 @@ const TherapistSchedule = ({ isReadOnly = false }) => {
     }
 
     try {
-      const dateStr = selectedDate.toISOString().split('T')[0];
-      const duration = availability?.session_duration || 60;
-      const startTime = new Date(`${dateStr}T${selectedSlot.time}:00`);
-      const endTime = new Date(startTime.getTime() + duration * 60000);
-
       await axios.post(`${API}/appointments`, {
         client_id: newAppt.client_id,
-        start_time: startTime.toISOString(),
-        end_time: endTime.toISOString(),
+        start_time: selectedSlot.startDate.toISOString(),
+        end_time: selectedSlot.endDate.toISOString(),
         notes: newAppt.notes
       });
 
       toast.success('Appointment scheduled');
       setShowScheduleDialog(false);
-      setNewAppt({ client_id: '', start_time: '', end_time: '', notes: '' });
+      setNewAppt({ client_id: '', notes: '' });
       setSelectedSlot(null);
       fetchData();
     } catch (error) {
@@ -347,6 +384,10 @@ const TherapistSchedule = ({ isReadOnly = false }) => {
         startDatetime = `${dateStr}T00:00:00`;
         endDatetime = `${dateStr}T23:59:59`;
       } else {
+        if (!newBlock.start_time || !newBlock.end_time) {
+          toast.error('Please specify start and end time');
+          return;
+        }
         startDatetime = `${dateStr}T${newBlock.start_time}:00`;
         endDatetime = `${dateStr}T${newBlock.end_time}:00`;
       }
@@ -375,6 +416,68 @@ const TherapistSchedule = ({ isReadOnly = false }) => {
       fetchData();
     } catch (error) {
       toast.error('Failed to remove block');
+    }
+  };
+
+  // Add availability for the day
+  const handleAddAvailability = async (e) => {
+    e.preventDefault();
+    if (!selectedDate || !newAvailability.start_time || !newAvailability.end_time) {
+      toast.error('Please specify start and end time');
+      return;
+    }
+
+    try {
+      const dayName = getDayName(selectedDate);
+      const currentDayAvail = availability?.[dayName] || { enabled: false, time_blocks: [] };
+      
+      // Add new time block
+      const newTimeBlocks = [
+        ...(currentDayAvail.time_blocks || []),
+        { start_time: newAvailability.start_time, end_time: newAvailability.end_time }
+      ].sort((a, b) => timeToMinutes(a.start_time) - timeToMinutes(b.start_time));
+
+      // Update availability for the day
+      await axios.post(`${API}/availability`, {
+        ...availability,
+        [dayName]: {
+          enabled: true,
+          time_blocks: newTimeBlocks
+        }
+      });
+
+      toast.success('Availability added');
+      setShowAddAvailabilityDialog(false);
+      setNewAvailability({ start_time: '', end_time: '' });
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to add availability');
+    }
+  };
+
+  // Remove availability block
+  const handleRemoveAvailability = async (blockIndex) => {
+    if (!selectedDate) return;
+    
+    try {
+      const dayName = getDayName(selectedDate);
+      const currentDayAvail = availability?.[dayName];
+      if (!currentDayAvail) return;
+
+      const newTimeBlocks = currentDayAvail.time_blocks.filter((_, idx) => idx !== blockIndex);
+
+      await axios.post(`${API}/availability`, {
+        ...availability,
+        [dayName]: {
+          enabled: newTimeBlocks.length > 0,
+          time_blocks: newTimeBlocks
+        }
+      });
+
+      toast.success('Availability removed');
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to remove availability');
     }
   };
 
@@ -453,14 +556,12 @@ const TherapistSchedule = ({ isReadOnly = false }) => {
 
           {/* Calendar Grid */}
           <div className="grid grid-cols-7 gap-1 sm:gap-2">
-            {/* Day Headers */}
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
               <div key={day} className="text-center text-xs sm:text-sm font-medium text-muted-foreground py-2">
                 {day}
               </div>
             ))}
 
-            {/* Calendar Days */}
             {calendarData.map((dayData, idx) => (
               <div
                 key={idx}
@@ -520,7 +621,7 @@ const TherapistSchedule = ({ isReadOnly = false }) => {
             <div className="flex items-center justify-between">
               <Button variant="ghost" size="sm" onClick={goToPrevDay} className="gap-1">
                 <ChevronLeft size={18} />
-                <span className="hidden sm:inline">Previous Day</span>
+                <span className="hidden sm:inline">Previous</span>
               </Button>
               <div className="text-center">
                 <p className="font-semibold text-lg">{formatDateDMY(selectedDate)}</p>
@@ -529,7 +630,7 @@ const TherapistSchedule = ({ isReadOnly = false }) => {
                 </p>
               </div>
               <Button variant="ghost" size="sm" onClick={goToNextDay} className="gap-1">
-                <span className="hidden sm:inline">Next Day</span>
+                <span className="hidden sm:inline">Next</span>
                 <ChevronRight size={18} />
               </Button>
             </div>
@@ -537,7 +638,15 @@ const TherapistSchedule = ({ isReadOnly = false }) => {
 
           {/* Day Actions */}
           {!isReadOnly && (
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowAddAvailabilityDialog(true)}
+                className="gap-2"
+              >
+                <Plus size={16} />
+                Add Availability
+              </Button>
               <Button 
                 variant="outline" 
                 onClick={() => setShowBlockDialog(true)}
@@ -549,143 +658,263 @@ const TherapistSchedule = ({ isReadOnly = false }) => {
             </div>
           )}
 
-          {/* Time Slots Grid */}
-          <Card className="overflow-hidden">
-            <div className="p-4 bg-muted/30 border-b border-border">
-              <h3 className="font-semibold flex items-center gap-2">
-                <Clock size={18} />
-                Day Schedule
-              </h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                {daySchedule.appointments.length} session(s) scheduled
-              </p>
+          {/* Session Duration Info */}
+          {daySchedule.hasAvailability && (
+            <div className="flex items-center gap-4 text-sm text-muted-foreground bg-muted/30 rounded-lg px-4 py-2">
+              <span className="flex items-center gap-1">
+                <Clock size={14} />
+                Session: {daySchedule.sessionDuration} min
+              </span>
+              {daySchedule.bufferTime > 0 && (
+                <span>Buffer: {daySchedule.bufferTime} min</span>
+              )}
             </div>
+          )}
 
-            <div className="divide-y divide-border">
-              {daySchedule.slots.map((slot, idx) => {
-                const showTimeLabel = idx === 0 || slot.time.endsWith(':00');
-                
-                return (
-                  <div
-                    key={slot.time}
-                    className={`flex items-stretch min-h-[60px] ${
-                      slot.isBlocked ? 'bg-red-50' :
-                      slot.appointment ? 'bg-primary/5' :
-                      slot.isAvailable ? 'bg-green-50/50 hover:bg-green-50' :
-                      'bg-muted/20'
-                    }`}
-                    data-testid={`time-slot-${slot.time}`}
+          {/* Full Day Blocked Warning */}
+          {daySchedule.isFullDayBlocked && (
+            <Card className="p-4 bg-red-50 border-red-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 text-red-700">
+                  <Ban size={20} />
+                  <div>
+                    <p className="font-medium">Day is Blocked</p>
+                    <p className="text-sm opacity-80">
+                      {daySchedule.blockedPeriods.find(b => b.is_all_day)?.reason || 'No availability for this day'}
+                    </p>
+                  </div>
+                </div>
+                {!isReadOnly && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const block = daySchedule.blockedPeriods.find(b => b.is_all_day);
+                      if (block) handleRemoveBlock(block.id);
+                    }}
+                    className="text-red-700 border-red-300 hover:bg-red-100"
                   >
-                    {/* Time Label */}
-                    <div className={`w-16 sm:w-20 flex-shrink-0 p-2 text-right border-r border-border ${
-                      showTimeLabel ? 'font-medium text-foreground' : 'text-muted-foreground/50'
-                    }`}>
-                      {showTimeLabel && (
-                        <span className="text-sm">{slot.time}</span>
-                      )}
-                    </div>
+                    <X size={14} className="mr-1" /> Remove Block
+                  </Button>
+                )}
+              </div>
+            </Card>
+          )}
 
-                    {/* Slot Content */}
-                    <div className="flex-1 p-2 sm:p-3">
-                      {slot.isBlocked && !slot.appointment && (
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-red-600">
-                            <Ban size={16} />
-                            <span className="text-sm font-medium">Blocked</span>
-                          </div>
-                          {!isReadOnly && (
+          {/* Availability Time Blocks */}
+          {daySchedule.hasAvailability && daySchedule.timeBlocks && (
+            <Card className="overflow-hidden">
+              <div className="p-4 bg-green-50 border-b border-green-100">
+                <h3 className="font-semibold text-green-800 flex items-center gap-2">
+                  <Clock size={18} />
+                  Availability Blocks
+                </h3>
+              </div>
+              <div className="p-4 space-y-2">
+                {daySchedule.timeBlocks.map((block, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-3 bg-green-50/50 rounded-lg border border-green-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-8 bg-green-500 rounded-full"></div>
+                      <div>
+                        <p className="font-medium text-green-800">
+                          {block.start_time} – {block.end_time}
+                        </p>
+                        <p className="text-sm text-green-600">
+                          {Math.floor((timeToMinutes(block.end_time) - timeToMinutes(block.start_time)) / 60)}h {(timeToMinutes(block.end_time) - timeToMinutes(block.start_time)) % 60}m
+                        </p>
+                      </div>
+                    </div>
+                    {!isReadOnly && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveAvailability(idx)}
+                        className="text-green-700 hover:text-red-600 hover:bg-red-50"
+                      >
+                        <Trash2 size={14} />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {/* No Availability Warning */}
+          {!daySchedule.hasAvailability && !daySchedule.isFullDayBlocked && (
+            <Card className="p-6 text-center bg-amber-50 border-amber-200">
+              <AlertTriangle size={32} className="mx-auto text-amber-500 mb-3" />
+              <p className="font-medium text-amber-800 mb-2">No Availability Set</p>
+              <p className="text-sm text-amber-600 mb-4">
+                You haven't set any availability for {selectedDate.toLocaleDateString('en-IN', { weekday: 'long' })}s
+              </p>
+              {!isReadOnly && (
+                <Button onClick={() => setShowAddAvailabilityDialog(true)} className="gap-2">
+                  <Plus size={16} />
+                  Add Availability
+                </Button>
+              )}
+            </Card>
+          )}
+
+          {/* Blocked Time Periods (non-full-day) */}
+          {daySchedule.blockedPeriods?.filter(b => !b.is_all_day).length > 0 && (
+            <Card className="overflow-hidden">
+              <div className="p-4 bg-red-50 border-b border-red-100">
+                <h3 className="font-semibold text-red-800 flex items-center gap-2">
+                  <Ban size={18} />
+                  Blocked Times
+                </h3>
+              </div>
+              <div className="p-4 space-y-2">
+                {daySchedule.blockedPeriods.filter(b => !b.is_all_day).map((block) => (
+                  <div key={block.id} className="flex items-center justify-between p-3 bg-red-50/50 rounded-lg border border-red-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-8 bg-red-500 rounded-full"></div>
+                      <div>
+                        <p className="font-medium text-red-800">
+                          {formatTime24(block.start_datetime)} – {formatTime24(block.end_datetime)}
+                        </p>
+                        {block.reason && (
+                          <p className="text-sm text-red-600">{block.reason}</p>
+                        )}
+                      </div>
+                    </div>
+                    {!isReadOnly && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveBlock(block.id)}
+                        className="text-red-700 hover:bg-red-100"
+                      >
+                        <X size={14} />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {/* Booked Sessions */}
+          {daySchedule.bookedSessions.length > 0 && (
+            <Card className="overflow-hidden">
+              <div className="p-4 bg-primary/10 border-b border-primary/20">
+                <h3 className="font-semibold text-primary flex items-center gap-2">
+                  <User size={18} />
+                  Booked Sessions ({daySchedule.bookedSessions.length})
+                </h3>
+              </div>
+              <div className="p-4 space-y-3">
+                {daySchedule.bookedSessions.map((appt) => (
+                  <div 
+                    key={appt.id} 
+                    className={`p-4 rounded-xl border-2 ${
+                      appt.status === 'completed' ? 'bg-green-50 border-green-200' :
+                      appt.status === 'in_progress' ? 'bg-amber-50 border-amber-200' :
+                      'bg-primary/5 border-primary/20'
+                    }`}
+                    data-testid={`booked-session-${appt.id}`}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-medium flex-shrink-0 ${
+                          appt.status === 'completed' ? 'bg-green-200 text-green-800' :
+                          appt.status === 'in_progress' ? 'bg-amber-200 text-amber-800' :
+                          'bg-primary/20 text-primary'
+                        }`}>
+                          {appt.client_name?.charAt(0) || 'C'}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold text-foreground truncate">{appt.client_name}</p>
+                          <p className="text-sm text-muted-foreground font-medium">
+                            {formatTime24(appt.start_time)} – {formatTime24(appt.end_time)}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className={`px-3 py-1.5 rounded-full text-xs font-medium ${
+                          appt.status === 'completed' ? 'bg-green-200 text-green-800' :
+                          appt.status === 'in_progress' ? 'bg-amber-200 text-amber-800 animate-pulse' :
+                          'bg-blue-100 text-blue-700'
+                        }`}>
+                          {appt.status === 'in_progress' ? 'In Progress' : appt.status}
+                        </span>
+                        {!isReadOnly && appt.status === 'scheduled' && (
+                          <div className="flex gap-1">
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => {
-                                const block = daySchedule.blocks?.find(b => {
-                                  const blockStart = new Date(b.start_datetime);
-                                  return slot.start >= blockStart;
-                                });
-                                if (block) handleRemoveBlock(block.id);
+                                setSelectedAppointment(appt);
+                                setShowEditDialog(true);
                               }}
-                              className="text-red-600 h-8"
+                              className="h-8 w-8 p-0"
                             >
-                              <X size={14} />
+                              <Edit2 size={14} />
                             </Button>
-                          )}
-                        </div>
-                      )}
-
-                      {slot.appointment && (
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-medium ${
-                              slot.appointment.status === 'completed' ? 'bg-green-100 text-green-700' :
-                              slot.appointment.status === 'in_progress' ? 'bg-amber-100 text-amber-700' :
-                              'bg-primary/10 text-primary'
-                            }`}>
-                              {slot.appointment.client_name?.charAt(0) || 'C'}
-                            </div>
-                            <div>
-                              <p className="font-medium text-sm sm:text-base">{slot.appointment.client_name}</p>
-                              <p className="text-xs sm:text-sm text-muted-foreground">
-                                {formatTime24(slot.appointment.start_time)} - {formatTime24(slot.appointment.end_time)}
-                              </p>
-                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleCancelAppointment(appt.id)}
+                              className="h-8 w-8 p-0 text-red-600 hover:bg-red-50"
+                            >
+                              <Trash2 size={14} />
+                            </Button>
                           </div>
-                          <div className="flex items-center gap-1">
-                            <span className={`px-2 py-1 rounded-full text-xs ${
-                              slot.appointment.status === 'completed' ? 'bg-green-100 text-green-700' :
-                              slot.appointment.status === 'in_progress' ? 'bg-amber-100 text-amber-700' :
-                              slot.appointment.status === 'cancelled' ? 'bg-red-100 text-red-700' :
-                              'bg-blue-100 text-blue-700'
-                            }`}>
-                              {slot.appointment.status}
-                            </span>
-                            {!isReadOnly && slot.appointment.status === 'scheduled' && (
-                              <div className="flex gap-1 ml-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => {
-                                    setSelectedAppointment(slot.appointment);
-                                    setShowEditDialog(true);
-                                  }}
-                                  className="h-8 w-8 p-0"
-                                >
-                                  <Edit2 size={14} />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleCancelAppointment(slot.appointment.id)}
-                                  className="h-8 w-8 p-0 text-red-600"
-                                >
-                                  <Trash2 size={14} />
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {!slot.appointment && !slot.isBlocked && slot.isAvailable && !isReadOnly && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => openScheduleDialog(slot)}
-                          className="text-green-600 hover:text-green-700 hover:bg-green-100 gap-2 h-8"
-                        >
-                          <Plus size={14} />
-                          Schedule
-                        </Button>
-                      )}
-
-                      {!slot.appointment && !slot.isBlocked && !slot.isAvailable && (
-                        <span className="text-xs text-muted-foreground">Unavailable</span>
-                      )}
+                        )}
+                      </div>
                     </div>
+                    {appt.notes && (
+                      <p className="text-sm text-muted-foreground mt-2 pl-15">
+                        {appt.notes}
+                      </p>
+                    )}
                   </div>
-                );
-              })}
-            </div>
-          </Card>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {/* Available Slots */}
+          {daySchedule.availableSlots.length > 0 && (
+            <Card className="overflow-hidden">
+              <div className="p-4 bg-green-50 border-b border-green-100">
+                <h3 className="font-semibold text-green-800 flex items-center gap-2">
+                  <CalendarPlus size={18} />
+                  Available Slots ({daySchedule.availableSlots.length})
+                </h3>
+              </div>
+              <div className="p-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                  {daySchedule.availableSlots.map((slot) => (
+                    <Button
+                      key={slot.id}
+                      variant="outline"
+                      onClick={() => openScheduleDialog(slot)}
+                      disabled={isReadOnly}
+                      className="h-auto py-3 flex flex-col items-center gap-1 border-green-200 hover:bg-green-50 hover:border-green-400"
+                      data-testid={`available-slot-${slot.startTime}`}
+                    >
+                      <span className="font-semibold text-green-700">{slot.startTime}</span>
+                      <span className="text-xs text-green-600">– {slot.endTime}</span>
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {/* Empty State - Has availability but no slots */}
+          {daySchedule.hasAvailability && daySchedule.availableSlots.length === 0 && daySchedule.bookedSessions.length === 0 && !daySchedule.isFullDayBlocked && (
+            <Card className="p-6 text-center">
+              <CalendarDays size={32} className="mx-auto text-muted-foreground mb-3" />
+              <p className="font-medium text-foreground mb-1">No Sessions Scheduled</p>
+              <p className="text-sm text-muted-foreground">
+                Your availability is set but no sessions are booked yet
+              </p>
+            </Card>
+          )}
         </div>
       )}
 
@@ -696,10 +925,10 @@ const TherapistSchedule = ({ isReadOnly = false }) => {
             <DialogTitle>Schedule Appointment</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleScheduleAppointment} className="space-y-4">
-            <div>
-              <Label>Date & Time</Label>
-              <p className="text-sm text-muted-foreground mt-1">
-                {selectedDate && formatDateDMY(selectedDate)} at {selectedSlot?.time}
+            <div className="p-3 bg-primary/10 rounded-lg">
+              <p className="text-sm text-muted-foreground">Date & Time</p>
+              <p className="font-semibold text-primary">
+                {selectedDate && formatDateDMY(selectedDate)} • {selectedSlot?.startTime} – {selectedSlot?.endTime}
               </p>
             </div>
 
@@ -720,13 +949,6 @@ const TherapistSchedule = ({ isReadOnly = false }) => {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-
-            <div>
-              <Label>Duration</Label>
-              <p className="text-sm text-muted-foreground mt-1">
-                {availability?.session_duration || 60} minutes
-              </p>
             </div>
 
             <div>
@@ -760,15 +982,10 @@ const TherapistSchedule = ({ isReadOnly = false }) => {
           </DialogHeader>
           {selectedAppointment && (
             <form onSubmit={handleEditAppointment} className="space-y-4">
-              <div>
-                <Label>Client</Label>
-                <p className="text-sm font-medium mt-1">{selectedAppointment.client_name}</p>
-              </div>
-
-              <div>
-                <Label>Time</Label>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {formatTime24(selectedAppointment.start_time)} - {formatTime24(selectedAppointment.end_time)}
+              <div className="p-3 bg-muted/50 rounded-lg">
+                <p className="font-medium">{selectedAppointment.client_name}</p>
+                <p className="text-sm text-muted-foreground">
+                  {formatTime24(selectedAppointment.start_time)} – {formatTime24(selectedAppointment.end_time)}
                 </p>
               </div>
 
@@ -819,9 +1036,9 @@ const TherapistSchedule = ({ isReadOnly = false }) => {
             <DialogTitle>Block Time</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleBlockTime} className="space-y-4">
-            <div>
-              <Label>Date</Label>
-              <p className="text-sm text-muted-foreground mt-1">
+            <div className="p-3 bg-red-50 rounded-lg">
+              <p className="text-sm text-red-600">Blocking time for</p>
+              <p className="font-semibold text-red-800">
                 {selectedDate && formatDateDMY(selectedDate)}
               </p>
             </div>
@@ -847,7 +1064,6 @@ const TherapistSchedule = ({ isReadOnly = false }) => {
                     value={newBlock.start_time}
                     onChange={(e) => setNewBlock({ ...newBlock, start_time: e.target.value })}
                     className="mt-1"
-                    required
                   />
                 </div>
                 <div>
@@ -858,7 +1074,6 @@ const TherapistSchedule = ({ isReadOnly = false }) => {
                     value={newBlock.end_time}
                     onChange={(e) => setNewBlock({ ...newBlock, end_time: e.target.value })}
                     className="mt-1"
-                    required
                   />
                 </div>
               </div>
@@ -879,8 +1094,62 @@ const TherapistSchedule = ({ isReadOnly = false }) => {
               <Button type="button" variant="outline" onClick={() => setShowBlockDialog(false)} className="flex-1">
                 Cancel
               </Button>
-              <Button type="submit" className="flex-1">
+              <Button type="submit" variant="destructive" className="flex-1">
                 Block Time
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Availability Dialog */}
+      <Dialog open={showAddAvailabilityDialog} onOpenChange={setShowAddAvailabilityDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Availability</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleAddAvailability} className="space-y-4">
+            <div className="p-3 bg-green-50 rounded-lg">
+              <p className="text-sm text-green-600">Adding availability for</p>
+              <p className="font-semibold text-green-800">
+                {selectedDate && formatDateDMY(selectedDate)} ({selectedDate?.toLocaleDateString('en-IN', { weekday: 'long' })})
+              </p>
+              <p className="text-xs text-green-600 mt-1">
+                This will apply to all {selectedDate?.toLocaleDateString('en-IN', { weekday: 'long' })}s
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="avail-start">Start Time *</Label>
+                <Input
+                  id="avail-start"
+                  type="time"
+                  value={newAvailability.start_time}
+                  onChange={(e) => setNewAvailability({ ...newAvailability, start_time: e.target.value })}
+                  className="mt-1"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="avail-end">End Time *</Label>
+                <Input
+                  id="avail-end"
+                  type="time"
+                  value={newAvailability.end_time}
+                  onChange={(e) => setNewAvailability({ ...newAvailability, end_time: e.target.value })}
+                  className="mt-1"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <Button type="button" variant="outline" onClick={() => setShowAddAvailabilityDialog(false)} className="flex-1">
+                Cancel
+              </Button>
+              <Button type="submit" className="flex-1 bg-green-600 hover:bg-green-700">
+                Add Availability
               </Button>
             </div>
           </form>
