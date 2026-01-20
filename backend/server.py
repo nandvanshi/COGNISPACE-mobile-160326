@@ -35,6 +35,7 @@ from routes.assessments import router as assessments_router
 from routes.clinical import router as clinical_router
 from routes.assistant import router as assistant_dashboard_router
 from routes.recurring import router as recurring_router
+from routes.protocols import router as protocols_router
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
