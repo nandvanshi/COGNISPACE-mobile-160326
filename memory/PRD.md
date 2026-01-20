@@ -1430,3 +1430,72 @@ Build a secure, therapist-first web application for managing a therapy practice 
 - Recurring Appointments (~175 lines)
 - Protocols (~200 lines)
 - Resource Library (~170 lines)
+
+### Phase 36: Post-Refactoring Bug Fixes (COMPLETED - Jan 21, 2026)
+**Issues Identified:** After the major server.py refactoring, several features stopped loading:
+- Assessments - "Not able to load assessment"
+- Protocols - "Failed to load protocols"
+- Recurring Appointments - "Failed to load recurring appointments"
+- Messages - "Failed to load messaging data"
+- Availability - "Failed to load availability settings"
+
+**Root Causes & Fixes:**
+1. **Assessments `/api/assessments/custom` (Route Order Issue)**:
+   - Problem: `/custom` endpoint was defined AFTER `/{assessment_id}` in `assessments.py`
+   - FastAPI matched `/custom` as an assessment_id parameter
+   - Fix: Moved `/custom`, `/custom/{assessment_id}`, `/library`, `/client/{client_id}/history` routes BEFORE `/{assessment_id}`
+   - File: `/app/backend/routes/assessments.py`
+
+2. **Protocols Endpoints Missing**:
+   - Problem: `/api/protocols` and `/api/protocols/templates` were never created in refactoring
+   - Fix: Created new `/app/backend/routes/protocols.py` with:
+     - GET /protocols - List therapist's protocols
+     - GET /protocols/templates - 5 standard templates (CBT_ANXIETY, CBT_DEPRESSION, DBT_SKILLS, ACT_GENERAL, TRAUMA_PROCESSING)
+     - POST /protocols - Create protocol
+     - GET/PUT/DELETE /protocols/{id}
+
+3. **Recurring Appointments Endpoints Missing**:
+   - Problem: `/api/recurring-appointments` endpoints were never created in refactoring
+   - Fix: Created new `/app/backend/routes/recurring.py` with:
+     - GET /recurring-appointments - List patterns
+     - POST /recurring-appointments - Create pattern
+     - GET/PUT/DELETE /recurring-appointments/{id}
+     - PUT /recurring-appointments/{id}/toggle - Toggle active status
+     - POST /recurring-appointments/{id}/generate - Generate appointments
+
+4. **Messaging Contacts Endpoint Missing**:
+   - Problem: `/api/messaging-contacts` was never created (frontend calls this for contact list)
+   - Fix: Added endpoint to `/app/backend/routes/sessions.py`
+   - Returns list of clients (for therapist) or therapist (for client) with unread counts
+
+5. **Blocked Times Field Mapping & Endpoint Name**:
+   - Problem 1: Frontend calls `/api/blocked-times` (plural), backend had `/api/blocked-time` (singular)
+   - Problem 2: Database stores `start_datetime/end_datetime`, code expected `start_time/end_time`
+   - Fix: Added both endpoint aliases, added field mapping to handle both old and new field names
+   - File: `/app/backend/routes/availability.py`
+
+**Files Created:**
+- `/app/backend/routes/protocols.py` (~300 lines)
+- `/app/backend/routes/recurring.py` (~300 lines)
+
+**Files Modified:**
+- `/app/backend/routes/assessments.py` - Route order fix
+- `/app/backend/routes/sessions.py` - Added /messaging-contacts endpoint
+- `/app/backend/routes/availability.py` - Added /blocked-times alias, field mapping fix
+- `/app/backend/server.py` - Added router imports
+
+**Testing**: 14/14 backend tests passed, 100% frontend features verified
+- Test file: `/app/tests/test_refactored_features.py`
+- Report: `/app/test_reports/iteration_28.json`
+
+**Endpoints Fixed:**
+| Endpoint | Status | Issue |
+|----------|--------|-------|
+| GET /api/assessments/custom | ✅ FIXED | Route order |
+| GET /api/protocols | ✅ FIXED | Missing endpoint |
+| GET /api/protocols/templates | ✅ FIXED | Missing endpoint |
+| GET /api/recurring-appointments | ✅ FIXED | Missing endpoint |
+| GET /api/messaging-contacts | ✅ FIXED | Missing endpoint |
+| GET /api/blocked-times | ✅ FIXED | Missing alias + field mapping |
+
+---
