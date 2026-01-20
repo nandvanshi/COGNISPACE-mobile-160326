@@ -54,7 +54,7 @@ const TherapistApplicationPage = () => {
         <div className="mb-8">
           <h2 className="text-4xl font-serif text-primary mb-2">Apply as Therapist</h2>
           <p className="text-muted-foreground">
-            Submit your application to join the Haven platform
+            Submit your application to join the TheraGenie platform
           </p>
         </div>
 
