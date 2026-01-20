@@ -11,12 +11,11 @@ import { toast } from 'sonner';
 import { UserPlus, Search, Key, Camera, Edit, User, Phone, Mail, MapPin, AlertCircle, Eye } from 'lucide-react';
 import ClientProfileView from './ClientProfileView';
 
-const ClientManagement = ({ isReadOnly = false, isAssistant = false, initialClientId = null, initialFilter = null, onClearContext = () => {} }) => {
+const ClientManagement = ({ isReadOnly = false, isAssistant = false, initialClientId = null, initialFilter = null, filterData = null, onClearContext = () => {} }) => {
   const [clients, setClients] = useState([]);
   const [filteredClients, setFilteredClients] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState(initialFilter);
-  const [inactiveClientIds, setInactiveClientIds] = useState([]);
   const [selectedClient, setSelectedClient] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [showAddDialog, setShowAddDialog] = useState(false);
