@@ -2057,6 +2057,84 @@ async def get_support_stats(current_user: dict = Depends(require_super_admin)):
     
     return result
 
+@api_router.get("/admin/dashboard-stats")
+async def get_admin_dashboard_stats(current_user: dict = Depends(require_super_admin)):
+    """Get comprehensive admin dashboard statistics"""
+    now_utc = datetime.now(timezone.utc)
+    
+    # Therapist counts
+    total_therapists = await db.users.count_documents({"role": "therapist", "status": "approved"})
+    pending_applications = await db.users.count_documents({"role": "therapist", "status": "pending_approval"})
+    suspended_therapists = await db.users.count_documents({"role": "therapist", "status": "suspended"})
+    
+    # Client counts
+    total_clients = await db.users.count_documents({"role": "client"})
+    
+    # Subscription stats
+    active_subscriptions = await db.users.count_documents({
+        "role": "therapist", 
+        "status": "approved",
+        "subscription_status": {"$in": ["active", "trial"]}
+    })
+    expired_subscriptions = await db.users.count_documents({
+        "role": "therapist",
+        "status": "approved", 
+        "subscription_status": "expired"
+    })
+    
+    # Trial ending soon (within 7 days)
+    seven_days_later = (now_utc + timedelta(days=7)).isoformat()
+    trial_ending_soon = await db.subscriptions.count_documents({
+        "status": "trial",
+        "end_date": {"$lte": seven_days_later, "$gte": now_utc.isoformat()}
+    })
+    
+    # Support ticket stats
+    open_tickets = await db.support_tickets.count_documents({"status": {"$in": ["open", "in_progress"]}})
+    
+    # Get pending applications list (top 5)
+    pending_apps = await db.users.find(
+        {"role": "therapist", "status": "pending_approval"},
+        {"_id": 0, "id": 1, "full_name": 1, "email": 1, "created_at": 1}
+    ).sort("created_at", -1).limit(5).to_list(5)
+    
+    # Get expired subscriptions list (top 5)
+    expired_list = await db.users.find(
+        {"role": "therapist", "status": "approved", "subscription_status": "expired"},
+        {"_id": 0, "id": 1, "full_name": 1, "email": 1}
+    ).limit(5).to_list(5)
+    
+    # Get open support tickets (top 5)
+    open_tickets_list = await db.support_tickets.find(
+        {"status": {"$in": ["open", "in_progress"]}},
+        {"_id": 0, "id": 1, "subject": 1, "therapist_name": 1, "priority": 1, "status": 1, "created_at": 1}
+    ).sort("created_at", -1).limit(5).to_list(5)
+    
+    # Get suspended therapists (top 5)
+    suspended_list = await db.users.find(
+        {"role": "therapist", "status": "suspended"},
+        {"_id": 0, "id": 1, "full_name": 1, "email": 1}
+    ).limit(5).to_list(5)
+    
+    return {
+        "metrics": {
+            "total_therapists": total_therapists,
+            "pending_applications": pending_applications,
+            "total_clients": total_clients,
+            "active_subscriptions": active_subscriptions,
+            "expired_subscriptions": expired_subscriptions,
+            "trial_ending_soon": trial_ending_soon,
+            "suspended_therapists": suspended_therapists,
+            "open_tickets": open_tickets
+        },
+        "attention_items": {
+            "pending_applications": pending_apps,
+            "expired_subscriptions": expired_list,
+            "open_tickets": open_tickets_list,
+            "suspended_therapists": suspended_list
+        }
+    }
+
 # ============= SUBSCRIPTION MANAGEMENT ENDPOINTS =============
 
 @api_router.get("/admin/subscription-plans", response_model=List[SubscriptionPlan])
