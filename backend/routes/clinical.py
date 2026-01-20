@@ -10,7 +10,7 @@ import uuid
 from database import db
 from dependencies import get_current_user, log_audit, check_feature_enabled
 
-router = APIRouter(tags=["clinical"])
+router = APIRouter(tags=["clinical"], prefix="")
 
 
 # ============= MODELS =============
