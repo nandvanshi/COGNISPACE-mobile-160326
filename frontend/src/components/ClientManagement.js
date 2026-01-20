@@ -250,6 +250,25 @@ const ClientManagement = ({ isReadOnly = false, isAssistant = false, initialClie
         </Button>
       </div>
 
+      {/* Active Filter Banner */}
+      {activeFilter === 'inactive' && (
+        <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center justify-between" data-testid="inactive-filter-banner">
+          <div className="flex items-center gap-2 text-amber-800">
+            <AlertCircle size={18} />
+            <span className="text-sm font-medium">Showing inactive clients (no sessions in 30+ days)</span>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={clearFilter}
+            className="text-amber-700 hover:text-amber-900 hover:bg-amber-100"
+            data-testid="clear-filter-btn"
+          >
+            Show All Clients
+          </Button>
+        </div>
+      )}
+
       {/* Search */}
       <div className="mb-6">
         <div className="relative">
