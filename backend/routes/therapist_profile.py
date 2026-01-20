@@ -25,6 +25,12 @@ class TherapistAddress(BaseModel):
     district: Optional[str] = None        # Auto-filled from pincode
 
 
+class FeeSlot(BaseModel):
+    """Consultation fee slot with duration"""
+    amount: float
+    duration_minutes: int
+
+
 class TherapistProfileUpdate(BaseModel):
     """Therapist profile update model"""
     # Basic Info
@@ -35,10 +41,10 @@ class TherapistProfileUpdate(BaseModel):
     
     # Clinic Info
     clinic_name: Optional[str] = None
-    specialization: Optional[str] = None
+    specializations: Optional[List[str]] = None  # Array of specializations (1-5)
     qualifications: Optional[str] = None
     experience_years: Optional[int] = None
-    consultation_fee: Optional[float] = None
+    fee_slots: Optional[List[FeeSlot]] = None  # Multiple fee options with duration
     
     # Address (Indian Format)
     address_line_1: Optional[str] = None
@@ -65,10 +71,12 @@ class TherapistProfile(BaseModel):
     
     # Clinic Info
     clinic_name: Optional[str] = None
-    specialization: Optional[str] = None
+    specializations: Optional[List[str]] = None
+    specialization: Optional[str] = None  # Legacy field
     qualifications: Optional[str] = None
     experience_years: Optional[int] = None
-    consultation_fee: Optional[float] = None
+    fee_slots: Optional[List[dict]] = None
+    consultation_fee: Optional[float] = None  # Legacy field
     
     # Address
     address_line_1: Optional[str] = None
