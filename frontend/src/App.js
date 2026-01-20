@@ -136,51 +136,53 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 function App() {
   return (
     <AuthProvider>
-      <div className="App">
-        <div className="noise-overlay" />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/admin-login" element={<AdminLoginPage />} />
-            <Route path="/therapist-application" element={<TherapistApplicationPage />} />
-            <Route
-              path="/therapist/*"
-              element={
-                <ProtectedRoute allowedRoles={['therapist']}>
-                  <TherapistDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/client/*"
-              element={
-                <ProtectedRoute allowedRoles={['client']}>
-                  <ClientDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/assistant/*"
-              element={
-                <ProtectedRoute allowedRoles={['assistant']}>
-                  <AssistantDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/*"
-              element={
-                <ProtectedRoute allowedRoles={['super_admin']}>
-                  <SuperAdminDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/" element={<Navigate to="/login" replace />} />
-          </Routes>
-        </BrowserRouter>
-        <Toaster position="top-right" richColors />
-        <InstallPWA />
-      </div>
+      <SubscriptionProvider>
+        <div className="App">
+          <div className="noise-overlay" />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/admin-login" element={<AdminLoginPage />} />
+              <Route path="/therapist-application" element={<TherapistApplicationPage />} />
+              <Route
+                path="/therapist/*"
+                element={
+                  <ProtectedRoute allowedRoles={['therapist']}>
+                    <TherapistDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/client/*"
+                element={
+                  <ProtectedRoute allowedRoles={['client']}>
+                    <ClientDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/assistant/*"
+                element={
+                  <ProtectedRoute allowedRoles={['assistant']}>
+                    <AssistantDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/*"
+                element={
+                  <ProtectedRoute allowedRoles={['super_admin']}>
+                    <SuperAdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/" element={<Navigate to="/login" replace />} />
+            </Routes>
+          </BrowserRouter>
+          <Toaster position="top-right" richColors />
+          <InstallPWA />
+        </div>
+      </SubscriptionProvider>
     </AuthProvider>
   );
 }
