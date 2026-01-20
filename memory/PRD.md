@@ -1388,3 +1388,45 @@ Build a secure, therapist-first web application for managing a therapy practice 
 - Therapist Profile (~180 lines)
 - Protocols (~200 lines)
 - AI Clinical (~230 lines)
+
+**Step 7: Final Refactoring - Clinical & Assistant Routes (COMPLETED)**
+- Created `/app/backend/routes/clinical.py` (~373 lines)
+  - Case History CRUD
+  - Therapy Consent CRUD
+  - Homework CRUD with priority
+- Created `/app/backend/routes/assistant.py` (~349 lines)
+  - Assistant Dashboard with stats
+  - Call Reminders
+  - Cash Settlement (handover, confirm, dispute)
+- **Lines reduced**: 3000 → 1799 (~1201 lines moved)
+- **Testing**: All endpoints verified
+
+**FINAL STATUS - REFACTORING COMPLETE:**
+- server.py: **1799 lines** (from 6919, **-74% reduction**)
+- Total routes: **4431 lines** (12 modules)
+
+**Route Modules:**
+| Module | Lines | Endpoints |
+|--------|-------|-----------|
+| admin.py | 526 | Therapist/Client management |
+| subscriptions.py | 532 | Plans, support tickets, coupons |
+| appointments.py | 437 | Appointments, check-in/out |
+| clinical.py | 373 | Case history, consent, homework |
+| availability.py | 359 | Availability, blocked time, slots |
+| assistant.py | 349 | Dashboard, cash settlement |
+| clients.py | 345 | Client CRUD |
+| payments.py | 336 | Payments CRUD, stats |
+| sessions.py | 301 | Session notes, messaging |
+| assistants.py | 301 | Assistant user management |
+| auth.py | 294 | Login, registration, preferences |
+| assessments.py | 278 | Assessment library, assign, submit |
+
+**Remaining in server.py (~1799 lines):**
+- Models (~550 lines)
+- Utility/Dependency functions (~200 lines)
+- AI Clinical endpoints (~230 lines)
+- Therapist Profile (~180 lines)
+- Note Templates (~95 lines)
+- Recurring Appointments (~175 lines)
+- Protocols (~200 lines)
+- Resource Library (~170 lines)
