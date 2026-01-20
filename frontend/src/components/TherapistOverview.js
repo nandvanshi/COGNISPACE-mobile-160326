@@ -208,7 +208,7 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
         {!isReadOnly && (
           <div className="flex gap-2">
             <Button 
-              onClick={() => handleNavigate('appointments')}
+              onClick={() => handleNavigate('schedule')}
               variant="outline"
               className="gap-2 flex-1 sm:flex-none h-11"
               data-testid="header-schedule-btn"
@@ -233,7 +233,7 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
         {/* Today's Sessions Card */}
         <Card 
           className={`p-5 border-l-4 ${stats.todayAppointments > 0 ? 'border-l-primary bg-primary/5' : 'border-l-muted bg-muted/30'} cursor-pointer hover:shadow-md transition-all active:scale-[0.98]`}
-          onClick={() => handleNavigate('appointments')}
+          onClick={() => handleNavigate('schedule')}
           data-testid="today-sessions-card"
         >
           <div className="flex items-start justify-between">
@@ -331,7 +331,7 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  onClick={() => handleNavigate('appointments')}
+                  onClick={() => handleNavigate('schedule')}
                   className="text-primary text-sm"
                 >
                   View All <ChevronRight size={18} />
@@ -351,7 +351,7 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
                       <Button 
                         variant="outline" 
-                        onClick={() => handleNavigate('appointments')}
+                        onClick={() => handleNavigate('schedule')}
                         className="h-11"
                       >
                         <CalendarPlus size={18} className="mr-2" />
@@ -619,7 +619,7 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
               </div>
               <div 
                 className="flex justify-between items-center cursor-pointer hover:text-primary transition-colors"
-                onClick={() => handleNavigate('appointments')}
+                onClick={() => handleNavigate('schedule')}
               >
                 <span className="text-sm text-muted-foreground">Upcoming Sessions</span>
                 <span className="font-semibold text-lg text-foreground">{stats.upcomingAppointments}</span>
