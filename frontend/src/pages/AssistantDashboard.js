@@ -28,6 +28,12 @@ const AssistantOverview = ({ onNavigate }) => {
   const [loading, setLoading] = useState(true);
   const [showAccessInfo, setShowAccessInfo] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  
+  // Cash Settlement state
+  const [settlement, setSettlement] = useState(null);
+  const [showHandoverDialog, setShowHandoverDialog] = useState(false);
+  const [handoverNote, setHandoverNote] = useState('');
+  const [submittingHandover, setSubmittingHandover] = useState(false);
 
   const fetchDashboard = useCallback(async () => {
     try {
@@ -41,17 +47,46 @@ const AssistantOverview = ({ onNavigate }) => {
       setRefreshing(false);
     }
   }, []);
+  
+  const fetchSettlement = useCallback(async () => {
+    try {
+      const res = await axios.get(`${API}/settlements/today`);
+      setSettlement(res.data);
+    } catch (error) {
+      console.error('Failed to fetch settlement:', error);
+    }
+  }, []);
 
   useEffect(() => {
     fetchDashboard();
+    fetchSettlement();
     // Refresh every 5 minutes
-    const interval = setInterval(fetchDashboard, 5 * 60 * 1000);
+    const interval = setInterval(() => {
+      fetchDashboard();
+      fetchSettlement();
+    }, 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [fetchDashboard]);
+  }, [fetchDashboard, fetchSettlement]);
 
   const handleRefresh = () => {
     setRefreshing(true);
     fetchDashboard();
+    fetchSettlement();
+  };
+  
+  const handleCashHandover = async () => {
+    setSubmittingHandover(true);
+    try {
+      await axios.post(`${API}/settlements/handover`, { note: handoverNote || null });
+      toast.success('Cash handover submitted successfully');
+      setShowHandoverDialog(false);
+      setHandoverNote('');
+      fetchSettlement();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to submit handover');
+    } finally {
+      setSubmittingHandover(false);
+    }
   };
 
   const handleMarkCalled = async (appointmentId) => {
