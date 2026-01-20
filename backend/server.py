@@ -79,35 +79,149 @@ JWT_EXPIRATION_HOURS = 24 * 7  # 7 days
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
 
-# ============= MODELS =============
+# Case History Models - Keep inline as they have special structure
+class BasicIdentification(BaseModel):
+    name: Optional[str] = None
+    age: Optional[int] = None
+    gender: Optional[str] = None
+    marital_status: Optional[str] = None
+    education: Optional[str] = None
+    occupation: Optional[str] = None
+    religion: Optional[str] = None
+    language: Optional[str] = None
+    handedness: Optional[str] = None
+    socioeconomic_status: Optional[str] = None
+    informant: Optional[str] = None
+    reliability: Optional[str] = None
 
-# Auth Models
-class UserRegister(BaseModel):
-    mobile: str
-    password: str
-    full_name: str
-    role: Literal["client"]  # Only clients can self-register
-    email: Optional[EmailStr] = None
+class PresentingComplaints(BaseModel):
+    complaints: Optional[List[str]] = None
+    duration: Optional[str] = None
+    onset: Optional[str] = None
+    course: Optional[str] = None
+    progression: Optional[str] = None
 
-class TherapistApplication(BaseModel):
-    mobile: str
-    email: EmailStr
-    full_name: str
-    credentials: str  # License number, certification
-    specialization: Optional[str] = None
-    years_of_experience: Optional[int] = None
-    
-class SuperAdminLogin(BaseModel):
-    username: str
-    password: str
+class HistoryOfPresentIllness(BaseModel):
+    detailed_history: Optional[str] = None
+    precipitating_factors: Optional[str] = None
+    associated_symptoms: Optional[List[str]] = None
+    impact_on_functioning: Optional[str] = None
+    previous_episodes: Optional[str] = None
+    treatment_history: Optional[str] = None
+    current_medications: Optional[str] = None
 
-class UserLogin(BaseModel):
-    identifier: str  # Can be mobile or email
-    password: str
+class PastPsychiatricHistory(BaseModel):
+    previous_diagnoses: Optional[List[str]] = None
+    hospitalizations: Optional[str] = None
+    treatments_received: Optional[str] = None
+    response_to_treatment: Optional[str] = None
+    suicide_attempts: Optional[str] = None
 
-class User(BaseModel):
+class MedicalHistory(BaseModel):
+    chronic_illnesses: Optional[List[str]] = None
+    surgeries: Optional[str] = None
+    allergies: Optional[List[str]] = None
+    current_medications: Optional[List[str]] = None
+    substance_use: Optional[str] = None
+
+class FamilyHistory(BaseModel):
+    psychiatric_history: Optional[str] = None
+    family_structure: Optional[str] = None
+    relationships: Optional[str] = None
+
+class PersonalDevelopmentalHistory(BaseModel):
+    birth_history: Optional[str] = None
+    developmental_milestones: Optional[str] = None
+    childhood_temperament: Optional[str] = None
+    education_history: Optional[str] = None
+    occupational_history: Optional[str] = None
+    relationship_history: Optional[str] = None
+
+class MentalStatusExamination(BaseModel):
+    general_appearance: Optional[str] = None
+    behavior: Optional[str] = None
+    speech: Optional[str] = None
+    mood: Optional[str] = None
+    affect: Optional[str] = None
+    thought_form: Optional[str] = None
+    thought_content: Optional[str] = None
+    perception: Optional[str] = None
+    cognition: Optional[str] = None
+    insight: Optional[str] = None
+    judgment: Optional[str] = None
+
+class ProvisionalFormulation(BaseModel):
+    summary: Optional[str] = None
+    predisposing_factors: Optional[str] = None
+    precipitating_factors: Optional[str] = None
+    maintaining_factors: Optional[str] = None
+    provisional_diagnosis: Optional[str] = None
+
+class InitialTherapyPlan(BaseModel):
+    treatment_goals: Optional[List[str]] = None
+    therapeutic_approach: Optional[str] = None
+    frequency_of_sessions: Optional[str] = None
+    estimated_duration: Optional[str] = None
+
+class ConsentDisclaimer(BaseModel):
+    confidentiality_explained: bool = False
+    limits_of_confidentiality_explained: bool = False
+    treatment_plan_discussed: bool = False
+    consent_obtained: bool = False
+
+class CaseHistoryCreate(BaseModel):
+    basic_identification: Optional[BasicIdentification] = None
+    presenting_complaints: Optional[PresentingComplaints] = None
+    history_of_present_illness: Optional[HistoryOfPresentIllness] = None
+    past_psychiatric_history: Optional[PastPsychiatricHistory] = None
+    medical_history: Optional[MedicalHistory] = None
+    family_history: Optional[FamilyHistory] = None
+    personal_developmental_history: Optional[PersonalDevelopmentalHistory] = None
+    mental_status_examination: Optional[MentalStatusExamination] = None
+    provisional_formulation: Optional[ProvisionalFormulation] = None
+    initial_therapy_plan: Optional[InitialTherapyPlan] = None
+    consent_disclaimer: Optional[ConsentDisclaimer] = None
+
+class CaseHistory(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str
+    therapist_id: str
+    client_id: str
+    basic_identification: Optional[BasicIdentification] = None
+    presenting_complaints: Optional[PresentingComplaints] = None
+    history_of_present_illness: Optional[HistoryOfPresentIllness] = None
+    past_psychiatric_history: Optional[PastPsychiatricHistory] = None
+    medical_history: Optional[MedicalHistory] = None
+    family_history: Optional[FamilyHistory] = None
+    personal_developmental_history: Optional[PersonalDevelopmentalHistory] = None
+    mental_status_examination: Optional[MentalStatusExamination] = None
+    provisional_formulation: Optional[ProvisionalFormulation] = None
+    initial_therapy_plan: Optional[InitialTherapyPlan] = None
+    consent_disclaimer: Optional[ConsentDisclaimer] = None
+    is_complete: bool = False
+    created_at: str
+    updated_at: str
+
+class TherapyConsentCreate(BaseModel):
+    client_name: str
+    therapist_name: str
+    date: str
+
+class TherapyConsent(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    therapist_id: str
+    client_id: str
+    client_name: str
+    therapist_name: str
+    consent_date: str
+    signed_at: Optional[str] = None
+    is_signed: bool = False
+    signature_data: Optional[str] = None
+    created_at: str
+    updated_at: str
+
+# ============= UTILITY FUNCTIONS =============
     client_id: Optional[str] = None  # Only for clients
     therapist_id: Optional[str] = None  # Only for assistants - linked therapist
     mobile: str
