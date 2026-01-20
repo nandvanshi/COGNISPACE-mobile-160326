@@ -909,6 +909,31 @@ def create_token(user_id: str, email: str, role: str) -> str:
     }
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
+async def get_feature_toggles_for_therapist(therapist_id: str):
+    """Get active feature toggles for a therapist based on their subscription plan"""
+    if not therapist_id:
+        return DEFAULT_FEATURE_TOGGLES
+    
+    therapist = await db.users.find_one({"id": therapist_id}, {"_id": 0})
+    if not therapist:
+        return DEFAULT_FEATURE_TOGGLES
+    
+    subscription = await db.subscriptions.find_one(
+        {"therapist_id": therapist_id},
+        {"_id": 0},
+        sort=[("start_date", -1)]
+    )
+    
+    if not subscription:
+        # Free trial gets all features
+        return DEFAULT_FEATURE_TOGGLES
+    
+    plan = await db.subscription_plans.find_one({"id": subscription.get("plan_id")}, {"_id": 0})
+    if not plan or not plan.get("feature_toggles"):
+        return DEFAULT_FEATURE_TOGGLES
+    
+    return {**DEFAULT_FEATURE_TOGGLES, **plan.get("feature_toggles", {})}
+
 async def check_feature_enabled(therapist_id: str, feature_name: str):
     """Check if a feature is enabled for a therapist based on their subscription plan"""
     toggles = await get_feature_toggles_for_therapist(therapist_id)
