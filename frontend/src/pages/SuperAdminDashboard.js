@@ -4,8 +4,9 @@ import axios from 'axios';
 import { useAuth, API } from '../App';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
-import { LogOut, Users, UserCheck, UserCog, CreditCard, Tag, Settings as SettingsIcon, MessageSquare } from 'lucide-react';
+import { LogOut, Users, UserCheck, UserCog, CreditCard, Tag, Settings as SettingsIcon, MessageSquare, Home } from 'lucide-react';
 import { toast } from 'sonner';
+import AdminOverview from '../components/admin/AdminOverview';
 import TherapistApplications from '../components/admin/TherapistApplications';
 import TherapistManagement from '../components/admin/TherapistManagement';
 import ClientManagement from '../components/admin/ClientManagement';
@@ -17,10 +18,11 @@ import Settings from '../components/Settings';
 const SuperAdminDashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [currentView, setCurrentView] = useState('applications');
+  const [currentView, setCurrentView] = useState('overview');
   const [showSettings, setShowSettings] = useState(false);
 
   const navItems = [
+    { id: 'overview', label: 'Dashboard', icon: Home },
     { id: 'applications', label: 'Therapist Applications', icon: UserCheck },
     { id: 'therapists', label: 'Therapist Management', icon: UserCog },
     { id: 'clients', label: 'Client Management', icon: Users },
