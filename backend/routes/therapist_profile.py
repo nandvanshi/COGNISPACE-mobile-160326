@@ -188,13 +188,15 @@ async def get_therapist_profile(current_user: dict = Depends(require_therapist))
         full_name=therapist.get("full_name", ""),
         email=therapist.get("email"),
         mobile=therapist.get("mobile"),
-        profile_photo=therapist.get("profile_photo"),
+        profile_photo=therapist.get("profile_photo") or (profile.get("profile_photo") if profile else None),
         
         # From profile collection
         clinic_name=profile.get("clinic_name") if profile else therapist.get("clinic_name"),
+        specializations=profile.get("specializations") if profile else None,
         specialization=profile.get("specialization") if profile else therapist.get("specialization"),
         qualifications=profile.get("qualifications") if profile else therapist.get("qualifications"),
         experience_years=profile.get("experience_years") if profile else therapist.get("experience_years"),
+        fee_slots=profile.get("fee_slots") if profile else None,
         consultation_fee=profile.get("consultation_fee") if profile else therapist.get("consultation_fee"),
         
         # Address fields
