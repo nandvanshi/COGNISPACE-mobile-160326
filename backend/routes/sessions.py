@@ -231,6 +231,63 @@ async def delete_session_note(note_id: str, current_user: dict = Depends(require
 
 # ============= MESSAGING ENDPOINTS =============
 
+@router.get("/messaging-contacts")
+async def get_messaging_contacts(current_user: dict = Depends(get_current_user)):
+    """Get contacts available for messaging"""
+    if current_user["role"] == "therapist":
+        # Get all clients for this therapist with messaging enabled
+        client_profiles = await db.client_profiles.find(
+            {"therapist_id": current_user["id"]},
+            {"_id": 0}
+        ).to_list(500)
+        
+        contacts = []
+        for profile in client_profiles:
+            # Get user info
+            user = await db.users.find_one({"id": profile["user_id"]}, {"_id": 0, "id": 1, "full_name": 1})
+            if user:
+                # Check unread messages count
+                unread = await db.messages.count_documents({
+                    "sender_id": profile["user_id"],
+                    "recipient_id": current_user["id"],
+                    "is_read": False
+                })
+                
+                contacts.append({
+                    "id": user["id"],
+                    "name": user.get("full_name", "Unknown"),
+                    "messaging_enabled": profile.get("messaging_enabled", True),
+                    "unread_count": unread
+                })
+        
+        return contacts
+    
+    elif current_user["role"] == "client":
+        # Get client's therapist
+        profile = await db.client_profiles.find_one({"user_id": current_user["id"]}, {"_id": 0})
+        if not profile or not profile.get("therapist_id"):
+            return []
+        
+        therapist = await db.users.find_one({"id": profile["therapist_id"]}, {"_id": 0, "id": 1, "full_name": 1})
+        if not therapist:
+            return []
+        
+        unread = await db.messages.count_documents({
+            "sender_id": profile["therapist_id"],
+            "recipient_id": current_user["id"],
+            "is_read": False
+        })
+        
+        return [{
+            "id": therapist["id"],
+            "name": therapist.get("full_name", "Unknown"),
+            "messaging_enabled": profile.get("messaging_enabled", True),
+            "unread_count": unread
+        }]
+    
+    return []
+
+
 @router.post("/messages", response_model=Message)
 async def send_message(msg_data: MessageCreate, current_user: dict = Depends(get_current_user)):
     """Send a message"""
