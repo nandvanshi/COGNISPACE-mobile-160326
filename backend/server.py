@@ -2614,7 +2614,7 @@ async def get_daily_payment_totals(therapist_id: str, date_str: str):
     # Query payments for the day
     payments = await db.payments.find({
         "therapist_id": therapist_id,
-        "payment_date": {"$gte": day_start_utc.isoformat(), "$lte": day_end_utc.isoformat()}
+        "created_at": {"$gte": day_start_utc.isoformat(), "$lte": day_end_utc.isoformat()}
     }, {"_id": 0}).to_list(500)
     
     cash_total = sum(p["amount"] for p in payments if p.get("payment_method") == "cash")
