@@ -657,7 +657,7 @@ const TherapistManagement = ({ onViewClients }) => {
 
       {/* Create Therapist Dialog */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="max-w-lg" data-testid="create-therapist-dialog">
+        <DialogContent className="max-w-2xl" data-testid="create-therapist-dialog">
           <DialogHeader>
             <DialogTitle className="text-2xl font-serif text-primary">Add New Therapist</DialogTitle>
           </DialogHeader>
@@ -689,17 +689,59 @@ const TherapistManagement = ({ onViewClients }) => {
               </div>
             </div>
             <div>
-              <Label>Credentials/License *</Label>
-              <Input value={newTherapist.credentials} onChange={(e) => setNewTherapist({ ...newTherapist, credentials: e.target.value })} required className="mt-1" placeholder="e.g., Licensed Clinical Psychologist" />
+              <Label>Qualifications *</Label>
+              <Input value={newTherapist.qualifications} onChange={(e) => setNewTherapist({ ...newTherapist, qualifications: e.target.value })} required className="mt-1" placeholder="M.Phil Clinical Psychology, RCI Licensed" />
+              <p className="text-xs text-muted-foreground mt-1">Degrees, certifications, licenses</p>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Specialization</Label>
-                <Input value={newTherapist.specialization} onChange={(e) => setNewTherapist({ ...newTherapist, specialization: e.target.value })} className="mt-1" />
+            <div>
+              <Label>Years of Experience</Label>
+              <Input type="number" value={newTherapist.years_of_experience} onChange={(e) => setNewTherapist({ ...newTherapist, years_of_experience: e.target.value })} className="mt-1" />
+            </div>
+
+            {/* Specializations Multi-Select */}
+            <div className="border-t pt-4">
+              <Label>Specializations * <span className="text-muted-foreground font-normal">(Select 1-5)</span></Label>
+              <div className="flex flex-wrap gap-2 mt-2 mb-3">
+                {(newTherapist.specializations || []).map((spec, idx) => (
+                  <Badge key={idx} variant="secondary" className="px-3 py-1 bg-primary/10 text-primary">
+                    {spec}
+                    <button type="button" onClick={() => removeSpecialization(spec)} className="ml-2 hover:text-destructive">
+                      <X size={12} />
+                    </button>
+                  </Badge>
+                ))}
+                {(!newTherapist.specializations || newTherapist.specializations.length === 0) && (
+                  <span className="text-sm text-muted-foreground">No specializations selected</span>
+                )}
               </div>
-              <div>
-                <Label>Years of Experience</Label>
-                <Input type="number" value={newTherapist.years_of_experience} onChange={(e) => setNewTherapist({ ...newTherapist, years_of_experience: e.target.value })} className="mt-1" />
+              <div className="relative">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-between"
+                  onClick={() => setShowSpecDropdown(!showSpecDropdown)}
+                >
+                  <span>Select ({(newTherapist.specializations || []).length}/5)</span>
+                  <Plus size={14} />
+                </Button>
+                {showSpecDropdown && (
+                  <div className="absolute z-[100] w-full mt-1 bg-white border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                    {SPECIALIZATION_OPTIONS.map((spec, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        className={`w-full text-left px-3 py-2 text-sm hover:bg-primary/5 flex items-center justify-between ${
+                          (newTherapist.specializations || []).includes(spec) ? 'bg-primary/10 text-primary' : ''
+                        }`}
+                        onClick={() => toggleSpecialization(spec)}
+                      >
+                        {spec}
+                        {(newTherapist.specializations || []).includes(spec) && <CheckCircle size={14} />}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -709,15 +751,69 @@ const TherapistManagement = ({ onViewClients }) => {
                 <Building2 size={16} className="text-primary" />
                 <span className="font-medium text-sm">Clinic Information</span>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Clinic Name</Label>
-                  <Input value={newTherapist.clinic_name} onChange={(e) => setNewTherapist({ ...newTherapist, clinic_name: e.target.value })} className="mt-1" placeholder="Mind Wellness Clinic" />
+              <div>
+                <Label>Clinic Name</Label>
+                <Input value={newTherapist.clinic_name} onChange={(e) => setNewTherapist({ ...newTherapist, clinic_name: e.target.value })} className="mt-1" placeholder="Mind Wellness Clinic" />
+              </div>
+            </div>
+
+            {/* Consultation Fees */}
+            <div className="border-t pt-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <CreditCard size={16} className="text-primary" />
+                  <span className="font-medium text-sm">Consultation Fees</span>
                 </div>
-                <div>
-                  <Label>Consultation Fee (₹)</Label>
-                  <Input type="number" value={newTherapist.consultation_fee} onChange={(e) => setNewTherapist({ ...newTherapist, consultation_fee: e.target.value })} className="mt-1" placeholder="1500" />
-                </div>
+                {newTherapist.fee_slots.length < 5 && (
+                  <Button type="button" variant="outline" size="sm" onClick={addFeeSlot}>
+                    <Plus size={14} className="mr-1" /> Add
+                  </Button>
+                )}
+              </div>
+              <div className="space-y-2">
+                {newTherapist.fee_slots.map((slot, index) => (
+                  <div key={index} className="flex items-center gap-3 p-3 bg-surface rounded-lg">
+                    <div className="flex-1 grid grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-xs">Amount (₹)</Label>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={slot.amount}
+                          onChange={(e) => updateFeeSlot(index, 'amount', e.target.value)}
+                          placeholder="1500"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Duration</Label>
+                        <select
+                          value={slot.duration_minutes}
+                          onChange={(e) => updateFeeSlot(index, 'duration_minutes', e.target.value)}
+                          className="w-full h-9 mt-1 px-3 rounded-md border border-input bg-background text-sm"
+                        >
+                          <option value="15">15 min</option>
+                          <option value="20">20 min</option>
+                          <option value="30">30 min</option>
+                          <option value="40">40 min</option>
+                          <option value="45">45 min</option>
+                          <option value="50">50 min</option>
+                          <option value="60">60 min</option>
+                          <option value="90">90 min</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="text-right min-w-[80px]">
+                      <p className="font-medium text-primary">{slot.amount ? `₹${slot.amount}` : '—'}</p>
+                      <p className="text-xs text-muted-foreground">{slot.duration_minutes} min</p>
+                    </div>
+                    {newTherapist.fee_slots.length > 1 && (
+                      <Button type="button" variant="ghost" size="sm" onClick={() => removeFeeSlot(index)} className="text-destructive">
+                        <Trash2 size={14} />
+                      </Button>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
 
