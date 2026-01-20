@@ -42,17 +42,22 @@ class TherapistUpdate(BaseModel):
     years_of_experience: Optional[int] = None
 
 
+class FeeSlotCreate(BaseModel):
+    amount: float
+    duration_minutes: int
+
+
 class TherapistCreate(BaseModel):
     mobile: str
     email: EmailStr
     full_name: str
     password: str
-    credentials: str
-    specialization: Optional[str] = None
+    qualifications: str
+    specializations: Optional[List[str]] = None
     years_of_experience: Optional[int] = None
     # Clinic Info
     clinic_name: Optional[str] = None
-    consultation_fee: Optional[float] = None
+    fee_slots: Optional[List[FeeSlotCreate]] = None
     # Address (Indian Format)
     address_line_1: Optional[str] = None
     address_line_2: Optional[str] = None
