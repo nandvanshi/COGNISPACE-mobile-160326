@@ -1128,3 +1128,22 @@ Build a secure, therapist-first web application for managing a therapy practice 
 - [ ] Split routes into domain-specific modules
 - [ ] Add database migration strategy for schema changes
 - [ ] Add comprehensive error handling
+
+### Phase 33: Dashboard Navigation Context (COMPLETED - Jan 20, 2026)
+- [x] **Therapist Overview Navigation Fix**:
+  - Updated `handleNavigate` in TherapistOverview.js to accept context parameters (clientId, filter)
+  - "View Client Profile" button in "Coming Up" card now passes client_id for direct profile view
+  - "View Clients" button in "Inactive Clients" alert passes filter='inactive' with client IDs
+- [x] **TherapistDashboard Navigation Context**:
+  - Added `navContext` state with `selectedClientId`, `clientFilter`, `filterData`
+  - `handleNavigation` function passes context to ClientManagement component
+- [x] **ClientManagement Enhanced Props**:
+  - New props: `initialClientId`, `initialFilter`, `filterData`, `onClearContext`
+  - Auto-opens client profile when `initialClientId` is provided
+  - Shows "Showing inactive clients (no sessions in 30+ days)" banner when filtered
+  - "Show All Clients" button clears filter and shows all clients
+- [x] **Testing**: 100% frontend tests passed (iteration_26.json)
+  - Login works correctly
+  - Coming Up card → Client Profile navigation verified
+  - Inactive Clients alert → Filtered view with banner verified
+  - Clear filter button functionality verified
