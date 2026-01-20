@@ -5823,7 +5823,15 @@ async def record_payment(payment_data: PaymentCreate, current_user: dict = Depen
         raise HTTPException(status_code=404, detail="Client not found")
     
     # Verify client belongs to therapist
-    if client.get("therapist_id") != therapist_id:
+    # Check both user.therapist_id and client_profiles.therapist_id (some clients have it in profiles)
+    client_therapist_id = client.get("therapist_id")
+    if not client_therapist_id:
+        # Check client_profiles collection
+        profile = await db.client_profiles.find_one({"user_id": payment_data.client_id}, {"_id": 0})
+        if profile:
+            client_therapist_id = profile.get("therapist_id")
+    
+    if client_therapist_id != therapist_id:
         raise HTTPException(status_code=403, detail="Access denied - client not assigned to you")
     
     # Get therapist info for receipt
