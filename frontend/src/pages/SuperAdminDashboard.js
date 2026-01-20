@@ -105,6 +105,7 @@ const SuperAdminDashboard = () => {
           {currentView === 'clients' && <ClientManagement onViewTherapist={handleViewTherapist} />}
           {currentView === 'subscriptions' && <SubscriptionManagement />}
           {currentView === 'coupons' && <CouponManagement />}
+          {currentView === 'support' && <AdminSupportTickets />}
         </div>
       </main>
 
