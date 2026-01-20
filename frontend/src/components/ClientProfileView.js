@@ -925,6 +925,11 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
 
                 {/* Assessments Tab */}
                 <TabsContent value="assessments" className="mt-0 space-y-4">
+                  {/* Assessment Trend Chart */}
+                  {completedAssessments >= 2 && (
+                    <AssessmentTrendChart clientId={client.id} />
+                  )}
+
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     <Card className="p-4 text-center bg-green-50">
                       <p className="text-3xl font-bold text-green-600">{completedAssessments}</p>
