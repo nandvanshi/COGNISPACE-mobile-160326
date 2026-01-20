@@ -54,7 +54,7 @@ const TherapistDashboard = () => {
       items: [
         { id: 'overview', label: 'Dashboard', icon: Home },
         { id: 'clients', label: 'Clients', icon: Users },
-        { id: 'appointments', label: 'Schedule', icon: Calendar },
+        { id: 'schedule', label: 'Schedule', icon: CalendarDays },
         { id: 'notes', label: 'Session Notes', icon: FileText },
         { id: 'assessments', label: 'Assessments', icon: ClipboardList },
         { id: 'protocols', label: 'Protocols', icon: BookOpen },
