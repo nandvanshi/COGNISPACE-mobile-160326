@@ -223,29 +223,29 @@ const AssistantOverview = ({ onNavigate }) => {
           </Badge>
         </div>
 
-        {todays_appointments.length === 0 ? (
+        {(todays_appointments?.length || 0) === 0 ? (
           <p className="text-muted-foreground text-center py-6">No sessions scheduled for today</p>
         ) : (
           <div className="space-y-2">
             {/* Pending Calls First */}
             {pendingCalls.map((appt) => (
               <div 
-                key={appt.id} 
+                key={appt?.id || Math.random()} 
                 className="flex items-center justify-between p-3 bg-amber-50 border border-amber-200 rounded-lg"
-                data-testid={`call-reminder-${appt.id}`}
+                data-testid={`call-reminder-${appt?.id}`}
               >
                 <div className="flex items-center gap-3">
                   <Phone size={18} className="text-amber-600" />
                   <div>
-                    <p className="font-medium">{appt.client_name}</p>
-                    <p className="text-sm text-muted-foreground">{formatTime(appt.start_time)}</p>
+                    <p className="font-medium">{appt?.client_name || 'Unknown Client'}</p>
+                    <p className="text-sm text-muted-foreground">{formatTime(appt?.start_time)}</p>
                   </div>
                 </div>
                 <Button 
                   size="sm" 
-                  onClick={() => handleMarkCalled(appt.id)}
+                  onClick={() => handleMarkCalled(appt?.id)}
                   className="gap-1"
-                  data-testid={`mark-called-${appt.id}`}
+                  data-testid={`mark-called-${appt?.id}`}
                 >
                   <CheckCircle2 size={14} />
                   Mark Called
@@ -256,21 +256,21 @@ const AssistantOverview = ({ onNavigate }) => {
             {/* Completed Calls */}
             {completedCalls.map((appt) => (
               <div 
-                key={appt.id} 
+                key={appt?.id || Math.random()} 
                 className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg opacity-75"
-                data-testid={`call-completed-${appt.id}`}
+                data-testid={`call-completed-${appt?.id}`}
               >
                 <div className="flex items-center gap-3">
                   <CheckCircle2 size={18} className="text-green-600" />
                   <div>
-                    <p className="font-medium text-green-800">{appt.client_name}</p>
-                    <p className="text-sm text-green-600">{formatTime(appt.start_time)} • Called</p>
+                    <p className="font-medium text-green-800">{appt?.client_name || 'Unknown Client'}</p>
+                    <p className="text-sm text-green-600">{formatTime(appt?.start_time)} • Called</p>
                   </div>
                 </div>
                 <Button 
                   size="sm" 
                   variant="ghost"
-                  onClick={() => handleUnmarkCalled(appt.id)}
+                  onClick={() => handleUnmarkCalled(appt?.id)}
                   className="text-muted-foreground text-xs"
                 >
                   Undo
