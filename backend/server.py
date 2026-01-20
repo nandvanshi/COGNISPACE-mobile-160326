@@ -4543,7 +4543,8 @@ ASSESSMENT_LIBRARY = {
 async def get_assessment_library(current_user: dict = Depends(get_current_user)):
     if current_user["role"] != "therapist":
         raise HTTPException(status_code=403, detail="Only therapists can access this")
-    return ASSESSMENT_LIBRARY
+    # Return the comprehensive CLINICAL_ASSESSMENTS from assessment_library.py
+    return CLINICAL_ASSESSMENTS
 
 @api_router.post("/assessments/custom", response_model=CustomAssessment)
 async def create_custom_assessment(assessment_data: CustomAssessmentCreate, current_user: dict = Depends(require_active_therapist)):
