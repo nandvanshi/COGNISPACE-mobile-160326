@@ -5,10 +5,20 @@ import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
+import { Badge } from '../ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { toast } from 'sonner';
-import { Ban, CheckCircle, Key, Plus, Edit, Users, Eye, Calendar, CreditCard, RefreshCw, Search, X, MapPin, Loader2, Building2 } from 'lucide-react';
+import { Ban, CheckCircle, Key, Plus, Edit, Users, Eye, Calendar, CreditCard, RefreshCw, Search, X, MapPin, Loader2, Building2, Trash2 } from 'lucide-react';
+
+// Available specializations
+const SPECIALIZATION_OPTIONS = [
+  "Clinical Psychology", "Counseling Psychology", "Child & Adolescent Therapy",
+  "Marriage & Family Therapy", "CBT", "DBT", "Trauma & PTSD", "Anxiety Disorders",
+  "Depression", "Addiction & Substance Abuse", "Eating Disorders", "OCD",
+  "Grief Counseling", "Stress Management", "Anger Management", "Career Counseling",
+  "Relationship Issues", "Mindfulness", "Neuropsychology", "Art Therapy"
+];
 
 const TherapistManagement = ({ onViewClients }) => {
   const [therapists, setTherapists] = useState([]);
@@ -27,16 +37,17 @@ const TherapistManagement = ({ onViewClients }) => {
   const [selectedPlanId, setSelectedPlanId] = useState('');
   const [extendDays, setExtendDays] = useState(30);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showSpecDropdown, setShowSpecDropdown] = useState(false);
   const [newTherapist, setNewTherapist] = useState({
     mobile: '',
     email: '',
     full_name: '',
     password: '',
-    credentials: '',
-    specialization: '',
+    qualifications: '',
+    specializations: [],
     years_of_experience: '',
     clinic_name: '',
-    consultation_fee: '',
+    fee_slots: [{ amount: '', duration_minutes: 50 }],
     address_line_1: '',
     address_line_2: '',
     pincode: '',
@@ -47,7 +58,7 @@ const TherapistManagement = ({ onViewClients }) => {
   const [editData, setEditData] = useState({
     full_name: '',
     email: '',
-    credentials: '',
+    qualifications: '',
     specialization: '',
     years_of_experience: '',
     profile_photo: '',
