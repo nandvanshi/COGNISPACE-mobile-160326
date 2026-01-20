@@ -525,7 +525,7 @@ const TherapistProfileSettings = ({ isReadOnly = false }) => {
               
               {/* Dropdown */}
               {!isReadOnly && (
-                <div className="relative">
+                <>
                   <Button
                     type="button"
                     variant="outline"
@@ -540,18 +540,24 @@ const TherapistProfileSettings = ({ isReadOnly = false }) => {
                   {showSpecDropdown && (
                     <>
                       <div 
-                        className="fixed inset-0 z-[99]" 
+                        className="fixed inset-0 z-[9998]" 
                         onClick={() => setShowSpecDropdown(false)}
                       />
                       <div 
-                        className="absolute left-0 right-0 z-[100] mt-1 bg-white border-2 border-primary/20 rounded-lg shadow-2xl"
+                        className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[9999] w-[400px] bg-white border-2 border-primary/20 rounded-xl shadow-2xl"
                       >
-                        <div className="overflow-y-auto" style={{ maxHeight: '300px', minHeight: '200px' }}>
+                        <div className="p-3 border-b bg-primary/5 rounded-t-xl flex justify-between items-center">
+                          <span className="font-medium text-primary">Select Specializations (max 5)</span>
+                          <button type="button" onClick={() => setShowSpecDropdown(false)} className="text-gray-500 hover:text-gray-700">
+                            <X size={18} />
+                          </button>
+                        </div>
+                        <div className="overflow-y-auto" style={{ maxHeight: '350px' }}>
                           {SPECIALIZATION_OPTIONS.map((spec, idx) => (
                             <button
                               key={idx}
                               type="button"
-                              className={`w-full text-left px-4 py-2.5 text-sm hover:bg-primary/5 flex items-center justify-between border-b border-gray-100 last:border-0 ${
+                              className={`w-full text-left px-4 py-3 text-sm hover:bg-primary/5 flex items-center justify-between border-b border-gray-100 last:border-0 ${
                                 formData.specializations.includes(spec) ? 'bg-primary/10 text-primary font-medium' : ''
                               }`}
                               onClick={(e) => {
@@ -561,15 +567,25 @@ const TherapistProfileSettings = ({ isReadOnly = false }) => {
                             >
                               <span>{spec}</span>
                               {formData.specializations.includes(spec) && (
-                                <CheckCircle size={16} className="text-primary flex-shrink-0" />
+                                <CheckCircle size={18} className="text-primary flex-shrink-0" />
                               )}
                             </button>
                           ))}
                         </div>
+                        <div className="p-3 border-t bg-gray-50 rounded-b-xl">
+                          <Button 
+                            type="button" 
+                            size="sm" 
+                            onClick={() => setShowSpecDropdown(false)}
+                            className="w-full"
+                          >
+                            Done ({formData.specializations.length} selected)
+                          </Button>
+                        </div>
                       </div>
                     </>
                   )}
-                </div>
+                </>
               )}
             </div>
           </div>
