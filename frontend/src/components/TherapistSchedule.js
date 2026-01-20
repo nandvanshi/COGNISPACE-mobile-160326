@@ -411,7 +411,10 @@ const TherapistSchedule = ({ isReadOnly = false, isAssistant = false }) => {
   // Block time
   const handleBlockTime = async (e) => {
     e.preventDefault();
-    if (!selectedDate) return;
+    if (!selectedDate || !(selectedDate instanceof Date) || isNaN(selectedDate.getTime())) {
+      toast.error('Invalid date selected');
+      return;
+    }
 
     try {
       const dateStr = selectedDate.toISOString().split('T')[0];
