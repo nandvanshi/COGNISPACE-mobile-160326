@@ -73,10 +73,10 @@ class Message(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str
     sender_id: str
-    sender_name: str
-    sender_role: str
+    sender_name: Optional[str] = None
+    sender_role: Optional[str] = None
     recipient_id: str
-    recipient_name: str
+    recipient_name: Optional[str] = None
     content: str
     is_read: bool = False
     created_at: datetime
