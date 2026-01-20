@@ -2179,6 +2179,9 @@ async def delete_coupon(coupon_id: str, current_user: dict = Depends(require_sup
 @api_router.post("/assistants", response_model=AssistantResponse)
 async def create_assistant(assistant_data: AssistantCreate, current_user: dict = Depends(require_active_therapist)):
     """Therapist creates an assistant linked to their account"""
+    # Check feature access
+    await check_feature_enabled(current_user["id"], "assistants")
+    
     # Check if email already exists
     existing = await db.users.find_one({"email": assistant_data.email})
     if existing:
