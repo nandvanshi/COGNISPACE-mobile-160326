@@ -897,6 +897,25 @@ def create_token(user_id: str, email: str, role: str) -> str:
     }
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
+async def check_feature_enabled(therapist_id: str, feature_name: str):
+    """Check if a feature is enabled for a therapist based on their subscription plan"""
+    toggles = await get_feature_toggles_for_therapist(therapist_id)
+    if not toggles.get(feature_name, True):
+        raise HTTPException(
+            status_code=403, 
+            detail=f"Feature '{feature_name}' is not included in your subscription plan"
+        )
+
+def require_feature(feature_name: str):
+    """Dependency factory to require a specific feature"""
+    async def check_feature(current_user: dict = Depends(get_current_user)):
+        if current_user["role"] == "therapist":
+            await check_feature_enabled(current_user["id"], feature_name)
+        elif current_user["role"] == "assistant":
+            await check_feature_enabled(current_user.get("therapist_id"), feature_name)
+        return current_user
+    return check_feature
+
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     try:
         token = credentials.credentials
