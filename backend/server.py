@@ -2618,12 +2618,17 @@ async def get_daily_payment_totals(therapist_id: str, date_str: str):
     }, {"_id": 0}).to_list(500)
     
     cash_total = sum(p["amount"] for p in payments if p.get("payment_method") == "cash")
-    online_total = sum(p["amount"] for p in payments if p.get("payment_method") in ["upi", "card", "bank_transfer", "bank"])
+    # Online includes: UPI, card, bank transfer, credit card (cheque is treated as cash/manual)
+    online_methods = ["upi", "card", "bank_transfer", "bank", "credit_card"]
+    online_total = sum(p["amount"] for p in payments if p.get("payment_method") in online_methods)
+    # Cheque and other are treated as cash (requires manual handling)
+    manual_methods = ["cheque", "other"]
+    manual_total = sum(p["amount"] for p in payments if p.get("payment_method") in manual_methods)
     
     return {
-        "cash_amount": cash_total,
+        "cash_amount": cash_total + manual_total,  # Cash + cheque/other (all require manual handover)
         "online_amount": online_total,
-        "total_amount": cash_total + online_total,
+        "total_amount": cash_total + online_total + manual_total,
         "payment_count": len(payments)
     }
 
