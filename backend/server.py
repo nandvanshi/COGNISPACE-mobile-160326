@@ -222,6 +222,7 @@ class TherapyConsent(BaseModel):
     updated_at: str
 
 # ============= UTILITY FUNCTIONS =============
+# ============= UTILITY FUNCTIONS =============
 
 def validate_mobile(mobile: str) -> bool:
     """Validate that mobile is exactly 10 digits"""
