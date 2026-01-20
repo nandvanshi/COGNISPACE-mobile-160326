@@ -501,16 +501,16 @@ const ClientDashboard = () => {
               <h3 className="text-lg sm:text-xl font-serif text-primary">Assessments</h3>
             </div>
             {pendingAssessments.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No pending assessments</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">No pending assessments</p>
             ) : (
               <div className="space-y-2">
                 {pendingAssessments.map((assess) => (
-                  <div key={assess.id} className="p-3 bg-surface rounded-lg">
-                    <p className="font-medium text-sm">{assess.assessment_type}</p>
+                  <div key={assess.id} className="p-2 sm:p-3 bg-surface rounded-lg">
+                    <p className="font-medium text-xs sm:text-sm">{assess.assessment_type}</p>
                     <Button
                       onClick={() => handleCompleteAssessment(assess)}
                       size="sm"
-                      className="mt-2 w-full"
+                      className="mt-2 w-full text-xs"
                       data-testid={`complete-assessment-${assess.id}`}
                     >
                       Complete
@@ -521,29 +521,29 @@ const ClientDashboard = () => {
             )}
           </Card>
 
-          {/* Homework - Span 6 cols */}
-          <Card className="md:col-span-6 p-6 bg-white/70 backdrop-blur-xl border border-border/40 rounded-xl shadow-lg" data-testid="homework-card">
-            <div className="flex items-center gap-3 mb-4">
-              <BookCheck className="text-info" size={24} />
-              <h3 className="text-2xl font-serif text-primary">Homework</h3>
+          {/* Homework - Span 6 cols on lg */}
+          <Card className="lg:col-span-6 p-4 sm:p-6 bg-white/70 backdrop-blur-xl border border-border/40 rounded-xl shadow-lg" data-testid="homework-card">
+            <div className="flex items-center gap-2 sm:gap-3 mb-4">
+              <BookCheck className="text-info" size={20} />
+              <h3 className="text-lg sm:text-xl lg:text-2xl font-serif text-primary">Homework</h3>
             </div>
             {pendingHomework.length === 0 ? (
-              <p className="text-muted-foreground">No pending homework</p>
+              <p className="text-sm text-muted-foreground">No pending homework</p>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {pendingHomework.map((hw) => (
-                  <div key={hw.id} className="p-4 bg-surface rounded-lg border border-border">
-                    <h4 className="font-medium">{hw.title}</h4>
-                    <p className="text-sm text-muted-foreground mt-1">{hw.description}</p>
+                  <div key={hw.id} className="p-3 sm:p-4 bg-surface rounded-lg border border-border">
+                    <h4 className="font-medium text-sm sm:text-base">{hw.title}</h4>
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-2">{hw.description}</p>
                     {hw.due_date && (
-                      <p className="text-xs text-warning mt-2">
+                      <p className="text-[10px] sm:text-xs text-warning mt-2">
                         Due: {formatDate(hw.due_date)}
                       </p>
                     )}
                     <Button
                       onClick={() => handleCompleteHomework(hw.id)}
                       size="sm"
-                      className="mt-3"
+                      className="mt-2 sm:mt-3 text-xs"
                       data-testid={`complete-homework-${hw.id}`}
                     >
                       Mark Complete
@@ -554,29 +554,29 @@ const ClientDashboard = () => {
             )}
           </Card>
 
-          {/* Payments - Span 6 cols */}
-          <Card className="md:col-span-6 p-6 bg-white/70 backdrop-blur-xl border border-border/40 rounded-xl shadow-lg" data-testid="payments-card">
-            <div className="flex items-center gap-3 mb-4">
-              <CreditCard className="text-success" size={24} />
-              <h3 className="text-2xl font-serif text-primary">Recent Payments</h3>
+          {/* Payments - Span 6 cols on lg */}
+          <Card className="lg:col-span-6 p-4 sm:p-6 bg-white/70 backdrop-blur-xl border border-border/40 rounded-xl shadow-lg" data-testid="payments-card">
+            <div className="flex items-center gap-2 sm:gap-3 mb-4">
+              <CreditCard className="text-success" size={20} />
+              <h3 className="text-lg sm:text-xl lg:text-2xl font-serif text-primary">Payments</h3>
             </div>
             {recentPayments.length === 0 ? (
-              <p className="text-muted-foreground">No payment records</p>
+              <p className="text-sm text-muted-foreground">No payment records</p>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {recentPayments.map((payment) => (
-                  <div key={payment.id} className="p-4 bg-surface rounded-lg border border-border flex justify-between items-center">
-                    <div>
-                      <p className="font-medium">{formatCurrency(payment.amount)}</p>
-                      <p className="text-sm text-muted-foreground">
+                  <div key={payment.id} className="p-3 sm:p-4 bg-surface rounded-lg border border-border flex justify-between items-start sm:items-center gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-sm sm:text-base">{formatCurrency(payment.amount)}</p>
+                      <p className="text-[10px] sm:text-sm text-muted-foreground">
                         {formatDate(payment.created_at)} • {payment.payment_method?.toUpperCase()}
                       </p>
                       {payment.bill_number && (
-                        <p className="text-xs text-muted-foreground">Bill #: {payment.bill_number}</p>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Bill #: {payment.bill_number}</p>
                       )}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`text-xs px-2 py-1 rounded-full capitalize ${
+                    <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                      <span className={`text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full capitalize ${
                         payment.payment_status === 'paid' ? 'bg-green-100 text-green-700' :
                         payment.payment_status === 'partial' ? 'bg-amber-100 text-amber-700' :
                         'bg-red-100 text-red-700'
@@ -586,10 +586,11 @@ const ClientDashboard = () => {
                       <Button 
                         variant="ghost" 
                         size="sm"
+                        className="p-1 sm:p-2"
                         onClick={() => handleViewReceipt(payment.id)}
                         data-testid={`view-receipt-${payment.id}`}
                       >
-                        <Receipt size={16} />
+                        <Receipt size={14} />
                       </Button>
                     </div>
                   </div>
@@ -600,8 +601,8 @@ const ClientDashboard = () => {
         </div>
 
         {/* Disclaimer */}
-        <div className="mt-12 p-6 bg-info/10 border border-info/20 rounded-xl">
-          <p className="text-sm text-info">
+        <div className="mt-8 sm:mt-12 p-4 sm:p-6 bg-info/10 border border-info/20 rounded-xl">
+          <p className="text-xs sm:text-sm text-info">
             <strong>Clinical Support Only:</strong> This platform provides tools to support your therapy journey.
             All clinical decisions and treatment plans are made by your licensed therapist.
           </p>
