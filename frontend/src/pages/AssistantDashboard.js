@@ -44,7 +44,6 @@ const AssistantOverview = ({ therapistInfo }) => {
               <li>View and create clients</li>
               <li>Schedule and cancel appointments</li>
               <li>Block calendar time</li>
-              <li>Modify availability settings</li>
               <li>View and record payments</li>
               <li>Check in/out sessions</li>
             </ul>
@@ -55,6 +54,7 @@ const AssistantOverview = ({ therapistInfo }) => {
               <li>View session notes</li>
               <li>Access assessments or protocols</li>
               <li>Access AI clinical features</li>
+              <li>Modify availability settings</li>
               <li>Delete clients permanently</li>
             </ul>
           </div>
