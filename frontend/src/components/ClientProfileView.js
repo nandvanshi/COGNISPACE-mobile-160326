@@ -443,24 +443,24 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
                 <div className="flex-1">
                   <h2 className="text-2xl font-serif">{client.full_name}</h2>
                   <p className="text-white/80 text-sm">Client ID: {client.client_id}</p>
-                  <div className="flex gap-4 mt-2 text-sm text-white/70">
+                  <div className="flex flex-wrap gap-2 sm:gap-4 mt-2 text-sm text-white/70">
                     {client.mobile && (
                       <span className="flex items-center gap-1">
                         <Phone size={14} /> {client.mobile}
                       </span>
                     )}
                     {client.email && (
-                      <span className="flex items-center gap-1">
+                      <span className="flex items-center gap-1 truncate max-w-[200px]">
                         <Mail size={14} /> {client.email}
                       </span>
                     )}
                   </div>
                   {/* Quick Action Buttons */}
-                  <div className="flex gap-2 mt-3">
+                  <div className="flex flex-wrap gap-2 mt-3">
                     <Button
                       size="sm"
                       variant="secondary"
-                      className="bg-white/20 hover:bg-white/30 text-white border-0"
+                      className="bg-white/20 hover:bg-white/30 text-white border-0 text-xs sm:text-sm"
                       onClick={handleBookAppointment}
                       disabled={isReadOnly}
                       data-testid="book-appointment-btn"
