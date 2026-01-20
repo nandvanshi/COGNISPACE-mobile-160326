@@ -15,46 +15,36 @@
 **User's preferred language**: English
 
 **what currently exists?**
-A full-stack application with a FastAPI backend, React frontend, and MongoDB. Key features include:
--   **Multi-Role Authentication**: Secure login for Super Admin, Therapist, Client, and Therapist Assistant.
--   **Complete Clinical Workflow**: A mandatory Case History wizard for therapists, automated consent form generation, and a client-side digital signing flow.
--   **AI-Powered Clinical Suite**: Integrated with Gemini 3 Flash for assessment suggestions, protocol building, and resource sharing.
--   **Comprehensive Client Profile**: A modal view for therapists that aggregates all client data, including appointments, session notes, and case history, with integrated actions like booking appointments and starting new notes.
--   **Session & Payment Management**: A full check-in/check-out workflow for appointments, which triggers a payment capture dialog. The system generates downloadable/printable HTML receipts for payments.
--   **Functional Client Dashboard**: Clients can view their upcoming appointments, book new appointments, and see their payment history.
--   **UI Customization**: A theme picker in the settings allows users (Therapist, Client, Admin) to choose from 5 predefined color themes, with the choice persisted in the database.
+A full-stack application named TheraGenie with a FastAPI backend, React frontend, and MongoDB. Key features include:
+-   **Multi-Role Authentication**: Secure login for all defined roles.
+-   **Clinical & Session Management**: Includes a clinical workflow, AI integration (Gemini), client profiles, and session/payment management with receipts.
+-   **Redesigned Therapist Dashboard**: A modern, action-oriented dashboard with a calendar-centric layout, logically grouped sidebar, and actionable summary cards.
+-   **Comprehensive Schedule System**: A full calendar feature for therapists with Month and Day views. The Day view is dynamically generated based on the therapist's specific availability, session duration, and buffer times.
+-   **Mobile-Responsive & PWA**: The application is fully responsive for mobile browsers and has Progressive Web App (PWA) support, allowing it to be installed on a phone's home screen.
+-   **Functional Client Dashboard**: Allows clients to book appointments and view their history.
 
 **Last working item**:
--   **Last item agent was working**: Fixing an issue where the user-selected theme was not being applied to the UI or persisting after a refresh. The agent identified that hardcoded colors in  and  were overriding the theme's CSS variables.
+-   **Last item agent was working**: Implementing Phase-1 Clinical Assessments. The agent created a new file  to hold the definitions, questions, and scoring logic for a list of standard clinical assessments (PHQ-9, GAD-7, etc.). The agent was preparing to add the corresponding backend endpoints to .
 -   **Status**: IN PROGRESS
 -   **Agent Testing Done**: N
--   **Which testing method agent to use?**: both. First, use the  with network logs to confirm API calls for theme preferences are successful and that the UI visually updates. Then, call the  to perform a regression test on all dashboards (Therapist, Client, Admin) to ensure the theme applies correctly and persists after logging out and back in.
--   **User Testing Done**: N (User reported the issue, but has not verified the fix).
+-   **Which testing method agent to use?**: both. The  should be used to verify the new API endpoints for assigning, completing, scoring, and sharing assessments. The  should then be used to test the end-to-end user flow for therapists, assistants, and clients.
+-   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
--   Issue 1: (P0) Theme picker is not changing the theme or persisting the selection.
-
-**Issues Detail**:
--   **Issue 1**:
-    -   **Description**: The user reported that clicking a theme in the Settings dialog does not change the UI colors, and the selection is lost on page refresh.
-    -   **Attempted fixes**: The agent correctly identified that hardcoded hex codes in  and  were overriding the dynamic CSS variables. The agent rewrote  to reference CSS variables (e.g., ) and updated  to define the default theme variables. A frontend restart was performed. A screenshot confirms the theme now visually changes.
-    -   **Next debug checklist**:
-        1.  Verify the  endpoint is successfully called when a theme is selected.
-        2.  Verify the  endpoint is called on app load () and that it correctly retrieves the saved theme.
-        3.  Confirm that the  function in  is correctly setting the CSS variables on the  element.
-        4.  Perform a full end-to-end test: log in as a therapist, change the theme, close the dialog, refresh the page, and confirm the theme persists. Repeat for a client.
-    -   **Why fix this issue and what will be achieved with the fix?**: This is a direct user-requested feature. Fixing it will complete the feature and improve user experience by allowing personalization.
-    -   **Status**: IN PROGRESS
-    -   **Is recurring issue?**: N
-    -   **Should Test frontend/backend/both after fix?**: both
-    -   **Blocked on other issue**: None
+-   No pending issues.
 
 **In progress Task List**:
--   None.
+-   **Task 1: Implement Phase-1 Clinical Assessments** (P0)
+    -   **Where to resume**: The  file has been created. The next step is to modify  to add the new API endpoints for all assessment-related actions (assign, submit, score, view results, share/unshare reports). After the backend is complete, the corresponding frontend components and views need to be built.
+    -   **What will be achieved with this?**: A complete, built-in system for therapists and assistants to assign clinical assessments, for clients to complete them, and for therapists to view results, track progress, and share reports.
+    -   **Status**: IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?**: both
+    -   **Blocked on something**: None.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks**:
-    -   (P1) **Global Standards Implementation**: A full audit and verification across the app for IST timezone, DD/MM/YYYY date format, and ₹ currency is still pending.
+    -   (P1) ** Refactoring**: Break down the monolithic  into a modular structure (e.g., separate files for routes, models, services) to improve maintainability.
+    -   (P1) **Global Standards Implementation**: Conduct a full audit and verification across the app to ensure IST timezone, DD/MM/YYYY date format, and ₹ currency are correctly and consistently applied.
     -   (P2) **Coupon Code Management**: Implement the coupon code module in the Super Admin panel.
 -   **Future Tasks**:
     -   Implement full backend logic for **payment tracking and reporting**.
@@ -63,19 +53,15 @@ A full-stack application with a FastAPI backend, React frontend, and MongoDB. Ke
     -   Implement **usage tracking/rate limiting** for AI features.
     -   Build a feature for therapists to **share note templates**.
     -   Add **profile photo uploads**.
-    -   **Enhancement**: Add a quick-add button for common interventions in session notes.
-    -   **Enhancement**: Alert therapists when a session exceeds its scheduled duration.
 
 **Completed work in this session**
--   **P0 Client Profile View Implemented**: Created a comprehensive, all-in-one dashboard for therapists to view client data, fulfilling a key P0 task from the previous session.
--   **Client Profile View Enhanced**: Added the ability to view session notes, start new session notes, and book appointments directly from the client profile view.
--   **Session & Payment Workflow**: Implemented a session check-in/check-out feature for therapists and assistants. This workflow now includes a payment capture modal on check-out and the ability to generate and download printable HTML receipts.
--   **Client Dashboard Fixed & Enhanced**: Overhauled the non-functional client dashboard, adding the ability for clients to book appointments, view their payment history, and see upcoming sessions. Fixed a critical data-loading bug where the client's  was not being correctly fetched, which prevented appointment booking.
--   **PDF/Print Functionality Fixed**: Replaced a buggy  implementation for receipts with a robust method using a downloadable Blob and an iframe for printing to bypass browser pop-up blockers.
--   **Theme Picker Implemented**: Created the backend endpoints () and frontend components (, ) to allow users to select and persist a UI theme.
+-   **App Renaming & UX Overhaul**: Renamed the app to TheraGenie and completely redesigned the Therapist Dashboard to be more action-oriented and calendar-centric.
+-   **Therapist Schedule/Calendar System**: Implemented a full scheduling system with Month and Day views. The Day view was refactored to be dynamically generated from therapist availability rather than a static hourly grid.
+-   **Mobile Responsiveness**: Made the Therapist and Client dashboards fully responsive for mobile devices, including a collapsible hamburger menu and larger, more readable fonts.
+-   **PWA (Progressive Web App) Implementation**: Added a manifest, service worker, and icons to make the web app installable on mobile devices, addressing user concerns about the lack of a native mobile app.
 
 **Earlier issues found/mentioned but not fixed**
--   ** Refactoring**: The main backend file has grown significantly and is a source of technical debt. It needs to be broken down into a modular structure (e.g., routes, models, services).
+-   ** Refactoring**: The main backend file remains a large monolith and is a significant source of technical debt.
 -   **Global Standards Verification**: The application-wide standardization of timezone, date/time formats, and currency remains unverified.
 
 **Known issue recurrence from previous fork**
@@ -85,68 +71,65 @@ A full-stack application with a FastAPI backend, React frontend, and MongoDB. Ke
 
 
 **Key Technical Concepts**
--   **CSS Variables for Theming**: Using CSS custom properties (, , etc.) defined in  and dynamically updated via JavaScript. The  file was refactored to consume these variables (e.g., ), enabling application-wide, persistent theming.
--   **Client-Side File Generation**: Generating a downloadable HTML receipt by creating a Blob and using  to create a link, which provides a robust alternative to  that is not blocked by browsers.
--   **Decoupled Data Linking**: Resolved a critical bug by understanding that client-therapist relationships are stored in a separate  collection, not directly on the  document. The login and  endpoints were updated to perform this lookup.
+-   **Mobile-First Responsive Design**: Using Tailwind CSS utility classes (, , ) to create adaptive layouts. Implemented a collapsible hamburger menu for mobile navigation.
+-   **Progressive Web App (PWA)**: Using a  file, a  for offline caching, and an in-app prompt to make the web application installable on mobile devices, providing a near-native experience.
+-   **Dynamic Calendar Generation**: The Day View of the therapist's schedule is generated dynamically on the frontend by fetching availability rules (time blocks, session duration, buffer time) and booked appointments from the backend, then calculating and rendering the exact available slots.
 
 **key DB schema**
--   **users**: added  field to store user's selected theme.
--   **appointments**: added  (e.g., 'in_progress'), , , , .
--   **payments**: added ,  (e.g., 'Cash', 'UPI').
--   **client_profiles**: Used to link a  (client) to a .
+-   No new collections were created in this session. The next steps will involve adding collections like  (for definitions), , and .
 
 **changes in tech stack**
--   No new libraries were installed. The project's approach to styling was fundamentally changed by refactoring Tailwind CSS to work with dynamic CSS variables.
+-   None.
 
 **All files of reference**
--   : Major additions for session check-in/out, payment capture, receipt generation, client-side appointment booking, and user preferences (theming).
--   : Substantially rewritten to integrate the new session and payment workflows.
--   : Completely overhauled from a non-functional state to a working dashboard with appointment booking.
--   : New component for generating and downloading payment receipts.
--    & : New components for the theme selection feature.
--   : New file defining the available color themes and their CSS variables.
--   : Refactored to use CSS variables for colors, enabling dynamic theming.
--   : Updated to define root CSS variables for the default theme.
--   : Modified to fetch and apply the user's saved theme on application startup.
+-   : New file created to house all clinical assessment definitions.
+-   : Completely rewritten for the new UX, mobile responsiveness, and integration of the new schedule component.
+-   : Completely rewritten as part of the new dashboard design.
+-   : Rewritten to implement the full calendar system with a dynamic, availability-based day view.
+-   , , : Created/updated to add PWA functionality.
+-   : Updated to reflect completed work.
 
 **Areas that need refactoring**:
--    remains a monolithic file and is a high-priority candidate for being broken down into separate files for routes, models, and services to improve maintainability.
+-    is a high-priority candidate for being broken down into separate files for routes, models, and services to improve maintainability and reduce technical debt.
 
 **key api endpoints**
--   : Marks an appointment as 'in_progress'.
--   : Completes an appointment and can trigger payment creation.
--   : Creates a payment record, now usable by assistants.
--   : Fetches data needed to generate a payment receipt.
--   : Allows a client to book an available slot.
--   : Retrieves the current user's saved preferences (like theme).
--   : Updates the user's preferences.
+The agent is in the process of adding a new set of assessment endpoints, which will likely include:
+-   : To assign an assessment to a client.
+-   : To retrieve all assessments for a specific client.
+-   : For a client to submit their completed assessment.
+-   : To view the scored results of an assessment.
+-   : For a therapist to share results with a client.
 
 **Critical Info for New Agent**
--   Your immediate priority is to finish debugging the **Theme Picker**. The user reported it doesn't change the theme or persist. The previous agent fixed the visual change by refactoring Tailwind CSS to use CSS variables but has not fully verified persistence. You must verify the full end-to-end flow (select, apply, refresh, persist) for all user roles and confirm the fix with the user.
--   After fixing the theme picker, the next priority should be proposing the refactoring of the monolithic  to the user, as it's a significant source of technical debt.
+-   Your immediate priority is to continue the implementation of the **Phase-1 Clinical Assessments** feature. You have the definitions in .
+-   The next logical step is to implement all required **backend endpoints in **. This includes logic for assigning, submitting, auto-scoring, and managing sharing permissions for assessments.
+-   After completing the backend, you will need to build the **frontend user interfaces** for therapists, assistants, and clients to interact with the assessment system.
+-   Be mindful that the monolithic nature of  might make adding new endpoints complex. Proposing a refactor of this file should be your next priority after the assessment feature is complete.
 
 **documents and test reports created in this job**
 -   
 -   
--    (updated)
+-   
+-   
+-   
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: Requested Theme Picker feature with specific requirements. **Status: IN PROGRESS**.
-2.  **User**: Stated the theme picker is not working in therapist ui. **Status: IN PROGRESS**.
-3.  **User**: Clarified the specific issues are The theme not changing when you click on it? and The theme not persisting after refresh?. **Status: IN PROGRESS**.
-4.  **User**: Reported the pdf downlaod or print fetaure is not working. **Status: DONE** (Agent fixed it with a blob download).
-5.  **User**: Provided login credentials for testing. **Status: ADDRESSED**.
-6.  **User**: Reported none option of client Dashboard feature is working and asked to add appointment booking. **Status: DONE** (Agent overhauled the dashboard and fixed related backend bugs).
-7.  **User**: Requested a new workflow for Session Check-in/Check-out with payment capture and PDF receipts. **Status: DONE**.
-8.  **Agent**: Finished the Client Profile View enhancements. **Status: DONE**.
-9.  **User**: Requested enhancements to the Client Profile view (show session notes, start new note, book appointment). **Status: DONE**.
-10. **Agent**: Finished the initial implementation of the Client Profile View. **Status: DONE**.
+1.  **User**: Provided detailed requirements for Phase-1 Clinical Assessments. **Status: IN PROGRESS**.
+2.  **User**: Requested a fix for the Day Schedule to show dynamic times based on therapist availability, not a fixed hourly grid. **Status: DONE**.
+3.  **User**: Requested the creation of a full Therapist Schedule/Calendar system. **Status: DONE**.
+4.  **User**: Agreed to make the web app a PWA. **Status: DONE**.
+5.  **User**: Expressed disappointment that the project was a web app and not a native mobile app. **Status: ADDRESSED** (Agent explained the scope and offered the PWA solution).
+6.  **User**: Asked if the project is a mobile app or web portal. **Status: ADDRESSED**.
+7.  **User**: Reported that the font size on mobile was too small. **Status: DONE**.
+8.  **User**: Requested to improve the mobile responsiveness of the web app. **Status: DONE**.
+9.  **Agent**: Finished the mobile responsiveness improvements. **Status: DONE**.
+10. **User**: Provided detailed requirements to improve the Therapist Dashboard UX. **Status: DONE**.
 
 **Project Health Check:**
 -   **Broken**: None.
 -   **Mocked**:
     -   Coupon Code management.
-    -   Payment tracking backend logic (basic implementation exists, but no advanced reporting/invoicing).
+    -   Advanced payment tracking and reporting features.
 
 **3rd Party Integrations**
 -   **Gemini 3 Flash** — uses Emergent LLM Key.
@@ -167,4 +150,5 @@ A full-stack application with a FastAPI backend, React frontend, and MongoDB. Ke
 | **Super Admin** |  |  |
 
 **What agent forgot to execute**
--   The agent has consistently carried over the tasks of fully verifying the **Global Standards** implementation and **refactoring **. While not explicitly forgotten in this session, these items have not been prioritized or completed.</analysis>
+-   The agent has not yet prioritized the crucial task of refactoring the monolithic , despite it being a known source of technical debt.
+-   The full verification of global standards (IST timezone, date/currency formats) across the entire application is still pending.</analysis>
