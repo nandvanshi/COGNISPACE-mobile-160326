@@ -721,7 +721,7 @@ const TherapistManagement = ({ onViewClients }) => {
             {/* Specializations Multi-Select */}
             <div className="border-t pt-4">
               <Label>Specializations * <span className="text-muted-foreground font-normal">(Select 1-5)</span></Label>
-              <div className="flex flex-wrap gap-2 mt-2 mb-3">
+              <div className="flex flex-wrap gap-2 mt-2 mb-3 min-h-[32px]">
                 {(newTherapist.specializations || []).map((spec, idx) => (
                   <Badge key={idx} variant="secondary" className="px-3 py-1 bg-primary/10 text-primary">
                     {spec}
@@ -746,21 +746,36 @@ const TherapistManagement = ({ onViewClients }) => {
                   <Plus size={14} />
                 </Button>
                 {showSpecDropdown && (
-                  <div className="absolute z-[100] w-full mt-1 bg-white border rounded-lg shadow-xl" style={{maxHeight: '250px', overflowY: 'auto'}}>
-                    {SPECIALIZATION_OPTIONS.map((spec, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        className={`w-full text-left px-3 py-2.5 text-sm hover:bg-primary/5 flex items-center justify-between border-b border-gray-50 last:border-0 ${
-                          (newTherapist.specializations || []).includes(spec) ? 'bg-primary/10 text-primary font-medium' : ''
-                        }`}
-                        onClick={() => toggleSpecialization(spec)}
-                      >
-                        {spec}
-                        {(newTherapist.specializations || []).includes(spec) && <CheckCircle size={14} />}
-                      </button>
-                    ))}
-                  </div>
+                  <>
+                    <div 
+                      className="fixed inset-0 z-[99]" 
+                      onClick={() => setShowSpecDropdown(false)}
+                    />
+                    <div 
+                      className="absolute left-0 right-0 z-[100] mt-1 bg-white border border-gray-200 rounded-lg shadow-2xl"
+                      style={{
+                        maxHeight: '250px',
+                        overflowY: 'scroll'
+                      }}
+                    >
+                      {SPECIALIZATION_OPTIONS.map((spec, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          className={`w-full text-left px-3 py-2.5 text-sm hover:bg-primary/5 flex items-center justify-between border-b border-gray-100 last:border-0 ${
+                            (newTherapist.specializations || []).includes(spec) ? 'bg-primary/10 text-primary font-medium' : ''
+                          }`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleSpecialization(spec);
+                          }}
+                        >
+                          <span>{spec}</span>
+                          {(newTherapist.specializations || []).includes(spec) && <CheckCircle size={14} className="flex-shrink-0" />}
+                        </button>
+                      ))}
+                    </div>
+                  </>
                 )}
               </div>
             </div>
