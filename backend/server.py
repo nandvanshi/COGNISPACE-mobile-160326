@@ -71,6 +71,8 @@ api_router.include_router(assistants_router)
 api_router.include_router(subscriptions_router)
 api_router.include_router(clients_router)
 api_router.include_router(appointments_router)
+api_router.include_router(availability_router)
+api_router.include_router(payments_router)
 
 # ============= MODELS =============
 
