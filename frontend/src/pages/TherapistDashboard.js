@@ -504,6 +504,7 @@ const TherapistDashboard = () => {
           {currentView === 'ai-support' && <AIClinicalSupport isReadOnly={isReadOnly} />}
           {currentView === 'payments' && <Payments isReadOnly={isReadOnly} />}
           {currentView === 'assistants' && <AssistantManagement isReadOnly={isReadOnly} />}
+          {currentView === 'profile' && <TherapistProfileSettings isReadOnly={isReadOnly} />}
           {currentView === 'support' && <SupportTickets />}
         </div>
       </main>
