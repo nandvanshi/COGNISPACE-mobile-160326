@@ -5250,6 +5250,9 @@ async def record_payment(payment_data: PaymentCreate, current_user: dict = Depen
     """
     therapist_id = get_effective_therapist_id(current_user)
     
+    # Check feature access
+    await check_feature_enabled(therapist_id, "payments")
+    
     client = await db.users.find_one({"id": payment_data.client_id}, {"_id": 0})
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")
