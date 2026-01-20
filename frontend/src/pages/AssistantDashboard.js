@@ -130,9 +130,19 @@ const AssistantOverview = ({ onNavigate }) => {
     );
   }
 
-  const { therapist, today_date, today_day, todays_appointments, needs_attention, inactive_clients, payments_summary } = dashboard;
-  const pendingCalls = todays_appointments.filter(a => a.call_status === 'pending');
-  const completedCalls = todays_appointments.filter(a => a.call_status === 'called');
+  // Destructure with defaults to handle missing fields
+  const { 
+    therapist = {}, 
+    today_date = new Date().toISOString().split('T')[0], 
+    today_day = new Date().toLocaleDateString('en-IN', { weekday: 'long' }),
+    todays_appointments = [], 
+    needs_attention = { upcoming_sessions: [], pending_checkins: [] }, 
+    inactive_clients = [], 
+    payments_summary = { payments: [], total_collected: 0 }
+  } = dashboard;
+  
+  const pendingCalls = (todays_appointments || []).filter(a => a.call_status === 'pending');
+  const completedCalls = (todays_appointments || []).filter(a => a.call_status === 'called');
 
   return (
     <div className="space-y-6" data-testid="assistant-overview">
