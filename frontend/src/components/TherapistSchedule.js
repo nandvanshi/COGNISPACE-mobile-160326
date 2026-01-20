@@ -724,7 +724,7 @@ const TherapistSchedule = ({ isReadOnly = false, isAssistant = false }) => {
                         </p>
                       </div>
                     </div>
-                    {!isReadOnly && !isAssistant && (
+                    {!isReadOnly && (
                       <Button
                         variant="ghost"
                         size="sm"
@@ -746,12 +746,9 @@ const TherapistSchedule = ({ isReadOnly = false, isAssistant = false }) => {
               <AlertTriangle size={32} className="mx-auto text-amber-500 mb-3" />
               <p className="font-medium text-amber-800 mb-2">No Availability Set</p>
               <p className="text-sm text-amber-600 mb-4">
-                {isAssistant 
-                  ? `The therapist hasn't set availability for ${selectedDate.toLocaleDateString('en-IN', { weekday: 'long' })}s`
-                  : `You haven't set any availability for ${selectedDate.toLocaleDateString('en-IN', { weekday: 'long' })}s`
-                }
+                No availability set for {selectedDate.toLocaleDateString('en-IN', { weekday: 'long' })}s
               </p>
-              {!isReadOnly && !isAssistant && (
+              {!isReadOnly && (
                 <Button onClick={() => setShowAddAvailabilityDialog(true)} className="gap-2">
                   <Plus size={16} />
                   Add Availability
