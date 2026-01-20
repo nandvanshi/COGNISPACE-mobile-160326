@@ -422,6 +422,13 @@ class HomeworkCreate(BaseModel):
     title: str
     description: str
     due_date: Optional[datetime] = None
+    priority: str = "medium"  # low, medium, high
+
+class HomeworkUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    due_date: Optional[datetime] = None
+    priority: Optional[str] = None
 
 class Homework(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -432,6 +439,7 @@ class Homework(BaseModel):
     title: str
     description: str
     due_date: Optional[datetime] = None
+    priority: str = "medium"
     status: str = "assigned"
     client_notes: Optional[str] = None
     completed_at: Optional[datetime] = None
