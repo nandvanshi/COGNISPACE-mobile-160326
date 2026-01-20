@@ -34,7 +34,15 @@ const TherapistManagement = ({ onViewClients }) => {
     password: '',
     credentials: '',
     specialization: '',
-    years_of_experience: ''
+    years_of_experience: '',
+    clinic_name: '',
+    consultation_fee: '',
+    address_line_1: '',
+    address_line_2: '',
+    pincode: '',
+    city: '',
+    state: '',
+    district: ''
   });
   const [editData, setEditData] = useState({
     full_name: '',
@@ -42,8 +50,17 @@ const TherapistManagement = ({ onViewClients }) => {
     credentials: '',
     specialization: '',
     years_of_experience: '',
-    profile_photo: ''
+    profile_photo: '',
+    clinic_name: '',
+    consultation_fee: '',
+    address_line_1: '',
+    address_line_2: '',
+    pincode: '',
+    city: '',
+    state: '',
+    district: ''
   });
+  const [pincodeLoading, setPincodeLoading] = useState(false);
 
   useEffect(() => {
     fetchTherapists();
