@@ -898,6 +898,71 @@ Build a secure, therapist-first web application for managing a therapy practice 
   - /app/tests/test_feature_toggles.py
   - /app/test_reports/iteration_23.json
 
+### Phase 28: Action-Oriented Assistant Dashboard (COMPLETED - Jan 20, 2026)
+- [x] **New Assistant Dashboard Overview** (AssistantOverview component):
+  - Therapist name and current date prominently displayed
+  - Date format: DD/MM/YYYY (IST timezone)
+  - Refresh button for manual data refresh
+  - Auto-refresh every 5 minutes
+- [x] **Quick Actions Panel**:
+  - Add Client button → navigates to Clients view
+  - Today's Schedule button → navigates to Schedule view
+  - Record Payment button → navigates to Payments view
+  - 3-column grid layout with icons
+- [x] **Today's Call Reminders Section**:
+  - Lists all appointments for today with client names and times
+  - Pending calls shown with amber background and "Mark Called" button
+  - Completed calls shown with green background, "Undo" option
+  - Badge shows pending count (e.g., "2 pending")
+  - `POST /api/assistant/call-reminder/{appointment_id}` - Mark as called
+  - `DELETE /api/assistant/call-reminder/{appointment_id}` - Undo call mark
+- [x] **Needs Attention Section**:
+  - Upcoming Sessions (within 4 hours): Blue cards with clock icon
+  - In Progress - Need Check-out: Amber cards with warning icon
+  - Pending Payments: Red cards with dollar icon and count
+  - Each item clickable → navigates to relevant view
+  - "All caught up!" message when nothing needs attention
+- [x] **Inactive Clients Follow-up Section (30+ days)**:
+  - Lists clients without sessions in last 30 days
+  - Shows days since last session (or "No sessions yet")
+  - Call button (opens tel: link for mobile)
+  - Schedule button → navigates to Schedule view
+  - "View all X inactive clients" link when > 5 clients
+  - "All clients are active!" message when none inactive
+- [x] **Daily Payments Summary Section**:
+  - 3-column summary: Cash, Online, Total amounts in ₹ (Indian Rupee)
+  - Payment method icons: Banknote (cash), CreditCard (online), DollarSign (total)
+  - List of today's payments with client name, method, and amount
+  - "Record Payment" button in header
+  - "No payments recorded today" empty state
+- [x] **Access Information Panel (Collapsible)**:
+  - Shows assistant permissions clearly
+  - **CAN**: View/create clients, view therapist availability, schedule/cancel appointments, block time, view/record payments, check in/out sessions
+  - **CANNOT**: View session notes, access assessments/protocols, access AI clinical features, create/edit/delete availability, delete clients permanently
+- [x] **Backend API** (`GET /api/assistant/dashboard`):
+  - Returns therapist info (name, email, mobile)
+  - Today's date and day name in IST
+  - Today's appointments with call status (pending/called)
+  - Needs attention: upcoming_sessions, pending_checkins, pending_payments_count
+  - Inactive clients list (top 10, sorted by days inactive)
+  - Payments summary: cash_total, online_total, total, payments list
+- [x] **Schedule View (TherapistSchedule component)**:
+  - Uses shared TherapistSchedule with `isAssistant={true}` prop
+  - Month view shows calendar with appointment counts
+  - Day view shows availability blocks, booked sessions, available slots
+  - **FIX VERIFIED**: Day view now correctly displays therapist availability (previously showed "No Availability Set")
+  - "Add Availability" button hidden for assistants
+  - "Block Time" button visible and functional for assistants
+  - Available slots bookable by assistant
+- [x] **Clinical Data Restrictions**:
+  - Assistants blocked from session notes (403)
+  - Assistants blocked from assessments (403)
+  - Assistants blocked from protocols (403)
+  - Assistants blocked from AI clinical features (403)
+- [x] **Testing**: 17/17 backend tests passed, 100% frontend features verified
+  - /app/tests/test_assistant_dashboard.py
+  - /app/test_reports/iteration_24.json
+
 ---
 
 ## Technical Architecture
