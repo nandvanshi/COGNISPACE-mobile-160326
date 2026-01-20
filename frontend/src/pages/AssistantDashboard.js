@@ -235,10 +235,9 @@ const AssistantDashboard = () => {
           {currentView === 'schedule' && (
             <TherapistSchedule 
               isReadOnly={isReadOnly} 
-              isAssistant={false}
+              isAssistant={true}
             />
           )}
-          {currentView === 'availability' && <AvailabilitySettings isReadOnly={isReadOnly} />}
           {currentView === 'payments' && <Payments isReadOnly={isReadOnly} />}
         </div>
       </main>
