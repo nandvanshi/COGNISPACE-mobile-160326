@@ -173,16 +173,16 @@ const TherapistDashboard = () => {
             </Button>
           </div>
           <p className="text-base text-muted-foreground mt-2 truncate">{user?.full_name}</p>
-          {subscriptionStatus && !isReadOnly && (
+          {!isReadOnly && (
             <span className="inline-block mt-2 px-2.5 py-1 bg-success/10 text-success text-sm rounded-full">
-              {subscriptionStatus.subscription_status === 'trial' ? 'Free Trial' : 'Active'}
+              Active
             </span>
           )}
         </div>
 
         {/* Navigation */}
         <nav className="flex-1 p-3 overflow-y-auto">
-          {navGroups.map((group, groupIdx) => (
+          {filteredNavGroups.map((group, groupIdx) => (
             <div key={group.label} className={groupIdx > 0 ? 'mt-4' : ''}>
               {/* Collapsible group header for mobile */}
               <button
