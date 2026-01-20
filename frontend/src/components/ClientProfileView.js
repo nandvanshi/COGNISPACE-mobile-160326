@@ -15,7 +15,7 @@ import {
   ClipboardCheck, Clock, CheckCircle, AlertCircle, ChevronRight,
   Brain, History, Loader2, Edit, MessageSquare, BookOpen,
   ArrowRight, TrendingUp, FileCheck, Users, Plus, Eye, CalendarPlus,
-  Link as LinkIcon, PenSquare, Receipt, PlayCircle, StopCircle
+  Link as LinkIcon, PenSquare, Receipt, PlayCircle, StopCircle, Trash2, BookCheck
 } from 'lucide-react';
 import { formatDate, formatTime, formatCurrency } from '../utils/formatUtils';
 import CaseHistoryWizard from './CaseHistoryWizard';
