@@ -378,6 +378,91 @@ CLINICAL_ASSESSMENTS = {
     }
 }
 
+# Client-friendly descriptions for non-clinical display
+ASSESSMENT_CLIENT_INFO = {
+    "PHQ-9": {
+        "friendly_name": "Mood Check-In",
+        "purpose": "Helps your therapist understand how you've been feeling lately",
+        "instruction": "Think about the past 2 weeks when answering"
+    },
+    "GAD-7": {
+        "friendly_name": "Worry & Anxiety Check-In",
+        "purpose": "Helps your therapist understand your experience with worry and anxiety",
+        "instruction": "Think about the past 2 weeks when answering"
+    },
+    "DASS-21": {
+        "friendly_name": "Emotional Well-being Check-In",
+        "purpose": "Helps your therapist understand your overall emotional state",
+        "instruction": "Think about how often these applied to you over the past week"
+    },
+    "WHO-5": {
+        "friendly_name": "Well-being Check-In",
+        "purpose": "Helps your therapist understand your general sense of well-being",
+        "instruction": "Think about the past 2 weeks when answering"
+    },
+    "ASRS-v1.1": {
+        "friendly_name": "Focus & Attention Check-In",
+        "purpose": "Helps your therapist understand your experience with focus and attention",
+        "instruction": "Consider how often these experiences occur for you"
+    },
+    "Y-BOCS": {
+        "friendly_name": "Thoughts & Habits Check-In",
+        "purpose": "Helps your therapist understand repetitive thoughts or behaviors you may experience",
+        "instruction": "Answer based on your typical day"
+    },
+    "HAM-A": {
+        "friendly_name": "Anxiety Experience Check-In",
+        "purpose": "Helps your therapist understand your physical and emotional experience of anxiety",
+        "instruction": "Your therapist will guide you through this assessment"
+    },
+    "BDI-II": {
+        "friendly_name": "Mood & Feelings Check-In",
+        "purpose": "Helps your therapist understand how you've been feeling emotionally",
+        "instruction": "Choose the statement that best describes how you've felt in the past 2 weeks"
+    },
+    "ISI": {
+        "friendly_name": "Sleep Quality Check-In",
+        "purpose": "Helps your therapist understand your sleep patterns",
+        "instruction": "Think about the past 2 weeks when answering"
+    },
+    "AUDIT": {
+        "friendly_name": "Lifestyle Check-In",
+        "purpose": "Helps your therapist understand your habits and lifestyle choices",
+        "instruction": "Answer honestly - there are no right or wrong answers"
+    },
+    "RSES": {
+        "friendly_name": "Self-Perception Check-In",
+        "purpose": "Helps your therapist understand how you view yourself",
+        "instruction": "Choose what feels most true for you"
+    },
+    "BPRS": {
+        "friendly_name": "Overall Experience Check-In",
+        "purpose": "Helps your therapist understand your overall mental and emotional experiences",
+        "instruction": "Your therapist will guide you through this assessment"
+    }
+}
+
+def get_client_friendly_assessment(assessment_type):
+    """Get client-friendly version of assessment info"""
+    assessment = CLINICAL_ASSESSMENTS.get(assessment_type)
+    if not assessment:
+        return None
+    
+    client_info = ASSESSMENT_CLIENT_INFO.get(assessment_type, {
+        "friendly_name": assessment.get("name", assessment_type),
+        "purpose": "Helps your therapist understand your experience",
+        "instruction": "Answer honestly - there are no right or wrong answers"
+    })
+    
+    return {
+        "type": assessment_type,
+        "friendly_name": client_info.get("friendly_name"),
+        "purpose": client_info.get("purpose"),
+        "instruction": client_info.get("instruction"),
+        "time_estimate": assessment.get("time_estimate"),
+        "question_count": len(assessment.get("questions", []))
+    }
+
 # Scoring functions
 def calculate_score(assessment_type, answers):
     """Calculate score and severity based on assessment type and answers"""
