@@ -1190,6 +1190,19 @@ Build a secure, therapist-first web application for managing a therapy practice 
   - Login: `support@mindlabs.co.in` / `Abcd@1234`
   - All sections render without crash: Call Reminders, Needs Attention, Inactive Clients, Payments Summary
 
+- [x] **Bug Fixed**: Schedule Day View crashed with "Invalid time value" error
+  - Root cause: `Date.toISOString()` called on potentially invalid Date objects in TherapistSchedule.js
+  - Affected: `selectedDate`, appointment filtering, blocked times filtering
+- [x] **Solution Applied** (TherapistSchedule.js):
+  - Added date validation before `toISOString()` calls: `instanceof Date && !isNaN(date.getTime())`
+  - Safe date parsing in `calendarData` and `daySchedule` useMemo hooks
+  - Wrapped date filtering in try-catch blocks for appointment and blocked time arrays
+  - Validated `handleDateClick`, `goToPrevDay`, `goToNextDay` navigation handlers
+  - Added validation in `handleBlockTime` and `handleScheduleAppointment` functions
+- [x] **Testing**: Screenshot verification - Day view loads correctly
+  - Month view → Date click → Day view works without errors
+  - Availability blocks, booked sessions display correctly
+
 ### Phase 36: Server.py Refactoring - Step 1 (IN PROGRESS - Jan 20, 2026)
 **Goal**: Break monolithic server.py (6919 lines) into modular route files
 
