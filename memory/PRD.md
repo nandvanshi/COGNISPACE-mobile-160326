@@ -612,6 +612,48 @@ Build a secure, therapist-first web application for managing a therapy practice 
   - New status: "in_progress" (between scheduled and completed)
   - New fields: actual_start_time, actual_end_time, actual_duration_minutes, checked_in_by, checked_out_by
 
+### Phase 22: App Rebranding & Therapist Dashboard UX (COMPLETED - Jan 20, 2026)
+- [x] **App Renamed to TheraGenie**:
+  - All "Haven" references changed to "TheraGenie" across all pages
+  - New tagline: "Clinical intelligence for modern therapists"
+  - Login page, TherapistDashboard, ClientDashboard, SuperAdminDashboard, AssistantDashboard updated
+  - Sidebar logo with Sparkles icon and "TheraGenie" text
+- [x] **Therapist Dashboard Sidebar Reorganization**:
+  - Navigation grouped into two sections: "Clinical" and "Operations"
+  - **Clinical Group**: Dashboard, Clients, Schedule, Session Notes, Assessments, Protocols, AI Clinical
+  - **Operations Group**: Availability, Recurring, Messages, Payments, Assistants
+  - Improved scanability for new therapists with uppercase section labels
+- [x] **Action-Oriented Today at a Glance Cards**:
+  - Sessions Today: Shows completed/remaining, clickable to Schedule
+  - Unread Messages: Shows "All caught up" or count, clickable to Messages
+  - Pending Notes: Shows count with "Add notes →" CTA, clickable to Session Notes
+  - Border-left color coding based on priority state
+- [x] **Personal Greeting**:
+  - Time-based greeting: "Good morning/afternoon/evening"
+  - Icons: SunMedium (morning), Sunset (afternoon), Moon (evening)
+  - Shows therapist's first name and formatted date
+- [x] **Calendar-Centric Dashboard Layout**:
+  - Today's Schedule section prominently displayed with status badges
+  - Status badges: "In Session" (amber pulse), "Done" (green), "Up Next" (primary), "Starting Now"
+  - "View Calendar" link to navigate to full schedule
+  - This Week section showing weekly appointments grouped by day
+- [x] **Empty States with CTAs**:
+  - No sessions today → "Schedule Appointment" + "Set Availability" buttons
+  - Calendar-centric messaging for empty states
+  - Friendly guidance instead of passive empty states
+- [x] **Needs Attention Section**:
+  - Alerts for: inactive clients (30+ days), pending session notes, trial status
+  - Each alert has action link (e.g., "View Clients →", "Add Notes →")
+- [x] **Coming Up Section**:
+  - Next appointment details: client name, time until, date, time range
+  - "View Client Profile" button
+- [x] **Practice Overview (Lower Emphasis)**:
+  - Moved to right sidebar with dashed border and muted background
+  - Shows Total Clients and Upcoming Sessions counts
+  - Clickable to navigate to respective views
+- [x] **Testing**: 29/29 frontend tests passed (100%)
+  - /app/test_reports/iteration_18.json
+
 ---
 
 ## Technical Architecture
