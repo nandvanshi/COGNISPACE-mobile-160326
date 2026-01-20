@@ -50,6 +50,16 @@ class TherapistCreate(BaseModel):
     credentials: str
     specialization: Optional[str] = None
     years_of_experience: Optional[int] = None
+    # Clinic Info
+    clinic_name: Optional[str] = None
+    consultation_fee: Optional[float] = None
+    # Address (Indian Format)
+    address_line_1: Optional[str] = None
+    address_line_2: Optional[str] = None
+    pincode: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    district: Optional[str] = None
 
 
 class ClientDetailResponse(BaseModel):
