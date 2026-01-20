@@ -22,6 +22,7 @@ import CaseHistoryWizard from './CaseHistoryWizard';
 import TherapyConsent from './TherapyConsent';
 import { SessionActionButtons, AppointmentStatusBadge } from './SessionCheckInOut';
 import { PaymentCard } from './PaymentReceipt';
+import AssessmentTrendChart from './AssessmentTrendChart';
 
 // Helper to safely extract error message from API response
 const getErrorMessage = (error, fallback = 'An error occurred') => {
