@@ -360,32 +360,32 @@ const AssistantOverview = ({ onNavigate }) => {
             <UserX className="text-muted-foreground" size={20} />
             <h2 className="text-lg font-semibold">Inactive Clients (30+ days)</h2>
           </div>
-          {dashboard.inactive_clients_count > 0 && (
-            <Badge variant="outline">{dashboard.inactive_clients_count} clients</Badge>
+          {inactive_clients_count > 0 && (
+            <Badge variant="outline">{inactive_clients_count} clients</Badge>
           )}
         </div>
 
-        {inactive_clients.length === 0 ? (
+        {(inactive_clients?.length || 0) === 0 ? (
           <p className="text-muted-foreground text-center py-6">All clients are active!</p>
         ) : (
           <div className="space-y-2">
-            {inactive_clients.slice(0, 5).map((client) => (
+            {(inactive_clients || []).slice(0, 5).map((client) => (
               <div 
-                key={client.id} 
+                key={client?.id || Math.random()} 
                 className="flex items-center justify-between p-3 bg-surface rounded-lg border border-border"
-                data-testid={`inactive-client-${client.id}`}
+                data-testid={`inactive-client-${client?.id}`}
               >
                 <div>
-                  <p className="font-medium">{client.full_name}</p>
+                  <p className="font-medium">{client?.full_name || 'Unknown Client'}</p>
                   <p className="text-sm text-muted-foreground">
-                    {client.days_inactive !== null 
+                    {client?.days_inactive !== null && client?.days_inactive !== undefined
                       ? `${client.days_inactive} days since last session`
                       : 'No sessions yet'
                     }
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  {client.mobile && (
+                  {client?.mobile && (
                     <Button 
                       size="sm" 
                       variant="outline"
@@ -408,13 +408,13 @@ const AssistantOverview = ({ onNavigate }) => {
               </div>
             ))}
 
-            {inactive_clients.length > 5 && (
+            {(inactive_clients?.length || 0) > 5 && (
               <Button 
                 variant="ghost" 
                 className="w-full mt-2"
                 onClick={() => onNavigate('clients')}
               >
-                View all {dashboard.inactive_clients_count} inactive clients
+                View all {inactive_clients_count} inactive clients
               </Button>
             )}
           </div>
