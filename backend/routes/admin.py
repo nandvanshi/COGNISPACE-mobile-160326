@@ -291,8 +291,7 @@ async def create_therapist(data: TherapistCreate, current_user: dict = Depends(r
         "password_hash": hash_password(data.password),
         "role": "therapist",
         "status": "approved",
-        "credentials": data.credentials,
-        "specialization": data.specialization,
+        "qualifications": data.qualifications,
         "years_of_experience": data.years_of_experience,
         "clinic_name": data.clinic_name,
         "subscription_status": "trial",
@@ -303,24 +302,25 @@ async def create_therapist(data: TherapistCreate, current_user: dict = Depends(r
     
     await db.users.insert_one(therapist_doc)
     
-    # Create therapist profile with address if provided
-    if any([data.address_line_1, data.address_line_2, data.pincode, data.city, data.state, data.consultation_fee]):
-        profile_doc = {
-            "therapist_id": therapist_id,
-            "clinic_name": data.clinic_name,
-            "consultation_fee": data.consultation_fee,
-            "address_line_1": data.address_line_1,
-            "address_line_2": data.address_line_2,
-            "pincode": data.pincode,
-            "city": data.city,
-            "state": data.state,
-            "district": data.district,
-            "show_mobile_on_receipt": True,
-            "show_email_on_receipt": True,
-            "created_at": now.isoformat(),
-            "updated_at": now.isoformat()
-        }
-        await db.therapist_profiles.insert_one(profile_doc)
+    # Create therapist profile with specializations, fee_slots, and address
+    profile_doc = {
+        "therapist_id": therapist_id,
+        "clinic_name": data.clinic_name,
+        "qualifications": data.qualifications,
+        "specializations": data.specializations or [],
+        "fee_slots": [{"amount": slot.amount, "duration_minutes": slot.duration_minutes} for slot in (data.fee_slots or [])],
+        "address_line_1": data.address_line_1,
+        "address_line_2": data.address_line_2,
+        "pincode": data.pincode,
+        "city": data.city,
+        "state": data.state,
+        "district": data.district,
+        "show_mobile_on_receipt": True,
+        "show_email_on_receipt": True,
+        "created_at": now.isoformat(),
+        "updated_at": now.isoformat()
+    }
+    await db.therapist_profiles.insert_one(profile_doc)
     
     subscription_id = str(uuid.uuid4())
     subscription_doc = {
