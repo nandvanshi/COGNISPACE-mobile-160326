@@ -2598,6 +2598,326 @@ async def unmark_call_reminder(appointment_id: str, current_user: dict = Depends
     
     return {"success": True, "message": "Call reminder reset"}
 
+# ============= CASH SETTLEMENT ENDPOINTS =============
+
+async def get_daily_payment_totals(therapist_id: str, date_str: str):
+    """Calculate cash and online totals for a specific date"""
+    # Parse date and create IST boundaries
+    date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+    day_start_ist = date_obj.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=IST)
+    day_end_ist = date_obj.replace(hour=23, minute=59, second=59, microsecond=999999, tzinfo=IST)
+    
+    # Convert to UTC for querying
+    day_start_utc = day_start_ist.astimezone(timezone.utc)
+    day_end_utc = day_end_ist.astimezone(timezone.utc)
+    
+    # Query payments for the day
+    payments = await db.payments.find({
+        "therapist_id": therapist_id,
+        "payment_date": {"$gte": day_start_utc.isoformat(), "$lte": day_end_utc.isoformat()}
+    }, {"_id": 0}).to_list(500)
+    
+    cash_total = sum(p["amount"] for p in payments if p.get("payment_method") == "cash")
+    online_total = sum(p["amount"] for p in payments if p.get("payment_method") in ["upi", "card", "bank_transfer", "bank"])
+    
+    return {
+        "cash_amount": cash_total,
+        "online_amount": online_total,
+        "total_amount": cash_total + online_total,
+        "payment_count": len(payments)
+    }
+
+@api_router.get("/settlements/today")
+async def get_today_settlement(current_user: dict = Depends(get_current_user)):
+    """Get today's cash settlement status for therapist or assistant"""
+    if current_user["role"] == "assistant":
+        therapist_id = current_user.get("therapist_id")
+        if not therapist_id:
+            raise HTTPException(status_code=403, detail="Assistant not linked to a therapist")
+    elif current_user["role"] == "therapist":
+        therapist_id = current_user["id"]
+    else:
+        raise HTTPException(status_code=403, detail="Only therapists and assistants can access settlements")
+    
+    now_ist = datetime.now(timezone.utc).astimezone(IST)
+    today_date = now_ist.strftime("%Y-%m-%d")
+    
+    # Get today's payment totals
+    totals = await get_daily_payment_totals(therapist_id, today_date)
+    
+    # Check if settlement record exists for today
+    settlement = await db.cash_settlements.find_one(
+        {"therapist_id": therapist_id, "date": today_date},
+        {"_id": 0}
+    )
+    
+    # Get therapist info
+    therapist = await db.users.find_one({"id": therapist_id}, {"_id": 0, "full_name": 1})
+    
+    if settlement:
+        # Update totals in case new payments were added (only if not settled/disputed)
+        if settlement["status"] in ["pending", "handed_over"]:
+            settlement["cash_amount"] = totals["cash_amount"]
+            settlement["online_amount"] = totals["online_amount"]
+            settlement["total_amount"] = totals["total_amount"]
+        return settlement
+    
+    # No settlement record yet - return pending status with totals
+    return {
+        "id": None,
+        "date": today_date,
+        "therapist_id": therapist_id,
+        "therapist_name": therapist.get("full_name") if therapist else "Unknown",
+        "assistant_id": None,
+        "assistant_name": None,
+        "cash_amount": totals["cash_amount"],
+        "online_amount": totals["online_amount"],
+        "total_amount": totals["total_amount"],
+        "status": "pending",
+        "handover_note": None,
+        "handover_at": None,
+        "confirmed_at": None,
+        "confirmed_by": None,
+        "disputed_at": None,
+        "disputed_reason": None
+    }
+
+@api_router.post("/settlements/handover")
+async def mark_cash_handover(data: CashSettlementCreate, current_user: dict = Depends(get_current_user)):
+    """Assistant marks cash as handed over to therapist"""
+    if current_user["role"] != "assistant":
+        raise HTTPException(status_code=403, detail="Only assistants can mark cash handover")
+    
+    therapist_id = current_user.get("therapist_id")
+    if not therapist_id:
+        raise HTTPException(status_code=403, detail="Assistant not linked to a therapist")
+    
+    now_ist = datetime.now(timezone.utc).astimezone(IST)
+    now_utc = datetime.now(timezone.utc)
+    today_date = now_ist.strftime("%Y-%m-%d")
+    
+    # Get today's payment totals
+    totals = await get_daily_payment_totals(therapist_id, today_date)
+    
+    if totals["cash_amount"] <= 0:
+        raise HTTPException(status_code=400, detail="No cash collected today to hand over")
+    
+    # Check if settlement already exists
+    existing = await db.cash_settlements.find_one(
+        {"therapist_id": therapist_id, "date": today_date}
+    )
+    
+    if existing:
+        if existing["status"] == "settled":
+            raise HTTPException(status_code=400, detail="Today's settlement is already completed and locked")
+        if existing["status"] == "handed_over":
+            raise HTTPException(status_code=400, detail="Cash handover already submitted, awaiting therapist confirmation")
+    
+    # Get therapist info
+    therapist = await db.users.find_one({"id": therapist_id}, {"_id": 0, "full_name": 1})
+    
+    settlement_id = str(uuid.uuid4())
+    settlement_doc = {
+        "id": settlement_id,
+        "date": today_date,
+        "therapist_id": therapist_id,
+        "therapist_name": therapist.get("full_name") if therapist else "Unknown",
+        "assistant_id": current_user["id"],
+        "assistant_name": current_user.get("full_name", "Unknown"),
+        "cash_amount": totals["cash_amount"],
+        "online_amount": totals["online_amount"],
+        "total_amount": totals["total_amount"],
+        "status": "handed_over",
+        "handover_note": data.note,
+        "handover_at": now_utc.isoformat(),
+        "confirmed_at": None,
+        "confirmed_by": None,
+        "disputed_at": None,
+        "disputed_reason": None,
+        "created_at": now_utc.isoformat(),
+        "updated_at": now_utc.isoformat()
+    }
+    
+    if existing:
+        # Update existing record
+        await db.cash_settlements.update_one(
+            {"id": existing["id"]},
+            {"$set": {
+                "status": "handed_over",
+                "assistant_id": current_user["id"],
+                "assistant_name": current_user.get("full_name", "Unknown"),
+                "cash_amount": totals["cash_amount"],
+                "online_amount": totals["online_amount"],
+                "total_amount": totals["total_amount"],
+                "handover_note": data.note,
+                "handover_at": now_utc.isoformat(),
+                "updated_at": now_utc.isoformat()
+            }}
+        )
+        settlement_id = existing["id"]
+    else:
+        await db.cash_settlements.insert_one(settlement_doc)
+    
+    # Log audit
+    await log_audit(current_user["id"], "assistant", "cash_handover", "settlement", settlement_id, {
+        "date": today_date,
+        "cash_amount": totals["cash_amount"],
+        "note": data.note
+    })
+    
+    return {
+        "success": True,
+        "message": "Cash handover submitted successfully",
+        "settlement_id": settlement_id,
+        "cash_amount": totals["cash_amount"]
+    }
+
+@api_router.post("/settlements/{settlement_id}/confirm")
+async def confirm_settlement(settlement_id: str, current_user: dict = Depends(get_current_user)):
+    """Therapist confirms receipt of cash - locks the settlement"""
+    if current_user["role"] != "therapist":
+        raise HTTPException(status_code=403, detail="Only therapists can confirm settlements")
+    
+    settlement = await db.cash_settlements.find_one(
+        {"id": settlement_id, "therapist_id": current_user["id"]},
+        {"_id": 0}
+    )
+    
+    if not settlement:
+        raise HTTPException(status_code=404, detail="Settlement not found")
+    
+    if settlement["status"] == "settled":
+        raise HTTPException(status_code=400, detail="Settlement is already confirmed and locked")
+    
+    if settlement["status"] == "pending":
+        raise HTTPException(status_code=400, detail="Cash has not been handed over yet")
+    
+    now_utc = datetime.now(timezone.utc)
+    
+    # Update and lock the settlement
+    await db.cash_settlements.update_one(
+        {"id": settlement_id},
+        {"$set": {
+            "status": "settled",
+            "confirmed_at": now_utc.isoformat(),
+            "confirmed_by": current_user["id"],
+            "updated_at": now_utc.isoformat()
+        }}
+    )
+    
+    # Log audit
+    await log_audit(current_user["id"], "therapist", "settlement_confirmed", "settlement", settlement_id, {
+        "date": settlement["date"],
+        "cash_amount": settlement["cash_amount"]
+    })
+    
+    return {
+        "success": True,
+        "message": "Cash settlement confirmed and locked",
+        "settlement_id": settlement_id
+    }
+
+@api_router.post("/settlements/{settlement_id}/dispute")
+async def dispute_settlement(settlement_id: str, data: CashSettlementDispute, current_user: dict = Depends(get_current_user)):
+    """Therapist reports an issue with the settlement"""
+    if current_user["role"] != "therapist":
+        raise HTTPException(status_code=403, detail="Only therapists can dispute settlements")
+    
+    if not data.reason or len(data.reason.strip()) < 5:
+        raise HTTPException(status_code=400, detail="Dispute reason is required (minimum 5 characters)")
+    
+    settlement = await db.cash_settlements.find_one(
+        {"id": settlement_id, "therapist_id": current_user["id"]},
+        {"_id": 0}
+    )
+    
+    if not settlement:
+        raise HTTPException(status_code=404, detail="Settlement not found")
+    
+    if settlement["status"] == "settled":
+        raise HTTPException(status_code=400, detail="Cannot dispute a settled and locked record")
+    
+    if settlement["status"] == "pending":
+        raise HTTPException(status_code=400, detail="Cash has not been handed over yet")
+    
+    now_utc = datetime.now(timezone.utc)
+    
+    # Update settlement status to disputed
+    await db.cash_settlements.update_one(
+        {"id": settlement_id},
+        {"$set": {
+            "status": "disputed",
+            "disputed_at": now_utc.isoformat(),
+            "disputed_reason": data.reason.strip(),
+            "updated_at": now_utc.isoformat()
+        }}
+    )
+    
+    # Log audit
+    await log_audit(current_user["id"], "therapist", "settlement_disputed", "settlement", settlement_id, {
+        "date": settlement["date"],
+        "cash_amount": settlement["cash_amount"],
+        "reason": data.reason.strip()
+    })
+    
+    return {
+        "success": True,
+        "message": "Settlement dispute recorded",
+        "settlement_id": settlement_id
+    }
+
+@api_router.get("/settlements/history")
+async def get_settlement_history(
+    days: int = 30,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get settlement history for audit trail"""
+    if current_user["role"] == "assistant":
+        therapist_id = current_user.get("therapist_id")
+        if not therapist_id:
+            raise HTTPException(status_code=403, detail="Assistant not linked to a therapist")
+    elif current_user["role"] == "therapist":
+        therapist_id = current_user["id"]
+    else:
+        raise HTTPException(status_code=403, detail="Only therapists and assistants can view settlement history")
+    
+    # Get settlements for the last N days
+    now_ist = datetime.now(timezone.utc).astimezone(IST)
+    start_date = (now_ist - timedelta(days=days)).strftime("%Y-%m-%d")
+    
+    settlements = await db.cash_settlements.find(
+        {"therapist_id": therapist_id, "date": {"$gte": start_date}},
+        {"_id": 0}
+    ).sort("date", -1).to_list(100)
+    
+    return {
+        "settlements": settlements,
+        "total_count": len(settlements),
+        "date_range": {
+            "start": start_date,
+            "end": now_ist.strftime("%Y-%m-%d")
+        }
+    }
+
+@api_router.get("/settlements/pending")
+async def get_pending_settlements(current_user: dict = Depends(get_current_user)):
+    """Get pending/handed_over settlements awaiting therapist action"""
+    if current_user["role"] != "therapist":
+        raise HTTPException(status_code=403, detail="Only therapists can view pending settlements")
+    
+    settlements = await db.cash_settlements.find(
+        {
+            "therapist_id": current_user["id"],
+            "status": {"$in": ["handed_over", "disputed"]}
+        },
+        {"_id": 0}
+    ).sort("date", -1).to_list(50)
+    
+    return {
+        "pending_settlements": settlements,
+        "count": len(settlements)
+    }
+
 @api_router.post("/admin/assistants", response_model=AssistantResponse)
 async def admin_create_assistant(assistant_data: AssistantCreate, therapist_id: str, current_user: dict = Depends(require_super_admin)):
     """Super Admin creates an assistant for a therapist"""
