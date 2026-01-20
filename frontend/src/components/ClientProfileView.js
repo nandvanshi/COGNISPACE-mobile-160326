@@ -439,6 +439,7 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
                 <TabsTrigger value="sessions">Sessions</TabsTrigger>
                 <TabsTrigger value="case-history">Case History</TabsTrigger>
                 <TabsTrigger value="assessments">Assessments</TabsTrigger>
+                {!isAssistant && <TabsTrigger value="homework">Homework</TabsTrigger>}
                 <TabsTrigger value="payments">Payments</TabsTrigger>
               </TabsList>
 
