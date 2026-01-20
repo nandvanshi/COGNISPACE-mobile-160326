@@ -154,17 +154,28 @@ const TherapistSchedule = ({ isReadOnly = false, isAssistant = false }) => {
       const date = new Date(year, month, d);
       const dateStr = date.toISOString().split('T')[0];
       
-      const dayAppts = appointments.filter(appt => {
-        const apptDate = new Date(appt.start_time).toISOString().split('T')[0];
-        return apptDate === dateStr && appt.status !== 'cancelled';
+      const dayAppts = (appointments || []).filter(appt => {
+        if (!appt?.start_time) return false;
+        try {
+          const apptDate = new Date(appt.start_time);
+          if (isNaN(apptDate.getTime())) return false;
+          return apptDate.toISOString().split('T')[0] === dateStr && appt.status !== 'cancelled';
+        } catch (e) {
+          return false;
+        }
       });
+      
+      const todayIST = nowIST();
+      const todayStr = todayIST instanceof Date && !isNaN(todayIST.getTime()) 
+        ? todayIST.toISOString().split('T')[0] 
+        : new Date().toISOString().split('T')[0];
       
       days.push({
         date,
         day: d,
         appointmentCount: dayAppts.length,
-        isToday: dateStr === nowIST().toISOString().split('T')[0],
-        isPast: date < new Date(nowIST().toISOString().split('T')[0])
+        isToday: dateStr === todayStr,
+        isPast: date < new Date(todayStr)
       });
     }
     
