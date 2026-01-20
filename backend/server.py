@@ -4644,6 +4644,312 @@ async def submit_assessment(assessment_id: str, submission: AssessmentSubmit, cu
     
     return {"success": True, "score": score}
 
+@api_router.get("/assessments/{assessment_id}")
+async def get_assessment_detail(assessment_id: str, current_user: dict = Depends(get_current_user)):
+    """Get single assessment with full details"""
+    if current_user["role"] == "assistant":
+        raise HTTPException(status_code=403, detail="Assistants cannot access assessments")
+    
+    query = {"id": assessment_id}
+    if current_user["role"] == "therapist":
+        query["therapist_id"] = current_user["id"]
+    elif current_user["role"] == "client":
+        query["client_id"] = current_user["id"]
+    
+    assessment = await db.assessments.find_one(query, {"_id": 0})
+    if not assessment:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+    
+    return assessment
+
+@api_router.get("/assessments/{assessment_id}/client-view")
+async def get_assessment_for_client(assessment_id: str, current_user: dict = Depends(get_current_user)):
+    """Get assessment with client-friendly format for taking the assessment"""
+    if current_user["role"] != "client":
+        raise HTTPException(status_code=403, detail="This endpoint is for clients only")
+    
+    assessment = await db.assessments.find_one(
+        {"id": assessment_id, "client_id": current_user["id"]},
+        {"_id": 0}
+    )
+    if not assessment:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+    
+    # Get client-friendly info
+    assessment_type = assessment.get("assessment_type")
+    client_info = get_client_friendly_assessment(assessment_type)
+    
+    # Get saved progress if any
+    saved_progress = assessment.get("saved_progress", {})
+    
+    return {
+        "id": assessment["id"],
+        "assessment_type": assessment_type,
+        "friendly_name": client_info.get("friendly_name") if client_info else assessment_type,
+        "purpose": client_info.get("purpose") if client_info else "Helps your therapist understand your experience",
+        "instruction": client_info.get("instruction") if client_info else "Answer honestly",
+        "time_estimate": client_info.get("time_estimate") if client_info else "5-10 minutes",
+        "questions": assessment.get("questions", []),
+        "saved_answers": saved_progress.get("answers", []),
+        "current_question_index": saved_progress.get("current_index", 0),
+        "status": assessment.get("status"),
+        "due_date": assessment.get("due_date")
+    }
+
+@api_router.post("/assessments/{assessment_id}/save-progress")
+async def save_assessment_progress(assessment_id: str, progress: dict, current_user: dict = Depends(get_current_user)):
+    """Auto-save client's answers in progress"""
+    if current_user["role"] != "client":
+        raise HTTPException(status_code=403, detail="Only clients can save assessment progress")
+    
+    assessment = await db.assessments.find_one(
+        {"id": assessment_id, "client_id": current_user["id"], "status": "assigned"},
+        {"_id": 0}
+    )
+    if not assessment:
+        raise HTTPException(status_code=404, detail="Assessment not found or already completed")
+    
+    await db.assessments.update_one(
+        {"id": assessment_id},
+        {"$set": {
+            "saved_progress": {
+                "answers": progress.get("answers", []),
+                "current_index": progress.get("current_index", 0),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }}
+    )
+    
+    return {"success": True, "message": "Progress saved"}
+
+@api_router.post("/assessments/{assessment_id}/submit-with-scoring")
+async def submit_assessment_with_scoring(assessment_id: str, submission: AssessmentSubmit, current_user: dict = Depends(get_current_user)):
+    """Submit assessment and calculate score using assessment library scoring"""
+    if current_user["role"] != "client":
+        raise HTTPException(status_code=403, detail="Only clients can submit assessments")
+    
+    assessment = await db.assessments.find_one(
+        {"id": assessment_id, "client_id": current_user["id"]},
+        {"_id": 0}
+    )
+    if not assessment:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+    
+    if assessment.get("status") == "completed":
+        raise HTTPException(status_code=400, detail="Assessment already completed")
+    
+    assessment_type = assessment.get("assessment_type")
+    
+    # Calculate score using assessment library if it's a standard assessment
+    score_result = None
+    if assessment_type in CLINICAL_ASSESSMENTS:
+        score_result = calculate_score(assessment_type, submission.answers)
+    else:
+        # For custom assessments, just sum the values
+        score_result = {
+            "total_score": sum([ans.get("value", 0) for ans in submission.answers]),
+            "severity": None,
+            "subscores": {}
+        }
+    
+    await db.assessments.update_one(
+        {"id": assessment_id},
+        {"$set": {
+            "answers": [dict(ans) for ans in submission.answers],
+            "score": score_result.get("total_score"),
+            "score_details": score_result,
+            "status": "completed",
+            "completed_at": datetime.now(timezone.utc).isoformat(),
+            "saved_progress": None,  # Clear saved progress
+            "report_shared_with_client": False  # Default: not shared
+        }}
+    )
+    
+    await log_audit(current_user["id"], current_user["role"], "submit", "assessment", assessment_id)
+    
+    # Return only confirmation, no scores for client
+    return {
+        "success": True,
+        "message": "Thank you. Your therapist will review this."
+    }
+
+@api_router.get("/assessments/{assessment_id}/results")
+async def get_assessment_results(assessment_id: str, current_user: dict = Depends(get_current_user)):
+    """Get full assessment results - therapist sees full details, client sees only if shared"""
+    if current_user["role"] == "assistant":
+        raise HTTPException(status_code=403, detail="Assistants cannot access assessment results")
+    
+    query = {"id": assessment_id}
+    if current_user["role"] == "therapist":
+        query["therapist_id"] = current_user["id"]
+    elif current_user["role"] == "client":
+        query["client_id"] = current_user["id"]
+    
+    assessment = await db.assessments.find_one(query, {"_id": 0})
+    if not assessment:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+    
+    if assessment.get("status") != "completed":
+        raise HTTPException(status_code=400, detail="Assessment not yet completed")
+    
+    # For clients, check if report is shared
+    if current_user["role"] == "client":
+        if not assessment.get("report_shared_with_client", False):
+            raise HTTPException(status_code=403, detail="Results not yet shared by your therapist")
+        
+        # Return limited info for client
+        return {
+            "id": assessment["id"],
+            "assessment_type": assessment["assessment_type"],
+            "completed_at": assessment.get("completed_at"),
+            "score": assessment.get("score"),
+            "score_details": assessment.get("score_details"),
+            "therapist_notes": assessment.get("therapist_notes"),
+            "message": "Please discuss this report with your therapist."
+        }
+    
+    # For therapist, return full details
+    return {
+        "id": assessment["id"],
+        "assessment_type": assessment["assessment_type"],
+        "client_id": assessment["client_id"],
+        "client_name": assessment["client_name"],
+        "questions": assessment.get("questions", []),
+        "answers": assessment.get("answers", []),
+        "score": assessment.get("score"),
+        "score_details": assessment.get("score_details"),
+        "completed_at": assessment.get("completed_at"),
+        "report_shared_with_client": assessment.get("report_shared_with_client", False),
+        "therapist_notes": assessment.get("therapist_notes")
+    }
+
+@api_router.post("/assessments/{assessment_id}/share-report")
+async def share_assessment_report(assessment_id: str, current_user: dict = Depends(require_active_therapist)):
+    """Therapist shares assessment report with client"""
+    assessment = await db.assessments.find_one(
+        {"id": assessment_id, "therapist_id": current_user["id"]},
+        {"_id": 0}
+    )
+    if not assessment:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+    
+    if assessment.get("status") != "completed":
+        raise HTTPException(status_code=400, detail="Cannot share incomplete assessment")
+    
+    await db.assessments.update_one(
+        {"id": assessment_id},
+        {"$set": {"report_shared_with_client": True, "shared_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    await log_audit(current_user["id"], current_user["role"], "share", "assessment_report", assessment_id)
+    
+    return {"success": True, "message": "Report shared with client"}
+
+@api_router.post("/assessments/{assessment_id}/unshare-report")
+async def unshare_assessment_report(assessment_id: str, current_user: dict = Depends(require_active_therapist)):
+    """Therapist removes client access to assessment report"""
+    assessment = await db.assessments.find_one(
+        {"id": assessment_id, "therapist_id": current_user["id"]},
+        {"_id": 0}
+    )
+    if not assessment:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+    
+    await db.assessments.update_one(
+        {"id": assessment_id},
+        {"$set": {"report_shared_with_client": False}}
+    )
+    
+    return {"success": True, "message": "Report access removed"}
+
+@api_router.put("/assessments/{assessment_id}/therapist-notes")
+async def update_therapist_notes(assessment_id: str, notes: dict, current_user: dict = Depends(require_active_therapist)):
+    """Therapist adds notes to assessment results"""
+    assessment = await db.assessments.find_one(
+        {"id": assessment_id, "therapist_id": current_user["id"]},
+        {"_id": 0}
+    )
+    if not assessment:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+    
+    await db.assessments.update_one(
+        {"id": assessment_id},
+        {"$set": {"therapist_notes": notes.get("notes", "")}}
+    )
+    
+    return {"success": True, "message": "Notes saved"}
+
+@api_router.put("/assessments/{assessment_id}/due-date")
+async def set_assessment_due_date(assessment_id: str, due_data: dict, current_user: dict = Depends(require_active_therapist)):
+    """Set optional due date for assessment"""
+    assessment = await db.assessments.find_one(
+        {"id": assessment_id, "therapist_id": current_user["id"]},
+        {"_id": 0}
+    )
+    if not assessment:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+    
+    await db.assessments.update_one(
+        {"id": assessment_id},
+        {"$set": {"due_date": due_data.get("due_date")}}
+    )
+    
+    return {"success": True, "message": "Due date set"}
+
+@api_router.get("/client/assessments")
+async def get_client_assessments_list(current_user: dict = Depends(get_current_user)):
+    """Get client's assessments with client-friendly formatting"""
+    if current_user["role"] != "client":
+        raise HTTPException(status_code=403, detail="This endpoint is for clients only")
+    
+    assessments = await db.assessments.find(
+        {"client_id": current_user["id"]},
+        {"_id": 0, "id": 1, "assessment_type": 1, "status": 1, "due_date": 1, "created_at": 1, "completed_at": 1, "report_shared_with_client": 1}
+    ).sort("created_at", -1).to_list(100)
+    
+    result = []
+    for assess in assessments:
+        assessment_type = assess.get("assessment_type")
+        client_info = get_client_friendly_assessment(assessment_type)
+        
+        result.append({
+            "id": assess["id"],
+            "assessment_type": assessment_type,
+            "friendly_name": client_info.get("friendly_name") if client_info else assessment_type,
+            "purpose": client_info.get("purpose") if client_info else "Helps your therapist understand your experience",
+            "status": assess.get("status"),
+            "due_date": assess.get("due_date"),
+            "completed_at": assess.get("completed_at"),
+            "report_available": assess.get("report_shared_with_client", False) and assess.get("status") == "completed"
+        })
+    
+    return result
+
+@api_router.get("/client/assessment-history")
+async def get_client_assessment_history(current_user: dict = Depends(get_current_user)):
+    """Get client's completed assessment history - names and dates only, no scores"""
+    if current_user["role"] != "client":
+        raise HTTPException(status_code=403, detail="This endpoint is for clients only")
+    
+    assessments = await db.assessments.find(
+        {"client_id": current_user["id"], "status": "completed"},
+        {"_id": 0, "id": 1, "assessment_type": 1, "completed_at": 1, "report_shared_with_client": 1}
+    ).sort("completed_at", -1).to_list(100)
+    
+    result = []
+    for assess in assessments:
+        assessment_type = assess.get("assessment_type")
+        client_info = get_client_friendly_assessment(assessment_type)
+        
+        result.append({
+            "id": assess["id"],
+            "friendly_name": client_info.get("friendly_name") if client_info else assessment_type,
+            "completed_at": assess.get("completed_at"),
+            "report_available": assess.get("report_shared_with_client", False)
+        })
+    
+    return result
+
 # ============= PROTOCOL ENDPOINTS =============
 
 PROTOCOL_TEMPLATES = {
