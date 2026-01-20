@@ -78,6 +78,23 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [appointmentNotes, setAppointmentNotes] = useState('');
   const [loadingSlots, setLoadingSlots] = useState(false);
+  
+  // Homework dialog states
+  const [showAssignHomeworkDialog, setShowAssignHomeworkDialog] = useState(false);
+  const [showEditHomeworkDialog, setShowEditHomeworkDialog] = useState(false);
+  const [selectedHomework, setSelectedHomework] = useState(null);
+  const [newHomework, setNewHomework] = useState({
+    title: '',
+    description: '',
+    due_date: '',
+    priority: 'medium'
+  });
+  const [editHomework, setEditHomework] = useState({
+    title: '',
+    description: '',
+    due_date: '',
+    priority: 'medium'
+  });
 
   useEffect(() => {
     if (isOpen && client?.id) {
