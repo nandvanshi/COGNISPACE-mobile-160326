@@ -316,6 +316,66 @@ async def send_message(msg_data: MessageCreate, current_user: dict = Depends(get
     return Message(**{k: parse_datetime(v) if k == "created_at" else v for k, v in message_doc.items()})
 
 
+@router.get("/messages/conversations")
+async def get_conversations(current_user: dict = Depends(get_current_user)):
+    """Get conversations list with last message and unread count"""
+    # Get all messages involving current user
+    all_messages = await db.messages.find(
+        {"$or": [{"sender_id": current_user["id"]}, {"recipient_id": current_user["id"]}]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(1000)
+    
+    # Group by conversation partner
+    conversations = {}
+    for msg in all_messages:
+        # Determine the other user
+        if msg["sender_id"] == current_user["id"]:
+            other_user_id = msg["recipient_id"]
+            other_user_name = msg.get("recipient_name", "Unknown")
+        else:
+            other_user_id = msg["sender_id"]
+            other_user_name = msg.get("sender_name", "Unknown")
+        
+        if other_user_id not in conversations:
+            conversations[other_user_id] = {
+                "user_id": other_user_id,
+                "user_name": other_user_name,
+                "last_message": msg["content"][:100],  # Truncate
+                "last_message_time": msg["created_at"],
+                "unread_count": 0
+            }
+        
+        # Count unread messages from this user
+        if msg["sender_id"] != current_user["id"] and not msg.get("is_read", True):
+            conversations[other_user_id]["unread_count"] += 1
+    
+    # Convert to list and sort by last message time
+    result = list(conversations.values())
+    result.sort(key=lambda x: x.get("last_message_time", ""), reverse=True)
+    
+    return result
+
+
+@router.get("/messages/{user_id}")
+async def get_messages_with_user(user_id: str, current_user: dict = Depends(get_current_user)):
+    """Get all messages with a specific user"""
+    messages = await db.messages.find(
+        {"$or": [
+            {"sender_id": current_user["id"], "recipient_id": user_id},
+            {"sender_id": user_id, "recipient_id": current_user["id"]}
+        ]},
+        {"_id": 0}
+    ).sort("created_at", 1).to_list(500)  # Sort ascending for chat order
+    
+    # Mark messages as read
+    await db.messages.update_many(
+        {"sender_id": user_id, "recipient_id": current_user["id"], "is_read": False},
+        {"$set": {"is_read": True}}
+    )
+    
+    return [Message(**{k: parse_datetime(v) if k == "created_at" else v for k, v in msg.items()}) for msg in messages]
+
+
 @router.get("/messages", response_model=List[Message])
 async def get_messages(
     with_user: Optional[str] = None,
