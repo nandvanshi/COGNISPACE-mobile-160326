@@ -226,6 +226,11 @@ const ClientManagement = ({ isReadOnly = false, isAssistant = false, initialClie
     return <div className="text-center py-12">Loading clients...</div>;
   }
 
+  const clearFilter = () => {
+    setActiveFilter(null);
+    onClearContext();
+  };
+
   return (
     <div data-testid="client-management">
       <div className="mb-8 flex items-center justify-between">
