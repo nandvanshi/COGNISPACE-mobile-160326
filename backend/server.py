@@ -4586,11 +4586,14 @@ async def assign_assessment(assessment_data: AssessmentCreate, current_user: dic
         "questions": assessment_data.questions,
         "is_custom": assessment_data.is_custom,
         "custom_assessment_id": assessment_data.custom_assessment_id,
+        "due_date": assessment_data.due_date,
         "answers": None,
         "score": None,
         "status": "assigned",
         "created_at": datetime.now(timezone.utc).isoformat(),
-        "completed_at": None
+        "completed_at": None,
+        "report_shared_with_client": False,
+        "saved_progress": None
     }
     
     await db.assessments.insert_one(assessment_doc)
