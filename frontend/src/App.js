@@ -11,6 +11,7 @@ import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import AssistantDashboard from './pages/AssistantDashboard';
 import InstallPWA from './components/InstallPWA';
 import { applyTheme, getStoredTheme } from './config/themes';
+import { SubscriptionProvider } from './contexts/SubscriptionContext';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
