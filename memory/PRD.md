@@ -689,6 +689,82 @@ Build a secure, therapist-first web application for managing a therapy practice 
 - [x] **Testing**: 11/11 frontend tests passed (100%)
   - /app/test_reports/iteration_19.json
 
+### Phase 24: PWA (Progressive Web App) Support (COMPLETED - Jan 20, 2026)
+- [x] **PWA Manifest** (`/public/manifest.json`):
+  - App name: "TheraGenie"
+  - Theme color: #16a34a (primary green)
+  - Display mode: standalone
+  - Icons: 72x72 to 512x512 PNG sizes
+  - App shortcuts for Schedule and Clients
+- [x] **Service Worker** (`/public/service-worker.js`):
+  - Static asset caching on install
+  - Network-first strategy for API calls
+  - Cache-first strategy for static assets
+  - Offline fallback page
+  - Push notification support (ready for future integration)
+- [x] **Offline Page** (`/public/offline.html`):
+  - Branded offline page with retry button
+  - Clean, professional design matching app theme
+- [x] **App Icons**:
+  - Generated icons at all required sizes (72-512px)
+  - Apple Touch Icon (180x180)
+  - Favicon (32x32)
+- [x] **Install Prompt Component** (`InstallPWA.js`):
+  - Smart install prompt (Android/Chrome)
+  - iOS instructions (Add to Home Screen)
+  - Dismissible with localStorage persistence
+  - Shows after 3-5 second delay, respects 7-day cooldown
+- [x] **Meta Tags** (index.html):
+  - Apple Mobile Web App capable
+  - Theme color meta
+  - MSApplication tiles
+  - Manifest link
+
+### Phase 25: Full Therapist Schedule/Calendar System (COMPLETED - Jan 20, 2026)
+- [x] **New TherapistSchedule Component** (`/components/TherapistSchedule.js`):
+  - Replaced old AppointmentCalendar with comprehensive schedule system
+  - Sidebar nav item renamed from "appointments" to "schedule"
+- [x] **Month View (Default)**:
+  - Full calendar grid showing all days of the month
+  - Session count badges on dates with appointments
+  - Navigation: Previous Month, Next Month, Today button
+  - Jump to Date dialog with date picker
+  - Today highlighted with primary border
+  - Past dates shown with muted styling
+  - Legend showing Today and "Has sessions" indicators
+- [x] **Day View (On Date Click)**:
+  - Date displayed in DD/MM/YYYY format (IST)
+  - Day name displayed (e.g., "Tuesday")
+  - Vertical time-based schedule (08:00 - 21:30 in 30-min slots)
+  - Time displayed in 24-hour format (HH:mm)
+  - Navigation: Previous Day, Next Day, Back to Month
+- [x] **Day View Slot Types**:
+  - **Available**: Green background, "Schedule" button to book
+  - **Unavailable**: Gray, shows "Unavailable" text
+  - **Blocked**: Red background, "Blocked" label, X button to remove
+  - **Scheduled Session**: Primary background, shows client avatar, name, time range (HH:mm - HH:mm), status badge
+- [x] **Session Status Badges**:
+  - scheduled: blue
+  - in_progress: amber
+  - completed: green
+  - cancelled: red
+- [x] **Editing & Actions (Day View)**:
+  - Schedule Appointment Dialog: client select, duration, notes
+  - Edit Appointment Dialog: update notes, change status
+  - Cancel appointment (with confirmation)
+  - Block Time Dialog: select time range or block entire day, reason
+  - Remove blocked time
+- [x] **IST Timezone Compliance**:
+  - All times displayed in IST (GMT +5:30)
+  - Date/time calculations use IST offset
+- [x] **Mobile Responsive**:
+  - Month view calendar adapts to small screens
+  - Day view time slots scrollable
+  - Navigation buttons accessible on mobile
+- [x] **Bug Fixed**: Available slots showed "Unavailable" - changed `dayAvailability.slots` to `dayAvailability.time_blocks` and `avail.start/end` to `avail.start_time/end_time`
+- [x] **Testing**: 100% frontend tests passed
+  - /app/test_reports/iteration_20.json
+
 ---
 
 ## Technical Architecture
