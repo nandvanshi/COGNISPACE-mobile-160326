@@ -28,6 +28,8 @@ from routes.assistants import router as assistants_router
 from routes.subscriptions import router as subscriptions_router
 from routes.clients import router as clients_router
 from routes.appointments import router as appointments_router
+from routes.availability import router as availability_router
+from routes.payments import router as payments_router
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
