@@ -336,13 +336,13 @@ const SubscriptionManagement = () => {
 
       {/* Feature Toggles Dialog */}
       <Dialog open={showFeaturesDialog} onOpenChange={setShowFeaturesDialog}>
-        <DialogContent className="max-w-lg" data-testid="features-dialog">
-          <DialogHeader>
+        <DialogContent className="max-w-lg max-h-[90vh] flex flex-col" data-testid="features-dialog">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle className="text-2xl font-serif text-primary">
               Feature Toggles - {selectedPlan?.name}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-1">
+          <div className="flex-1 overflow-y-auto pr-2">
             <p className="text-sm text-muted-foreground mb-4">
               Control which features are available to therapists on this plan.
               Changes apply immediately to all therapists on this plan.
@@ -378,15 +378,15 @@ const SubscriptionManagement = () => {
                 );
               })}
             </div>
+          </div>
 
-            <div className="flex gap-3 pt-4 mt-4 border-t">
-              <Button onClick={handleSaveFeatures} className="flex-1" data-testid="save-features-btn">
-                Save Changes
-              </Button>
-              <Button variant="outline" onClick={() => setShowFeaturesDialog(false)}>
-                Cancel
-              </Button>
-            </div>
+          <div className="flex gap-3 pt-4 mt-4 border-t flex-shrink-0">
+            <Button onClick={handleSaveFeatures} className="flex-1" data-testid="save-features-btn">
+              Save Changes
+            </Button>
+            <Button variant="outline" onClick={() => setShowFeaturesDialog(false)}>
+              Cancel
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
