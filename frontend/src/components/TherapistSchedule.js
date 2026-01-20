@@ -12,8 +12,10 @@ import { toast } from 'sonner';
 import { 
   ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, 
   User, Plus, Edit2, Trash2, X, Check, Ban, ArrowLeft,
-  CalendarDays, Settings, AlertTriangle, CalendarPlus
+  CalendarDays, Settings, AlertTriangle, CalendarPlus,
+  PlayCircle, StopCircle
 } from 'lucide-react';
+import { SessionActionButtons } from './SessionCheckInOut';
 
 // IST timezone offset
 const IST_OFFSET = 5.5 * 60 * 60 * 1000;
