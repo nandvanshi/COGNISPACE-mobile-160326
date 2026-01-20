@@ -1074,18 +1074,18 @@ async def log_audit(user_id: str, user_role: str, action: str, resource_type: st
     }
     await db.audit_logs.insert_one(audit)
 
-# ============= AUTH ENDPOINTS =============
+# ============= AUTH ENDPOINTS (MOVED TO routes/auth.py) =============
+# The following auth endpoints are now in routes/auth.py:
+# - POST /auth/register
+# - POST /auth/therapist-application
+# - POST /auth/login
+# - POST /auth/super-admin-login
+# - GET /auth/me
+# - GET /auth/subscription-status
+# - GET /user/preferences
+# - PUT /user/preferences
 
-@api_router.post("/auth/register", response_model=TokenResponse)
-async def register(user_data: UserRegister):
-    """
-    Client self-registration is DISABLED for security and data isolation.
-    Clients must be created by their assigned therapist or Super Admin.
-    """
-    raise HTTPException(
-        status_code=403, 
-        detail="Client self-registration is disabled. Please contact your therapist to create an account for you."
-    )
+# ============= USER PREFERENCES ENDPOINTS (MOVED TO routes/auth.py) =============
 
 @api_router.post("/auth/therapist-application")
 async def apply_as_therapist(application: TherapistApplication):
