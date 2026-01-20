@@ -46,6 +46,11 @@ Build a secure, therapist-first web application for managing a therapy practice 
 - **Assigned therapist name in client profiles**
 - **Navigation: Client → Therapist profile, Therapist → Clients list**
 - Subscription plan management (CRUD)
+- **Subscription Plan Feature Toggles** (NEW - Phase 27)
+  - Control feature access per subscription plan
+  - 8 toggleable features: Session Notes, Assessments, AI Clinical, Protocols, Messaging, Payments, Assistants, Reports
+  - Feature toggles enforced in UI (hide from sidebar) and backend (403 on disabled endpoints)
+  - Changes apply immediately to all therapists on the plan
 - Coupon code management (CRUD)
 - Assistant management (view all assistants across therapists)
 
