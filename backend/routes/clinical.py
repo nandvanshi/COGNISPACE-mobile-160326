@@ -169,6 +169,23 @@ async def get_case_history(client_id: str, current_user: dict = Depends(require_
     return response
 
 
+@router.get("/case-history/check/{client_id}")
+async def check_case_history(client_id: str, current_user: dict = Depends(require_therapist)):
+    """Check if case history exists and is complete for a client"""
+    case_history = await db.case_histories.find_one(
+        {"client_id": client_id, "therapist_id": current_user["id"]},
+        {"_id": 0}
+    )
+    
+    if not case_history:
+        return {"exists": False, "is_complete": False}
+    
+    return {
+        "exists": True,
+        "is_complete": case_history.get("is_complete", False)
+    }
+
+
 @router.put("/case-history/{client_id}")
 async def update_case_history(client_id: str, data: CaseHistoryUpdate, current_user: dict = Depends(require_active_therapist)):
     """Update a section of case history"""
