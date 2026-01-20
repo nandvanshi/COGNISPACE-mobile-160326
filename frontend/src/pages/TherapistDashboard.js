@@ -3,7 +3,7 @@ import { Routes, Route, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth, API } from '../App';
 import { Button } from '../components/ui/button';
-import { LogOut, Users, Calendar, FileText, MessageSquare, ClipboardList, BookOpen, DollarSign, Home, AlertTriangle, Clock, Repeat, UserCog, Brain, Settings as SettingsIcon, Sparkles } from 'lucide-react';
+import { LogOut, Users, Calendar, FileText, MessageSquare, ClipboardList, BookOpen, DollarSign, Home, AlertTriangle, Clock, Repeat, UserCog, Brain, Settings as SettingsIcon, Sparkles, Menu, X, ChevronDown } from 'lucide-react';
 import TherapistOverview from '../components/TherapistOverview';
 import ClientManagement from '../components/ClientManagement';
 import AppointmentCalendar from '../components/AppointmentCalendar';
@@ -25,10 +25,17 @@ const TherapistDashboard = () => {
   const [subscriptionStatus, setSubscriptionStatus] = useState(null);
   const [isReadOnly, setIsReadOnly] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [expandedGroup, setExpandedGroup] = useState('Clinical');
 
   useEffect(() => {
     fetchSubscriptionStatus();
   }, []);
+
+  // Close mobile menu on view change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [currentView]);
 
   const fetchSubscriptionStatus = async () => {
     try {
@@ -66,21 +73,83 @@ const TherapistDashboard = () => {
     }
   ];
 
+  // Get current view label for mobile header
+  const getCurrentViewLabel = () => {
+    for (const group of navGroups) {
+      const item = group.items.find(i => i.id === currentView);
+      if (item) return item.label;
+    }
+    return 'Dashboard';
+  };
+
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
+  const handleNavClick = (viewId) => {
+    setCurrentView(viewId);
+    setMobileMenuOpen(false);
+  };
+
   return (
     <div className="flex h-screen bg-background">
-      {/* Sidebar - Organized Navigation */}
-      <aside className="w-64 bg-surface border-r border-border flex flex-col">
-        <div className="p-5 border-b border-border">
+      {/* Mobile Header */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-surface border-b border-border">
+        <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
               <Sparkles size={16} className="text-white" />
             </div>
-            <h1 className="text-xl font-serif text-primary">TheraGenie</h1>
+            <span className="font-serif text-lg text-primary">TheraGenie</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground hidden sm:block">{getCurrentViewLabel()}</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2"
+              data-testid="mobile-menu-toggle"
+            >
+              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <div 
+          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Sidebar - Desktop: fixed, Mobile: slide-out */}
+      <aside className={`
+        fixed lg:relative inset-y-0 left-0 z-50
+        w-72 lg:w-64 bg-surface border-r border-border flex flex-col
+        transform transition-transform duration-300 ease-in-out
+        ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `}>
+        {/* Logo Section */}
+        <div className="p-5 border-b border-border">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
+                <Sparkles size={16} className="text-white" />
+              </div>
+              <h1 className="text-xl font-serif text-primary">TheraGenie</h1>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setMobileMenuOpen(false)}
+              className="lg:hidden p-1"
+            >
+              <X size={20} />
+            </Button>
           </div>
           <p className="text-sm text-muted-foreground mt-2 truncate">{user?.full_name}</p>
           {subscriptionStatus && !isReadOnly && (
@@ -90,21 +159,36 @@ const TherapistDashboard = () => {
           )}
         </div>
 
+        {/* Navigation */}
         <nav className="flex-1 p-3 overflow-y-auto">
           {navGroups.map((group, groupIdx) => (
-            <div key={group.label} className={groupIdx > 0 ? 'mt-5' : ''}>
-              <p className="px-3 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                {group.label}
-              </p>
-              <div className="space-y-0.5">
+            <div key={group.label} className={groupIdx > 0 ? 'mt-4' : ''}>
+              {/* Collapsible group header for mobile */}
+              <button
+                onClick={() => setExpandedGroup(expandedGroup === group.label ? '' : group.label)}
+                className="w-full flex items-center justify-between px-3 py-2 lg:py-0 lg:mb-2 rounded-lg lg:rounded-none hover:bg-muted/50 lg:hover:bg-transparent"
+              >
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  {group.label}
+                </p>
+                <ChevronDown 
+                  size={16} 
+                  className={`lg:hidden text-muted-foreground transition-transform ${expandedGroup === group.label ? 'rotate-180' : ''}`}
+                />
+              </button>
+              
+              {/* Nav items - always visible on desktop, collapsible on mobile */}
+              <div className={`space-y-0.5 overflow-hidden transition-all duration-200 ${
+                expandedGroup === group.label ? 'max-h-96 opacity-100' : 'max-h-0 lg:max-h-96 opacity-0 lg:opacity-100'
+              }`}>
                 {group.items.map((item) => {
                   const Icon = item.icon;
                   return (
                     <button
                       key={item.id}
                       data-testid={`nav-${item.id}`}
-                      onClick={() => setCurrentView(item.id)}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+                      onClick={() => handleNavClick(item.id)}
+                      className={`w-full flex items-center gap-3 px-3 py-3 lg:py-2.5 rounded-lg transition-all ${
                         currentView === item.id
                           ? 'bg-primary text-white shadow-sm'
                           : 'text-foreground hover:bg-muted/60'
@@ -120,11 +204,12 @@ const TherapistDashboard = () => {
           ))}
         </nav>
 
+        {/* Footer Actions */}
         <div className="p-3 border-t border-border space-y-1">
           <Button
-            onClick={() => setShowSettings(true)}
+            onClick={() => { setShowSettings(true); setMobileMenuOpen(false); }}
             variant="ghost"
-            className="w-full justify-start h-10"
+            className="w-full justify-start h-12 lg:h-10"
             data-testid="settings-button"
           >
             <SettingsIcon size={18} className="mr-3" />
@@ -133,7 +218,7 @@ const TherapistDashboard = () => {
           <Button
             onClick={handleLogout}
             variant="ghost"
-            className="w-full justify-start h-10 text-muted-foreground hover:text-foreground"
+            className="w-full justify-start h-12 lg:h-10 text-muted-foreground hover:text-foreground"
             data-testid="logout-button"
           >
             <LogOut size={18} className="mr-3" />
@@ -143,29 +228,30 @@ const TherapistDashboard = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto bg-background">
+      <main className="flex-1 overflow-y-auto bg-background pt-14 lg:pt-0">
         {/* Read-Only Banner */}
         {isReadOnly && (
           <div 
-            className="bg-warning text-warning-foreground px-6 py-3 flex items-center gap-4 sticky top-0 z-50 shadow-sm"
+            className="bg-warning text-warning-foreground px-4 lg:px-6 py-3 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 sticky top-14 lg:top-0 z-40 shadow-sm"
             data-testid="subscription-expired-banner"
           >
-            <AlertTriangle size={20} className="flex-shrink-0" />
-            <div className="flex-1">
-              <p className="font-medium text-sm">Your subscription has expired. You are in read-only mode.</p>
+            <div className="flex items-center gap-2 flex-1">
+              <AlertTriangle size={20} className="flex-shrink-0" />
+              <p className="font-medium text-sm">Subscription expired. Read-only mode.</p>
             </div>
             <Button 
               variant="secondary" 
               size="sm"
               onClick={() => window.open('mailto:support@theragenie.com?subject=Subscription Renewal', '_blank')}
               data-testid="contact-support-button"
+              className="w-full sm:w-auto"
             >
               Contact Support
             </Button>
           </div>
         )}
 
-        <div className="max-w-7xl mx-auto p-6 lg:p-10">
+        <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-10">
           {currentView === 'overview' && (
             <TherapistOverview 
               isReadOnly={isReadOnly} 
