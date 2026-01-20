@@ -146,17 +146,37 @@ const TherapistManagement = ({ onViewClients }) => {
 
   const handleCreateTherapist = async (e) => {
     e.preventDefault();
+    
+    // Validation
+    if (!newTherapist.specializations || newTherapist.specializations.length === 0) {
+      toast.error('Please select at least 1 specialization');
+      return;
+    }
+    
+    const validFeeSlots = newTherapist.fee_slots.filter(slot => slot.amount && slot.duration_minutes);
+    if (validFeeSlots.length === 0) {
+      toast.error('Please add at least one consultation fee');
+      return;
+    }
+    
     try {
       const payload = {
         ...newTherapist,
-        years_of_experience: newTherapist.years_of_experience ? parseInt(newTherapist.years_of_experience) : null
+        years_of_experience: newTherapist.years_of_experience ? parseInt(newTherapist.years_of_experience) : null,
+        fee_slots: validFeeSlots.map(slot => ({
+          amount: parseFloat(slot.amount),
+          duration_minutes: parseInt(slot.duration_minutes)
+        }))
       };
       await axios.post(`${API}/admin/therapists/create`, payload);
       toast.success('Therapist created with 30-day trial subscription');
       setShowCreateDialog(false);
+      setShowSpecDropdown(false);
       setNewTherapist({
         mobile: '', email: '', full_name: '', password: '',
-        credentials: '', specialization: '', years_of_experience: ''
+        qualifications: '', specializations: [], years_of_experience: '',
+        clinic_name: '', fee_slots: [{ amount: '', duration_minutes: 50 }],
+        address_line_1: '', address_line_2: '', pincode: '', city: '', state: '', district: ''
       });
       fetchTherapists();
     } catch (error) {
