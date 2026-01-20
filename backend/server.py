@@ -4684,8 +4684,8 @@ async def get_assessment_for_client(assessment_id: str, current_user: dict = Dep
     assessment_type = assessment.get("assessment_type")
     client_info = get_client_friendly_assessment(assessment_type)
     
-    # Get saved progress if any
-    saved_progress = assessment.get("saved_progress", {})
+    # Get saved progress if any (handle None case)
+    saved_progress = assessment.get("saved_progress") or {}
     
     return {
         "id": assessment["id"],
@@ -4695,8 +4695,8 @@ async def get_assessment_for_client(assessment_id: str, current_user: dict = Dep
         "instruction": client_info.get("instruction") if client_info else "Answer honestly",
         "time_estimate": client_info.get("time_estimate") if client_info else "5-10 minutes",
         "questions": assessment.get("questions", []),
-        "saved_answers": saved_progress.get("answers", []),
-        "current_question_index": saved_progress.get("current_index", 0),
+        "saved_answers": saved_progress.get("answers", []) if saved_progress else [],
+        "current_question_index": saved_progress.get("current_index", 0) if saved_progress else 0,
         "status": assessment.get("status"),
         "due_date": assessment.get("due_date")
     }
