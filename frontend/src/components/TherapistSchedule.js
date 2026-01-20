@@ -847,33 +847,45 @@ const TherapistSchedule = ({ isReadOnly = false, isAssistant = false }) => {
                         }`}>
                           {appt.status === 'in_progress' ? 'In Progress' : appt.status}
                         </span>
-                        {!isReadOnly && appt.status === 'scheduled' && (
-                          <div className="flex gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedAppointment(appt);
-                                setShowEditDialog(true);
-                              }}
-                              className="h-8 w-8 p-0"
-                            >
-                              <Edit2 size={14} />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleCancelAppointment(appt.id)}
-                              className="h-8 w-8 p-0 text-red-600 hover:bg-red-50"
-                            >
-                              <Trash2 size={14} />
-                            </Button>
-                          </div>
-                        )}
                       </div>
                     </div>
+                    
+                    {/* Check In / Check Out Buttons */}
+                    <div className="mt-3 pt-3 border-t border-border/50 flex items-center justify-between">
+                      <SessionActionButtons 
+                        appointment={appt} 
+                        onRefresh={fetchData}
+                        isReadOnly={isReadOnly}
+                      />
+                      {!isReadOnly && appt.status === 'scheduled' && (
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedAppointment(appt);
+                              setShowEditDialog(true);
+                            }}
+                            className="h-8 w-8 p-0"
+                            title="Edit"
+                          >
+                            <Edit2 size={14} />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleCancelAppointment(appt.id)}
+                            className="h-8 w-8 p-0 text-red-600 hover:bg-red-50"
+                            title="Cancel"
+                          >
+                            <Trash2 size={14} />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                    
                     {appt.notes && (
-                      <p className="text-sm text-muted-foreground mt-2 pl-15">
+                      <p className="text-sm text-muted-foreground mt-2">
                         {appt.notes}
                       </p>
                     )}
