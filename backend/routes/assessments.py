@@ -14,68 +14,8 @@ from assessment_library import CLINICAL_ASSESSMENTS, calculate_score, get_severi
 router = APIRouter(prefix="/assessments", tags=["assessments"])
 
 
-# ============= ASSESSMENT LIBRARY =============
-
-ASSESSMENT_LIBRARY = {
-    "PHQ-9": {
-        "name": "Patient Health Questionnaire-9",
-        "description": "Depression screening",
-        "questions": [
-            {"q": "Little interest or pleasure in doing things", "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]},
-            {"q": "Feeling down, depressed, or hopeless", "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]},
-            {"q": "Trouble falling or staying asleep, or sleeping too much", "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]},
-            {"q": "Feeling tired or having little energy", "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]},
-            {"q": "Poor appetite or overeating", "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]}
-        ]
-    },
-    "GAD-7": {
-        "name": "Generalized Anxiety Disorder-7",
-        "description": "Anxiety screening",
-        "questions": [
-            {"q": "Feeling nervous, anxious, or on edge", "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]},
-            {"q": "Not being able to stop or control worrying", "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]},
-            {"q": "Worrying too much about different things", "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]},
-            {"q": "Trouble relaxing", "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]}
-        ]
-    },
-    "PCL-5": {
-        "name": "PTSD Checklist for DSM-5",
-        "description": "PTSD screening",
-        "questions": [
-            {"q": "Repeated, disturbing memories of a stressful experience", "options": ["Not at all", "A little bit", "Moderately", "Quite a bit", "Extremely"]},
-            {"q": "Repeated, disturbing dreams of a stressful experience", "options": ["Not at all", "A little bit", "Moderately", "Quite a bit", "Extremely"]},
-            {"q": "Suddenly feeling as if a stressful experience were happening again", "options": ["Not at all", "A little bit", "Moderately", "Quite a bit", "Extremely"]}
-        ]
-    },
-    "ASRS": {
-        "name": "Adult ADHD Self-Report Scale",
-        "description": "ADHD screening",
-        "questions": [
-            {"q": "Trouble wrapping up final details of a project?", "options": ["Never", "Rarely", "Sometimes", "Often", "Very often"]},
-            {"q": "Difficulty getting things in order for organized tasks?", "options": ["Never", "Rarely", "Sometimes", "Often", "Very often"]},
-            {"q": "Problems remembering appointments or obligations?", "options": ["Never", "Rarely", "Sometimes", "Often", "Very often"]}
-        ]
-    },
-    "BDI-II": {
-        "name": "Beck Depression Inventory-II",
-        "description": "Depression severity assessment",
-        "questions": [
-            {"q": "Sadness", "options": ["I do not feel sad", "I feel sad much of the time", "I am sad all the time", "I can't stand it"]},
-            {"q": "Pessimism", "options": ["Not discouraged", "More discouraged than before", "Don't expect things to work out", "Future is hopeless"]},
-            {"q": "Past Failure", "options": ["Don't feel like a failure", "Failed more than I should", "See a lot of failures", "Total failure"]},
-            {"q": "Loss of Pleasure", "options": ["Get as much pleasure as ever", "Don't enjoy as much", "Very little pleasure", "No pleasure"]}
-        ]
-    },
-    "DASS-21": {
-        "name": "Depression Anxiety Stress Scales-21",
-        "description": "Measure depression, anxiety, and stress",
-        "questions": [
-            {"q": "I found it hard to wind down", "options": ["Did not apply", "Applied sometimes", "Applied often", "Applied most of time"]},
-            {"q": "I was aware of dryness of my mouth", "options": ["Did not apply", "Applied sometimes", "Applied often", "Applied most of time"]},
-            {"q": "I couldn't seem to experience any positive feeling", "options": ["Did not apply", "Applied sometimes", "Applied often", "Applied most of time"]}
-        ]
-    }
-}
+# Use complete assessment library from assessment_library.py
+ASSESSMENT_LIBRARY = CLINICAL_ASSESSMENTS
 
 
 # ============= MODELS =============
