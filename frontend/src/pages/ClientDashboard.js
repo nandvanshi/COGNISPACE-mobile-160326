@@ -410,7 +410,6 @@ const ClientDashboard = () => {
     .slice(0, 3);
 
   const pendingHomework = homework.filter((h) => h.status === 'assigned');
-  const pendingAssessments = assessments.filter((a) => a.status === 'assigned');
   const recentPayments = payments.slice(0, 3);
 
   return (
