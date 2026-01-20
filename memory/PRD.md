@@ -1310,3 +1310,43 @@ Build a secure, therapist-first web application for managing a therapy practice 
 - Therapist Profile (~180 lines)
 - Protocols (~200 lines)
 - AI Clinical (~230 lines)
+
+**Step 5: Availability & Payments Routes (COMPLETED)**
+- Created `/app/backend/routes/availability.py` (~359 lines)
+  - GET/PUT /availability
+  - POST/GET/DELETE /blocked-time
+  - GET /available-slots
+- Created `/app/backend/routes/payments.py` (~336 lines)
+  - Payment CRUD (create, list, get, update, delete)
+  - Payment stats summary
+- **Lines reduced**: 4743 → 4228 (~515 lines moved)
+- **Testing**: All endpoints verified
+
+**Current Status:**
+- server.py: 4228 lines (from 6919, -2691 total, ~39% reduction)
+- Total in routes: 3130 lines
+  - auth.py: 294
+  - admin.py: 526
+  - assistants.py: 301
+  - subscriptions.py: 532
+  - clients.py: 345
+  - appointments.py: 437
+  - availability.py: 359
+  - payments.py: 336
+
+**Remaining in server.py (~4228 lines):**
+- Models (~900 lines)
+- Utility/Dependency functions (~220 lines)
+- Assistant Dashboard (~200 lines)
+- Cash Settlement (~360 lines)
+- Case History (~340 lines)
+- Consent (~150 lines)
+- Session Notes (~160 lines)
+- Note Templates (~95 lines)
+- Recurring Appointments (~175 lines)
+- Messaging (~230 lines)
+- Assessments (~700 lines)
+- Homework (~120 lines)
+- Therapist Profile (~180 lines)
+- Protocols (~200 lines)
+- AI Clinical (~230 lines)
