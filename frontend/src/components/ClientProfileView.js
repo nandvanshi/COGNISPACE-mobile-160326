@@ -933,7 +933,7 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
                           <h5 className="font-medium mb-3 flex items-center gap-2">
                             <User size={16} /> Basic Identification
                           </h5>
-                          <div className="grid grid-cols-3 gap-3 text-sm">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-sm">
                             {Object.entries(profileData.caseHistory.basic_identification).map(([key, value]) => (
                               value && (
                                 <div key={key}>
