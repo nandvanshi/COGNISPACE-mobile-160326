@@ -939,21 +939,25 @@ Build a secure, therapist-first web application for managing a therapy practice 
 
 ### Test Credentials
 - **Super Admin**: username: `admin`, password: `admin123` (at `/admin-login`)
-- **Test Therapist**: mobile: `9999999999`, password: `password123`
-- **Test Assistant**: email: `assistant1@test.com`, password: `assist123`
+- **Test Therapist**: mobile: `9999999999`, password: `password`
+- **Test Assistant**: email: `test_assistant_ui@test.com`, password: `testpass123`
+- **Test Client**: mobile: `8888888888`, password: `testpass123`
 
 ---
 
 ## Backlog
 
 ### P1 - High Priority
-- [ ] Refactor `server.py` into modular structure (routes, models, services)
+- [ ] Refactor `server.py` into modular structure (routes, models, services) - 6000+ lines, needs splitting
 - [ ] Global Standards Verification (IST timezone, DD/MM/YYYY dates, ₹ currency across app)
 - [ ] Coupon Code management validation and testing
 
 ### P2 - Medium Priority  
 - [x] ~~Assessment result visualization~~ (DONE - Phase 26)
-- [ ] Profile photo upload (currently URL-based)
+- [x] ~~Assessment trends and progress tracking~~ (DONE - Phase 27 - AssessmentTrendChart)
+- [x] ~~Subscription feature toggles~~ (DONE - Phase 27)
+- [x] ~~Unified calendar for Therapist/Assistant~~ (DONE - Phase 27)
+- [ ] Profile photo upload (currently URL-based only)
 - [ ] AI-powered SOAP/DAP note generation from session transcripts
 - [ ] Case History download/print functionality
 
@@ -963,9 +967,10 @@ Build a secure, therapist-first web application for managing a therapy practice 
 - [ ] Template sharing between therapists
 - [x] ~~Homework completion tracking~~ (DONE - Phase 18 Resource Library)
 - [ ] Audit log viewer for admins
-- [ ] Email notifications for approvals
+- [ ] Email notifications for approvals, subscription expiry
 - [ ] AI usage tracking/rate limiting
-- [ ] Assessment trends and progress tracking over time
+- [ ] SMS/Email appointment reminders
+- [ ] Global search across clients/appointments
 
 ---
 
