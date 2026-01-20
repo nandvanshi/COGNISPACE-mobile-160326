@@ -130,19 +130,35 @@ const AssistantOverview = ({ onNavigate }) => {
     );
   }
 
-  // Destructure with defaults to handle missing fields
+  // Destructure with defaults to handle missing fields - DEFENSIVE CODING
   const { 
     therapist = {}, 
     today_date = new Date().toISOString().split('T')[0], 
     today_day = new Date().toLocaleDateString('en-IN', { weekday: 'long' }),
     todays_appointments = [], 
-    needs_attention = { upcoming_sessions: [], pending_checkins: [] }, 
-    inactive_clients = [], 
-    payments_summary = { payments: [], total_collected: 0 }
-  } = dashboard;
+    needs_attention = { upcoming_sessions: [], pending_checkins: [], pending_payments_count: 0 }, 
+    inactive_clients = [],
+    inactive_clients_count = 0,
+    payments_summary = { payments: [], total_collected: 0, cash_total: 0, online_total: 0, total: 0 }
+  } = dashboard || {};
   
-  const pendingCalls = (todays_appointments || []).filter(a => a.call_status === 'pending');
-  const completedCalls = (todays_appointments || []).filter(a => a.call_status === 'called');
+  // Safe access for needs_attention nested properties
+  const safeNeedsAttention = {
+    upcoming_sessions: needs_attention?.upcoming_sessions || [],
+    pending_checkins: needs_attention?.pending_checkins || [],
+    pending_payments_count: needs_attention?.pending_payments_count || 0
+  };
+  
+  // Safe access for payments_summary nested properties
+  const safePaymentsSummary = {
+    payments: payments_summary?.payments || [],
+    cash_total: payments_summary?.cash_total || 0,
+    online_total: payments_summary?.online_total || 0,
+    total: payments_summary?.total || 0
+  };
+  
+  const pendingCalls = (todays_appointments || []).filter(a => a?.call_status === 'pending');
+  const completedCalls = (todays_appointments || []).filter(a => a?.call_status === 'called');
 
   return (
     <div className="space-y-6" data-testid="assistant-overview">
