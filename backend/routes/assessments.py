@@ -255,6 +255,99 @@ async def submit_assessment(assessment_id: str, data: AssessmentSubmit, current_
     return {"message": "Assessment submitted", "score": score}
 
 
+@router.get("/{assessment_id}/results")
+async def get_assessment_results(assessment_id: str, current_user: dict = Depends(get_current_user)):
+    """Get assessment results - therapist sees full results, client sees only if shared"""
+    assessment = await db.assessments.find_one({"id": assessment_id}, {"_id": 0})
+    if not assessment:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+    
+    # Access control
+    if current_user["role"] == "therapist":
+        if assessment.get("therapist_id") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Access denied")
+    elif current_user["role"] == "client":
+        if assessment.get("client_id") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Access denied")
+        if not assessment.get("is_shared", False):
+            raise HTTPException(status_code=403, detail="Results not shared yet")
+    else:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Get assessment library data for scoring info
+    assessment_type = assessment.get("assessment_type", "")
+    library_data = ASSESSMENT_LIBRARY.get(assessment_type, {})
+    
+    # Calculate score if responses exist
+    responses = assessment.get("responses", [])
+    score = None
+    severity = None
+    
+    if responses and assessment.get("status") == "completed":
+        score = calculate_score(assessment_type, responses)
+        severity = get_severity(assessment_type, score)
+    
+    return {
+        "id": assessment["id"],
+        "assessment_type": assessment_type,
+        "assessment_name": library_data.get("name", assessment_type),
+        "client_id": assessment.get("client_id"),
+        "client_name": assessment.get("client_name"),
+        "status": assessment.get("status"),
+        "responses": responses,
+        "score": score,
+        "severity": severity,
+        "severity_bands": library_data.get("severity_bands", []),
+        "questions": library_data.get("questions", []),
+        "therapist_notes": assessment.get("therapist_notes"),
+        "is_shared": assessment.get("is_shared", False),
+        "assigned_at": assessment.get("assigned_at"),
+        "completed_at": assessment.get("completed_at")
+    }
+
+
+@router.post("/{assessment_id}/share-report")
+async def share_assessment_report(assessment_id: str, current_user: dict = Depends(require_active_therapist)):
+    """Share assessment results with client"""
+    result = await db.assessments.update_one(
+        {"id": assessment_id, "therapist_id": current_user["id"]},
+        {"$set": {"is_shared": True}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+    
+    await log_audit(current_user["id"], "therapist", "share", "assessment_report", assessment_id)
+    return {"message": "Report shared with client"}
+
+
+@router.post("/{assessment_id}/unshare-report")
+async def unshare_assessment_report(assessment_id: str, current_user: dict = Depends(require_active_therapist)):
+    """Remove client access to assessment results"""
+    result = await db.assessments.update_one(
+        {"id": assessment_id, "therapist_id": current_user["id"]},
+        {"$set": {"is_shared": False}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+    
+    await log_audit(current_user["id"], "therapist", "unshare", "assessment_report", assessment_id)
+    return {"message": "Report access removed"}
+
+
+@router.put("/{assessment_id}/therapist-notes")
+async def update_therapist_notes(assessment_id: str, data: dict, current_user: dict = Depends(require_active_therapist)):
+    """Add or update therapist notes on assessment"""
+    result = await db.assessments.update_one(
+        {"id": assessment_id, "therapist_id": current_user["id"]},
+        {"$set": {"therapist_notes": data.get("notes", "")}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+    
+    await log_audit(current_user["id"], "therapist", "update", "assessment_notes", assessment_id)
+    return {"message": "Notes updated"}
+
+
 @router.delete("/{assessment_id}")
 async def delete_assessment(assessment_id: str, current_user: dict = Depends(require_active_therapist)):
     """Delete an assessment"""
