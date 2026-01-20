@@ -1918,6 +1918,145 @@ async def admin_update_client(client_id: str, update_data: ClientProfileUpdate, 
         "created_at": updated_client["created_at"]
     }
 
+# ============= SUPPORT TICKET ENDPOINTS =============
+
+@api_router.post("/support/tickets", response_model=SupportTicket)
+async def create_support_ticket(ticket_data: TicketCreate, current_user: dict = Depends(get_current_user)):
+    """Create a support ticket - therapists only"""
+    if current_user["role"] != "therapist":
+        raise HTTPException(status_code=403, detail="Only therapists can create support tickets")
+    
+    now_utc = datetime.now(timezone.utc).isoformat()
+    ticket_id = str(uuid.uuid4())
+    
+    ticket_doc = {
+        "id": ticket_id,
+        "therapist_id": current_user["id"],
+        "therapist_name": current_user.get("full_name", "Unknown"),
+        "therapist_email": current_user.get("email"),
+        "subject": ticket_data.subject,
+        "category": ticket_data.category,
+        "description": ticket_data.description,
+        "priority": ticket_data.priority,
+        "status": "open",
+        "replies": [],
+        "created_at": now_utc,
+        "updated_at": now_utc
+    }
+    
+    await db.support_tickets.insert_one(ticket_doc)
+    await log_audit(current_user["id"], "therapist", "create", "support_ticket", ticket_id)
+    
+    return SupportTicket(**ticket_doc)
+
+@api_router.get("/support/tickets")
+async def get_support_tickets(
+    status: Optional[str] = None,
+    priority: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get support tickets - therapists see own, super_admin sees all"""
+    if current_user["role"] == "therapist":
+        query = {"therapist_id": current_user["id"]}
+    elif current_user["role"] == "super_admin":
+        query = {}
+    else:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    if status:
+        query["status"] = status
+    if priority:
+        query["priority"] = priority
+    
+    tickets = await db.support_tickets.find(query, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return tickets
+
+@api_router.get("/support/tickets/{ticket_id}")
+async def get_support_ticket(ticket_id: str, current_user: dict = Depends(get_current_user)):
+    """Get a single support ticket with replies"""
+    ticket = await db.support_tickets.find_one({"id": ticket_id}, {"_id": 0})
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Ticket not found")
+    
+    # Therapists can only view their own tickets
+    if current_user["role"] == "therapist" and ticket["therapist_id"] != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    elif current_user["role"] not in ["therapist", "super_admin"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    return ticket
+
+@api_router.post("/support/tickets/{ticket_id}/reply")
+async def reply_to_ticket(ticket_id: str, reply_data: TicketReplyCreate, current_user: dict = Depends(get_current_user)):
+    """Add a reply to a ticket - super_admin only for now"""
+    if current_user["role"] != "super_admin":
+        raise HTTPException(status_code=403, detail="Only admins can reply to tickets")
+    
+    ticket = await db.support_tickets.find_one({"id": ticket_id}, {"_id": 0})
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Ticket not found")
+    
+    if ticket["status"] == "closed":
+        raise HTTPException(status_code=400, detail="Cannot reply to a closed ticket")
+    
+    now_utc = datetime.now(timezone.utc).isoformat()
+    reply_id = str(uuid.uuid4())
+    
+    reply = {
+        "id": reply_id,
+        "ticket_id": ticket_id,
+        "message": reply_data.message,
+        "author_id": current_user["id"],
+        "author_name": "Support Admin",
+        "author_role": "super_admin",
+        "created_at": now_utc
+    }
+    
+    await db.support_tickets.update_one(
+        {"id": ticket_id},
+        {
+            "$push": {"replies": reply},
+            "$set": {"updated_at": now_utc, "status": "in_progress"}
+        }
+    )
+    
+    await log_audit(current_user["id"], "super_admin", "reply", "support_ticket", ticket_id)
+    
+    return {"success": True, "reply": reply}
+
+@api_router.put("/support/tickets/{ticket_id}/status")
+async def update_ticket_status(ticket_id: str, status_data: TicketStatusUpdate, current_user: dict = Depends(require_super_admin)):
+    """Update ticket status - super_admin only"""
+    ticket = await db.support_tickets.find_one({"id": ticket_id}, {"_id": 0})
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Ticket not found")
+    
+    now_utc = datetime.now(timezone.utc).isoformat()
+    
+    await db.support_tickets.update_one(
+        {"id": ticket_id},
+        {"$set": {"status": status_data.status, "updated_at": now_utc}}
+    )
+    
+    await log_audit(current_user["id"], "super_admin", f"status_change_{status_data.status}", "support_ticket", ticket_id)
+    
+    return {"success": True, "status": status_data.status}
+
+@api_router.get("/admin/support/stats")
+async def get_support_stats(current_user: dict = Depends(require_super_admin)):
+    """Get support ticket statistics for admin dashboard"""
+    pipeline = [
+        {"$group": {"_id": "$status", "count": {"$sum": 1}}}
+    ]
+    stats = await db.support_tickets.aggregate(pipeline).to_list(10)
+    
+    result = {"open": 0, "in_progress": 0, "closed": 0, "total": 0}
+    for s in stats:
+        result[s["_id"]] = s["count"]
+        result["total"] += s["count"]
+    
+    return result
+
 # ============= SUBSCRIPTION MANAGEMENT ENDPOINTS =============
 
 @api_router.get("/admin/subscription-plans", response_model=List[SubscriptionPlan])
