@@ -16,6 +16,31 @@ from emergentintegrations.llm.chat import LlmChat, UserMessage
 import json
 from assessment_library import CLINICAL_ASSESSMENTS, calculate_score, get_severity, get_client_friendly_assessment, ASSESSMENT_CLIENT_INFO
 
+# Import models from models package
+from models import (
+    UserRegister, TherapistApplication, SuperAdminLogin, UserLogin, User, TokenResponse,
+    AssistantCreate, AssistantUpdate, AssistantResponse,
+    ClientProfile, ClientProfileUpdate, ClientPasswordReset,
+    AppointmentCreate, AppointmentUpdate, Appointment, CheckInRequest, CheckOutRequest,
+    TimeBlock, DayAvailability, TherapistAvailabilityUpdate, TherapistAvailability,
+    BlockedTimeCreate, BlockedTime, AvailableSlot,
+    SessionNoteCreate, SessionNoteUpdate, SessionNote,
+    RecurringPatternCreate, RecurringPattern,
+    NoteTemplateCreate, NoteTemplateUpdate, NoteTemplate,
+    MessageCreate, Message, ClientMessagingSettings,
+    CustomAssessmentCreate, CustomAssessment, AssessmentCreate, Assessment, AssessmentSubmit,
+    ProtocolCreate, Protocol, HomeworkCreate, Homework, HomeworkComplete,
+    AIAssessmentSuggestionRequest, AIAssessmentSuggestion, AIAssessmentSuggestionResponse,
+    AIProtocolRequest, AIProtocolSession, AIProtocolResponse,
+    AIHomeworkRequest, AIHomeworkResponse,
+    ResourceCreate, Resource, ResourceAssignment,
+    PaymentCreate, Payment, PaymentReceipt,
+    CashSettlementCreate, CashSettlementDispute, CashSettlement,
+    TicketReplyCreate, TicketReply, TicketCreate, TicketStatusUpdate, SupportTicket,
+    AuditLog, SubscriptionPlan, Subscription, CouponCode,
+    TherapistProfile, ManualTherapistCreate, TherapistUpdate, ClientDetailResponse
+)
+
 # IST timezone for India Standard Time
 IST = ZoneInfo("Asia/Kolkata")
 import jwt
