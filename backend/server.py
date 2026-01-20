@@ -1831,6 +1831,36 @@ async def delete_subscription_plan(plan_id: str, current_user: dict = Depends(re
     
     return {"message": "Plan deleted"}
 
+class UpdateFeatureToggles(BaseModel):
+    feature_toggles: dict
+
+@api_router.put("/admin/subscription-plans/{plan_id}/feature-toggles")
+async def update_plan_feature_toggles(plan_id: str, data: UpdateFeatureToggles, current_user: dict = Depends(require_super_admin)):
+    """Update feature toggles for a subscription plan"""
+    plan = await db.subscription_plans.find_one({"id": plan_id}, {"_id": 0})
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plan not found")
+    
+    # Merge with defaults to ensure all keys exist
+    updated_toggles = {**DEFAULT_FEATURE_TOGGLES, **(plan.get("feature_toggles") or {}), **data.feature_toggles}
+    
+    await db.subscription_plans.update_one(
+        {"id": plan_id},
+        {"$set": {"feature_toggles": updated_toggles}}
+    )
+    
+    await log_audit(current_user["id"], current_user["role"], "update", "subscription_plan_features", plan_id)
+    
+    return {"success": True, "feature_toggles": updated_toggles}
+
+@api_router.get("/admin/subscription-plans/{plan_id}")
+async def get_subscription_plan(plan_id: str, current_user: dict = Depends(require_super_admin)):
+    """Get single subscription plan with feature toggles"""
+    plan = await db.subscription_plans.find_one({"id": plan_id}, {"_id": 0})
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plan not found")
+    return plan
+
 class AssignSubscription(BaseModel):
     plan_id: str
     coupon_code: Optional[str] = None
