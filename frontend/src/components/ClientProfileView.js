@@ -1662,6 +1662,157 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Assign Homework Dialog */}
+        <Dialog open={showAssignHomeworkDialog} onOpenChange={setShowAssignHomeworkDialog}>
+          <DialogContent className="max-w-lg" data-testid="assign-homework-dialog">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <BookCheck className="text-primary" size={20} />
+                Assign Homework
+              </DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleAssignHomework} className="space-y-4">
+              <div>
+                <Label htmlFor="hw-title">Title *</Label>
+                <Input
+                  id="hw-title"
+                  value={newHomework.title}
+                  onChange={(e) => setNewHomework({...newHomework, title: e.target.value})}
+                  placeholder="e.g., Daily Mood Journal"
+                  className="mt-1"
+                  required
+                  data-testid="homework-title-input"
+                />
+              </div>
+              <div>
+                <Label htmlFor="hw-description">Description/Instructions *</Label>
+                <Textarea
+                  id="hw-description"
+                  value={newHomework.description}
+                  onChange={(e) => setNewHomework({...newHomework, description: e.target.value})}
+                  placeholder="Describe the homework and provide clear instructions for the client..."
+                  className="mt-1"
+                  rows={4}
+                  required
+                  data-testid="homework-description-input"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="hw-due-date">Due Date (Optional)</Label>
+                  <Input
+                    id="hw-due-date"
+                    type="date"
+                    value={newHomework.due_date}
+                    onChange={(e) => setNewHomework({...newHomework, due_date: e.target.value})}
+                    className="mt-1"
+                    min={new Date().toISOString().split('T')[0]}
+                    data-testid="homework-due-date-input"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="hw-priority">Priority</Label>
+                  <Select
+                    value={newHomework.priority}
+                    onValueChange={(value) => setNewHomework({...newHomework, priority: value})}
+                  >
+                    <SelectTrigger className="mt-1" data-testid="homework-priority-select">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button type="button" variant="outline" onClick={() => setShowAssignHomeworkDialog(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" data-testid="submit-homework-btn">
+                  Assign Homework
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Homework Dialog */}
+        <Dialog open={showEditHomeworkDialog} onOpenChange={setShowEditHomeworkDialog}>
+          <DialogContent className="max-w-lg" data-testid="edit-homework-dialog">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Edit className="text-primary" size={20} />
+                Edit Homework
+              </DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleUpdateHomework} className="space-y-4">
+              <div>
+                <Label htmlFor="edit-hw-title">Title *</Label>
+                <Input
+                  id="edit-hw-title"
+                  value={editHomework.title}
+                  onChange={(e) => setEditHomework({...editHomework, title: e.target.value})}
+                  className="mt-1"
+                  required
+                  data-testid="edit-homework-title-input"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-hw-description">Description/Instructions *</Label>
+                <Textarea
+                  id="edit-hw-description"
+                  value={editHomework.description}
+                  onChange={(e) => setEditHomework({...editHomework, description: e.target.value})}
+                  className="mt-1"
+                  rows={4}
+                  required
+                  data-testid="edit-homework-description-input"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-hw-due-date">Due Date (Optional)</Label>
+                  <Input
+                    id="edit-hw-due-date"
+                    type="date"
+                    value={editHomework.due_date}
+                    onChange={(e) => setEditHomework({...editHomework, due_date: e.target.value})}
+                    className="mt-1"
+                    data-testid="edit-homework-due-date-input"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-hw-priority">Priority</Label>
+                  <Select
+                    value={editHomework.priority}
+                    onValueChange={(value) => setEditHomework({...editHomework, priority: value})}
+                  >
+                    <SelectTrigger className="mt-1" data-testid="edit-homework-priority-select">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button type="button" variant="outline" onClick={() => setShowEditHomeworkDialog(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" data-testid="update-homework-btn">
+                  Update Homework
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
       </DialogContent>
     </Dialog>
   );
