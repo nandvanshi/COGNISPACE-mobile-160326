@@ -2369,6 +2369,204 @@ async def admin_get_all_assistants(therapist_id: Optional[str] = None, current_u
         created_at=datetime.fromisoformat(a["created_at"])
     ) for a in assistants]
 
+# ============= ASSISTANT DASHBOARD ENDPOINTS =============
+
+@api_router.get("/assistant/dashboard")
+async def get_assistant_dashboard(current_user: dict = Depends(get_current_user)):
+    """Get comprehensive dashboard data for assistant"""
+    if current_user["role"] != "assistant":
+        raise HTTPException(status_code=403, detail="Only assistants can access this")
+    
+    therapist_id = current_user.get("therapist_id")
+    if not therapist_id:
+        raise HTTPException(status_code=403, detail="Assistant not linked to a therapist")
+    
+    # Get therapist info
+    therapist = await db.users.find_one({"id": therapist_id}, {"_id": 0, "full_name": 1, "email": 1, "mobile": 1})
+    
+    # Get today's date in IST
+    now_utc = datetime.now(timezone.utc)
+    now_ist = now_utc.astimezone(IST)
+    today_start_ist = now_ist.replace(hour=0, minute=0, second=0, microsecond=0)
+    today_end_ist = now_ist.replace(hour=23, minute=59, second=59, microsecond=999999)
+    
+    # Convert to UTC for querying
+    today_start_utc = today_start_ist.astimezone(timezone.utc)
+    today_end_utc = today_end_ist.astimezone(timezone.utc)
+    
+    # 1. TODAY'S APPOINTMENTS (for call reminders)
+    todays_appointments = await db.appointments.find({
+        "therapist_id": therapist_id,
+        "start_time": {"$gte": today_start_utc.isoformat(), "$lte": today_end_utc.isoformat()},
+        "status": {"$in": ["scheduled", "in_progress"]}
+    }, {"_id": 0}).sort("start_time", 1).to_list(50)
+    
+    # Get call reminder statuses for today
+    call_reminders = await db.call_reminders.find({
+        "therapist_id": therapist_id,
+        "date": today_start_ist.strftime("%Y-%m-%d")
+    }, {"_id": 0}).to_list(100)
+    
+    call_reminder_map = {cr["appointment_id"]: cr for cr in call_reminders}
+    
+    # Enrich appointments with call status
+    for appt in todays_appointments:
+        reminder = call_reminder_map.get(appt["id"])
+        appt["call_status"] = reminder.get("status", "pending") if reminder else "pending"
+        appt["called_at"] = reminder.get("called_at") if reminder else None
+    
+    # 2. NEEDS ATTENTION (upcoming few hours + pending check-ins)
+    upcoming_cutoff = (now_utc + timedelta(hours=4)).isoformat()
+    upcoming_sessions = [a for a in todays_appointments if a["start_time"] <= upcoming_cutoff and a["status"] == "scheduled"]
+    pending_checkins = [a for a in todays_appointments if a["status"] == "in_progress"]
+    
+    # 3. INACTIVE CLIENTS (no sessions in last 30 days)
+    thirty_days_ago = (now_utc - timedelta(days=30)).isoformat()
+    
+    # Get all clients for this therapist
+    all_clients = await db.users.find(
+        {"therapist_id": therapist_id, "role": "client", "status": {"$ne": "deleted"}},
+        {"_id": 0, "id": 1, "full_name": 1, "mobile": 1}
+    ).to_list(500)
+    
+    # Get clients with recent sessions
+    recent_session_clients = await db.appointments.distinct(
+        "client_id",
+        {"therapist_id": therapist_id, "start_time": {"$gte": thirty_days_ago}, "status": {"$in": ["scheduled", "in_progress", "completed"]}}
+    )
+    recent_client_set = set(recent_session_clients)
+    
+    # Find inactive clients
+    inactive_clients = []
+    for client in all_clients:
+        if client["id"] not in recent_client_set:
+            # Get last session date
+            last_session = await db.appointments.find_one(
+                {"therapist_id": therapist_id, "client_id": client["id"], "status": "completed"},
+                {"_id": 0, "start_time": 1},
+                sort=[("start_time", -1)]
+            )
+            last_session_date = last_session["start_time"] if last_session else None
+            days_inactive = None
+            if last_session_date:
+                try:
+                    last_dt = datetime.fromisoformat(last_session_date.replace('Z', '+00:00'))
+                    days_inactive = (now_utc - last_dt).days
+                except:
+                    pass
+            
+            inactive_clients.append({
+                "id": client["id"],
+                "full_name": client["full_name"],
+                "mobile": client.get("mobile"),
+                "last_session_date": last_session_date,
+                "days_inactive": days_inactive
+            })
+    
+    # Sort by days inactive (most inactive first), handle None
+    inactive_clients.sort(key=lambda x: x["days_inactive"] if x["days_inactive"] is not None else 9999, reverse=True)
+    
+    # 4. TODAY'S PAYMENTS
+    todays_payments = await db.payments.find({
+        "therapist_id": therapist_id,
+        "payment_date": {"$gte": today_start_utc.isoformat(), "$lte": today_end_utc.isoformat()}
+    }, {"_id": 0}).to_list(100)
+    
+    # Calculate payment summary
+    cash_total = sum(p["amount"] for p in todays_payments if p.get("payment_method") == "cash")
+    online_total = sum(p["amount"] for p in todays_payments if p.get("payment_method") in ["upi", "card", "bank_transfer"])
+    other_total = sum(p["amount"] for p in todays_payments if p.get("payment_method") not in ["cash", "upi", "card", "bank_transfer"])
+    
+    # 5. Get pending payments (clients with outstanding balance) - simplified
+    # Just count today's pending status payments
+    pending_payments = await db.payments.count_documents({
+        "therapist_id": therapist_id,
+        "status": "pending"
+    })
+    
+    return {
+        "therapist": {
+            "full_name": therapist.get("full_name") if therapist else "Unknown",
+            "email": therapist.get("email") if therapist else None,
+            "mobile": therapist.get("mobile") if therapist else None
+        },
+        "today_date": today_start_ist.strftime("%d/%m/%Y"),
+        "today_day": today_start_ist.strftime("%A"),
+        "todays_appointments": todays_appointments,
+        "call_reminders_count": len([a for a in todays_appointments if a.get("call_status") == "pending"]),
+        "needs_attention": {
+            "upcoming_sessions": upcoming_sessions[:5],
+            "pending_checkins": pending_checkins,
+            "pending_payments_count": pending_payments
+        },
+        "inactive_clients": inactive_clients[:10],  # Top 10
+        "inactive_clients_count": len(inactive_clients),
+        "payments_summary": {
+            "cash_total": cash_total,
+            "online_total": online_total,
+            "other_total": other_total,
+            "total": cash_total + online_total + other_total,
+            "payments": todays_payments
+        }
+    }
+
+@api_router.post("/assistant/call-reminder/{appointment_id}")
+async def mark_call_reminder(appointment_id: str, current_user: dict = Depends(get_current_user)):
+    """Mark a client as called for today's appointment"""
+    if current_user["role"] != "assistant":
+        raise HTTPException(status_code=403, detail="Only assistants can access this")
+    
+    therapist_id = current_user.get("therapist_id")
+    if not therapist_id:
+        raise HTTPException(status_code=403, detail="Assistant not linked to a therapist")
+    
+    # Verify appointment exists and belongs to therapist
+    appointment = await db.appointments.find_one(
+        {"id": appointment_id, "therapist_id": therapist_id},
+        {"_id": 0}
+    )
+    if not appointment:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+    
+    now_ist = datetime.now(timezone.utc).astimezone(IST)
+    today_date = now_ist.strftime("%Y-%m-%d")
+    
+    # Upsert call reminder
+    await db.call_reminders.update_one(
+        {"appointment_id": appointment_id, "therapist_id": therapist_id, "date": today_date},
+        {"$set": {
+            "appointment_id": appointment_id,
+            "therapist_id": therapist_id,
+            "client_id": appointment["client_id"],
+            "client_name": appointment["client_name"],
+            "date": today_date,
+            "status": "called",
+            "called_at": datetime.now(timezone.utc).isoformat(),
+            "called_by": current_user["id"]
+        }},
+        upsert=True
+    )
+    
+    return {"success": True, "message": "Marked as called"}
+
+@api_router.delete("/assistant/call-reminder/{appointment_id}")
+async def unmark_call_reminder(appointment_id: str, current_user: dict = Depends(get_current_user)):
+    """Unmark a call reminder (mark as pending again)"""
+    if current_user["role"] != "assistant":
+        raise HTTPException(status_code=403, detail="Only assistants can access this")
+    
+    therapist_id = current_user.get("therapist_id")
+    now_ist = datetime.now(timezone.utc).astimezone(IST)
+    today_date = now_ist.strftime("%Y-%m-%d")
+    
+    await db.call_reminders.delete_one({
+        "appointment_id": appointment_id,
+        "therapist_id": therapist_id,
+        "date": today_date
+    })
+    
+    return {"success": True, "message": "Call reminder reset"}
+
 @api_router.post("/admin/assistants", response_model=AssistantResponse)
 async def admin_create_assistant(assistant_data: AssistantCreate, therapist_id: str, current_user: dict = Depends(require_super_admin)):
     """Super Admin creates an assistant for a therapist"""
