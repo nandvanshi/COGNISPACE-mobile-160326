@@ -363,6 +363,7 @@ class AssessmentCreate(BaseModel):
     questions: List[dict]
     is_custom: bool = False
     custom_assessment_id: Optional[str] = None
+    due_date: Optional[str] = None  # Optional due date in ISO format
 
 class Assessment(BaseModel):
     model_config = ConfigDict(extra="ignore")
