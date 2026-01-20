@@ -73,7 +73,7 @@ const minutesToTime = (minutes) => {
   return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
 };
 
-const TherapistSchedule = ({ isReadOnly = false }) => {
+const TherapistSchedule = ({ isReadOnly = false, isAssistant = false }) => {
   const { user } = useAuth();
   const [view, setView] = useState('month'); // 'month' or 'day'
   const [currentDate, setCurrentDate] = useState(new Date());
