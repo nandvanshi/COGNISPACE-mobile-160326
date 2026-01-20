@@ -404,81 +404,82 @@ const ClientDashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-lg border-b border-border/40">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-serif text-primary">TheraGenie</h1>
-            <p className="text-sm text-muted-foreground">Welcome, {user?.full_name}</p>
+      <header className="bg-white/80 backdrop-blur-lg border-b border-border/40 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl sm:text-2xl font-serif text-primary">TheraGenie</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">Welcome, {user?.full_name}</p>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
+          <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0">
+            <span className="hidden sm:flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
               <Check size={12} /> Consent Signed
             </span>
-            <Button onClick={() => setShowSettings(true)} variant="ghost" data-testid="client-settings-button">
-              <SettingsIcon size={20} />
+            <Button onClick={() => setShowSettings(true)} variant="ghost" size="sm" className="p-2" data-testid="client-settings-button">
+              <SettingsIcon size={18} />
             </Button>
-            <Button onClick={handleLogout} variant="ghost" data-testid="client-logout-button">
-              <LogOut size={20} className="mr-2" /> Logout
+            <Button onClick={handleLogout} variant="ghost" size="sm" className="p-2 sm:px-3" data-testid="client-logout-button">
+              <LogOut size={18} />
+              <span className="hidden sm:inline ml-2">Logout</span>
             </Button>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto p-6 md:p-12">
-        <div className="flex justify-between items-center mb-8">
+      <main className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-12">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
           <div>
-            <h2 className="text-4xl font-serif text-primary mb-2">Your Dashboard</h2>
-            <p className="text-muted-foreground">Manage your therapy journey</p>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif text-primary mb-1 sm:mb-2">Your Dashboard</h2>
+            <p className="text-sm text-muted-foreground">Manage your therapy journey</p>
           </div>
           <Button 
             onClick={handleOpenBooking}
-            className="bg-gradient-to-r from-primary to-primary/80"
+            className="bg-gradient-to-r from-primary to-primary/80 w-full sm:w-auto"
             data-testid="book-appointment-button"
           >
             <CalendarPlus size={18} className="mr-2" /> Book Appointment
           </Button>
         </div>
 
-        {/* Bento Grid Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-          {/* Upcoming Appointments - Span 8 cols */}
-          <Card className="md:col-span-8 p-6 bg-white/70 backdrop-blur-xl border border-border/40 rounded-xl shadow-lg" data-testid="upcoming-appointments-card">
+        {/* Bento Grid Layout - Mobile optimized */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
+          {/* Upcoming Appointments - Span 8 cols on lg */}
+          <Card className="lg:col-span-8 p-4 sm:p-6 bg-white/70 backdrop-blur-xl border border-border/40 rounded-xl shadow-lg" data-testid="upcoming-appointments-card">
             <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <Calendar className="text-primary" size={24} />
-                <h3 className="text-2xl font-serif text-primary">Upcoming Appointments</h3>
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Calendar className="text-primary" size={20} />
+                <h3 className="text-lg sm:text-xl lg:text-2xl font-serif text-primary">Upcoming</h3>
               </div>
-              <Button variant="ghost" size="sm" onClick={handleOpenBooking}>
-                <CalendarPlus size={16} className="mr-1" /> Book
+              <Button variant="ghost" size="sm" onClick={handleOpenBooking} className="text-xs sm:text-sm">
+                <CalendarPlus size={14} className="mr-1" /> Book
               </Button>
             </div>
             {upcomingAppointments.length === 0 ? (
-              <div className="text-center py-8">
-                <Calendar className="mx-auto text-muted-foreground mb-3" size={40} />
-                <p className="text-muted-foreground mb-4">No upcoming appointments</p>
-                <Button onClick={handleOpenBooking} variant="outline">
-                  <CalendarPlus size={16} className="mr-2" /> Schedule Your First Appointment
+              <div className="text-center py-6 sm:py-8">
+                <Calendar className="mx-auto text-muted-foreground mb-3" size={32} />
+                <p className="text-sm text-muted-foreground mb-4">No upcoming appointments</p>
+                <Button onClick={handleOpenBooking} variant="outline" size="sm">
+                  <CalendarPlus size={14} className="mr-2" /> Schedule Now
                 </Button>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {upcomingAppointments.map((appt) => (
                   <div
                     key={appt.id}
-                    className="p-4 bg-surface rounded-lg border border-border hover:border-primary/50 transition-colors"
+                    className="p-3 sm:p-4 bg-surface rounded-lg border border-border hover:border-primary/50 transition-colors"
                     data-testid={`appointment-${appt.id}`}
                   >
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="font-medium text-lg">
+                    <div className="flex justify-between items-start sm:items-center gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-sm sm:text-base lg:text-lg">
                           {formatDate(appt.start_time)}
                         </p>
-                        <p className="text-sm text-muted-foreground flex items-center gap-1">
-                          <Clock size={14} /> {formatTime(appt.start_time)} - {formatTime(appt.end_time)}
+                        <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
+                          <Clock size={12} /> {formatTime(appt.start_time)} - {formatTime(appt.end_time)}
                         </p>
                       </div>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
+                      <span className={`text-[10px] sm:text-xs px-2 py-1 rounded-full flex-shrink-0 ${
                         appt.status === 'scheduled' ? 'bg-blue-100 text-blue-700' :
                         appt.status === 'in_progress' ? 'bg-amber-100 text-amber-700' :
                         'bg-gray-100 text-gray-700'
@@ -486,18 +487,18 @@ const ClientDashboard = () => {
                         {appt.status === 'in_progress' ? 'In Progress' : 'Scheduled'}
                       </span>
                     </div>
-                    {appt.notes && <p className="text-sm text-muted-foreground mt-2">{appt.notes}</p>}
+                    {appt.notes && <p className="text-xs sm:text-sm text-muted-foreground mt-2 line-clamp-2">{appt.notes}</p>}
                   </div>
                 ))}
               </div>
             )}
           </Card>
 
-          {/* Pending Assessments - Span 4 cols */}
-          <Card className="md:col-span-4 p-6 bg-white/70 backdrop-blur-xl border border-border/40 rounded-xl shadow-lg" data-testid="pending-assessments-card">
-            <div className="flex items-center gap-3 mb-4">
-              <ClipboardCheck className="text-secondary" size={24} />
-              <h3 className="text-xl font-serif text-primary">Assessments</h3>
+          {/* Pending Assessments - Span 4 cols on lg */}
+          <Card className="lg:col-span-4 p-4 sm:p-6 bg-white/70 backdrop-blur-xl border border-border/40 rounded-xl shadow-lg" data-testid="pending-assessments-card">
+            <div className="flex items-center gap-2 sm:gap-3 mb-4">
+              <ClipboardCheck className="text-secondary" size={20} />
+              <h3 className="text-lg sm:text-xl font-serif text-primary">Assessments</h3>
             </div>
             {pendingAssessments.length === 0 ? (
               <p className="text-sm text-muted-foreground">No pending assessments</p>
