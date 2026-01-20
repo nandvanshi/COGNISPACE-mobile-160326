@@ -51,7 +51,7 @@ const Messaging = ({ isReadOnly = false }) => {
   const fetchData = async () => {
     try {
       const [convsRes, contactsRes] = await Promise.all([
-        axios.get(`${API}/messages`),
+        axios.get(`${API}/messages/conversations`),
         axios.get(`${API}/messaging-contacts`),
       ]);
       setConversations(convsRes.data);
