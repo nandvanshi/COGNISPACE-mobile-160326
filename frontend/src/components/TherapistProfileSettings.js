@@ -544,30 +544,28 @@ const TherapistProfileSettings = ({ isReadOnly = false }) => {
                         onClick={() => setShowSpecDropdown(false)}
                       />
                       <div 
-                        className="absolute left-0 right-0 z-[100] mt-1 bg-white border border-gray-200 rounded-lg shadow-2xl"
-                        style={{
-                          maxHeight: '280px',
-                          overflowY: 'scroll'
-                        }}
+                        className="absolute left-0 right-0 z-[100] mt-1 bg-white border-2 border-primary/20 rounded-lg shadow-2xl"
                       >
-                        {SPECIALIZATION_OPTIONS.map((spec, idx) => (
-                          <button
-                            key={idx}
-                            type="button"
-                            className={`w-full text-left px-4 py-3 text-sm hover:bg-primary/5 flex items-center justify-between border-b border-gray-100 last:border-0 ${
-                              formData.specializations.includes(spec) ? 'bg-primary/10 text-primary font-medium' : ''
-                            }`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleSpecialization(spec);
-                            }}
-                          >
-                            <span>{spec}</span>
-                            {formData.specializations.includes(spec) && (
-                              <CheckCircle size={16} className="text-primary flex-shrink-0" />
-                            )}
-                          </button>
-                        ))}
+                        <div className="overflow-y-auto" style={{ maxHeight: '240px' }}>
+                          {SPECIALIZATION_OPTIONS.map((spec, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              className={`w-full text-left px-4 py-3 text-sm hover:bg-primary/5 flex items-center justify-between border-b border-gray-100 last:border-0 ${
+                                formData.specializations.includes(spec) ? 'bg-primary/10 text-primary font-medium' : ''
+                              }`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleSpecialization(spec);
+                              }}
+                            >
+                              <span>{spec}</span>
+                              {formData.specializations.includes(spec) && (
+                                <CheckCircle size={16} className="text-primary flex-shrink-0" />
+                              )}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </>
                   )}
