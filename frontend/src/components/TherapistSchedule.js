@@ -177,20 +177,37 @@ const TherapistSchedule = ({ isReadOnly = false, isAssistant = false }) => {
       return { availableSlots: [], bookedSessions: [], blockedPeriods: [], hasAvailability: false };
     }
     
-    const dateStr = selectedDate.toISOString().split('T')[0];
-    const dayName = getDayName(selectedDate);
+    // Validate selectedDate is a valid Date object
+    const safeDate = selectedDate instanceof Date && !isNaN(selectedDate.getTime()) 
+      ? selectedDate 
+      : new Date();
+    
+    const dateStr = safeDate.toISOString().split('T')[0];
+    const dayName = getDayName(safeDate);
     const dayAvailability = availability[dayName];
     
-    // Get booked appointments for the day
-    const dayAppts = appointments.filter(appt => {
-      const apptDate = new Date(appt.start_time).toISOString().split('T')[0];
-      return apptDate === dateStr && appt.status !== 'cancelled';
+    // Get booked appointments for the day (with safe date parsing)
+    const dayAppts = (appointments || []).filter(appt => {
+      if (!appt?.start_time) return false;
+      try {
+        const apptDate = new Date(appt.start_time);
+        if (isNaN(apptDate.getTime())) return false;
+        return apptDate.toISOString().split('T')[0] === dateStr && appt.status !== 'cancelled';
+      } catch (e) {
+        return false;
+      }
     }).sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
     
-    // Get blocked times for the day
-    const dayBlocks = blockedTimes.filter(block => {
-      const blockDate = new Date(block.start_datetime).toISOString().split('T')[0];
-      return blockDate === dateStr;
+    // Get blocked times for the day (with safe date parsing)
+    const dayBlocks = (blockedTimes || []).filter(block => {
+      if (!block?.start_datetime) return false;
+      try {
+        const blockDate = new Date(block.start_datetime);
+        if (isNaN(blockDate.getTime())) return false;
+        return blockDate.toISOString().split('T')[0] === dateStr;
+      } catch (e) {
+        return false;
+      }
     });
     
     // Check if day is fully blocked
