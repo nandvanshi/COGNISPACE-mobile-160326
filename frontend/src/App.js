@@ -9,6 +9,7 @@ import TherapistDashboard from './pages/TherapistDashboard';
 import ClientDashboard from './pages/ClientDashboard';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import AssistantDashboard from './pages/AssistantDashboard';
+import InstallPWA from './components/InstallPWA';
 import { applyTheme, getStoredTheme } from './config/themes';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
