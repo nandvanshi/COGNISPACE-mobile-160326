@@ -124,12 +124,14 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
       });
       
       const inactiveClients = clientsRes.data.filter(c => !recentApptsMap[c.id]).length;
+      const inactiveClientIds = clientsRes.data.filter(c => !recentApptsMap[c.id]).map(c => c.id);
       if (inactiveClients > 0) {
         alertsList.push({
           type: 'info',
           message: `${inactiveClients} client(s) inactive for 30+ days`,
           action: 'View Clients',
           actionNav: 'clients',
+          actionContext: { filter: 'inactive', inactiveClientIds },
           icon: Users
         });
       }
@@ -543,7 +545,8 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
                 <Button 
                   variant="outline" 
                   className="w-full h-11"
-                  onClick={() => handleNavigate('clients')}
+                  onClick={() => handleNavigate('clients', { clientId: nextAppointment.client_id })}
+                  data-testid="view-client-profile-btn"
                 >
                   View Client Profile
                 </Button>
@@ -593,7 +596,8 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
                             variant="link" 
                             size="sm" 
                             className="p-0 h-auto text-sm mt-1"
-                            onClick={() => handleNavigate(alert.actionNav)}
+                            onClick={() => handleNavigate(alert.actionNav, alert.actionContext || {})}
+                            data-testid={`alert-action-${idx}`}
                           >
                             {alert.action} <ArrowRight size={14} className="ml-1" />
                           </Button>
