@@ -323,6 +323,3 @@ async def delete_assessment(assessment_id: str, current_user: dict = Depends(req
     
     await log_audit(current_user["id"], "therapist", "delete", "assessment", assessment_id)
     return {"message": "Assessment deleted"}
-
-
- 
