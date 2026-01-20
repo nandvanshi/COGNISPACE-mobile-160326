@@ -57,6 +57,9 @@ JWT_EXPIRATION_HOURS = 24 * 7  # 7 days
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
 
+# Include route modules
+api_router.include_router(auth_router)
+
 # ============= MODELS =============
 
 # Auth Models
