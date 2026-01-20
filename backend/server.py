@@ -3928,6 +3928,9 @@ async def regenerate_therapy_consent(client_id: str, current_user: dict = Depend
 @api_router.post("/session-notes", response_model=SessionNote)
 async def create_session_note(note_data: SessionNoteCreate, current_user: dict = Depends(require_active_therapist)):
     """Create a new session note - Requires completed case history and signed consent"""
+    # Check feature access
+    await check_feature_enabled(current_user["id"], "session_notes")
+    
     # Check if case history exists and is complete
     case_history = await db.case_histories.find_one(
         {"client_id": note_data.client_id, "therapist_id": current_user["id"]},
