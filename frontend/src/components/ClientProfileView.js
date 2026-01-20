@@ -433,16 +433,16 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
             <Loader2 className="animate-spin text-primary" size={40} />
           </div>
         ) : (
-          <div className="flex flex-col h-[85vh]">
+          <div className="flex flex-col h-auto min-h-[85vh] sm:h-[85vh]">
             {/* Header */}
-            <div className="bg-gradient-to-r from-primary to-primary/80 p-6 text-white">
-              <div className="flex items-start gap-4">
-                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center text-2xl font-bold">
+            <div className="bg-gradient-to-r from-primary to-primary/80 p-4 sm:p-6 text-white">
+              <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-white/20 rounded-full flex items-center justify-center text-xl sm:text-2xl font-bold">
                   {client.full_name?.charAt(0) || 'C'}
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-2xl font-serif">{client.full_name}</h2>
-                  <p className="text-white/80 text-sm">Client ID: {client.client_id}</p>
+                  <h2 className="text-xl sm:text-2xl font-serif">{client.full_name}</h2>
+                  <p className="text-white/80 text-xs sm:text-sm">Client ID: {client.client_id}</p>
                   <div className="flex flex-wrap gap-2 sm:gap-4 mt-2 text-sm text-white/70">
                     {client.mobile && (
                       <span className="flex items-center gap-1">
