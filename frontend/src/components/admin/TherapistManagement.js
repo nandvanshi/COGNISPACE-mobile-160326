@@ -597,10 +597,12 @@ const TherapistManagement = ({ onViewClients }) => {
           <DialogHeader>
             <DialogTitle className="text-2xl font-serif text-primary">Add New Therapist</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleCreateTherapist} className="space-y-4">
+          <form onSubmit={handleCreateTherapist} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
             <p className="text-sm text-info bg-info/10 p-3 rounded-lg">
               New therapists automatically receive a 30-day trial subscription.
             </p>
+            
+            {/* Basic Info */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Full Name *</Label>
@@ -636,7 +638,77 @@ const TherapistManagement = ({ onViewClients }) => {
                 <Input type="number" value={newTherapist.years_of_experience} onChange={(e) => setNewTherapist({ ...newTherapist, years_of_experience: e.target.value })} className="mt-1" />
               </div>
             </div>
-            <div className="flex gap-3">
+
+            {/* Clinic Info */}
+            <div className="border-t pt-4 mt-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Building2 size={16} className="text-primary" />
+                <span className="font-medium text-sm">Clinic Information</span>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Clinic Name</Label>
+                  <Input value={newTherapist.clinic_name} onChange={(e) => setNewTherapist({ ...newTherapist, clinic_name: e.target.value })} className="mt-1" placeholder="Mind Wellness Clinic" />
+                </div>
+                <div>
+                  <Label>Consultation Fee (₹)</Label>
+                  <Input type="number" value={newTherapist.consultation_fee} onChange={(e) => setNewTherapist({ ...newTherapist, consultation_fee: e.target.value })} className="mt-1" placeholder="1500" />
+                </div>
+              </div>
+            </div>
+
+            {/* Address Section */}
+            <div className="border-t pt-4 mt-4">
+              <div className="flex items-center gap-2 mb-3">
+                <MapPin size={16} className="text-primary" />
+                <span className="font-medium text-sm">Clinic Address</span>
+                <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">Indian Format</span>
+              </div>
+              <div className="space-y-3">
+                <div>
+                  <Label>Address Line 1</Label>
+                  <Input value={newTherapist.address_line_1} onChange={(e) => setNewTherapist({ ...newTherapist, address_line_1: e.target.value })} className="mt-1" placeholder="Building/House No., Street" />
+                </div>
+                <div>
+                  <Label>Address Line 2</Label>
+                  <Input value={newTherapist.address_line_2} onChange={(e) => setNewTherapist({ ...newTherapist, address_line_2: e.target.value })} className="mt-1" placeholder="Locality, Area, Landmark" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>PIN Code</Label>
+                    <div className="relative mt-1">
+                      <Input 
+                        value={newTherapist.pincode} 
+                        onChange={(e) => handlePincodeChange(e.target.value, false)} 
+                        maxLength={6} 
+                        placeholder="110001"
+                        className="pr-8"
+                      />
+                      {pincodeLoading && (
+                        <Loader2 size={14} className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-primary" />
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">6-digit PIN auto-fills city/state</p>
+                  </div>
+                  <div>
+                    <Label>City</Label>
+                    <Input value={newTherapist.city} onChange={(e) => setNewTherapist({ ...newTherapist, city: e.target.value })} className="mt-1" placeholder="Auto-filled" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>District</Label>
+                    <Input value={newTherapist.district} onChange={(e) => setNewTherapist({ ...newTherapist, district: e.target.value })} className="mt-1" placeholder="Auto-filled" />
+                  </div>
+                  <div>
+                    <Label>State</Label>
+                    <Input value={newTherapist.state} onChange={(e) => setNewTherapist({ ...newTherapist, state: e.target.value })} className="mt-1" placeholder="Auto-filled" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-2">
               <Button type="submit" className="flex-1">Create Therapist</Button>
               <Button type="button" variant="outline" onClick={() => setShowCreateDialog(false)}>Cancel</Button>
             </div>
