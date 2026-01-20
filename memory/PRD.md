@@ -1203,7 +1203,29 @@ Build a secure, therapist-first web application for managing a therapy practice 
   - Month view → Date click → Day view works without errors
   - Availability blocks, booked sessions display correctly
 
-### Phase 36: Server.py Refactoring - Step 1 (IN PROGRESS - Jan 20, 2026)
+### Phase 36: Case History Simple Form (COMPLETED - Jan 21, 2026)
+- [x] **New Simple Form Created**: Replaced wizard-style form with full-page multi-step form
+  - 11 sections across multiple pages with Next/Previous navigation
+  - Auto-save when moving between sections (PATCH /api/case-history/{client_id}/section)
+  - Full page layout (not cards/wizard style)
+  - Mobile responsive design
+  - Progress bar showing current section (e.g., "2 / 11")
+- [x] **Sections**: Basic Identification, Presenting Complaints, History of Present Illness, 
+  Past Psychiatric History, Medical History, Family History, Personal & Developmental History,
+  Mental Status Examination, Provisional Formulation, Initial Therapy Plan, Consent & Disclaimer
+- [x] **PDF Download**: View Full mode with Print/Download option at completion
+- [x] **Backend Endpoints Added**:
+  - GET /api/case-history/check/{client_id} - Check if case history exists
+  - PATCH /api/case-history/{client_id}/section?section={section_name} - Auto-save section
+  - GET /api/therapy-consent/check/{client_id} - Check consent status
+  - GET /api/therapy-consent/{client_id} - Get consent details
+  - POST /api/therapy-consent/{client_id}/sign - Sign consent
+- [x] **Files Created/Modified**:
+  - Created: /app/frontend/src/components/CaseHistoryForm.js
+  - Modified: /app/frontend/src/components/ClientProfileView.js
+  - Modified: /app/backend/routes/clinical.py
+
+### Phase 37: Server.py Refactoring - Step 1 (PENDING)
 **Goal**: Break monolithic server.py (6919 lines) into modular route files
 
 **Step 1: Auth Routes (COMPLETED)**
