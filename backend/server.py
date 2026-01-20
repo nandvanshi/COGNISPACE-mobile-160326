@@ -378,6 +378,8 @@ class Assessment(BaseModel):
     status: str = "assigned"
     created_at: datetime
     completed_at: Optional[datetime] = None
+    due_date: Optional[str] = None
+    report_shared_with_client: Optional[bool] = False
 
 class AssessmentSubmit(BaseModel):
     answers: List[dict]
