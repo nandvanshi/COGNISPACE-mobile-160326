@@ -639,14 +639,16 @@ const TherapistSchedule = ({ isReadOnly = false, isAssistant = false }) => {
           {/* Day Actions */}
           {!isReadOnly && (
             <div className="flex flex-wrap gap-2">
-              <Button 
-                variant="outline" 
-                onClick={() => setShowAddAvailabilityDialog(true)}
-                className="gap-2"
-              >
-                <Plus size={16} />
-                Add Availability
-              </Button>
+              {!isAssistant && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowAddAvailabilityDialog(true)}
+                  className="gap-2"
+                >
+                  <Plus size={16} />
+                  Add Availability
+                </Button>
+              )}
               <Button 
                 variant="outline" 
                 onClick={() => setShowBlockDialog(true)}
