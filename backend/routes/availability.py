@@ -16,8 +16,16 @@ router = APIRouter(tags=["availability"])
 # ============= MODELS =============
 
 class TimeBlock(BaseModel):
-    start: str
-    end: str
+    start: Optional[str] = None
+    end: Optional[str] = None
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
+    
+    def get_start(self):
+        return self.start or self.start_time or "09:00"
+    
+    def get_end(self):
+        return self.end or self.end_time or "17:00"
 
 
 class DayAvailability(BaseModel):
