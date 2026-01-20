@@ -218,10 +218,10 @@ const TherapistDashboard = () => {
           <Button
             onClick={handleLogout}
             variant="ghost"
-            className="w-full justify-start h-12 lg:h-10 text-muted-foreground hover:text-foreground"
+            className="w-full justify-start h-14 lg:h-10 text-muted-foreground hover:text-foreground text-base lg:text-sm"
             data-testid="logout-button"
           >
-            <LogOut size={18} className="mr-3" />
+            <LogOut size={20} className="mr-3" />
             Logout
           </Button>
         </div>
