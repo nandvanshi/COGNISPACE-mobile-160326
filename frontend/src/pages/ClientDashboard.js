@@ -512,23 +512,68 @@ const ClientDashboard = () => {
               <ClipboardCheck className="text-secondary" size={20} />
               <h3 className="text-lg sm:text-xl font-serif text-primary">Assessments</h3>
             </div>
-            {pendingAssessments.length === 0 ? (
-              <p className="text-xs sm:text-sm text-muted-foreground">No pending assessments</p>
+            {assessments.length === 0 ? (
+              <p className="text-xs sm:text-sm text-muted-foreground">No assessments assigned</p>
             ) : (
               <div className="space-y-2">
-                {pendingAssessments.map((assess) => (
-                  <div key={assess.id} className="p-2 sm:p-3 bg-surface rounded-lg">
-                    <p className="font-medium text-xs sm:text-sm">{assess.assessment_type}</p>
+                {/* Pending Assessments */}
+                {assessments.filter(a => a.status === 'assigned').map((assess) => (
+                  <div key={assess.id} className="p-3 bg-surface rounded-lg border border-border hover:border-primary/30 transition-colors">
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-sm">{assess.assessment_type}</p>
+                        {assess.due_date && (
+                          <p className="text-[10px] text-muted-foreground mt-1">
+                            Due: {formatDate(assess.due_date)}
+                          </p>
+                        )}
+                      </div>
+                      <Badge variant="outline" className="bg-amber-50 text-amber-700 text-[10px]">
+                        Pending
+                      </Badge>
+                    </div>
                     <Button
                       onClick={() => handleCompleteAssessment(assess)}
                       size="sm"
                       className="mt-2 w-full text-xs"
                       data-testid={`complete-assessment-${assess.id}`}
                     >
-                      Complete
+                      Start Assessment
                     </Button>
                   </div>
                 ))}
+                
+                {/* Completed Assessments with View Report option */}
+                {assessments.filter(a => a.status === 'completed').slice(0, 3).map((assess) => (
+                  <div key={assess.id} className="p-3 bg-surface rounded-lg border border-border">
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-sm">{assess.assessment_type}</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          Completed: {assess.completed_at ? formatDate(assess.completed_at) : 'N/A'}
+                        </p>
+                      </div>
+                      <Badge className="bg-success/10 text-success text-[10px]">
+                        Done
+                      </Badge>
+                    </div>
+                    {assess.report_shared_with_client && (
+                      <Button
+                        onClick={() => handleViewSharedReport(assess.id)}
+                        size="sm"
+                        variant="outline"
+                        className="mt-2 w-full text-xs"
+                        data-testid={`view-report-${assess.id}`}
+                      >
+                        <Eye size={12} className="mr-1" /> View Report
+                      </Button>
+                    )}
+                  </div>
+                ))}
+
+                {assessments.filter(a => a.status === 'assigned').length === 0 && assessments.filter(a => a.status === 'completed').length > 0 && (
+                  <p className="text-xs text-muted-foreground text-center py-2">No pending assessments</p>
+                )}
               </div>
             )}
           </Card>
