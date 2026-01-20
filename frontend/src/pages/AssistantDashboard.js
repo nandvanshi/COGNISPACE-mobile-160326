@@ -103,6 +103,7 @@ const AssistantDashboard = () => {
     { id: 'overview', label: 'Overview', icon: Home },
     { id: 'clients', label: 'Clients', icon: Users },
     { id: 'schedule', label: 'Schedule', icon: CalendarDays },
+    { id: 'availability', label: 'Availability', icon: Clock },
     { id: 'payments', label: 'Payments', icon: DollarSign },
   ];
 
