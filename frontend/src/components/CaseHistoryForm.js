@@ -271,7 +271,7 @@ const CaseHistoryForm = ({ clientId, clientName, onComplete, onClose, isReadOnly
   const SectionIcon = SECTIONS[currentSection].icon;
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-background" style={{ height: '100dvh' }}>
+    <div className="h-full w-full flex flex-col bg-background">
       {/* Header - Fixed */}
       <div className="flex-shrink-0 bg-background border-b z-10">
         <div className="max-w-3xl mx-auto px-4 py-3">
@@ -314,7 +314,7 @@ const CaseHistoryForm = ({ clientId, clientName, onComplete, onClose, isReadOnly
           </div>
 
           {/* Form Fields */}
-          <div className="space-y-6">
+          <div className="space-y-6 pb-4">
             {renderSectionFields(SECTIONS[currentSection].id, currentSectionData, updateField, isReadOnly)}
           </div>
         </div>
