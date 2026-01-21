@@ -342,12 +342,18 @@ async def get_available_slots(
     for appt in appointments:
         start = datetime.fromisoformat(appt["start_time"].replace('Z', '+00:00'))
         end = datetime.fromisoformat(appt["end_time"].replace('Z', '+00:00'))
-        booked_ranges.append((start, end))
+        # Convert to IST for comparison with IST availability slots
+        start_ist = start.astimezone(IST)
+        end_ist = end.astimezone(IST)
+        booked_ranges.append((start_ist, end_ist))
     
     for bt in blocked_times:
         start = datetime.fromisoformat(bt["start_time"].replace('Z', '+00:00'))
         end = datetime.fromisoformat(bt["end_time"].replace('Z', '+00:00'))
-        booked_ranges.append((start, end))
+        # Convert to IST for comparison
+        start_ist = start.astimezone(IST)
+        end_ist = end.astimezone(IST)
+        booked_ranges.append((start_ist, end_ist))
     
     available_slots = []
     time_blocks = day_availability.get("time_blocks", [])
