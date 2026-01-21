@@ -195,8 +195,8 @@ const ClientManagement = ({ isReadOnly = false, isAssistant = false, initialClie
   };
 
   const handleViewProfile = (client) => {
-    setProfileViewClient(client);
-    setShowProfileView(true);
+    // Navigate to full-page client profile
+    navigate(`/therapist/clients/${client.id}`);
   };
 
   const generatePassword = () => {
