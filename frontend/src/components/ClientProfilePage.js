@@ -887,6 +887,88 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
           />
         </DialogContent>
       </Dialog>
+      
+      {/* Book Appointment Dialog */}
+      <Dialog open={showBookAppointment} onOpenChange={setShowBookAppointment}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CalendarPlus size={20} /> Book Appointment for {client.full_name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Select Date</Label>
+              <Input
+                type="date"
+                value={selectedDate}
+                onChange={handleDateChange}
+                min={new Date().toISOString().split('T')[0]}
+                className="mt-1"
+              />
+            </div>
+
+            {selectedDate && (
+              <div>
+                <Label className="mb-2 block">Available Time Slots</Label>
+                {loadingSlots ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="animate-spin text-primary" size={24} />
+                  </div>
+                ) : availableSlots.length > 0 ? (
+                  <div className="grid grid-cols-3 gap-2 max-h-[200px] overflow-y-auto">
+                    {availableSlots.map((slot, idx) => (
+                      <Button
+                        key={idx}
+                        type="button"
+                        variant={selectedSlot?.start === slot.start ? 'default' : 'outline'}
+                        size="sm"
+                        className="text-xs"
+                        onClick={() => handleSlotSelect(slot)}
+                      >
+                        {formatTime(slot.start)}
+                      </Button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-sm text-center py-4">No available slots for this date</p>
+                )}
+              </div>
+            )}
+
+            {selectedSlot && (
+              <div className="p-3 bg-primary/10 rounded-lg text-sm">
+                <p className="font-medium text-primary">Selected: {formatTime(selectedSlot.start)} - {formatTime(selectedSlot.end)}</p>
+              </div>
+            )}
+
+            <div>
+              <Label>Notes (optional)</Label>
+              <Textarea
+                value={appointmentNotes}
+                onChange={(e) => setAppointmentNotes(e.target.value)}
+                placeholder="Session purpose, reminders..."
+                rows={2}
+                className="mt-1"
+              />
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <Button 
+                onClick={handleCreateAppointment} 
+                disabled={!selectedSlot || isReadOnly}
+                className="flex-1"
+                data-testid="confirm-book-appointment"
+              >
+                Book Appointment
+              </Button>
+              <Button type="button" variant="outline" onClick={() => setShowBookAppointment(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
