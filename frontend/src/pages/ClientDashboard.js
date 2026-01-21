@@ -471,8 +471,8 @@ const ClientDashboard = () => {
       <header className="bg-white/80 backdrop-blur-lg border-b border-emerald-100 sticky top-0 z-40">
         <div className="max-w-lg mx-auto px-4 py-3 flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <Sparkles className="text-emerald-600" size={22} />
-            <span className="text-lg font-serif text-emerald-700">COGNISPACE</span>
+            <img src="/logo-symbol.png" alt="COGNISPACE" className="h-7 w-auto" />
+            <span className="font-serif text-lg text-primary">COGNISPACE</span>
           </div>
           <div className="flex items-center gap-1">
             <Button onClick={() => setShowSettings(true)} variant="ghost" size="sm" className="p-2" data-testid="client-settings-button">
