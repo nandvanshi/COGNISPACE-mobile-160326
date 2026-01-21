@@ -1241,20 +1241,22 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
           </div>
         )}
 
-        {/* Case History Full Screen */}
+        {/* Case History Full Screen Modal */}
         {showCaseHistoryDialog && (
-          <div className="fixed inset-0 z-[100] bg-background overflow-hidden">
-            <CaseHistoryForm
-              clientId={client.id}
-              clientName={client.full_name}
-              isReadOnly={isReadOnly}
-              onComplete={() => {
-                setShowCaseHistoryDialog(false);
-                fetchAllClientData();
-                if (onRefresh) onRefresh();
-              }}
-              onClose={() => setShowCaseHistoryDialog(false)}
-            />
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-4xl bg-background rounded-lg shadow-xl overflow-hidden" style={{ maxHeight: '90vh', height: '90vh' }}>
+              <CaseHistoryForm
+                clientId={client.id}
+                clientName={client.full_name}
+                isReadOnly={isReadOnly}
+                onComplete={() => {
+                  setShowCaseHistoryDialog(false);
+                  fetchAllClientData();
+                  if (onRefresh) onRefresh();
+                }}
+                onClose={() => setShowCaseHistoryDialog(false)}
+              />
+            </div>
           </div>
         )}
 
