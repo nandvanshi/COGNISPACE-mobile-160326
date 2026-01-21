@@ -108,6 +108,10 @@ const ClientDashboard = () => {
 
   // Settings state
   const [showSettings, setShowSettings] = useState(false);
+  
+  // Messaging state
+  const [showMessaging, setShowMessaging] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     checkConsentStatus();
