@@ -50,6 +50,7 @@ const LoginPage = () => {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
         <Card className="w-full max-w-md p-8 bg-white/70 backdrop-blur-xl border border-border/40 rounded-2xl shadow-xl">
           <div className="text-center mb-8">
+            <img src="/logo-cognispace.png" alt="COGNISPACE" className="h-16 mx-auto mb-4" />
             <h2 className="text-3xl font-serif text-primary mb-2">Welcome Back</h2>
             <p className="text-muted-foreground">Sign in to your account</p>
           </div>
