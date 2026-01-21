@@ -215,6 +215,11 @@ const TherapistDashboard = () => {
     setShowDisputeDialog(true);
   };
 
+  // If on client profile page, render full-page client profile
+  if (isClientProfilePage && clientIdFromUrl) {
+    return <ClientProfilePage isReadOnly={isReadOnly} isAssistant={false} />;
+  }
+
   return (
     <div className="flex h-screen bg-background">
       {/* Mobile Header */}
