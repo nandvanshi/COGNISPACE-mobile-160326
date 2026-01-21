@@ -11,16 +11,63 @@ import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Badge } from '../components/ui/badge';
 import { 
-  LogOut, Calendar, MessageSquare, ClipboardCheck, BookCheck, 
+  LogOut, Calendar, ClipboardCheck, BookCheck, 
   FileCheck, Pen, Check, AlertCircle, Loader2, Shield, 
-  CalendarPlus, Receipt, CreditCard, Clock, ChevronRight, Settings as SettingsIcon,
-  Eye, FileText
+  CalendarPlus, Receipt, CreditCard, Clock, Settings as SettingsIcon,
+  Eye, FileText, Sparkles, CheckCircle, User
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDate, formatTime, formatCurrency } from '../utils/formatUtils';
 import { PaymentReceiptView } from '../components/PaymentReceipt';
 import Settings from '../components/Settings';
 import ClientAssessmentTaker from '../components/ClientAssessmentTaker';
+
+// ============= TIME-BASED GREETING =============
+const getGreeting = () => {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) return { text: 'Good Morning', emoji: '🌱' };
+  if (hour >= 12 && hour < 17) return { text: 'Good Afternoon', emoji: '☀️' };
+  if (hour >= 17 && hour < 21) return { text: 'Good Evening', emoji: '🌸' };
+  return { text: 'Good Night', emoji: '🌙' };
+};
+
+// ============= MOTIVATION CARD =============
+const MotivationCard = ({ lastSessionDate }) => {
+  const daysSinceLastSession = lastSessionDate 
+    ? Math.floor((new Date() - new Date(lastSessionDate)) / (1000 * 60 * 60 * 24))
+    : null;
+  
+  const needsGentle Reminder = daysSinceLastSession && daysSinceLastSession > 14;
+  
+  return (
+    <Card 
+      className={`p-5 rounded-2xl border-0 shadow-sm ${
+        needsGentleReminder 
+          ? 'bg-gradient-to-br from-amber-50 to-orange-50' 
+          : 'bg-gradient-to-br from-yellow-50 to-amber-50'
+      }`}
+      data-testid="motivation-card"
+    >
+      <div className="flex items-start gap-3">
+        <span className="text-2xl">🌼</span>
+        <div>
+          <h3 className="font-semibold text-amber-800 mb-1">Consistency matters</h3>
+          {needsGentleReminder ? (
+            <p className="text-sm text-amber-700">
+              It has been {daysSinceLastSession} days since your last session. 
+              Regular sessions help you feel better over time.
+            </p>
+          ) : (
+            <p className="text-sm text-amber-700">
+              Regular sessions help you feel better over time. 
+              Keep up the great work on your journey!
+            </p>
+          )}
+        </div>
+      </div>
+    </Card>
+  );
+};
 
 const ClientDashboard = () => {
   const { user, logout } = useAuth();
@@ -30,6 +77,7 @@ const ClientDashboard = () => {
   const [assessments, setAssessments] = useState([]);
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [therapistName, setTherapistName] = useState('');
   
   // Assessment taking state
   const [showAssessmentTaker, setShowAssessmentTaker] = useState(false);
@@ -72,6 +120,9 @@ const ClientDashboard = () => {
       if (response.data.exists && !response.data.is_signed) {
         const consentRes = await axios.get(`${API}/therapy-consent/${user?.id}`);
         setConsent(consentRes.data);
+        if (consentRes.data?.therapist_name) {
+          setTherapistName(consentRes.data.therapist_name);
+        }
       }
       
       if (response.data.is_signed) {
@@ -101,6 +152,16 @@ const ClientDashboard = () => {
       setHomework(hwRes.data);
       setAssessments(assessRes.data);
       setPayments(paymentsRes.data);
+      
+      // Try to get therapist name from consent or user data
+      if (!therapistName && user?.therapist_id) {
+        try {
+          const consentRes = await axios.get(`${API}/therapy-consent/${user.id}`);
+          if (consentRes.data?.therapist_name) {
+            setTherapistName(consentRes.data.therapist_name);
+          }
+        } catch (e) { /* ignore */ }
+      }
     } catch (error) {
       toast.error('Failed to load data');
     }
@@ -179,7 +240,6 @@ const ClientDashboard = () => {
     setLoadingSlots(true);
     try {
       const response = await axios.get(`${API}/available-slots/${user?.therapist_id}?date=${date}`);
-      // API returns array directly, transform to {start, end} format
       const slots = Array.isArray(response.data) ? response.data.map(s => ({
         start: s.start_time,
         end: s.end_time
@@ -215,13 +275,13 @@ const ClientDashboard = () => {
         end_time: selectedSlot.end,
         notes: bookingNotes,
       });
-      toast.success('Appointment booked successfully!');
+      toast.success('Appointment request submitted!');
       setShowBookingDialog(false);
       setSelectedSlot(null);
       setBookingNotes('');
       fetchDashboardData();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to book appointment');
+      toast.error(error.response?.data?.detail || 'Failed to request appointment');
     } finally {
       setBooking(false);
     }
@@ -240,10 +300,10 @@ const ClientDashboard = () => {
   // Loading state
   if (loading || consentLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-emerald-50 via-teal-50/30 to-sky-50/50">
         <div className="text-center">
-          <Loader2 className="inline-block animate-spin h-8 w-8 text-primary" />
-          <p className="mt-4 text-muted-foreground">Loading...</p>
+          <Loader2 className="inline-block animate-spin h-8 w-8 text-emerald-600" />
+          <p className="mt-4 text-emerald-700">Loading your space...</p>
         </div>
       </div>
     );
@@ -252,31 +312,31 @@ const ClientDashboard = () => {
   // Consent not yet created by therapist
   if (!consentStatus.exists) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-        <header className="bg-white/80 backdrop-blur-lg border-b border-border/40">
-          <div className="max-w-4xl mx-auto px-6 py-4 flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-serif text-primary">TheraGenie</h1>
-              <p className="text-sm text-muted-foreground">Welcome, {user?.full_name}</p>
+      <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-teal-50/30 to-sky-50/50">
+        <header className="bg-white/80 backdrop-blur-lg border-b border-emerald-100">
+          <div className="max-w-lg mx-auto px-4 py-4 flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <Sparkles className="text-emerald-600" size={24} />
+              <span className="text-xl font-serif text-emerald-700">TheraGenie</span>
             </div>
-            <Button onClick={handleLogout} variant="ghost" data-testid="client-logout-button">
-              <LogOut size={20} className="mr-2" /> Logout
+            <Button onClick={handleLogout} variant="ghost" size="sm" data-testid="client-logout-button">
+              <LogOut size={18} />
             </Button>
           </div>
         </header>
 
-        <main className="max-w-2xl mx-auto p-6 md:p-12">
-          <Card className="p-8 bg-white/80 backdrop-blur-xl border border-border/40 rounded-2xl shadow-xl text-center">
+        <main className="max-w-lg mx-auto p-4 pt-8">
+          <Card className="p-8 bg-white rounded-3xl shadow-lg text-center border-0">
             <div className="w-16 h-16 mx-auto bg-amber-100 rounded-full flex items-center justify-center mb-6">
               <AlertCircle className="text-amber-600" size={32} />
             </div>
-            <h2 className="text-2xl font-serif text-primary mb-4">Waiting for Your Therapist</h2>
-            <p className="text-muted-foreground mb-6">
-              Your therapist is preparing your case history and consent documentation. 
-              Once complete, you&apos;ll be able to review and sign your informed consent for therapy.
+            <h2 className="text-2xl font-serif text-emerald-800 mb-4">Waiting for Your Therapist</h2>
+            <p className="text-gray-600 mb-6">
+              Your therapist is preparing your documentation. 
+              Once complete, you can review and sign your consent form.
             </p>
-            <p className="text-sm text-muted-foreground">
-              Please check back later or contact your therapist if you have questions.
+            <p className="text-sm text-gray-500">
+              Please check back later or contact your therapist.
             </p>
           </Card>
         </main>
@@ -284,91 +344,74 @@ const ClientDashboard = () => {
     );
   }
 
-  // Consent exists but not signed - SHOW CONSENT FORM
+  // Consent exists but not signed
   if (!consentStatus.is_signed) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-        <header className="bg-white/80 backdrop-blur-lg border-b border-border/40">
-          <div className="max-w-4xl mx-auto px-6 py-4 flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-serif text-primary">TheraGenie</h1>
-              <p className="text-sm text-muted-foreground">Welcome, {user?.full_name}</p>
+      <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-teal-50/30 to-sky-50/50">
+        <header className="bg-white/80 backdrop-blur-lg border-b border-emerald-100">
+          <div className="max-w-lg mx-auto px-4 py-4 flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <Sparkles className="text-emerald-600" size={24} />
+              <span className="text-xl font-serif text-emerald-700">TheraGenie</span>
             </div>
-            <Button onClick={handleLogout} variant="ghost" data-testid="client-logout-button">
-              <LogOut size={20} className="mr-2" /> Logout
+            <Button onClick={handleLogout} variant="ghost" size="sm" data-testid="client-logout-button">
+              <LogOut size={18} />
             </Button>
           </div>
         </header>
 
-        <main className="max-w-3xl mx-auto p-6 md:p-12">
-          <Card className="bg-white/80 backdrop-blur-xl border border-border/40 rounded-2xl shadow-xl overflow-hidden">
-            <div className="bg-gradient-to-r from-primary to-primary/80 p-6 text-white">
+        <main className="max-w-lg mx-auto p-4 pt-4">
+          <Card className="bg-white rounded-3xl shadow-lg overflow-hidden border-0">
+            <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-6 text-white">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                  <FileCheck size={24} />
-                </div>
+                <FileCheck size={24} />
                 <div>
-                  <h2 className="text-2xl font-serif">Informed Consent</h2>
-                  <p className="text-white/80 text-sm">Please review and sign to begin your therapy journey</p>
+                  <h2 className="text-xl font-serif">Informed Consent</h2>
+                  <p className="text-white/80 text-sm">Please review and sign</p>
                 </div>
               </div>
             </div>
 
-            <div className="p-6 md:p-8">
+            <div className="p-5">
               {consent && (
-                <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg mb-6">
-                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                    <Shield className="text-primary" size={20} />
+                <div className="flex items-center gap-3 p-4 bg-emerald-50 rounded-2xl mb-5">
+                  <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+                    <Shield className="text-emerald-600" size={18} />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Your Therapist</p>
-                    <p className="font-medium">{consent.therapist_name}</p>
+                    <p className="text-xs text-emerald-600">Your Therapist</p>
+                    <p className="font-medium text-emerald-800">{consent.therapist_name}</p>
                   </div>
                 </div>
               )}
 
-              <div className="prose prose-sm max-w-none mb-8">
-                <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 max-h-[400px] overflow-y-auto">
-                  {consent?.consent_text?.split('\n').map((line, idx) => {
-                    if (line.match(/^\d+\.\s/)) {
-                      return <h3 key={idx} className="text-lg font-semibold text-primary mt-4 mb-2">{line}</h3>;
-                    }
-                    if (line.startsWith('•') || line.startsWith('-')) {
-                      return <p key={idx} className="ml-4 text-slate-600">{line}</p>;
-                    }
-                    if (line.startsWith('  -')) {
-                      return <p key={idx} className="ml-8 text-slate-500 text-sm">{line}</p>;
-                    }
-                    if (line.includes('INFORMED CONSENT')) {
-                      return <h2 key={idx} className="text-xl font-bold text-center text-primary mb-4">{line}</h2>;
-                    }
-                    if (line.startsWith('Client Name:') || line.startsWith('Therapist Name:') || line.startsWith('Date:')) {
-                      return <p key={idx} className="text-sm text-slate-500">{line}</p>;
-                    }
-                    if (!line.trim()) {
-                      return <div key={idx} className="h-2" />;
-                    }
-                    return <p key={idx} className="text-slate-700">{line}</p>;
-                  })}
-                </div>
+              <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 max-h-[300px] overflow-y-auto mb-5">
+                {consent?.consent_text?.split('\n').map((line, idx) => {
+                  if (line.match(/^\d+\.\s/)) {
+                    return <h3 key={idx} className="text-base font-semibold text-emerald-700 mt-3 mb-2">{line}</h3>;
+                  }
+                  if (line.startsWith('•') || line.startsWith('-')) {
+                    return <p key={idx} className="ml-3 text-gray-600 text-sm">{line}</p>;
+                  }
+                  if (line.includes('INFORMED CONSENT')) {
+                    return <h2 key={idx} className="text-lg font-bold text-center text-emerald-700 mb-3">{line}</h2>;
+                  }
+                  if (!line.trim()) return <div key={idx} className="h-2" />;
+                  return <p key={idx} className="text-gray-700 text-sm">{line}</p>;
+                })}
               </div>
 
-              <div className="bg-primary/5 p-4 rounded-xl border border-primary/20 mb-6">
+              <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100 mb-5">
                 <div className="flex items-start gap-3">
                   <Checkbox
                     id="consent-agree"
                     checked={consentAgreed}
                     onCheckedChange={setConsentAgreed}
-                    className="mt-1"
+                    className="mt-0.5"
                     data-testid="consent-agree-checkbox"
                   />
-                  <label htmlFor="consent-agree" className="text-sm cursor-pointer">
-                    <span className="font-semibold text-primary">Client Consent Declaration</span>
-                    <br />
-                    <span className="text-slate-600">
-                      I hereby confirm that I have read, understood, and agree to the terms described above 
-                      and provide my informed consent to participate in psychotherapy.
-                    </span>
+                  <label htmlFor="consent-agree" className="text-sm cursor-pointer text-emerald-800">
+                    I have read, understood, and agree to the terms above.
                   </label>
                 </div>
               </div>
@@ -376,26 +419,15 @@ const ClientDashboard = () => {
               <Button
                 onClick={handleSignConsent}
                 disabled={signing || !consentAgreed}
-                className="w-full py-6 text-lg bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                className="w-full py-5 text-base rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
                 data-testid="sign-consent-button"
               >
                 {signing ? (
-                  <>
-                    <Loader2 className="animate-spin mr-2" size={20} />
-                    Signing...
-                  </>
+                  <><Loader2 className="animate-spin mr-2" size={18} /> Signing...</>
                 ) : (
-                  <>
-                    <Pen className="mr-2" size={20} />
-                    Sign Consent Digitally
-                  </>
+                  <><Pen className="mr-2" size={18} /> Sign Consent</>
                 )}
               </Button>
-
-              <p className="text-xs text-center text-muted-foreground mt-4">
-                By clicking &quot;Sign Consent Digitally&quot;, you are providing your electronic signature 
-                which has the same legal effect as a handwritten signature.
-              </p>
             </div>
           </Card>
         </main>
@@ -404,323 +436,335 @@ const ClientDashboard = () => {
   }
 
   // CONSENT SIGNED - Show full dashboard
+  const greeting = getGreeting();
   const upcomingAppointments = appointments
     .filter((a) => new Date(a.start_time) > new Date() && a.status !== 'cancelled')
     .sort((a, b) => new Date(a.start_time) - new Date(b.start_time))
     .slice(0, 3);
 
   const pendingHomework = homework.filter((h) => h.status === 'assigned');
+  const completedHomework = homework.filter((h) => h.status === 'completed').slice(0, 3);
   const recentPayments = payments.slice(0, 3);
+  
+  // Get last session date for motivation card
+  const pastSessions = appointments
+    .filter((a) => new Date(a.start_time) < new Date() && a.status !== 'cancelled')
+    .sort((a, b) => new Date(b.start_time) - new Date(a.start_time));
+  const lastSessionDate = pastSessions.length > 0 ? pastSessions[0].start_time : null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-lg border-b border-border/40 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
-          <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl font-serif text-primary">TheraGenie</h1>
-            <p className="text-xs sm:text-sm text-muted-foreground truncate">Welcome, {user?.full_name}</p>
+    <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-teal-50/30 to-sky-50/50 pb-8">
+      {/* Header - Minimal */}
+      <header className="bg-white/80 backdrop-blur-lg border-b border-emerald-100 sticky top-0 z-40">
+        <div className="max-w-lg mx-auto px-4 py-3 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <Sparkles className="text-emerald-600" size={22} />
+            <span className="text-lg font-serif text-emerald-700">TheraGenie</span>
           </div>
-          <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0">
-            <span className="hidden sm:flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
-              <Check size={12} /> Consent Signed
-            </span>
+          <div className="flex items-center gap-1">
             <Button onClick={() => setShowSettings(true)} variant="ghost" size="sm" className="p-2" data-testid="client-settings-button">
-              <SettingsIcon size={18} />
+              <SettingsIcon size={18} className="text-gray-500" />
             </Button>
-            <Button onClick={handleLogout} variant="ghost" size="sm" className="p-2 sm:px-3" data-testid="client-logout-button">
-              <LogOut size={18} />
-              <span className="hidden sm:inline ml-2">Logout</span>
+            <Button onClick={handleLogout} variant="ghost" size="sm" className="p-2" data-testid="client-logout-button">
+              <LogOut size={18} className="text-gray-500" />
             </Button>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-12">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
-          <div>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif text-primary mb-1 sm:mb-2">Your Dashboard</h2>
-            <p className="text-sm text-muted-foreground">Manage your therapy journey</p>
-          </div>
+      {/* Main Content - Single Column Mobile Layout */}
+      <main className="max-w-lg mx-auto px-4 pt-6 space-y-5">
+        
+        {/* Greeting Header with Gradient */}
+        <div 
+          className="rounded-3xl p-6 text-white"
+          style={{ background: 'linear-gradient(135deg, #059669 0%, #0d9488 50%, #0ea5e9 100%)' }}
+          data-testid="greeting-header"
+        >
+          <h1 className="text-2xl font-serif mb-1">
+            {greeting.text}, {user?.full_name?.split(' ')[0]} {greeting.emoji}
+          </h1>
+          <p className="text-white/80 text-sm mb-4">How are you feeling today?</p>
+          
+          {therapistName && (
+            <div className="flex items-center gap-2 bg-white/20 rounded-xl px-3 py-2 mt-3">
+              <User size={16} className="text-white/80" />
+              <span className="text-sm text-white/90">Your Therapist: {therapistName}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Primary CTA - Request Appointment */}
+        <div className="text-center">
           <Button 
             onClick={handleOpenBooking}
-            className="bg-gradient-to-r from-primary to-primary/80 w-full sm:w-auto"
-            data-testid="book-appointment-button"
+            className="w-full py-6 text-base rounded-2xl bg-emerald-700 hover:bg-emerald-800 shadow-lg shadow-emerald-200"
+            data-testid="request-appointment-button"
           >
-            <CalendarPlus size={18} className="mr-2" /> Book Appointment
+            <CalendarPlus size={20} className="mr-2" /> Request Appointment
           </Button>
+          <p className="text-xs text-gray-500 mt-2">
+            Your appointment request will be reviewed and confirmed soon.
+          </p>
         </div>
 
-        {/* Bento Grid Layout - Mobile optimized */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
-          {/* Upcoming Appointments - Span 8 cols on lg */}
-          <Card className="lg:col-span-8 p-4 sm:p-6 bg-white/70 backdrop-blur-xl border border-border/40 rounded-xl shadow-lg" data-testid="upcoming-appointments-card">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <Calendar className="text-primary" size={20} />
-                <h3 className="text-lg sm:text-xl lg:text-2xl font-serif text-primary">Upcoming</h3>
-              </div>
-              <Button variant="ghost" size="sm" onClick={handleOpenBooking} className="text-xs sm:text-sm">
-                <CalendarPlus size={14} className="mr-1" /> Book
-              </Button>
-            </div>
-            {upcomingAppointments.length === 0 ? (
-              <div className="text-center py-6 sm:py-8">
-                <Calendar className="mx-auto text-muted-foreground mb-3" size={32} />
-                <p className="text-sm text-muted-foreground mb-4">No upcoming appointments</p>
-                <Button onClick={handleOpenBooking} variant="outline" size="sm">
-                  <CalendarPlus size={14} className="mr-2" /> Schedule Now
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-2 sm:space-y-3">
-                {upcomingAppointments.map((appt) => (
-                  <div
-                    key={appt.id}
-                    className="p-3 sm:p-4 bg-surface rounded-lg border border-border hover:border-primary/50 transition-colors"
-                    data-testid={`appointment-${appt.id}`}
-                  >
-                    <div className="flex justify-between items-start sm:items-center gap-2">
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-sm sm:text-base lg:text-lg">
-                          {formatDate(appt.start_time)}
-                        </p>
-                        <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1">
-                          <Clock size={12} /> {formatTime(appt.start_time)} - {formatTime(appt.end_time)}
-                        </p>
-                      </div>
-                      <span className={`text-[10px] sm:text-xs px-2 py-1 rounded-full flex-shrink-0 ${
-                        appt.status === 'scheduled' ? 'bg-blue-100 text-blue-700' :
-                        appt.status === 'in_progress' ? 'bg-amber-100 text-amber-700' :
-                        'bg-gray-100 text-gray-700'
-                      }`}>
-                        {appt.status === 'in_progress' ? 'In Progress' : 'Scheduled'}
-                      </span>
-                    </div>
-                    {appt.notes && <p className="text-xs sm:text-sm text-muted-foreground mt-2 line-clamp-2">{appt.notes}</p>}
-                  </div>
-                ))}
-              </div>
-            )}
-          </Card>
+        {/* Motivation Card */}
+        <MotivationCard lastSessionDate={lastSessionDate} />
 
-          {/* Pending Assessments - Span 4 cols on lg */}
-          <Card className="lg:col-span-4 p-4 sm:p-6 bg-white/70 backdrop-blur-xl border border-border/40 rounded-xl shadow-lg" data-testid="pending-assessments-card">
-            <div className="flex items-center gap-2 sm:gap-3 mb-4">
-              <ClipboardCheck className="text-secondary" size={20} />
-              <h3 className="text-lg sm:text-xl font-serif text-primary">Assessments</h3>
+        {/* Upcoming Appointments Section */}
+        <Card className="p-5 bg-white rounded-3xl border-0 shadow-sm" data-testid="upcoming-appointments-card">
+          <div className="flex items-center gap-2 mb-4">
+            <Calendar className="text-emerald-600" size={20} />
+            <h3 className="text-lg font-semibold text-gray-800">Upcoming Sessions</h3>
+          </div>
+          
+          {upcomingAppointments.length === 0 ? (
+            <div className="p-6 bg-gray-50 rounded-2xl text-center">
+              <Calendar className="mx-auto text-gray-300 mb-2" size={32} />
+              <p className="text-sm text-gray-500">No upcoming sessions scheduled</p>
+              <p className="text-xs text-gray-400 mt-1">Request an appointment to get started</p>
             </div>
-            {assessments.length === 0 ? (
-              <p className="text-xs sm:text-sm text-muted-foreground">No assessments assigned</p>
-            ) : (
-              <div className="space-y-2">
-                {/* Pending Assessments */}
-                {assessments.filter(a => a.status === 'assigned').map((assess) => (
-                  <div key={assess.id} className="p-3 bg-surface rounded-lg border border-border hover:border-primary/30 transition-colors">
-                    <div className="flex justify-between items-start gap-2">
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-sm">{assess.assessment_type}</p>
-                        {assess.due_date && (
-                          <p className="text-[10px] text-muted-foreground mt-1">
-                            Due: {formatDate(assess.due_date)}
-                          </p>
-                        )}
-                      </div>
-                      <Badge variant="outline" className="bg-amber-50 text-amber-700 text-[10px]">
-                        Pending
-                      </Badge>
-                    </div>
-                    <Button
-                      onClick={() => handleCompleteAssessment(assess)}
-                      size="sm"
-                      className="mt-2 w-full text-xs"
-                      data-testid={`complete-assessment-${assess.id}`}
-                    >
-                      Start Assessment
-                    </Button>
-                  </div>
-                ))}
-                
-                {/* Completed Assessments with View Report option */}
-                {assessments.filter(a => a.status === 'completed').slice(0, 3).map((assess) => (
-                  <div key={assess.id} className="p-3 bg-surface rounded-lg border border-border">
-                    <div className="flex justify-between items-start gap-2">
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-sm">{assess.assessment_type}</p>
-                        <p className="text-[10px] text-muted-foreground mt-1">
-                          Completed: {assess.completed_at ? formatDate(assess.completed_at) : 'N/A'}
-                        </p>
-                      </div>
-                      <Badge className="bg-success/10 text-success text-[10px]">
-                        Done
-                      </Badge>
-                    </div>
-                    {assess.report_shared_with_client && (
-                      <Button
-                        onClick={() => handleViewSharedReport(assess.id)}
-                        size="sm"
-                        variant="outline"
-                        className="mt-2 w-full text-xs"
-                        data-testid={`view-report-${assess.id}`}
-                      >
-                        <Eye size={12} className="mr-1" /> View Report
-                      </Button>
-                    )}
-                  </div>
-                ))}
-
-                {assessments.filter(a => a.status === 'assigned').length === 0 && assessments.filter(a => a.status === 'completed').length > 0 && (
-                  <p className="text-xs text-muted-foreground text-center py-2">No pending assessments</p>
-                )}
-              </div>
-            )}
-          </Card>
-
-          {/* Homework - Span 6 cols on lg */}
-          <Card className="lg:col-span-6 p-4 sm:p-6 bg-white/70 backdrop-blur-xl border border-border/40 rounded-xl shadow-lg" data-testid="homework-card">
-            <div className="flex items-center gap-2 sm:gap-3 mb-4">
-              <BookCheck className="text-info" size={20} />
-              <h3 className="text-lg sm:text-xl lg:text-2xl font-serif text-primary">Homework</h3>
-            </div>
-            {pendingHomework.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No pending homework</p>
-            ) : (
-              <div className="space-y-2 sm:space-y-3">
-                {pendingHomework.map((hw) => (
-                  <div 
-                    key={hw.id} 
-                    className={`p-3 sm:p-4 bg-surface rounded-lg border ${
-                      hw.priority === 'high' ? 'border-red-300 bg-red-50/30' :
-                      hw.priority === 'low' ? 'border-gray-300' :
-                      'border-amber-300 bg-amber-50/20'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <h4 className="font-medium text-sm sm:text-base">{hw.title}</h4>
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0 ${
-                        hw.priority === 'high' ? 'bg-red-100 text-red-700' :
-                        hw.priority === 'low' ? 'bg-gray-100 text-gray-700' :
-                        'bg-amber-100 text-amber-700'
-                      }`}>
-                        {hw.priority?.charAt(0).toUpperCase() + hw.priority?.slice(1)}
-                      </span>
-                    </div>
-                    <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-2">{hw.description}</p>
-                    {hw.due_date && (
-                      <p className={`text-[10px] sm:text-xs mt-2 ${
-                        new Date(hw.due_date) < new Date() ? 'text-red-600 font-medium' : 'text-warning'
-                      }`}>
-                        Due: {formatDate(hw.due_date)}
-                        {new Date(hw.due_date) < new Date() && ' (Overdue)'}
+          ) : (
+            <div className="space-y-3">
+              {upcomingAppointments.map((appt) => (
+                <div
+                  key={appt.id}
+                  className="p-4 bg-sky-50 rounded-2xl border border-sky-100"
+                  data-testid={`appointment-${appt.id}`}
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-medium text-sky-900">{formatDate(appt.start_time)}</p>
+                      <p className="text-sm text-sky-700 flex items-center gap-1 mt-1">
+                        <Clock size={14} /> {formatTime(appt.start_time)} - {formatTime(appt.end_time)}
                       </p>
-                    )}
-                    <Button
-                      onClick={() => handleCompleteHomework(hw.id)}
-                      size="sm"
-                      className="mt-2 sm:mt-3 text-xs"
-                      data-testid={`complete-homework-${hw.id}`}
-                    >
-                      Mark Complete
-                    </Button>
+                    </div>
+                    <Badge className="bg-sky-100 text-sky-700 border-0">
+                      {appt.status === 'in_progress' ? 'In Progress' : 'Scheduled'}
+                    </Badge>
                   </div>
-                ))}
-              </div>
-            )}
-          </Card>
-
-          {/* Payments - Span 6 cols on lg */}
-          <Card className="lg:col-span-6 p-4 sm:p-6 bg-white/70 backdrop-blur-xl border border-border/40 rounded-xl shadow-lg" data-testid="payments-card">
-            <div className="flex items-center gap-2 sm:gap-3 mb-4">
-              <CreditCard className="text-success" size={20} />
-              <h3 className="text-lg sm:text-xl lg:text-2xl font-serif text-primary">Payments</h3>
+                </div>
+              ))}
             </div>
-            {recentPayments.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No payment records</p>
-            ) : (
-              <div className="space-y-2 sm:space-y-3">
-                {recentPayments.map((payment) => (
-                  <div key={payment.id} className="p-3 sm:p-4 bg-surface rounded-lg border border-border flex justify-between items-start sm:items-center gap-2">
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium text-sm sm:text-base">{formatCurrency(payment.amount)}</p>
-                      <p className="text-[10px] sm:text-sm text-muted-foreground">
-                        {formatDate(payment.created_at)} • {payment.payment_method?.toUpperCase()}
-                      </p>
-                      {payment.bill_number && (
-                        <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Bill #: {payment.bill_number}</p>
+          )}
+        </Card>
+
+        {/* Homework Section */}
+        <Card className="p-5 bg-white rounded-3xl border-0 shadow-sm" data-testid="homework-card">
+          <div className="flex items-center gap-2 mb-4">
+            <BookCheck className="text-emerald-600" size={20} />
+            <h3 className="text-lg font-semibold text-gray-800">Homework</h3>
+          </div>
+          
+          {pendingHomework.length === 0 && completedHomework.length === 0 ? (
+            <p className="text-sm text-gray-500 text-center py-4">No homework assigned yet</p>
+          ) : (
+            <div className="space-y-3">
+              {/* Pending Homework - Light Orange */}
+              {pendingHomework.map((hw) => (
+                <div 
+                  key={hw.id} 
+                  className="p-4 bg-orange-50 rounded-2xl border border-orange-100"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1">
+                      <h4 className="font-medium text-orange-900">{hw.title}</h4>
+                      <p className="text-sm text-orange-700 mt-1 line-clamp-2">{hw.description}</p>
+                      {hw.due_date && (
+                        <p className="text-xs text-orange-600 mt-2">
+                          Due: {formatDate(hw.due_date)}
+                        </p>
                       )}
                     </div>
-                    <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-                      <span className={`text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full capitalize ${
-                        payment.payment_status === 'paid' ? 'bg-green-100 text-green-700' :
-                        payment.payment_status === 'partial' ? 'bg-amber-100 text-amber-700' :
-                        'bg-red-100 text-red-700'
-                      }`}>
-                        {payment.payment_status}
-                      </span>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        className="p-1 sm:p-2"
-                        onClick={() => handleViewReceipt(payment.id)}
-                        data-testid={`view-receipt-${payment.id}`}
-                      >
-                        <Receipt size={14} />
-                      </Button>
-                    </div>
+                    <Badge className="bg-orange-100 text-orange-700 border-0 text-xs">Pending</Badge>
                   </div>
-                ))}
-              </div>
-            )}
-          </Card>
-        </div>
+                  <Button
+                    onClick={() => handleCompleteHomework(hw.id)}
+                    size="sm"
+                    className="mt-3 w-full bg-orange-600 hover:bg-orange-700 rounded-xl"
+                    data-testid={`complete-homework-${hw.id}`}
+                  >
+                    Mark Complete
+                  </Button>
+                </div>
+              ))}
+              
+              {/* Completed Homework - Soft Green */}
+              {completedHomework.map((hw) => (
+                <div 
+                  key={hw.id} 
+                  className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-start gap-2">
+                      <CheckCircle className="text-emerald-600 mt-0.5 flex-shrink-0" size={18} />
+                      <div>
+                        <h4 className="font-medium text-emerald-800">{hw.title}</h4>
+                        <p className="text-xs text-emerald-600 mt-1">
+                          Completed: {formatDate(hw.completed_at || hw.updated_at)}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge className="bg-emerald-100 text-emerald-700 border-0 text-xs">Done</Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
 
-        {/* Disclaimer */}
-        <div className="mt-8 sm:mt-12 p-4 sm:p-6 bg-info/10 border border-info/20 rounded-xl">
-          <p className="text-xs sm:text-sm text-info">
-            <strong>Clinical Support Only:</strong> This platform provides tools to support your therapy journey.
-            All clinical decisions and treatment plans are made by your licensed therapist.
+        {/* Assessments Section */}
+        <Card className="p-5 bg-white rounded-3xl border-0 shadow-sm" data-testid="assessments-card">
+          <div className="flex items-center gap-2 mb-4">
+            <ClipboardCheck className="text-emerald-600" size={20} />
+            <h3 className="text-lg font-semibold text-gray-800">Assessments</h3>
+          </div>
+          
+          {assessments.length === 0 ? (
+            <p className="text-sm text-gray-500 text-center py-4">No assessments assigned</p>
+          ) : (
+            <div className="space-y-3">
+              {/* Pending Assessments */}
+              {assessments.filter(a => a.status === 'assigned').map((assess) => (
+                <div key={assess.id} className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                  <div className="flex justify-between items-start gap-2">
+                    <div>
+                      <p className="font-medium text-gray-800">{assess.assessment_type}</p>
+                      {assess.due_date && (
+                        <p className="text-xs text-gray-500 mt-1">Due: {formatDate(assess.due_date)}</p>
+                      )}
+                    </div>
+                    <Badge className="bg-gray-100 text-gray-600 border-0 text-xs">Pending</Badge>
+                  </div>
+                  <Button
+                    onClick={() => handleCompleteAssessment(assess)}
+                    size="sm"
+                    className="mt-3 w-full rounded-xl"
+                    data-testid={`complete-assessment-${assess.id}`}
+                  >
+                    Start Assessment
+                  </Button>
+                </div>
+              ))}
+              
+              {/* Completed Assessments */}
+              {assessments.filter(a => a.status === 'completed').slice(0, 3).map((assess) => (
+                <div key={assess.id} className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                  <div className="flex justify-between items-start gap-2">
+                    <div>
+                      <p className="font-medium text-gray-800">{assess.assessment_type}</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Completed: {assess.completed_at ? formatDate(assess.completed_at) : 'N/A'}
+                      </p>
+                    </div>
+                    <Badge className="bg-emerald-100 text-emerald-700 border-0 text-xs">Completed</Badge>
+                  </div>
+                  {assess.report_shared_with_client && (
+                    <Button
+                      onClick={() => handleViewSharedReport(assess.id)}
+                      size="sm"
+                      variant="outline"
+                      className="mt-3 w-full rounded-xl"
+                      data-testid={`view-report-${assess.id}`}
+                    >
+                      <Eye size={14} className="mr-1" /> View Report
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+
+        {/* Payments Section - Minimal & Soft */}
+        <Card className="p-5 bg-white rounded-3xl border-0 shadow-sm" data-testid="payments-card">
+          <div className="flex items-center gap-2 mb-4">
+            <CreditCard className="text-gray-400" size={20} />
+            <h3 className="text-lg font-semibold text-gray-600">Payment History</h3>
+          </div>
+          
+          {recentPayments.length === 0 ? (
+            <p className="text-sm text-gray-400 text-center py-4">No payment records</p>
+          ) : (
+            <div className="space-y-2">
+              {recentPayments.map((payment) => (
+                <div 
+                  key={payment.id} 
+                  className="p-3 bg-gray-50 rounded-xl flex justify-between items-center"
+                >
+                  <div>
+                    <p className="font-medium text-gray-700 text-sm">{formatCurrency(payment.amount)}</p>
+                    <p className="text-xs text-gray-400">{formatDate(payment.created_at)}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-500 capitalize">
+                      {payment.payment_status}
+                    </span>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      className="p-1.5"
+                      onClick={() => handleViewReceipt(payment.id)}
+                      data-testid={`view-receipt-${payment.id}`}
+                    >
+                      <Receipt size={14} className="text-gray-400" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+
+        {/* Support Note */}
+        <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+          <p className="text-xs text-emerald-700 text-center">
+            Need support? Reach out to your therapist anytime. We are here for you. 💚
           </p>
         </div>
       </main>
 
-      {/* Appointment Booking Dialog */}
+      {/* Request Appointment Dialog */}
       <Dialog open={showBookingDialog} onOpenChange={setShowBookingDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md mx-4 rounded-3xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <CalendarPlus size={20} /> Book an Appointment
+            <DialogTitle className="flex items-center gap-2 text-emerald-700">
+              <CalendarPlus size={20} /> Request an Appointment
             </DialogTitle>
           </DialogHeader>
           
           <div className="space-y-4">
             <div>
-              <Label>Select Date</Label>
+              <Label className="text-gray-700">Select Date</Label>
               <Input
                 type="date"
                 value={selectedDate}
                 onChange={handleDateChange}
                 min={new Date().toISOString().split('T')[0]}
-                className="mt-1"
+                className="mt-1 rounded-xl"
               />
             </div>
 
             {selectedDate && (
               <div>
-                <Label className="mb-2 block">Available Time Slots</Label>
+                <Label className="mb-2 block text-gray-700">Available Time Slots</Label>
                 {loadingSlots ? (
                   <div className="flex items-center justify-center py-8">
-                    <Loader2 className="animate-spin text-primary" size={24} />
+                    <Loader2 className="animate-spin text-emerald-600" size={24} />
                   </div>
                 ) : availableSlots.length > 0 ? (
-                  <div className="grid grid-cols-3 gap-2 max-h-[200px] overflow-y-auto">
+                  <div className="grid grid-cols-3 gap-2 max-h-[180px] overflow-y-auto">
                     {availableSlots.map((slot, idx) => (
                       <Button
                         key={idx}
                         type="button"
                         variant={selectedSlot?.start === slot.start ? 'default' : 'outline'}
                         size="sm"
-                        className="text-xs"
+                        className={`text-xs rounded-xl ${
+                          selectedSlot?.start === slot.start 
+                            ? 'bg-emerald-600' 
+                            : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
+                        }`}
                         onClick={() => setSelectedSlot(slot)}
                       >
                         {formatTime(slot.start)}
@@ -728,29 +772,29 @@ const ClientDashboard = () => {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-muted-foreground text-sm text-center py-4">
-                    No available slots for this date. Please try another date.
+                  <p className="text-gray-500 text-sm text-center py-4">
+                    No available slots for this date.
                   </p>
                 )}
               </div>
             )}
 
             {selectedSlot && (
-              <div className="p-3 bg-primary/10 rounded-lg text-sm">
-                <p className="font-medium text-primary">
+              <div className="p-3 bg-emerald-50 rounded-xl text-sm border border-emerald-100">
+                <p className="font-medium text-emerald-700">
                   Selected: {formatDate(selectedSlot.start)} at {formatTime(selectedSlot.start)}
                 </p>
               </div>
             )}
 
             <div>
-              <Label>Notes (optional)</Label>
+              <Label className="text-gray-700">Notes (optional)</Label>
               <Textarea
                 value={bookingNotes}
                 onChange={(e) => setBookingNotes(e.target.value)}
-                placeholder="Any topics you'd like to discuss..."
+                placeholder="What would you like to discuss?"
                 rows={2}
-                className="mt-1"
+                className="mt-1 rounded-xl"
               />
             </div>
 
@@ -758,21 +802,22 @@ const ClientDashboard = () => {
               <Button 
                 onClick={handleBookAppointment} 
                 disabled={!selectedSlot || booking}
-                className="flex-1"
+                className="flex-1 rounded-xl bg-emerald-700 hover:bg-emerald-800"
               >
                 {booking ? (
-                  <>
-                    <Loader2 className="animate-spin mr-2" size={16} />
-                    Booking...
-                  </>
+                  <><Loader2 className="animate-spin mr-2" size={16} /> Requesting...</>
                 ) : (
-                  'Confirm Booking'
+                  'Request Appointment'
                 )}
               </Button>
-              <Button variant="outline" onClick={() => setShowBookingDialog(false)}>
+              <Button variant="outline" onClick={() => setShowBookingDialog(false)} className="rounded-xl">
                 Cancel
               </Button>
             </div>
+            
+            <p className="text-xs text-gray-400 text-center">
+              Your therapist will confirm your appointment request.
+            </p>
           </div>
         </DialogContent>
       </Dialog>
@@ -787,14 +832,14 @@ const ClientDashboard = () => {
       {/* Settings Dialog */}
       <Settings isOpen={showSettings} onClose={() => setShowSettings(false)} />
 
-      {/* Assessment Taker Dialog - Full Screen for better UX */}
+      {/* Assessment Taker Dialog */}
       <Dialog open={showAssessmentTaker} onOpenChange={(open) => {
         if (!open) {
           setShowAssessmentTaker(false);
           setSelectedAssessmentId(null);
         }
       }}>
-        <DialogContent className="max-w-2xl max-h-[95vh] overflow-y-auto p-0" data-testid="assessment-taker-dialog">
+        <DialogContent className="max-w-2xl max-h-[95vh] overflow-y-auto p-0 rounded-3xl" data-testid="assessment-taker-dialog">
           {selectedAssessmentId && (
             <ClientAssessmentTaker
               assessmentId={selectedAssessmentId}
@@ -810,65 +855,38 @@ const ClientDashboard = () => {
 
       {/* Shared Report View Dialog */}
       <Dialog open={showSharedReport} onOpenChange={setShowSharedReport}>
-        <DialogContent className="max-w-lg" data-testid="shared-report-dialog">
+        <DialogContent className="max-w-lg rounded-3xl" data-testid="shared-report-dialog">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-primary">
+            <DialogTitle className="flex items-center gap-2 text-emerald-700">
               <FileText size={20} /> Assessment Report
             </DialogTitle>
           </DialogHeader>
           {sharedReportData && (
             <div className="space-y-4">
               <div>
-                <p className="text-lg font-medium">{sharedReportData.assessment_type}</p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-lg font-medium text-gray-800">{sharedReportData.assessment_type}</p>
+                <p className="text-sm text-gray-500">
                   Completed: {sharedReportData.completed_at ? formatDate(sharedReportData.completed_at) : 'N/A'}
                 </p>
               </div>
 
-              {/* Score Display */}
-              {sharedReportData.score_details && (
-                <Card className="p-4 bg-surface">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Your Score</p>
-                      <p className="text-2xl font-bold text-primary">{sharedReportData.score}</p>
-                      {sharedReportData.score_details.max_score && (
-                        <p className="text-xs text-muted-foreground">out of {sharedReportData.score_details.max_score}</p>
-                      )}
-                    </div>
-                    {sharedReportData.score_details.severity && (
-                      <Badge className={`text-sm ${
-                        sharedReportData.score_details.severity.color === 'green' ? 'bg-success/10 text-success' :
-                        sharedReportData.score_details.severity.color === 'yellow' ? 'bg-warning/10 text-warning' :
-                        sharedReportData.score_details.severity.color === 'orange' ? 'bg-orange-100 text-orange-800' :
-                        'bg-destructive/10 text-destructive'
-                      }`}>
-                        {sharedReportData.score_details.severity.label}
-                      </Badge>
-                    )}
-                  </div>
-                </Card>
-              )}
-
-              {/* Therapist Notes if any */}
               {sharedReportData.therapist_notes && (
                 <div>
-                  <p className="text-sm font-medium mb-2">Notes from Your Therapist</p>
-                  <Card className="p-4 bg-blue-50 border-blue-200">
-                    <p className="text-sm text-blue-900">{sharedReportData.therapist_notes}</p>
+                  <p className="text-sm font-medium mb-2 text-gray-700">Notes from Your Therapist</p>
+                  <Card className="p-4 bg-emerald-50 border-emerald-100 rounded-2xl">
+                    <p className="text-sm text-emerald-800">{sharedReportData.therapist_notes}</p>
                   </Card>
                 </div>
               )}
 
-              {/* Disclaimer */}
-              <Card className="p-4 bg-amber-50 border-amber-200">
+              <Card className="p-4 bg-amber-50 border-amber-100 rounded-2xl">
                 <p className="text-sm text-amber-800">
                   <AlertCircle className="w-4 h-4 inline mr-2" />
-                  Please discuss this report with your therapist for proper interpretation.
+                  Please discuss this report with your therapist for guidance.
                 </p>
               </Card>
 
-              <Button onClick={() => setShowSharedReport(false)} className="w-full">
+              <Button onClick={() => setShowSharedReport(false)} className="w-full rounded-xl bg-emerald-700">
                 Close
               </Button>
             </div>
