@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { API, useAuth } from '../App';
 import { Button } from './ui/button';
@@ -21,14 +21,15 @@ import {
 // Import sub-components
 import CaseHistoryForm from './CaseHistoryForm';
 import TherapyConsent from './TherapyConsent';
-import { SessionActionButtons, AppointmentStatusBadge } from './SessionCheckInOut';
-import { PaymentCard } from './PaymentReceipt';
 import AssessmentTrendChart from './AssessmentTrendChart';
 
-const ClientProfilePage = ({ isReadOnly = false, isAssistant = false }) => {
-  const { clientId } = useParams();
+const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = false }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+  
+  // Extract clientId from URL or prop
+  const clientId = clientIdProp || location.pathname.split('/').pop();
   
   const [client, setClient] = useState(null);
   const [loading, setLoading] = useState(true);
