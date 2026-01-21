@@ -31,11 +31,17 @@ const TherapistDashboard = () => {
   const { user, logout } = useAuth();
   const { isFeatureEnabled, isReadOnly, daysRemaining, expiryWarning, refreshStatus } = useSubscription();
   const navigate = useNavigate();
+  const location = useLocation();
   const [currentView, setCurrentView] = useState('overview');
   const [showSettings, setShowSettings] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [expandedGroup, setExpandedGroup] = useState('Clinical');
   const [hasAvailability, setHasAvailability] = useState(true);
+  
+  // Check if we're on a client profile page
+  const clientProfileMatch = location.pathname.match(/\/therapist\/clients\/([^/]+)/);
+  const isClientProfilePage = !!clientProfileMatch;
+  const clientIdFromUrl = clientProfileMatch ? clientProfileMatch[1] : null;
   
   // Navigation context for passing data between views
   const [navContext, setNavContext] = useState({ selectedClientId: null, clientFilter: null, filterData: null });
