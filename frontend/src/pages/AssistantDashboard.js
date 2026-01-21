@@ -733,6 +733,11 @@ const AssistantDashboard = () => {
   const { isReadOnly, refreshStatus } = useSubscription();
   const [currentView, setCurrentView] = useState('overview');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
+  // Check if we're on a client profile page
+  const clientProfileMatch = window.location.pathname.match(/\/assistant\/clients\/([^/]+)/);
+  const isClientProfilePage = !!clientProfileMatch;
+  const clientIdFromUrl = clientProfileMatch ? clientProfileMatch[1] : null;
 
   useEffect(() => {
     refreshStatus();
@@ -756,9 +761,15 @@ const AssistantDashboard = () => {
   };
 
   const getCurrentViewLabel = () => {
+    if (isClientProfilePage) return 'Client Profile';
     const item = navItems.find(i => i.id === currentView);
     return item ? item.label : 'Dashboard';
   };
+  
+  // If on client profile page, render full-page client profile with assistant restrictions
+  if (isClientProfilePage && clientIdFromUrl) {
+    return <ClientProfilePage clientIdProp={clientIdFromUrl} isReadOnly={isReadOnly} isAssistant={true} />;
+  }
 
   return (
     <div className="flex h-screen bg-background">
