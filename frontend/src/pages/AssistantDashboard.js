@@ -17,6 +17,7 @@ import {
   Lock, Send, FileCheck
 } from 'lucide-react';
 import ClientManagement from '../components/ClientManagement';
+import ClientProfilePage from '../components/ClientProfilePage';
 import TherapistSchedule from '../components/TherapistSchedule';
 import Payments from '../components/Payments';
 import { toast } from 'sonner';
