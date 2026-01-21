@@ -284,26 +284,28 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
                 </div>
               </Card>
               
-              {/* Consent Status Card */}
-              <Card className="p-5">
-                <h3 className="font-semibold mb-4">Therapy Consent</h3>
-                {consent?.is_signed ? (
-                  <div className="flex items-center gap-2 text-green-600">
-                    <CheckCircle2 size={18} />
-                    <span>Signed on {formatDate(consent.signature_date)}</span>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-amber-600">
-                      <AlertCircle size={18} />
-                      <span>Consent not signed</span>
+              {/* Consent Status Card - Therapist Only */}
+              {!isAssistant && (
+                <Card className="p-5">
+                  <h3 className="font-semibold mb-4">Therapy Consent</h3>
+                  {consent?.is_signed ? (
+                    <div className="flex items-center gap-2 text-green-600">
+                      <CheckCircle2 size={18} />
+                      <span>Signed on {formatDate(consent.signature_date)}</span>
                     </div>
-                    <Button size="sm" onClick={() => setShowConsent(true)} disabled={isReadOnly}>
-                      View Consent Form
-                    </Button>
-                  </div>
-                )}
-              </Card>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 text-amber-600">
+                        <AlertCircle size={18} />
+                        <span>Consent not signed</span>
+                      </div>
+                      <Button size="sm" onClick={() => setShowConsent(true)} disabled={isReadOnly}>
+                        View Consent Form
+                      </Button>
+                    </div>
+                  )}
+                </Card>
+              )}
             </div>
             
             {/* Middle Column - Recent Activity */}
@@ -333,47 +335,88 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
                 )}
               </Card>
               
-              {/* Recent Session Notes */}
-              <Card className="p-5">
-                <h3 className="font-semibold mb-4 flex items-center gap-2">
-                  <PenSquare size={18} /> Recent Notes
-                </h3>
-                {sessionNotes.length === 0 ? (
-                  <p className="text-muted-foreground text-sm">No session notes yet</p>
-                ) : (
-                  <div className="space-y-3">
-                    {sessionNotes.slice(0, 3).map(note => (
-                      <div key={note.id} className="p-3 bg-muted/50 rounded-lg">
-                        <div className="flex justify-between items-start mb-2">
-                          <p className="font-medium text-sm">{formatDate(note.session_date)}</p>
-                          <Badge variant="outline" className="text-xs">{note.note_type || 'SOAP'}</Badge>
+              {/* Recent Session Notes - Therapist Only */}
+              {!isAssistant && (
+                <Card className="p-5">
+                  <h3 className="font-semibold mb-4 flex items-center gap-2">
+                    <PenSquare size={18} /> Recent Notes
+                  </h3>
+                  {sessionNotes.length === 0 ? (
+                    <p className="text-muted-foreground text-sm">No session notes yet</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {sessionNotes.slice(0, 3).map(note => (
+                        <div key={note.id} className="p-3 bg-muted/50 rounded-lg">
+                          <div className="flex justify-between items-start mb-2">
+                            <p className="font-medium text-sm">{formatDate(note.session_date)}</p>
+                            <Badge variant="outline" className="text-xs">{note.note_type || 'SOAP'}</Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground line-clamp-2">
+                            {note.subjective || note.content || 'No content'}
+                          </p>
                         </div>
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {note.subjective || note.content || 'No content'}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </Card>
+                      ))}
+                    </div>
+                  )}
+                </Card>
+              )}
+              
+              {/* Recent Payments - Assistant View */}
+              {isAssistant && (
+                <Card className="p-5">
+                  <h3 className="font-semibold mb-4 flex items-center gap-2">
+                    <DollarSign size={18} /> Recent Payments
+                  </h3>
+                  {payments.length === 0 ? (
+                    <p className="text-muted-foreground text-sm">No payments recorded</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {payments.slice(0, 3).map(payment => (
+                        <div key={payment.id} className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
+                          <div>
+                            <p className="font-medium">{formatCurrency(payment.amount)}</p>
+                            <p className="text-sm text-muted-foreground">{formatDate(payment.payment_date || payment.created_at)}</p>
+                          </div>
+                          <Badge variant="outline" className="capitalize">{payment.payment_method || 'cash'}</Badge>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </Card>
+              )}
             </div>
             
             {/* Right Column - Stats & Case History */}
             <div className="space-y-6">
-              {/* Stats */}
+              {/* Stats - Show different stats for Assistant */}
               <div className="grid grid-cols-2 gap-4">
                 <Card className="p-4 text-center">
                   <p className="text-2xl font-bold text-primary">{sessions.length}</p>
                   <p className="text-sm text-muted-foreground">Total Sessions</p>
                 </Card>
-                <Card className="p-4 text-center">
-                  <p className="text-2xl font-bold text-primary">{assessments.length}</p>
-                  <p className="text-sm text-muted-foreground">Assessments</p>
-                </Card>
-                <Card className="p-4 text-center">
-                  <p className="text-2xl font-bold text-primary">{homework.length}</p>
-                  <p className="text-sm text-muted-foreground">Homework</p>
-                </Card>
+                {isAssistant ? (
+                  <>
+                    <Card className="p-4 text-center">
+                      <p className="text-2xl font-bold text-primary">{appointments.filter(a => new Date(a.start_time) > new Date() && a.status !== 'cancelled').length}</p>
+                      <p className="text-sm text-muted-foreground">Upcoming</p>
+                    </Card>
+                    <Card className="p-4 text-center">
+                      <p className="text-2xl font-bold text-primary">{payments.length}</p>
+                      <p className="text-sm text-muted-foreground">Payments</p>
+                    </Card>
+                  </>
+                ) : (
+                  <>
+                    <Card className="p-4 text-center">
+                      <p className="text-2xl font-bold text-primary">{assessments.length}</p>
+                      <p className="text-sm text-muted-foreground">Assessments</p>
+                    </Card>
+                    <Card className="p-4 text-center">
+                      <p className="text-2xl font-bold text-primary">{homework.length}</p>
+                      <p className="text-sm text-muted-foreground">Homework</p>
+                    </Card>
+                  </>
+                )}
                 <Card className="p-4 text-center">
                   <p className="text-2xl font-bold text-primary">
                     {formatCurrency(payments.reduce((sum, p) => sum + (p.amount || 0), 0))}
@@ -382,28 +425,30 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
                 </Card>
               </div>
               
-              {/* Case History Quick View */}
-              <Card className="p-5">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-semibold flex items-center gap-2">
-                    <FileText size={18} /> Case History
-                  </h3>
-                  <Button size="sm" variant="outline" onClick={() => setShowCaseHistory(true)}>
-                    {caseHistory?.is_complete ? 'View' : 'Edit'}
-                  </Button>
-                </div>
-                {caseHistory?.is_complete ? (
-                  <div className="text-sm text-green-600 flex items-center gap-2">
-                    <CheckCircle2 size={16} />
-                    Case history completed
+              {/* Case History Quick View - Therapist Only */}
+              {!isAssistant && (
+                <Card className="p-5">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-semibold flex items-center gap-2">
+                      <FileText size={18} /> Case History
+                    </h3>
+                    <Button size="sm" variant="outline" onClick={() => setShowCaseHistory(true)}>
+                      {caseHistory?.is_complete ? 'View' : 'Edit'}
+                    </Button>
                   </div>
-                ) : (
-                  <div className="text-sm text-amber-600 flex items-center gap-2">
-                    <AlertCircle size={16} />
-                    Case history incomplete
-                  </div>
-                )}
-              </Card>
+                  {caseHistory?.is_complete ? (
+                    <div className="text-sm text-green-600 flex items-center gap-2">
+                      <CheckCircle2 size={16} />
+                      Case history completed
+                    </div>
+                  ) : (
+                    <div className="text-sm text-amber-600 flex items-center gap-2">
+                      <AlertCircle size={16} />
+                      Case history incomplete
+                    </div>
+                  )}
+                </Card>
+              )}
             </div>
           </div>
         )}
