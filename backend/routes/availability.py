@@ -347,8 +347,9 @@ async def get_available_slots(
     time_blocks = day_availability.get("time_blocks", [])
     
     for block in time_blocks:
-        block_start_str = block.get("start", "09:00")
-        block_end_str = block.get("end", "17:00")
+        # Support both old format (start/end) and new format (start_time/end_time)
+        block_start_str = block.get("start_time") or block.get("start", "09:00")
+        block_end_str = block.get("end_time") or block.get("end", "17:00")
         
         try:
             block_start_time = datetime.strptime(block_start_str, "%H:%M").time()
