@@ -321,7 +321,7 @@ const CaseHistoryForm = ({ clientId, clientName, onComplete, onClose, isReadOnly
       </div>
 
       {/* Footer Navigation - Fixed at bottom */}
-      <div className="flex-shrink-0 bg-background border-t safe-area-bottom">
+      <div className="flex-shrink-0 bg-background border-t z-50" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
         <div className="max-w-3xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between gap-4">
             <Button
@@ -329,6 +329,7 @@ const CaseHistoryForm = ({ clientId, clientName, onComplete, onClose, isReadOnly
               onClick={handlePrev}
               disabled={currentSection === 0}
               className="gap-2"
+              data-testid="prev-section-btn"
             >
               <ChevronLeft size={18} />
               <span className="hidden sm:inline">Previous</span>
@@ -344,7 +345,7 @@ const CaseHistoryForm = ({ clientId, clientName, onComplete, onClose, isReadOnly
             </div>
 
             {currentSection < SECTIONS.length - 1 ? (
-              <Button onClick={handleNext} disabled={saving} className="gap-2">
+              <Button onClick={handleNext} disabled={saving} className="gap-2" data-testid="next-section-btn">
                 {saving ? <Loader2 size={18} className="animate-spin" /> : null}
                 <span className="hidden sm:inline">Next</span>
                 <ChevronRight size={18} />
@@ -354,6 +355,7 @@ const CaseHistoryForm = ({ clientId, clientName, onComplete, onClose, isReadOnly
                 onClick={handleComplete} 
                 disabled={saving || isReadOnly}
                 className="gap-2 bg-green-600 hover:bg-green-700"
+                data-testid="complete-case-history-btn"
               >
                 {saving ? <Loader2 size={18} className="animate-spin" /> : <Check size={18} />}
                 Complete
