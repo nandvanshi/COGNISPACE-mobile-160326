@@ -14,13 +14,14 @@ import {
   LogOut, Calendar, ClipboardCheck, BookCheck, 
   FileCheck, Pen, Check, AlertCircle, Loader2, Shield, 
   CalendarPlus, Receipt, CreditCard, Clock, Settings as SettingsIcon,
-  Eye, FileText, Sparkles, CheckCircle, User
+  Eye, FileText, Sparkles, CheckCircle, User, MessageCircle, Send
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDate, formatTime, formatCurrency } from '../utils/formatUtils';
 import { PaymentReceiptView } from '../components/PaymentReceipt';
 import Settings from '../components/Settings';
 import ClientAssessmentTaker from '../components/ClientAssessmentTaker';
+import Messaging from '../components/Messaging';
 
 // ============= TIME-BASED GREETING =============
 const getGreeting = () => {
