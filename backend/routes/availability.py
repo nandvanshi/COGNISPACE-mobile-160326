@@ -280,8 +280,14 @@ async def get_available_slots(
     current_user: dict = Depends(get_current_user)
 ):
     """Get available appointment slots for a specific date"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    logger.info(f"available-slots called: user_role={current_user['role']}, user_id={current_user['id']}, therapist_id_param={therapist_id}")
+    
     if current_user["role"] == "client":
         profile = await db.client_profiles.find_one({"user_id": current_user["id"]}, {"_id": 0})
+        logger.info(f"Client profile: {profile}")
         if profile:
             therapist_id = profile.get("therapist_id")
         if not therapist_id:
@@ -290,6 +296,8 @@ async def get_available_slots(
         therapist_id = get_effective_therapist_id(current_user)
     else:
         raise HTTPException(status_code=403, detail="Access denied")
+    
+    logger.info(f"Final therapist_id: {therapist_id}")
     
     try:
         target_date = datetime.strptime(date_str, "%Y-%m-%d").date()
