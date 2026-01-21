@@ -704,21 +704,6 @@ const ClientManagement = ({ isReadOnly = false, isAssistant = false, initialClie
           </DialogContent>
         </Dialog>
       )}
-
-      {/* Client Profile View Modal */}
-      {profileViewClient && (
-        <ClientProfileView
-          client={profileViewClient}
-          isOpen={showProfileView}
-          onClose={() => {
-            setShowProfileView(false);
-            setProfileViewClient(null);
-          }}
-          isReadOnly={isReadOnly}
-          isAssistant={isAssistant}
-          onRefresh={fetchClients}
-        />
-      )}
     </div>
   );
 };
