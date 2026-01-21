@@ -1644,4 +1644,63 @@ Build a secure, therapist-first web application for managing a therapy practice 
 
 **Testing:** Screenshot verified - Pincode 110001 auto-fills "New Delhi", "Delhi"
 
+
+
+### Phase 39: Assistant Client Profile - Non-Clinical Tabs Only (COMPLETED - Jan 21, 2026)
+**Feature:** Assistant role can view Client Profile as full page, but only with non-clinical tabs (Sessions, Payments, Book Appointment)
+
+**Requirement:**
+- Assistant should be able to navigate to client profile from Client Management
+- Only non-clinical tabs should be visible: Overview, Sessions, Payments
+- Clinical tabs should be hidden: Case History, Session Notes, Assessments, Homework
+- Overview tab should show non-clinical stats (Sessions, Upcoming, Payments, Total Paid)
+- Clinical cards (Therapy Consent, Recent Notes, Case History) should be hidden
+
+**Implementation:**
+
+**1. ClientProfilePage.js Changes:**
+- Added `isAssistant` prop to control tab visibility
+- Created `allTabs` array with `clinicalOnly` flag per tab
+- Filtered tabs based on `isAssistant` - shows only non-clinical tabs for assistants
+- Updated "Back" button to navigate to `/assistant` for assistants, `/therapist` for therapists
+- Overview tab modifications for assistants:
+  - Hide Therapy Consent card
+  - Hide Recent Notes section (replaced with Recent Payments for assistant)
+  - Hide Case History Quick View card
+  - Show different stats: Total Sessions, Upcoming, Payments, Total Paid (instead of Assessments/Homework)
+
+**2. AssistantDashboard.js Changes:**
+- Added URL pattern matching for `/assistant/clients/:clientId`
+- Renders `ClientProfilePage` with `isAssistant={true}` when on client profile URL
+- Added `ClientProfilePage` import
+
+**3. ClientManagement.js Changes:**
+- Updated `handleViewProfile` to navigate to `/assistant/clients/:id` for assistant role
+- Keeps `/therapist/clients/:id` for therapist role
+
+**Tab Access Control:**
+| Tab | Therapist | Assistant |
+|-----|-----------|-----------|
+| Overview | ✅ Full | ✅ Limited (no clinical data) |
+| Case History | ✅ | ❌ Hidden |
+| Sessions | ✅ | ✅ |
+| Session Notes | ✅ | ❌ Hidden |
+| Assessments | ✅ | ❌ Hidden |
+| Homework | ✅ | ❌ Hidden |
+| Payments | ✅ | ✅ |
+
+**Files Modified:**
+- `/app/frontend/src/components/ClientProfilePage.js` - Tab filtering and content changes
+- `/app/frontend/src/pages/AssistantDashboard.js` - Client profile routing
+- `/app/frontend/src/components/ClientManagement.js` - Navigation path by role
+
+**Testing:**
+- Assistant login: `support@mindlabs.co.in` / `Abcd@1234`
+- Verified only 3 tabs visible (Overview, Sessions, Payments)
+- Clinical tabs hidden (Case History, Session Notes, Assessments, Homework)
+- "Back to Dashboard" button correctly navigates to /assistant
+- Therapist view still shows all 7 tabs
+
+---
+
 ---
