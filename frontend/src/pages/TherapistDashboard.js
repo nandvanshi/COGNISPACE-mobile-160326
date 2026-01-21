@@ -217,7 +217,7 @@ const TherapistDashboard = () => {
 
   // If on client profile page, render full-page client profile
   if (isClientProfilePage && clientIdFromUrl) {
-    return <ClientProfilePage isReadOnly={isReadOnly} isAssistant={false} />;
+    return <ClientProfilePage clientIdProp={clientIdFromUrl} isReadOnly={isReadOnly} isAssistant={false} />;
   }
 
   return (
