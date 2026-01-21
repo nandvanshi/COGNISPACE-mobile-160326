@@ -1,6 +1,6 @@
 {
-  "name": "TheraGenie",
-  "short_name": "TheraGenie",
+  "name": "COGNISPACE",
+  "short_name": "COGNISPACE",
   "description": "Clinical intelligence for modern therapists - Manage your therapy practice with ease",
   "start_url": "/",
   "display": "standalone",
@@ -65,14 +65,14 @@
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "TheraGenie Dashboard"
+      "label": "COGNISPACE Dashboard"
     },
     {
       "src": "/screenshots/mobile.png",
       "sizes": "750x1334",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "TheraGenie Mobile View"
+      "label": "COGNISPACE Mobile View"
     }
   ],
   "shortcuts": [
