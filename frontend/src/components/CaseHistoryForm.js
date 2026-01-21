@@ -360,7 +360,6 @@ const CaseHistoryForm = ({ clientId, clientName, onComplete, onClose, isReadOnly
           )}
         </div>
       </div>
-      </div>
     </div>
   );
 };
