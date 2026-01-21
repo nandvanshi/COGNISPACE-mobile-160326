@@ -330,7 +330,7 @@ const ClientDashboard = () => {
           <div className="max-w-lg mx-auto px-4 py-4 flex justify-between items-center">
             <div className="flex items-center gap-2">
               <Sparkles className="text-emerald-600" size={24} />
-              <span className="text-xl font-serif text-emerald-700">TheraGenie</span>
+              <span className="text-xl font-serif text-emerald-700">COGNISPACE</span>
             </div>
             <Button onClick={handleLogout} variant="ghost" size="sm" data-testid="client-logout-button">
               <LogOut size={18} />
@@ -365,7 +365,7 @@ const ClientDashboard = () => {
           <div className="max-w-lg mx-auto px-4 py-4 flex justify-between items-center">
             <div className="flex items-center gap-2">
               <Sparkles className="text-emerald-600" size={24} />
-              <span className="text-xl font-serif text-emerald-700">TheraGenie</span>
+              <span className="text-xl font-serif text-emerald-700">COGNISPACE</span>
             </div>
             <Button onClick={handleLogout} variant="ghost" size="sm" data-testid="client-logout-button">
               <LogOut size={18} />
@@ -472,7 +472,7 @@ const ClientDashboard = () => {
         <div className="max-w-lg mx-auto px-4 py-3 flex justify-between items-center">
           <div className="flex items-center gap-2">
             <Sparkles className="text-emerald-600" size={22} />
-            <span className="text-lg font-serif text-emerald-700">TheraGenie</span>
+            <span className="text-lg font-serif text-emerald-700">COGNISPACE</span>
           </div>
           <div className="flex items-center gap-1">
             <Button onClick={() => setShowSettings(true)} variant="ghost" size="sm" className="p-2" data-testid="client-settings-button">
