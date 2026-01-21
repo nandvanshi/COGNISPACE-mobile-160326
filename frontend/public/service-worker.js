@@ -1,46 +1,55 @@
-const CACHE_NAME = 'theragenie-v1';
-const STATIC_CACHE = 'theragenie-static-v1';
-const DYNAMIC_CACHE = 'theragenie-dynamic-v1';
+const CACHE_VERSION = 'v2';
+const CACHE_NAME = `theragenie-${CACHE_VERSION}`;
+const STATIC_CACHE = `theragenie-static-${CACHE_VERSION}`;
+const DYNAMIC_CACHE = `theragenie-dynamic-${CACHE_VERSION}`;
 
-// Assets to cache immediately on install
+// Assets to cache immediately on install (only truly static assets)
 const STATIC_ASSETS = [
-  '/',
-  '/index.html',
   '/manifest.json',
   '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png'
+  '/icons/icon-512x512.png',
+  '/offline.html'
 ];
 
 // API routes that should use network-first strategy
 const API_ROUTES = ['/api/'];
 
-// Install event - cache static assets
+// JS/CSS files should always use network-first to get latest bundles
+const BUNDLE_PATTERNS = ['.js', '.css', '.chunk.'];
+
+// Install event - cache only truly static assets
 self.addEventListener('install', (event) => {
-  console.log('[ServiceWorker] Install');
+  console.log('[ServiceWorker] Install - Version:', CACHE_VERSION);
   event.waitUntil(
     caches.open(STATIC_CACHE)
       .then((cache) => {
         console.log('[ServiceWorker] Caching static assets');
         return cache.addAll(STATIC_ASSETS);
       })
-      .then(() => self.skipWaiting())
+      .then(() => self.skipWaiting()) // Immediately activate new SW
   );
 });
 
-// Activate event - clean up old caches
+// Activate event - clean up ALL old caches
 self.addEventListener('activate', (event) => {
-  console.log('[ServiceWorker] Activate');
+  console.log('[ServiceWorker] Activate - Version:', CACHE_VERSION);
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
-          .filter((name) => name !== STATIC_CACHE && name !== DYNAMIC_CACHE)
+          .filter((name) => {
+            // Delete any cache that doesn't match current version
+            return !name.includes(CACHE_VERSION);
+          })
           .map((name) => {
             console.log('[ServiceWorker] Deleting old cache:', name);
             return caches.delete(name);
           })
       );
-    }).then(() => self.clients.claim())
+    }).then(() => {
+      console.log('[ServiceWorker] Claiming clients');
+      return self.clients.claim();
+    })
   );
 });
 
@@ -59,17 +68,29 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // API requests - Network first, fallback to cache
+  // API requests - Network first
   if (API_ROUTES.some(route => url.pathname.startsWith(route))) {
     event.respondWith(networkFirst(request));
     return;
   }
 
-  // Static assets - Cache first, fallback to network
+  // JS/CSS bundles - ALWAYS network first to get latest code
+  if (BUNDLE_PATTERNS.some(pattern => url.pathname.includes(pattern))) {
+    event.respondWith(networkFirst(request));
+    return;
+  }
+
+  // index.html - ALWAYS network first (critical for SPA routing)
+  if (url.pathname === '/' || url.pathname === '/index.html' || !url.pathname.includes('.')) {
+    event.respondWith(networkFirst(request));
+    return;
+  }
+
+  // Other static assets (images, icons) - Cache first
   event.respondWith(cacheFirst(request));
 });
 
-// Cache-first strategy
+// Cache-first strategy (only for truly static assets like images)
 async function cacheFirst(request) {
   const cachedResponse = await caches.match(request);
   if (cachedResponse) {
@@ -101,12 +122,14 @@ async function cacheFirst(request) {
   }
 }
 
-// Network-first strategy
+// Network-first strategy (for API, JS/CSS, and HTML)
 async function networkFirst(request) {
   try {
-    const networkResponse = await fetch(request);
+    const networkResponse = await fetch(request, {
+      cache: 'no-store' // Bypass browser cache for fresh content
+    });
     
-    // Cache successful GET responses
+    // Cache successful GET responses (but network is always tried first)
     if (networkResponse.ok && request.method === 'GET') {
       const cache = await caches.open(DYNAMIC_CACHE);
       cache.put(request, networkResponse.clone());
@@ -119,6 +142,14 @@ async function networkFirst(request) {
       return cachedResponse;
     }
     
+    // For HTML navigation requests, return offline page
+    if (request.headers.get('accept')?.includes('text/html')) {
+      const offlineResponse = await caches.match('/offline.html');
+      if (offlineResponse) {
+        return offlineResponse;
+      }
+    }
+    
     return new Response(JSON.stringify({ error: 'Offline' }), {
       status: 503,
       statusText: 'Service Unavailable',
@@ -126,6 +157,25 @@ async function networkFirst(request) {
     });
   }
 }
+
+// Listen for messages from the app
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    console.log('[ServiceWorker] Skip waiting requested');
+    self.skipWaiting();
+  }
+  
+  if (event.data && event.data.type === 'CLEAR_CACHE') {
+    console.log('[ServiceWorker] Clear cache requested');
+    event.waitUntil(
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((name) => caches.delete(name))
+        );
+      })
+    );
+  }
+});
 
 // Handle push notifications
 self.addEventListener('push', (event) => {
@@ -157,13 +207,11 @@ self.addEventListener('notificationclick', (event) => {
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })
       .then((windowClients) => {
-        // Check if there's already a window open
         for (const client of windowClients) {
           if (client.url === url && 'focus' in client) {
             return client.focus();
           }
         }
-        // Open a new window
         if (clients.openWindow) {
           return clients.openWindow(url);
         }
@@ -179,6 +227,5 @@ self.addEventListener('sync', (event) => {
 });
 
 async function syncAppointments() {
-  // Handle syncing offline actions when back online
   console.log('[ServiceWorker] Syncing appointments...');
 }
