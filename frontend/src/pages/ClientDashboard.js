@@ -158,6 +158,12 @@ const ClientDashboard = () => {
       setAssessments(assessRes.data);
       setPayments(paymentsRes.data);
       
+      // Fetch unread message count
+      try {
+        const unreadRes = await axios.get(`${API}/messages/unread-count`);
+        setUnreadCount(unreadRes.data?.count || 0);
+      } catch (e) { /* ignore */ }
+      
       // Try to get therapist name from consent or user data
       if (!therapistName && user?.therapist_id) {
         try {
