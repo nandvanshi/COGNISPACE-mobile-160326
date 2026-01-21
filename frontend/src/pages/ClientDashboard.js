@@ -518,6 +518,33 @@ const ClientDashboard = () => {
             Your appointment request will be reviewed and confirmed soon.
           </p>
         </div>
+        
+        {/* Message Therapist Card */}
+        <Card 
+          className="p-4 bg-white rounded-2xl border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+          onClick={() => setShowMessaging(true)}
+          data-testid="message-therapist-card"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                <MessageCircle className="text-blue-600" size={20} />
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-800">Message Your Therapist</h3>
+                <p className="text-xs text-gray-500">Send a message anytime</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {unreadCount > 0 && (
+                <Badge className="bg-red-500 text-white border-0 text-xs px-2 py-0.5">
+                  {unreadCount} new
+                </Badge>
+              )}
+              <Send size={18} className="text-gray-400" />
+            </div>
+          </div>
+        </Card>
 
         {/* Motivation Card */}
         <MotivationCard lastSessionDate={lastSessionDate} />
