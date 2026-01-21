@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API } from '../App';
 import { Card } from './ui/card';
@@ -9,9 +10,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Textarea } from './ui/textarea';
 import { toast } from 'sonner';
 import { UserPlus, Search, Key, Camera, Edit, User, Phone, Mail, MapPin, AlertCircle, Eye } from 'lucide-react';
-import ClientProfileView from './ClientProfileView';
 
 const ClientManagement = ({ isReadOnly = false, isAssistant = false, initialClientId = null, initialFilter = null, filterData = null, onClearContext = () => {} }) => {
+  const navigate = useNavigate();
   const [clients, setClients] = useState([]);
   const [filteredClients, setFilteredClients] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -21,8 +22,6 @@ const ClientManagement = ({ isReadOnly = false, isAssistant = false, initialClie
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
-  const [showProfileView, setShowProfileView] = useState(false);
-  const [profileViewClient, setProfileViewClient] = useState(null);
   const [newPassword, setNewPassword] = useState('');
   const [newClient, setNewClient] = useState({
     mobile: '',
