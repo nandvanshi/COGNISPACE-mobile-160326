@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth, API } from '../App';
 import { useSubscription } from '../contexts/SubscriptionContext';
@@ -10,6 +10,7 @@ import { Label } from '../components/ui/label';
 import { LogOut, Users, Calendar, FileText, MessageSquare, ClipboardList, BookOpen, DollarSign, Home, AlertTriangle, Clock, Repeat, UserCog, Brain, Settings as SettingsIcon, Sparkles, Menu, X, ChevronDown, CalendarDays, AlertCircle, HandCoins, CheckCircle2, XCircle, Lock, RefreshCw, HelpCircle, UserCircle } from 'lucide-react';
 import TherapistOverview from '../components/TherapistOverview';
 import ClientManagement from '../components/ClientManagement';
+import ClientProfilePage from '../components/ClientProfilePage';
 import TherapistSchedule from '../components/TherapistSchedule';
 import SessionNotes from '../components/SessionNotes';
 import Messaging from '../components/Messaging';
