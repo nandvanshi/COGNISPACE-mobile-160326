@@ -195,8 +195,12 @@ const ClientManagement = ({ isReadOnly = false, isAssistant = false, initialClie
   };
 
   const handleViewProfile = (client) => {
-    // Navigate to full-page client profile
-    navigate(`/therapist/clients/${client.id}`);
+    // Navigate to full-page client profile - different route for assistant
+    if (isAssistant) {
+      navigate(`/assistant/clients/${client.id}`);
+    } else {
+      navigate(`/therapist/clients/${client.id}`);
+    }
   };
 
   const generatePassword = () => {
