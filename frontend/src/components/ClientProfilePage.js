@@ -114,6 +114,74 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
     fetchClientData();
   }, [fetchClientData]);
   
+  // ========== Book Appointment Functions ==========
+  const handleOpenBookAppointment = () => {
+    const today = new Date();
+    const dateStr = today.toISOString().split('T')[0];
+    setSelectedDate(dateStr);
+    setSelectedSlot(null);
+    setAppointmentNotes('');
+    setShowBookAppointment(true);
+    fetchAvailableSlots(dateStr);
+  };
+  
+  const fetchAvailableSlots = async (date) => {
+    if (!client?.therapist_id) {
+      toast.error('Therapist not assigned to client');
+      return;
+    }
+    setLoadingSlots(true);
+    try {
+      const response = await axios.get(`${API}/available-slots/${client.therapist_id}?date=${date}`);
+      const slots = Array.isArray(response.data) ? response.data.map(s => ({
+        start: s.start_time,
+        end: s.end_time
+      })) : [];
+      setAvailableSlots(slots);
+    } catch (error) {
+      toast.error('Failed to load available slots');
+      setAvailableSlots([]);
+    } finally {
+      setLoadingSlots(false);
+    }
+  };
+  
+  const handleDateChange = (e) => {
+    const date = e.target.value;
+    setSelectedDate(date);
+    setSelectedSlot(null);
+    if (date) {
+      fetchAvailableSlots(date);
+    }
+  };
+  
+  const handleSlotSelect = (slot) => {
+    setSelectedSlot(slot);
+  };
+  
+  const handleCreateAppointment = async () => {
+    if (!selectedSlot) {
+      toast.error('Please select a time slot');
+      return;
+    }
+    
+    try {
+      await axios.post(`${API}/appointments`, {
+        client_id: clientId,
+        start_time: selectedSlot.start,
+        end_time: selectedSlot.end,
+        notes: appointmentNotes,
+      });
+      toast.success('Appointment booked successfully');
+      setShowBookAppointment(false);
+      setSelectedSlot(null);
+      setAppointmentNotes('');
+      fetchClientData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to book appointment');
+    }
+  };
+  
   // Define all tabs - filter based on isAssistant
   const allTabs = [
     { id: 'overview', label: 'Overview', icon: User, clinicalOnly: false },
