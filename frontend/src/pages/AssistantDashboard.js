@@ -554,7 +554,7 @@ const AssistantOverview = ({ onNavigate }) => {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <CreditCard className="text-green-600" size={20} />
-            <h2 className="text-lg font-semibold">Today's Payments</h2>
+            <h2 className="text-lg font-semibold">Today Payments</h2>
           </div>
         </div>
 
