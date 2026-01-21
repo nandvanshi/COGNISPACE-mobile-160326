@@ -15,7 +15,7 @@ import { formatDate, formatTime, formatCurrency } from '../utils/formatUtils';
 import { 
   ArrowLeft, Phone, Mail, User, Calendar, FileText, ClipboardList, 
   BookOpen, DollarSign, MessageSquare, Edit, Plus, CheckCircle2,
-  AlertCircle, Clock, CalendarPlus, PenSquare, ChevronRight
+  AlertCircle, Clock, CalendarPlus, PenSquare, ChevronRight, Loader2
 } from 'lucide-react';
 
 // Import sub-components
@@ -49,6 +49,13 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
   const [showCaseHistory, setShowCaseHistory] = useState(false);
   const [showConsent, setShowConsent] = useState(false);
   const [showBookAppointment, setShowBookAppointment] = useState(false);
+  
+  // Book Appointment states
+  const [availableSlots, setAvailableSlots] = useState([]);
+  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [appointmentNotes, setAppointmentNotes] = useState('');
+  const [loadingSlots, setLoadingSlots] = useState(false);
   
   // Fetch client data
   const fetchClientData = useCallback(async () => {
