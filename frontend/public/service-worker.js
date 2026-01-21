@@ -1,7 +1,7 @@
-const CACHE_VERSION = 'v2';
-const CACHE_NAME = `theragenie-${CACHE_VERSION}`;
-const STATIC_CACHE = `theragenie-static-${CACHE_VERSION}`;
-const DYNAMIC_CACHE = `theragenie-dynamic-${CACHE_VERSION}`;
+const CACHE_VERSION = 'v3';
+const CACHE_NAME = `cognispace-${CACHE_VERSION}`;
+const STATIC_CACHE = `cognispace-static-${CACHE_VERSION}`;
+const DYNAMIC_CACHE = `cognispace-dynamic-${CACHE_VERSION}`;
 
 // Assets to cache immediately on install (only truly static assets)
 const STATIC_ASSETS = [
