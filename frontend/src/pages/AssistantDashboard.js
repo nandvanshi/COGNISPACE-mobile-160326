@@ -814,9 +814,7 @@ const AssistantDashboard = () => {
       <header className="lg:hidden fixed top-0 left-0 right-0 bg-white border-b border-border z-40 px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
-              <Sparkles size={16} className="text-white" />
-            </div>
+            <img src="/logo-symbol.png" alt="COGNISPACE" className="h-8 w-auto" />
             <span className="font-serif text-lg text-primary">COGNISPACE</span>
           </div>
           <Button
