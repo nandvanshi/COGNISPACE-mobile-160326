@@ -263,9 +263,7 @@ const TherapistDashboard = () => {
         <div className="p-5 border-b border-border">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
-                <Sparkles size={18} className="text-white" />
-              </div>
+              <img src="/logo-symbol.png" alt="COGNISPACE" className="h-9 w-auto" />
               <h1 className="text-xl font-serif text-primary">COGNISPACE</h1>
             </div>
             <Button
