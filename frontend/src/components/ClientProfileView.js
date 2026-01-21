@@ -1243,7 +1243,7 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
 
         {/* Case History Full Screen */}
         {showCaseHistoryDialog && (
-          <div className="fixed inset-0 z-50 bg-background">
+          <div className="fixed inset-0 z-[100] bg-background overflow-hidden">
             <CaseHistoryForm
               clientId={client.id}
               clientName={client.full_name}
