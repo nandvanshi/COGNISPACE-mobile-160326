@@ -305,13 +305,16 @@ async def get_available_slots(
         raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
     
     day_name = target_date.strftime("%A").lower()
+    logger.info(f"Looking for availability on {day_name} for therapist {therapist_id}")
     
     availability = await db.therapist_availability.find_one({"therapist_id": therapist_id}, {"_id": 0})
+    logger.info(f"Found availability: {availability is not None}")
     
     if not availability:
         return []
     
     day_availability = availability.get(day_name, {})
+    logger.info(f"Day availability for {day_name}: {day_availability}")
     if not day_availability.get("enabled", False):
         return []
     
