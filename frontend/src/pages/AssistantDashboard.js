@@ -241,7 +241,7 @@ const ContextualQuickActions = ({ onNavigate }) => {
   
   const morningActions = [
     { id: 'calls', label: 'Call List', icon: Phone, view: 'overview', color: 'bg-orange-100 text-orange-700 border-orange-200' },
-    { id: 'schedule', label: "Today's Schedule", icon: Calendar, view: 'schedule', color: 'bg-blue-100 text-blue-700 border-blue-200' },
+    { id: 'schedule', label: "Today Schedule", icon: Calendar, view: 'schedule', color: 'bg-blue-100 text-blue-700 border-blue-200' },
   ];
   
   const afternoonActions = [
