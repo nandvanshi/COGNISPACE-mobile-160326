@@ -271,9 +271,9 @@ const CaseHistoryForm = ({ clientId, clientName, onComplete, onClose, isReadOnly
   const SectionIcon = SECTIONS[currentSection].icon;
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="sticky top-0 bg-background border-b z-10">
+    <div className="h-screen flex flex-col bg-background overflow-hidden">
+      {/* Header - Fixed */}
+      <div className="flex-shrink-0 bg-background border-b z-10">
         <div className="max-w-3xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -302,23 +302,26 @@ const CaseHistoryForm = ({ clientId, clientName, onComplete, onClose, isReadOnly
         </div>
       </div>
 
-      {/* Section Title */}
-      <div className="max-w-3xl mx-auto px-4 py-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <SectionIcon size={20} className="text-primary" />
+      {/* Scrollable Content Area */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-3xl mx-auto px-4 py-6 pb-24">
+          {/* Section Title */}
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <SectionIcon size={20} className="text-primary" />
+            </div>
+            <h2 className="text-xl sm:text-2xl font-semibold">{SECTIONS[currentSection].label}</h2>
           </div>
-          <h2 className="text-xl sm:text-2xl font-semibold">{SECTIONS[currentSection].label}</h2>
-        </div>
 
-        {/* Form Fields */}
-        <div className="space-y-6">
-          {renderSectionFields(SECTIONS[currentSection].id, currentSectionData, updateField, isReadOnly)}
+          {/* Form Fields */}
+          <div className="space-y-6">
+            {renderSectionFields(SECTIONS[currentSection].id, currentSectionData, updateField, isReadOnly)}
+          </div>
         </div>
       </div>
 
-      {/* Footer Navigation */}
-      <div className="sticky bottom-0 bg-background border-t">
+      {/* Footer Navigation - Fixed */}
+      <div className="flex-shrink-0 bg-background border-t">
         <div className="max-w-3xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between gap-4">
             <Button
