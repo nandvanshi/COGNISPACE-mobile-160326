@@ -250,14 +250,16 @@ const ClientDashboard = () => {
   const fetchAvailableSlots = async (date) => {
     setLoadingSlots(true);
     try {
-      const response = await axios.get(`${API}/available-slots/${user?.therapist_id}?date=${date}`);
+      // For clients, use the endpoint without therapist_id - backend will auto-detect from profile
+      const response = await axios.get(`${API}/available-slots?date=${date}`);
       const slots = Array.isArray(response.data) ? response.data.map(s => ({
         start: s.start_time,
         end: s.end_time
       })) : [];
       setAvailableSlots(slots);
     } catch (error) {
-      toast.error('Failed to load available slots');
+      const errorMsg = error.response?.data?.detail || 'Failed to load available slots';
+      toast.error(errorMsg);
       setAvailableSlots([]);
     } finally {
       setLoadingSlots(false);
