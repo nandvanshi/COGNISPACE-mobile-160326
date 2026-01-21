@@ -733,11 +733,12 @@ const AssistantOverview = ({ onNavigate }) => {
 const AssistantDashboard = () => {
   const { user, logout } = useAuth();
   const { isReadOnly, refreshStatus } = useSubscription();
+  const location = useLocation();
   const [currentView, setCurrentView] = useState('overview');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
-  // Check if we're on a client profile page
-  const clientProfileMatch = window.location.pathname.match(/\/assistant\/clients\/([^/]+)/);
+  // Check if we're on a client profile page using useLocation for reactivity
+  const clientProfileMatch = location.pathname.match(/\/assistant\/clients\/([^/]+)/);
   const isClientProfilePage = !!clientProfileMatch;
   const clientIdFromUrl = clientProfileMatch ? clientProfileMatch[1] : null;
 
