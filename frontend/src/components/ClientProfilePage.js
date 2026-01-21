@@ -107,15 +107,21 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
     fetchClientData();
   }, [fetchClientData]);
   
-  const tabs = [
-    { id: 'overview', label: 'Overview', icon: User },
-    { id: 'case-history', label: 'Case History', icon: FileText },
-    { id: 'sessions', label: 'Sessions', icon: Calendar },
-    { id: 'notes', label: 'Session Notes', icon: PenSquare },
-    { id: 'assessments', label: 'Assessments', icon: ClipboardList },
-    { id: 'homework', label: 'Homework', icon: BookOpen },
-    { id: 'payments', label: 'Payments', icon: DollarSign },
+  // Define all tabs - filter based on isAssistant
+  const allTabs = [
+    { id: 'overview', label: 'Overview', icon: User, clinicalOnly: false },
+    { id: 'case-history', label: 'Case History', icon: FileText, clinicalOnly: true },
+    { id: 'sessions', label: 'Sessions', icon: Calendar, clinicalOnly: false },
+    { id: 'notes', label: 'Session Notes', icon: PenSquare, clinicalOnly: true },
+    { id: 'assessments', label: 'Assessments', icon: ClipboardList, clinicalOnly: true },
+    { id: 'homework', label: 'Homework', icon: BookOpen, clinicalOnly: true },
+    { id: 'payments', label: 'Payments', icon: DollarSign, clinicalOnly: false },
   ];
+  
+  // For Assistant: show only non-clinical tabs (Sessions, Payments, + limited Overview)
+  const tabs = isAssistant 
+    ? allTabs.filter(tab => !tab.clinicalOnly)
+    : allTabs;
   
   if (loading) {
     return (
@@ -145,10 +151,10 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
           <Button 
             variant="ghost" 
             className="text-white/80 hover:text-white hover:bg-white/10 mb-4 -ml-2"
-            onClick={() => navigate('/therapist')}
+            onClick={() => navigate(isAssistant ? '/assistant' : '/therapist')}
             data-testid="back-to-clients"
           >
-            <ArrowLeft size={18} className="mr-2" /> Back to Clients
+            <ArrowLeft size={18} className="mr-2" /> Back to {isAssistant ? 'Dashboard' : 'Clients'}
           </Button>
           
           {/* Client Info */}
