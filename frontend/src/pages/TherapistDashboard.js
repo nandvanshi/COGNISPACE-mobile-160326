@@ -229,7 +229,7 @@ const TherapistDashboard = () => {
             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
               <Sparkles size={18} className="text-white" />
             </div>
-            <span className="font-serif text-xl text-primary">TheraGenie</span>
+            <span className="font-serif text-xl text-primary">COGNISPACE</span>
           </div>
           <div className="flex items-center gap-3">
             <span className="text-base text-muted-foreground hidden sm:block">{getCurrentViewLabel()}</span>
@@ -268,7 +268,7 @@ const TherapistDashboard = () => {
               <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
                 <Sparkles size={18} className="text-white" />
               </div>
-              <h1 className="text-xl font-serif text-primary">TheraGenie</h1>
+              <h1 className="text-xl font-serif text-primary">COGNISPACE</h1>
             </div>
             <Button
               variant="ghost"

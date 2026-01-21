@@ -40,7 +40,7 @@ const LoginPage = () => {
       >
         <div className="absolute inset-0 bg-primary/40 backdrop-blur-sm" />
         <div className="relative z-10 p-12 flex flex-col justify-end">
-          <h1 className="text-5xl font-serif text-white mb-4">TheraGenie</h1>
+          <h1 className="text-5xl font-serif text-white mb-4">COGNISPACE</h1>
           <p className="text-xl text-white/90">
             Clinical intelligence for modern therapists
           </p>
@@ -91,7 +91,7 @@ const LoginPage = () => {
 
           <div className="mt-8 pt-6 border-t border-border/40">
             <p className="text-sm text-muted-foreground text-center mb-4">
-              Are you a therapist looking to join TheraGenie?
+              Are you a therapist looking to join COGNISPACE?
             </p>
             <Button
               variant="outline"

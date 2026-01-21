@@ -771,7 +771,7 @@ const AssistantDashboard = () => {
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
               <Sparkles size={16} className="text-white" />
             </div>
-            <h1 className="text-lg font-serif text-primary">TheraGenie</h1>
+            <h1 className="text-lg font-serif text-primary">COGNISPACE</h1>
           </div>
           <p className="text-sm text-muted-foreground mt-2 truncate">{user?.full_name}</p>
           <Badge className="mt-1 bg-info/10 text-info border-info/20 text-xs">Assistant</Badge>
@@ -819,7 +819,7 @@ const AssistantDashboard = () => {
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
               <Sparkles size={16} className="text-white" />
             </div>
-            <span className="font-serif text-lg text-primary">TheraGenie</span>
+            <span className="font-serif text-lg text-primary">COGNISPACE</span>
           </div>
           <Button
             onClick={handleLogout}
