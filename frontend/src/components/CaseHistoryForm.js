@@ -271,9 +271,9 @@ const CaseHistoryForm = ({ clientId, clientName, onComplete, onClose, isReadOnly
   const SectionIcon = SECTIONS[currentSection].icon;
 
   return (
-    <div className="h-full flex flex-col">
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Header - Fixed at top */}
-      <div className="flex-shrink-0 bg-background border-b px-4 py-3">
+      <div style={{ flexShrink: 0 }} className="bg-background border-b px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             {onClose && (
@@ -301,7 +301,7 @@ const CaseHistoryForm = ({ clientId, clientName, onComplete, onClose, isReadOnly
       </div>
 
       {/* Scrollable Content Area */}
-      <div className="flex-1 overflow-y-auto">
+      <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
         <div className="px-4 sm:px-6 py-6">
           {/* Section Title */}
           <div className="flex items-center gap-3 mb-6">
