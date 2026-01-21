@@ -271,40 +271,38 @@ const CaseHistoryForm = ({ clientId, clientName, onComplete, onClose, isReadOnly
   const SectionIcon = SECTIONS[currentSection].icon;
 
   return (
-    <div className="absolute inset-0 flex flex-col bg-background">
-      {/* Header - Fixed */}
-      <div className="flex-shrink-0 bg-background border-b z-10">
-        <div className="max-w-3xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {onClose && (
-                <Button variant="ghost" size="sm" onClick={onClose}>
-                  <ChevronLeft size={20} />
-                </Button>
-              )}
-              <div>
-                <h1 className="text-lg sm:text-xl font-semibold text-foreground">Case History</h1>
-                <p className="text-sm text-muted-foreground">{clientName}</p>
-              </div>
-            </div>
-            <div className="text-sm text-muted-foreground">
-              {currentSection + 1} / {SECTIONS.length}
+    <div className="h-full flex flex-col">
+      {/* Header - Fixed at top */}
+      <div className="flex-shrink-0 bg-background border-b px-4 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {onClose && (
+              <Button variant="ghost" size="sm" onClick={onClose}>
+                <ChevronLeft size={20} />
+              </Button>
+            )}
+            <div>
+              <h1 className="text-lg sm:text-xl font-semibold text-foreground">Case History</h1>
+              <p className="text-sm text-muted-foreground">{clientName}</p>
             </div>
           </div>
-          
-          {/* Progress Bar */}
-          <div className="mt-3 h-1 bg-muted rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-primary transition-all duration-300"
-              style={{ width: `${((currentSection + 1) / SECTIONS.length) * 100}%` }}
-            />
+          <div className="text-sm text-muted-foreground font-medium">
+            {currentSection + 1} / {SECTIONS.length}
           </div>
+        </div>
+        
+        {/* Progress Bar */}
+        <div className="mt-3 h-1.5 bg-muted rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-primary transition-all duration-300"
+            style={{ width: `${((currentSection + 1) / SECTIONS.length) * 100}%` }}
+          />
         </div>
       </div>
 
       {/* Scrollable Content Area */}
-      <div className="flex-1 overflow-y-auto overscroll-contain min-h-0">
-        <div className="max-w-3xl mx-auto px-4 py-6">
+      <div className="flex-1 overflow-y-auto">
+        <div className="px-4 sm:px-6 py-6">
           {/* Section Title */}
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -314,55 +312,54 @@ const CaseHistoryForm = ({ clientId, clientName, onComplete, onClose, isReadOnly
           </div>
 
           {/* Form Fields */}
-          <div className="space-y-6 pb-4">
+          <div className="space-y-5">
             {renderSectionFields(SECTIONS[currentSection].id, currentSectionData, updateField, isReadOnly)}
           </div>
         </div>
       </div>
 
       {/* Footer Navigation - Fixed at bottom */}
-      <div className="flex-shrink-0 bg-background border-t z-50" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
-        <div className="max-w-3xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between gap-4">
-            <Button
-              variant="outline"
-              onClick={handlePrev}
-              disabled={currentSection === 0}
-              className="gap-2"
-              data-testid="prev-section-btn"
-            >
-              <ChevronLeft size={18} />
-              <span className="hidden sm:inline">Previous</span>
-            </Button>
+      <div className="flex-shrink-0 bg-background border-t px-4 py-3">
+        <div className="flex items-center justify-between gap-4">
+          <Button
+            variant="outline"
+            onClick={handlePrev}
+            disabled={currentSection === 0}
+            className="gap-2"
+            data-testid="prev-section-btn"
+          >
+            <ChevronLeft size={18} />
+            <span className="hidden sm:inline">Previous</span>
+          </Button>
 
-            <div className="flex gap-2">
-              {isComplete && (
-                <Button variant="outline" onClick={() => setShowFullView(true)} className="gap-2">
-                  <FileText size={18} />
-                  <span className="hidden sm:inline">View Full</span>
-                </Button>
-              )}
-            </div>
-
-            {currentSection < SECTIONS.length - 1 ? (
-              <Button onClick={handleNext} disabled={saving} className="gap-2" data-testid="next-section-btn">
-                {saving ? <Loader2 size={18} className="animate-spin" /> : null}
-                <span className="hidden sm:inline">Next</span>
-                <ChevronRight size={18} />
-              </Button>
-            ) : (
-              <Button 
-                onClick={handleComplete} 
-                disabled={saving || isReadOnly}
-                className="gap-2 bg-green-600 hover:bg-green-700"
-                data-testid="complete-case-history-btn"
-              >
-                {saving ? <Loader2 size={18} className="animate-spin" /> : <Check size={18} />}
-                Complete
+          <div className="flex gap-2">
+            {isComplete && (
+              <Button variant="outline" onClick={() => setShowFullView(true)} className="gap-2">
+                <FileText size={18} />
+                <span className="hidden sm:inline">View Full</span>
               </Button>
             )}
           </div>
+
+          {currentSection < SECTIONS.length - 1 ? (
+            <Button onClick={handleNext} disabled={saving} className="gap-2" data-testid="next-section-btn">
+              {saving ? <Loader2 size={18} className="animate-spin" /> : null}
+              <span className="hidden sm:inline">Next</span>
+              <ChevronRight size={18} />
+            </Button>
+          ) : (
+            <Button 
+              onClick={handleComplete} 
+              disabled={saving || isReadOnly}
+              className="gap-2 bg-green-600 hover:bg-green-700"
+              data-testid="complete-case-history-btn"
+            >
+              {saving ? <Loader2 size={18} className="animate-spin" /> : <Check size={18} />}
+              Complete
+            </Button>
+          )}
         </div>
+      </div>
       </div>
     </div>
   );
