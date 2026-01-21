@@ -37,7 +37,7 @@ const MotivationCard = ({ lastSessionDate }) => {
     ? Math.floor((new Date() - new Date(lastSessionDate)) / (1000 * 60 * 60 * 24))
     : null;
   
-  const needsGentle Reminder = daysSinceLastSession && daysSinceLastSession > 14;
+  const needsGentleReminder = daysSinceLastSession && daysSinceLastSession > 14;
   
   return (
     <Card 
