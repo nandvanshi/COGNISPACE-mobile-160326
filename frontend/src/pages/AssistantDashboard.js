@@ -346,7 +346,9 @@ const AssistantOverview = ({ onNavigate }) => {
 
   const handleMarkCalled = async (appointmentId) => {
     try {
-      await axios.post(`${API}/assistant/call-reminder/${appointmentId}`);
+      await axios.post(`${API}/assistant/call-reminder/${appointmentId}`, {
+        status: 'called'
+      });
       toast.success('Marked as called');
       fetchDashboard();
     } catch (error) {
@@ -357,8 +359,8 @@ const AssistantOverview = ({ onNavigate }) => {
   const handleAddCallNote = async (appointmentId, noteType, customNote) => {
     try {
       await axios.post(`${API}/assistant/call-reminder/${appointmentId}`, {
-        note_type: noteType,
-        note: customNote || noteType
+        status: noteType === 'confirmed' ? 'called' : 'pending',
+        notes: customNote || noteType
       });
       toast.success('Note saved');
       fetchDashboard();
