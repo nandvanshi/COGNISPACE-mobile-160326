@@ -90,7 +90,7 @@ const InstallPWA = () => {
         <div className="bg-gradient-to-r from-primary to-primary/80 px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2 text-white">
             <Smartphone size={20} />
-            <span className="font-medium">Install TheraGenie</span>
+            <span className="font-medium">Install COGNISPACE</span>
           </div>
           <button 
             onClick={handleDismiss}
@@ -107,7 +107,7 @@ const InstallPWA = () => {
             // iOS Instructions
             <div className="space-y-3">
               <p className="text-sm text-foreground">
-                Install TheraGenie on your iPhone for quick access:
+                Install COGNISPACE on your iPhone for quick access:
               </p>
               <ol className="text-sm text-muted-foreground space-y-2">
                 <li className="flex items-start gap-2">
@@ -139,7 +139,7 @@ const InstallPWA = () => {
             // Android/Desktop Install
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                Add TheraGenie to your home screen for quick access, offline support, and a native app experience.
+                Add COGNISPACE to your home screen for quick access, offline support, and a native app experience.
               </p>
               <div className="flex gap-2">
                 <Button 
