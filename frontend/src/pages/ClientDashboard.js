@@ -329,8 +329,8 @@ const ClientDashboard = () => {
         <header className="bg-white/80 backdrop-blur-lg border-b border-emerald-100">
           <div className="max-w-lg mx-auto px-4 py-4 flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <Sparkles className="text-emerald-600" size={24} />
-              <span className="text-xl font-serif text-emerald-700">COGNISPACE</span>
+              <img src="/logo-symbol.png" alt="COGNISPACE" className="h-8 w-auto" />
+              <span className="text-xl font-serif text-primary">COGNISPACE</span>
             </div>
             <Button onClick={handleLogout} variant="ghost" size="sm" data-testid="client-logout-button">
               <LogOut size={18} />
@@ -364,8 +364,8 @@ const ClientDashboard = () => {
         <header className="bg-white/80 backdrop-blur-lg border-b border-emerald-100">
           <div className="max-w-lg mx-auto px-4 py-4 flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <Sparkles className="text-emerald-600" size={24} />
-              <span className="text-xl font-serif text-emerald-700">COGNISPACE</span>
+              <img src="/logo-symbol.png" alt="COGNISPACE" className="h-8 w-auto" />
+              <span className="text-xl font-serif text-primary">COGNISPACE</span>
             </div>
             <Button onClick={handleLogout} variant="ghost" size="sm" data-testid="client-logout-button">
               <LogOut size={18} />
