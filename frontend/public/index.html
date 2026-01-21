@@ -58,17 +58,44 @@
         <noscript>You need to enable JavaScript to run this app.</noscript>
         <div id="root"></div>
         
-        <!-- Service Worker Registration -->
+        <!-- Service Worker Registration with immediate update -->
         <script>
             if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
                     navigator.serviceWorker.register('/service-worker.js')
                         .then(function(registration) {
-                            console.log('ServiceWorker registered successfully:', registration.scope);
+                            console.log('ServiceWorker registered:', registration.scope);
+                            
+                            // Check for updates immediately
+                            registration.update();
+                            
+                            // Listen for new service worker
+                            registration.addEventListener('updatefound', function() {
+                                const newWorker = registration.installing;
+                                console.log('New ServiceWorker found, installing...');
+                                
+                                newWorker.addEventListener('statechange', function() {
+                                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                        // New SW installed, skip waiting
+                                        newWorker.postMessage({ type: 'SKIP_WAITING' });
+                                        console.log('New ServiceWorker activated');
+                                    }
+                                });
+                            });
                         })
                         .catch(function(error) {
                             console.log('ServiceWorker registration failed:', error);
                         });
+                        
+                    // Reload page when new SW takes control
+                    let refreshing = false;
+                    navigator.serviceWorker.addEventListener('controllerchange', function() {
+                        if (!refreshing) {
+                            refreshing = true;
+                            console.log('ServiceWorker updated, refreshing...');
+                            // Don't auto-refresh, just log
+                        }
+                    });
                 });
             }
         </script>
