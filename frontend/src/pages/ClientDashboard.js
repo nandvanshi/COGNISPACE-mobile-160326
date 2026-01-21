@@ -931,6 +931,13 @@ const ClientDashboard = () => {
           )}
         </DialogContent>
       </Dialog>
+      
+      {/* Messaging Dialog */}
+      <Dialog open={showMessaging} onOpenChange={setShowMessaging}>
+        <DialogContent className="max-w-2xl h-[80vh] p-0 rounded-3xl overflow-hidden" data-testid="messaging-dialog">
+          <Messaging />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
