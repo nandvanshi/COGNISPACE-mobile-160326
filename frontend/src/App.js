@@ -76,6 +76,15 @@ const AuthProvider = ({ children }) => {
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     // Load user's theme preference after login
     loadUserTheme();
+    
+    // Clear service worker cache on login to ensure fresh content
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_CACHE' });
+      // Also trigger service worker update check
+      navigator.serviceWorker.ready.then((registration) => {
+        registration.update();
+      });
+    }
   };
 
   const logout = () => {
