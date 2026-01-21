@@ -363,8 +363,9 @@ async def get_available_slots(
         except ValueError:
             continue
         
-        block_start = datetime.combine(target_date, block_start_time, tzinfo=timezone.utc)
-        block_end = datetime.combine(target_date, block_end_time, tzinfo=timezone.utc)
+        # Use IST timezone since availability is set in IST
+        block_start = datetime.combine(target_date, block_start_time, tzinfo=IST)
+        block_end = datetime.combine(target_date, block_end_time, tzinfo=IST)
         
         current_slot_start = block_start
         while current_slot_start + timedelta(minutes=session_duration) <= block_end:
