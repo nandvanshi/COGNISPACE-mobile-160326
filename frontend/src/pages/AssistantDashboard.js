@@ -768,9 +768,7 @@ const AssistantDashboard = () => {
       <aside className="hidden lg:flex fixed inset-y-0 left-0 w-56 bg-white border-r border-border flex-col z-40">
         <div className="p-4 border-b border-border">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
-              <Sparkles size={16} className="text-white" />
-            </div>
+            <img src="/logo-symbol.png" alt="COGNISPACE" className="h-8 w-auto" />
             <h1 className="text-lg font-serif text-primary">COGNISPACE</h1>
           </div>
           <p className="text-sm text-muted-foreground mt-2 truncate">{user?.full_name}</p>
