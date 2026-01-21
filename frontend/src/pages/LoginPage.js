@@ -42,7 +42,7 @@ const LoginPage = () => {
         <div className="relative z-10 p-12 flex flex-col justify-end">
           <h1 className="text-5xl font-serif text-white mb-4">COGNISPACE</h1>
           <p className="text-xl text-white/90">
-            Clinical intelligence for modern therapists
+            Precision Insights. Personal Growth.
           </p>
         </div>
       </div>
