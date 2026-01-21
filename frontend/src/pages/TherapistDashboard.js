@@ -226,9 +226,7 @@ const TherapistDashboard = () => {
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-surface border-b border-border">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
-              <Sparkles size={18} className="text-white" />
-            </div>
+            <img src="/logo-symbol.png" alt="COGNISPACE" className="h-9 w-auto" />
             <span className="font-serif text-xl text-primary">COGNISPACE</span>
           </div>
           <div className="flex items-center gap-3">
