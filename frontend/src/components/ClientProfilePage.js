@@ -275,7 +275,7 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
               size="sm" 
               variant="secondary"
               className="bg-white/20 hover:bg-white/30 text-white border-0"
-              onClick={() => setShowBookAppointment(true)}
+              onClick={handleOpenBookAppointment}
               disabled={isReadOnly}
             >
               <CalendarPlus size={14} className="mr-1" /> Book Appointment
