@@ -253,8 +253,8 @@ const ClientDashboard = () => {
       // For clients, use the endpoint without therapist_id - backend will auto-detect from profile
       const response = await axios.get(`${API}/available-slots?date=${date}`);
       const slots = Array.isArray(response.data) ? response.data.map(s => ({
-        start: s.start_time,
-        end: s.end_time
+        start: s.start,
+        end: s.end
       })) : [];
       setAvailableSlots(slots);
     } catch (error) {
