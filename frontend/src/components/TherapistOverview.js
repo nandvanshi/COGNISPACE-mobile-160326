@@ -23,6 +23,17 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
     upcomingAppointments: 0,
     completedToday: 0,
     pendingNotes: 0,
+    // Week stats
+    weekSessions: 0,
+    weekCompleted: 0,
+    weekCancelled: 0,
+    weekNoShows: 0,
+    // Payment stats
+    paymentsPending: 0,
+    paymentsReceived: 0,
+    pendingPaymentCount: 0,
+    // Documentation stats
+    avgNoteDelay: 0,
   });
   const [todaySchedule, setTodaySchedule] = useState([]);
   const [weekSchedule, setWeekSchedule] = useState([]);
