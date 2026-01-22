@@ -264,7 +264,7 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
             <span className="text-base">{greeting.text}</span>
           </div>
           <h1 className="text-3xl sm:text-4xl lg:text-4xl font-serif text-foreground">
-            {user?.full_name?.split(' ')[0] || 'Doctor'}
+            {user?.full_name || 'Doctor'}
           </h1>
           <p className="text-base text-muted-foreground mt-1">{formatDateLong(nowIST())}</p>
         </div>
@@ -292,82 +292,220 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
         )}
       </div>
 
-      {/* Today at a Glance - Actionable Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {/* Today's Sessions Card */}
+      {/* Insight Cards - Soft Clinical Colors */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Sessions Today - Soft Teal */}
         <Card 
-          className={`p-5 border-l-4 ${stats.todayAppointments > 0 ? 'border-l-primary bg-primary/5' : 'border-l-muted bg-muted/30'} cursor-pointer hover:shadow-md transition-all active:scale-[0.98]`}
+          className="p-4 bg-teal-50 border-teal-200 cursor-pointer hover:shadow-md hover:bg-teal-100/70 transition-all active:scale-[0.98]"
           onClick={() => handleNavigate('schedule')}
           data-testid="today-sessions-card"
         >
-          <div className="flex items-start justify-between">
-            <div className="flex-1 min-w-0">
-              <p className="text-3xl sm:text-4xl font-bold text-foreground">{stats.todayAppointments}</p>
-              <p className="text-sm sm:text-base text-muted-foreground font-medium mt-1">Sessions Today</p>
-              {stats.todayAppointments > 0 ? (
-                <p className="text-sm text-primary mt-2 font-medium">
-                  {stats.completedToday} done, {stats.todayAppointments - stats.completedToday} left
-                </p>
-              ) : (
-                <p className="text-sm text-muted-foreground mt-2">
-                  No sessions scheduled
-                </p>
-              )}
+          <div className="flex items-center justify-between mb-2">
+            <div className="p-2 bg-teal-100 rounded-lg">
+              <Calendar size={20} className="text-teal-600" />
             </div>
-            <div className={`p-3 rounded-full flex-shrink-0 ${stats.todayAppointments > 0 ? 'bg-primary/10' : 'bg-muted'}`}>
-              <Calendar size={24} className={stats.todayAppointments > 0 ? 'text-primary' : 'text-muted-foreground'} />
-            </div>
+            <ChevronRight size={16} className="text-teal-400" />
           </div>
+          <p className="text-2xl sm:text-3xl font-bold text-teal-700">{stats.todayAppointments}</p>
+          <p className="text-sm text-teal-600 font-medium">Sessions Today</p>
+          {stats.todayAppointments > 0 && (
+            <p className="text-xs text-teal-500 mt-1">
+              {stats.completedToday} completed
+            </p>
+          )}
         </Card>
 
-        {/* Messages Card */}
+        {/* Unread Messages - Soft Blue */}
         <Card 
-          className={`p-5 border-l-4 ${stats.unreadMessages > 0 ? 'border-l-blue-500 bg-blue-50' : 'border-l-muted bg-muted/30'} cursor-pointer hover:shadow-md transition-all active:scale-[0.98]`}
+          className={`p-4 cursor-pointer hover:shadow-md transition-all active:scale-[0.98] ${
+            stats.unreadMessages > 0 
+              ? 'bg-blue-50 border-blue-200 hover:bg-blue-100/70' 
+              : 'bg-slate-50 border-slate-200 hover:bg-slate-100/70'
+          }`}
           onClick={() => handleNavigate('messages')}
           data-testid="messages-card"
         >
-          <div className="flex items-start justify-between">
-            <div className="flex-1 min-w-0">
-              <p className="text-3xl sm:text-4xl font-bold text-foreground">{stats.unreadMessages}</p>
-              <p className="text-sm sm:text-base text-muted-foreground font-medium mt-1">Unread Messages</p>
-              {stats.unreadMessages > 0 ? (
-                <p className="text-sm text-blue-600 mt-2 font-medium">
-                  Needs attention
-                </p>
-              ) : (
-                <p className="text-sm text-success mt-2 flex items-center gap-1">
-                  <CheckCircle size={14} /> All caught up
-                </p>
-              )}
+          <div className="flex items-center justify-between mb-2">
+            <div className={`p-2 rounded-lg ${stats.unreadMessages > 0 ? 'bg-blue-100' : 'bg-slate-100'}`}>
+              <MessageSquare size={20} className={stats.unreadMessages > 0 ? 'text-blue-600' : 'text-slate-500'} />
             </div>
-            <div className={`p-3 rounded-full flex-shrink-0 ${stats.unreadMessages > 0 ? 'bg-blue-100' : 'bg-muted'}`}>
-              <MessageSquare size={24} className={stats.unreadMessages > 0 ? 'text-blue-500' : 'text-muted-foreground'} />
+            <ChevronRight size={16} className={stats.unreadMessages > 0 ? 'text-blue-400' : 'text-slate-400'} />
+          </div>
+          <p className={`text-2xl sm:text-3xl font-bold ${stats.unreadMessages > 0 ? 'text-blue-700' : 'text-slate-600'}`}>
+            {stats.unreadMessages}
+          </p>
+          <p className={`text-sm font-medium ${stats.unreadMessages > 0 ? 'text-blue-600' : 'text-slate-500'}`}>
+            Unread Messages
+          </p>
+          {stats.unreadMessages === 0 && (
+            <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+              <CheckCircle size={12} /> All caught up
+            </p>
+          )}
+        </Card>
+
+        {/* Pending Notes - Soft Amber */}
+        <Card 
+          className={`p-4 cursor-pointer hover:shadow-md transition-all active:scale-[0.98] ${
+            stats.pendingNotes > 0 
+              ? 'bg-amber-50 border-amber-200 hover:bg-amber-100/70' 
+              : 'bg-slate-50 border-slate-200 hover:bg-slate-100/70'
+          }`}
+          onClick={() => handleNavigate('notes')}
+          data-testid="pending-notes-card"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <div className={`p-2 rounded-lg ${stats.pendingNotes > 0 ? 'bg-amber-100' : 'bg-slate-100'}`}>
+              <FileText size={20} className={stats.pendingNotes > 0 ? 'text-amber-600' : 'text-slate-500'} />
+            </div>
+            <ChevronRight size={16} className={stats.pendingNotes > 0 ? 'text-amber-400' : 'text-slate-400'} />
+          </div>
+          <p className={`text-2xl sm:text-3xl font-bold ${stats.pendingNotes > 0 ? 'text-amber-700' : 'text-slate-600'}`}>
+            {stats.pendingNotes}
+          </p>
+          <p className={`text-sm font-medium ${stats.pendingNotes > 0 ? 'text-amber-600' : 'text-slate-500'}`}>
+            Pending Notes
+          </p>
+          {stats.pendingNotes === 0 && (
+            <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+              <CheckCircle size={12} /> All documented
+            </p>
+          )}
+        </Card>
+
+        {/* Payments Pending - Soft Rose */}
+        <Card 
+          className={`p-4 cursor-pointer hover:shadow-md transition-all active:scale-[0.98] ${
+            stats.pendingPaymentCount > 0 
+              ? 'bg-rose-50 border-rose-200 hover:bg-rose-100/70' 
+              : 'bg-slate-50 border-slate-200 hover:bg-slate-100/70'
+          }`}
+          onClick={() => handleNavigate('payments')}
+          data-testid="payments-pending-card"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <div className={`p-2 rounded-lg ${stats.pendingPaymentCount > 0 ? 'bg-rose-100' : 'bg-slate-100'}`}>
+              <DollarSign size={20} className={stats.pendingPaymentCount > 0 ? 'text-rose-600' : 'text-slate-500'} />
+            </div>
+            <ChevronRight size={16} className={stats.pendingPaymentCount > 0 ? 'text-rose-400' : 'text-slate-400'} />
+          </div>
+          <p className={`text-2xl sm:text-3xl font-bold ${stats.pendingPaymentCount > 0 ? 'text-rose-700' : 'text-slate-600'}`}>
+            {stats.pendingPaymentCount}
+          </p>
+          <p className={`text-sm font-medium ${stats.pendingPaymentCount > 0 ? 'text-rose-600' : 'text-slate-500'}`}>
+            Payments Pending
+          </p>
+          {stats.paymentsPending > 0 && (
+            <p className="text-xs text-rose-500 mt-1">
+              {formatCurrency(stats.paymentsPending)}
+            </p>
+          )}
+        </Card>
+      </div>
+
+      {/* Lightweight Reporting Section */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* This Week at a Glance */}
+        <Card 
+          className="p-5 bg-white border cursor-pointer hover:shadow-md transition-all"
+          onClick={() => handleNavigate('schedule')}
+          data-testid="week-glance-card"
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <CalendarDays size={18} className="text-primary" />
+            <h3 className="font-semibold text-foreground">This Week at a Glance</h3>
+          </div>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">Total Sessions</span>
+              <span className="font-semibold text-foreground">{stats.weekSessions}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground flex items-center gap-1">
+                <CheckCircle size={14} className="text-green-500" /> Completed
+              </span>
+              <span className="font-semibold text-green-600">{stats.weekCompleted}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground flex items-center gap-1">
+                <XCircle size={14} className="text-red-400" /> Cancelled
+              </span>
+              <span className="font-semibold text-red-500">{stats.weekCancelled}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground flex items-center gap-1">
+                <UserX size={14} className="text-amber-500" /> No-shows
+              </span>
+              <span className="font-semibold text-amber-600">{stats.weekNoShows}</span>
             </div>
           </div>
         </Card>
 
-        {/* Pending Notes Card */}
+        {/* Documentation Health */}
         <Card 
-          className={`p-5 border-l-4 ${stats.pendingNotes > 0 ? 'border-l-amber-500 bg-amber-50' : 'border-l-muted bg-muted/30'} cursor-pointer hover:shadow-md transition-all active:scale-[0.98]`}
+          className="p-5 bg-white border cursor-pointer hover:shadow-md transition-all"
           onClick={() => handleNavigate('notes')}
-          data-testid="pending-notes-card"
+          data-testid="doc-health-card"
         >
-          <div className="flex items-start justify-between">
-            <div className="flex-1 min-w-0">
-              <p className="text-3xl sm:text-4xl font-bold text-foreground">{stats.pendingNotes}</p>
-              <p className="text-sm sm:text-base text-muted-foreground font-medium mt-1">Pending Notes</p>
-              {stats.pendingNotes > 0 ? (
-                <p className="text-sm text-amber-600 mt-2 font-medium">
-                  Need documentation
+          <div className="flex items-center gap-2 mb-4">
+            <FileWarning size={18} className="text-amber-500" />
+            <h3 className="font-semibold text-foreground">Documentation Health</h3>
+          </div>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">Pending Notes</span>
+              <span className={`font-semibold ${stats.pendingNotes > 0 ? 'text-amber-600' : 'text-green-600'}`}>
+                {stats.pendingNotes}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">Avg. Note Delay</span>
+              <span className={`font-semibold ${stats.avgNoteDelay > 2 ? 'text-amber-600' : 'text-green-600'}`}>
+                {stats.avgNoteDelay === 0 ? 'Same day' : `${stats.avgNoteDelay} day${stats.avgNoteDelay > 1 ? 's' : ''}`}
+              </span>
+            </div>
+            <div className="pt-2 mt-2 border-t">
+              {stats.pendingNotes === 0 ? (
+                <p className="text-sm text-green-600 flex items-center gap-1">
+                  <CheckCircle size={14} /> Great job! All notes up to date
                 </p>
               ) : (
-                <p className="text-sm text-success mt-2 flex items-center gap-1">
-                  <CheckCircle size={14} /> All documented
+                <p className="text-sm text-amber-600">
+                  {stats.pendingNotes} session{stats.pendingNotes > 1 ? 's' : ''} need documentation
                 </p>
               )}
             </div>
-            <div className={`p-3 rounded-full flex-shrink-0 ${stats.pendingNotes > 0 ? 'bg-amber-100' : 'bg-muted'}`}>
-              <FileText size={24} className={stats.pendingNotes > 0 ? 'text-amber-500' : 'text-muted-foreground'} />
+          </div>
+        </Card>
+
+        {/* Revenue Snapshot */}
+        <Card 
+          className="p-5 bg-white border cursor-pointer hover:shadow-md transition-all"
+          onClick={() => handleNavigate('payments')}
+          data-testid="revenue-snapshot-card"
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <TrendingUp size={18} className="text-green-500" />
+            <h3 className="font-semibold text-foreground">Revenue Snapshot</h3>
+          </div>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">Received</span>
+              <span className="font-semibold text-green-600">{formatCurrency(stats.paymentsReceived)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">Pending</span>
+              <span className={`font-semibold ${stats.paymentsPending > 0 ? 'text-rose-600' : 'text-slate-500'}`}>
+                {formatCurrency(stats.paymentsPending)}
+              </span>
+            </div>
+            <div className="pt-2 mt-2 border-t">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Total</span>
+                <span className="font-bold text-foreground">
+                  {formatCurrency(stats.paymentsReceived + stats.paymentsPending)}
+                </span>
+              </div>
             </div>
           </div>
         </Card>
