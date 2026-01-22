@@ -307,6 +307,7 @@ const TherapistDashboard = () => {
               }`}>
                 {group.items.map((item) => {
                   const Icon = item.icon;
+                  const isHighlighted = item.highlight;
                   return (
                     <button
                       key={item.id}
@@ -315,10 +316,12 @@ const TherapistDashboard = () => {
                       className={`w-full flex items-center gap-3 px-4 py-3.5 lg:py-2.5 rounded-lg transition-all ${
                         currentView === item.id
                           ? 'bg-primary text-white shadow-sm'
-                          : 'text-foreground hover:bg-muted/60'
+                          : isHighlighted
+                            ? 'bg-gradient-to-r from-purple-500/10 to-pink-500/10 text-purple-700 border border-purple-200 hover:from-purple-500/20 hover:to-pink-500/20'
+                            : 'text-foreground hover:bg-muted/60'
                       }`}
                     >
-                      <Icon size={20} />
+                      <Icon size={20} className={isHighlighted && currentView !== item.id ? 'text-purple-500' : ''} />
                       <span className="text-base lg:text-sm font-medium">{item.label}</span>
                     </button>
                   );
