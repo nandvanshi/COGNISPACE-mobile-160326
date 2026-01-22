@@ -35,7 +35,7 @@ const LoginPage = () => {
         className="hidden lg:flex lg:w-1/2 bg-cover bg-center relative"
         style={{
           backgroundImage:
-            'url(https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=1200)',
+            'url(https://images.pexels.com/photos/5234624/pexels-photo-5234624.jpeg?w=1200)',
         }}
       >
         <div className="absolute inset-0 bg-primary/40 backdrop-blur-sm" />
