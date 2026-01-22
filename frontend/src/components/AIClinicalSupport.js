@@ -244,13 +244,28 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
     <div data-testid="ai-clinical-support" className="space-y-6">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
+        <div className="flex items-center gap-3 mb-3">
           <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
             <Brain className="text-white" size={24} />
           </div>
           <div>
-            <h2 className="text-4xl font-serif text-primary">AI Clinical Support</h2>
-            <p className="text-muted-foreground">Powered by Gemini 3 Flash</p>
+            <h2 className="text-4xl font-serif text-primary">TheraGenie ✨</h2>
+            <p className="text-muted-foreground">AI-Powered Clinical Intelligence</p>
+          </div>
+        </div>
+        
+        {/* Info Banner */}
+        <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-xl p-4 mt-4">
+          <div className="flex items-start gap-3">
+            <Sparkles className="text-purple-500 mt-0.5 flex-shrink-0" size={20} />
+            <div>
+              <p className="text-sm font-medium text-purple-800 mb-1">How TheraGenie Works</p>
+              <ul className="text-xs text-purple-700 space-y-1">
+                <li>• Analyzes inputs from <strong>Case History</strong>, <strong>Assessments</strong>, and <strong>Session Notes</strong></li>
+                <li>• <strong>No direct client advice</strong> - suggestions are for therapist reference only</li>
+                <li>• <strong>Therapist approval required</strong> for all AI-generated outputs</li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
