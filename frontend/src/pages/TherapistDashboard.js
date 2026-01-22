@@ -121,7 +121,7 @@ const TherapistDashboard = () => {
         { id: 'notes', label: 'Session Notes', icon: FileText, feature: 'session_notes' },
         { id: 'assessments', label: 'Assessments', icon: ClipboardList, feature: 'assessments' },
         { id: 'protocols', label: 'Protocols', icon: BookOpen, feature: 'protocols' },
-        { id: 'ai-support', label: 'AI Clinical', icon: Brain, feature: 'ai_clinical' },
+        { id: 'ai-support', label: 'TheraGenie ✨', icon: Brain, feature: 'ai_clinical', highlight: true },
       ]
     },
     {
