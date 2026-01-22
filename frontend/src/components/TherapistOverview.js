@@ -7,10 +7,11 @@ import {
   Calendar, Users, FileText, MessageSquare, Clock, 
   Plus, Bell, AlertTriangle, ChevronRight, ArrowRight,
   CheckCircle, User, ClipboardList, CalendarDays, 
-  CalendarPlus, Sparkles, SunMedium, Moon, Sunset
+  CalendarPlus, Sparkles, SunMedium, Moon, Sunset,
+  DollarSign, TrendingUp, XCircle, UserX, FileWarning
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { formatTime, formatTimeRange, formatDateLong, getRelativeDate, getTimeUntil, toIST, nowIST } from '../utils/formatUtils';
+import { formatTime, formatTimeRange, formatDateLong, getRelativeDate, getTimeUntil, toIST, nowIST, formatCurrency } from '../utils/formatUtils';
 
 const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
   const { user } = useAuth();
