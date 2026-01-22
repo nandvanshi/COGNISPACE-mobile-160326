@@ -50,7 +50,7 @@ const LoginPage = () => {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
         <Card className="w-full max-w-md p-8 bg-white/70 backdrop-blur-xl border border-border/40 rounded-2xl shadow-xl">
           <div className="text-center mb-8">
-            <img src="/logo-cognispace.png" alt="COGNISPACE" className="h-24 mx-auto mb-4 object-contain" />
+            <img src="/logo-cognispace.png" alt="COGNISPACE" className="h-36 mx-auto mb-4 object-contain" />
             <h2 className="text-3xl font-serif text-primary mb-2">Welcome</h2>
             <p className="text-muted-foreground">Sign in to your account</p>
           </div>
@@ -100,8 +100,11 @@ const LoginPage = () => {
               className="w-full"
               data-testid="therapist-apply-button"
             >
-              Apply as Therapist
+              Register as Therapist
             </Button>
+            <p className="text-xs text-muted-foreground text-center mt-2">
+              Registration requires admin approval.
+            </p>
           </div>
 
           <div className="mt-6 p-4 bg-info/10 border border-info/20 rounded-lg">
