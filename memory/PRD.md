@@ -1,10 +1,10 @@
-# TheraGenie - Product Requirements Document
+# COGNISPACE - Product Requirements Document
 
 ## Original Problem Statement
 Build a secure, therapist-first web application for managing a therapy practice and supporting clinical decision-making.
 
-**App Name**: TheraGenie
-**Tagline**: Clinical intelligence for modern therapists
+**App Name**: COGNISPACE
+**Tagline**: Precision Insights. Personal Growth.
 
 ## Core Requirements
 
@@ -1701,6 +1701,39 @@ Build a secure, therapist-first web application for managing a therapy practice 
 - "Back to Dashboard" button correctly navigates to /assistant
 - Therapist view still shows all 7 tabs
 
----
+### Phase 40: Application Rebranding & UI Fixes (COMPLETED - Jan 22, 2026)
+**Feature:** Complete application rebrand from TheraGenie to COGNISPACE
+
+**Rebranding Changes:**
+- App Name: TheraGenie → **COGNISPACE**
+- Tagline: "Clinical intelligence for modern therapists" → **"Precision Insights. Personal Growth."**
+- Logo: New logo uploaded at `/app/frontend/public/logo-cognispace.png`
+- Updated all frontend files with new branding (LoginPage, dashboards, headers)
+- Service Worker updated to `networkFirst` strategy to fix caching issues
+
+**Login Page UI Tweaks (P0):**
+- Logo size increased from `h-24` to `h-36`
+- Heading changed from "Welcome back" to "Welcome"
+- Button text changed from "Apply as Therapist" to "Register as Therapist"
+- Added helper text: "Registration requires admin approval."
+
+**Client Dashboard Availability Slots Bug Fix (P0):**
+- Fixed recurring issue where availability slots didn't show time
+- Time now correctly displays in 24-hour IST format (e.g., 10:00, 11:10, 12:20)
+- `formatTime(slot.start)` correctly renders slot times
+
+**Caching Issue Fix:**
+- Service Worker changed from `cacheFirst` to `networkFirst` strategy
+- Users now see latest UI immediately after login without hard refresh
+
+**Files Modified:**
+- `/app/frontend/src/pages/LoginPage.js` - UI tweaks
+- `/app/frontend/public/service-worker.js` - Caching strategy
+- `/app/frontend/public/logo-cognispace.png` - New logo
+- Multiple frontend files - Branding updates
+
+**Testing:** Screenshot verified
+- Login page shows larger logo, correct text, helper message
+- Client Dashboard availability slots show times correctly (10:00, 11:10, 12:20, etc.)
 
 ---
