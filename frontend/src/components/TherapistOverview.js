@@ -63,13 +63,15 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
         apptsRes, 
         messagesRes, 
         subscriptionRes,
-        notesRes
+        notesRes,
+        paymentsRes
       ] = await Promise.all([
         axios.get(`${API}/clients`),
         axios.get(`${API}/appointments`),
         axios.get(`${API}/messages`).catch(() => ({ data: [] })),
         axios.get(`${API}/auth/subscription-status`),
         axios.get(`${API}/session-notes`).catch(() => ({ data: [] })),
+        axios.get(`${API}/payments`).catch(() => ({ data: [] })),
       ]);
 
       const today = nowIST();
@@ -79,6 +81,8 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
       const now = nowIST();
 
       // Calculate week range
+      const weekStart = new Date(today);
+      weekStart.setDate(weekStart.getDate() - weekStart.getDay()); // Start of week (Sunday)
       const weekEnd = new Date(today);
       weekEnd.setDate(weekEnd.getDate() + 7);
 
@@ -90,7 +94,19 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
         return apptDate >= today && apptDate < tomorrow && appt.status !== 'cancelled';
       }).sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
 
-      // Week's appointments (grouped by day)
+      // This week's appointments (for stats)
+      const thisWeekAppts = allAppts.filter((appt) => {
+        const apptDate = toIST(appt.start_time);
+        return apptDate >= weekStart && apptDate < weekEnd;
+      });
+
+      // Week stats
+      const weekSessions = thisWeekAppts.length;
+      const weekCompleted = thisWeekAppts.filter(a => a.status === 'completed').length;
+      const weekCancelled = thisWeekAppts.filter(a => a.status === 'cancelled').length;
+      const weekNoShows = thisWeekAppts.filter(a => a.status === 'no_show').length;
+
+      // Week's appointments (grouped by day) - for display
       const weekAppts = allAppts.filter((appt) => {
         const apptDate = toIST(appt.start_time);
         return apptDate >= today && apptDate < weekEnd && appt.status !== 'cancelled';
@@ -120,6 +136,32 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
         const hasNote = notesRes.data.some(n => n.appointment_id === a.id);
         return !hasNote;
       }).length;
+
+      // Calculate avg note delay (days between session and note creation)
+      let totalDelay = 0;
+      let notesWithDelay = 0;
+      notesRes.data.forEach(note => {
+        if (note.appointment_id) {
+          const appt = allAppts.find(a => a.id === note.appointment_id);
+          if (appt) {
+            const apptDate = new Date(appt.start_time);
+            const noteDate = new Date(note.created_at);
+            const delayDays = Math.floor((noteDate - apptDate) / (1000 * 60 * 60 * 24));
+            if (delayDays >= 0) {
+              totalDelay += delayDays;
+              notesWithDelay++;
+            }
+          }
+        }
+      });
+      const avgNoteDelay = notesWithDelay > 0 ? Math.round(totalDelay / notesWithDelay) : 0;
+
+      // Payment stats
+      const payments = paymentsRes.data || [];
+      const pendingPayments = payments.filter(p => p.payment_status === 'pending');
+      const receivedPayments = payments.filter(p => p.payment_status === 'paid' || p.payment_status === 'completed');
+      const paymentsReceived = receivedPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+      const paymentsPending = pendingPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
 
       // Generate alerts
       const alertsList = [];
@@ -173,6 +215,14 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
         upcomingAppointments: upcomingAppts.length,
         completedToday,
         pendingNotes: completedWithoutNotes,
+        weekSessions,
+        weekCompleted,
+        weekCancelled,
+        weekNoShows,
+        paymentsReceived,
+        paymentsPending,
+        pendingPaymentCount: pendingPayments.length,
+        avgNoteDelay,
       });
 
       setTodaySchedule(todayAppts);
