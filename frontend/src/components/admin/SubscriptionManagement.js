@@ -316,7 +316,7 @@ const SubscriptionManagement = () => {
                 data-testid="plan-features-input"
                 value={newPlan.features}
                 onChange={(e) => setNewPlan({ ...newPlan, features: e.target.value })}
-                placeholder="Unlimited clients, Priority support, AI features"
+                placeholder="Unlimited clients, Priority support, TheraGenie features"
               />
             </div>
             <p className="text-sm text-muted-foreground">
