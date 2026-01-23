@@ -326,25 +326,48 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex items-end gap-4">
-                <label className="flex items-center gap-2 text-sm">
-                  <input 
-                    type="checkbox" 
-                    checked={assessmentRequest.include_intake}
-                    onChange={(e) => setAssessmentRequest({...assessmentRequest, include_intake: e.target.checked})}
-                    className="rounded"
-                  />
-                  Include Intake
-                </label>
-                <label className="flex items-center gap-2 text-sm">
-                  <input 
-                    type="checkbox" 
-                    checked={assessmentRequest.include_notes}
-                    onChange={(e) => setAssessmentRequest({...assessmentRequest, include_notes: e.target.checked})}
-                    className="rounded"
-                  />
-                  Include Notes
-                </label>
+              
+              {/* Data Source Checkboxes */}
+              <div className="col-span-2 bg-slate-50 rounded-lg p-3 mt-2">
+                <p className="text-xs font-medium text-muted-foreground mb-2">Include data from:</p>
+                <div className="flex flex-wrap gap-4">
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={assessmentRequest.include_case_history}
+                      onChange={(e) => setAssessmentRequest({...assessmentRequest, include_case_history: e.target.checked})}
+                      className="rounded border-slate-300"
+                    />
+                    <span>Case History</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={assessmentRequest.include_prev_assessments}
+                      onChange={(e) => setAssessmentRequest({...assessmentRequest, include_prev_assessments: e.target.checked})}
+                      className="rounded border-slate-300"
+                    />
+                    <span>Previous Assessments</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={assessmentRequest.include_intake}
+                      onChange={(e) => setAssessmentRequest({...assessmentRequest, include_intake: e.target.checked})}
+                      className="rounded border-slate-300"
+                    />
+                    <span>Intake Notes</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={assessmentRequest.include_notes}
+                      onChange={(e) => setAssessmentRequest({...assessmentRequest, include_notes: e.target.checked})}
+                      className="rounded border-slate-300"
+                    />
+                    <span>Session Notes</span>
+                  </label>
+                </div>
               </div>
             </div>
 
