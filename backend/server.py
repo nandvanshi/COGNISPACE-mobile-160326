@@ -1910,7 +1910,7 @@ CRITICAL INSTRUCTIONS - FOLLOW STRICTLY:
 
 6. Do NOT provide summaries - provide DEEP clinical interpretations.
 
-7. Use ICD-11 and DSM-5 diagnostic standards.
+7. Use ICD-10 and DSM-5 diagnostic standards.
 
 8. Be evidence-based and cite which assessments support each conclusion.
 
@@ -1933,7 +1933,7 @@ REPORT STRUCTURE (Generate each section):
    - Clinical significance of scores
    
 4. DIAGNOSTIC IMPRESSION
-   - Primary diagnosis with ICD-11/DSM-5 codes
+   - Primary diagnosis with ICD-10/DSM-5 codes
    - Differential diagnoses considered
    - Rule-outs with reasoning
    - Severity specifiers
