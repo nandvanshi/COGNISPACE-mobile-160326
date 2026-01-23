@@ -690,10 +690,10 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
             {/* Assessment Selection */}
             {diagnosticRequest.client_id && (
               <div className="mb-4">
-                <Label className="mb-2 block">Select Assessments for Report *</Label>
+                <Label className="mb-2 block">Select Assessments for Report (optional)</Label>
                 {completedAssessments.length === 0 ? (
-                  <p className="text-sm text-muted-foreground bg-amber-50 p-3 rounded-lg">
-                    No completed assessments found for this client. Please complete at least one assessment first.
+                  <p className="text-sm text-muted-foreground bg-slate-50 p-3 rounded-lg">
+                    No completed assessments found. You can still generate a report using clinical observations below.
                   </p>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-y-auto border rounded-lg p-3">
