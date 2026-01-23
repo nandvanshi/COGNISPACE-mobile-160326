@@ -370,7 +370,7 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
     body {
       font-family: 'Inter', Arial, sans-serif;
       font-size: 11pt;
-      color: #333;
+      color: #000;
       line-height: 1.6;
       background: #fff;
       padding: 0;
@@ -382,40 +382,41 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
       padding: 0;
     }
     
-    /* Therapist Header - Left Aligned */
+    /* Therapist Header - Navy Blue */
     .therapist-header {
       margin-bottom: 25px;
       padding-bottom: 15px;
-      border-bottom: 2px solid #004d40;
+      border-bottom: 2px solid #000080;
     }
     .therapist-header h1 {
       font-size: 18pt;
       font-weight: 700;
       margin: 0 0 5px 0;
-      color: #004d40;
+      color: #000080;
     }
     .therapist-header p {
       margin: 3px 0;
       font-size: 10pt;
-      color: #555;
+      color: #333;
+      display: block;
     }
     
-    /* Report Title - Centered */
+    /* Report Title - Navy Blue */
     .report-title {
       text-align: center;
       font-size: 16pt;
       font-weight: 600;
       letter-spacing: 2px;
       margin: 25px 0;
-      color: #004d40;
+      color: #000080;
     }
     .report-meta {
       text-align: center;
       font-size: 9pt;
-      color: #666;
+      color: #333;
       margin-bottom: 25px;
     }
-    .report-meta p { margin: 3px 0; }
+    .report-meta p { margin: 3px 0; display: block; }
     
     /* Sections with Grey Dividers */
     .report-section {
@@ -424,19 +425,22 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
     }
     .section-divider {
       border: none;
-      border-top: 1px solid #ddd;
+      border-top: 1px solid #ccc;
       margin: 20px 0 15px 0;
     }
     .section-heading {
       font-size: 12pt;
       font-weight: 600;
-      color: #004d40;
+      color: #000080;
       margin-bottom: 12px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
     
-    /* Patient Info - Each Point on New Line */
+    /* Force ALL paragraphs, lists, bullets to NEW LINE */
+    p, li, span, div {
+      display: block;
+    }
     .patient-info p, .report-content p {
       margin-bottom: 8px;
       display: block;
@@ -444,14 +448,25 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
     }
     .data-label {
       font-weight: 600;
-      color: #333;
+      color: #000;
       display: block;
       margin-bottom: 2px;
     }
     .data-value {
       display: block;
       margin-bottom: 10px;
-      color: #444;
+      color: #333;
+    }
+    
+    /* Lists - Each item on NEW LINE */
+    ul, ol {
+      margin: 10px 0;
+      padding-left: 20px;
+    }
+    li {
+      display: block;
+      margin-bottom: 6px;
+      text-align: justify;
     }
     
     /* Disclaimer */
@@ -462,9 +477,9 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
       padding: 12px;
       margin: 25px 0;
       font-size: 8pt;
-      color: #666;
+      color: #333;
     }
-    .disclaimer-box p { margin: 5px 0; text-align: justify; }
+    .disclaimer-box p { margin: 5px 0; text-align: justify; display: block; }
     
     /* Signature Block */
     .signature-section {
@@ -473,7 +488,7 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
     }
     .signature-space {
       height: 60px;
-      border-bottom: 1px solid #333;
+      border-bottom: 1px solid #000;
       width: 180px;
       margin: 15px 0 8px 0;
     }
@@ -481,11 +496,13 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
       font-weight: 600;
       font-size: 11pt;
       margin: 5px 0 2px 0;
+      color: #000;
     }
     .signature-details {
       font-size: 9pt;
-      color: #555;
+      color: #333;
       margin: 2px 0;
+      display: block;
     }
     
     /* Branded Footer - Fixed at Bottom */
@@ -494,13 +511,13 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
       bottom: 0;
       left: 0;
       right: 0;
-      border-top: 1px solid #eee;
+      border-top: 1px solid #ddd;
       padding: 10px 2cm;
       display: flex;
       justify-content: space-between;
       align-items: center;
       font-size: 9pt;
-      color: #777;
+      color: #555;
       background: #fff;
     }
     .footer-logo {
@@ -508,7 +525,7 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
       align-items: center;
       gap: 8px;
     }
-    .footer-logo svg { width: 18px; height: 18px; }
+    .footer-logo img { height: 20px; width: auto; }
     
     /* Content spacer for footer */
     .footer-spacer { height: 50px; }
@@ -517,14 +534,11 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
 <body>
   ${reportContent}
   
-  <!-- Fixed Branded Footer -->
+  <!-- Fixed Branded Footer with Logo URL -->
   <div class="branded-footer">
     <div class="footer-logo">
-      <svg viewBox="0 0 24 24" fill="none">
-        <circle cx="12" cy="12" r="10" stroke="#004d40" stroke-width="2"/>
-        <path d="M12 6v6l4 2" stroke="#004d40" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-      <span style="color: #004d40; font-weight: 500;">Powered by Cognispace</span>
+      <img src="https://i.ibb.co/placeholder/cognispace-logo.png" alt="Cognispace" onerror="this.style.display='none'" />
+      <span style="color: #000080; font-weight: 500;">Powered by Cognispace</span>
     </div>
     <span>Precision Insights. Personal Growth.</span>
   </div>
