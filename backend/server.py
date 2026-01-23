@@ -1296,7 +1296,7 @@ async def get_ai_chat(session_id: str, system_message: str):
         api_key=EMERGENT_LLM_KEY,
         session_id=session_id,
         system_message=system_message
-    ).with_model("anthropic", "claude-sonnet-4-5-20250929")
+    ).with_model("anthropic", "claude-4-sonnet-20250514")
     
     return chat
 
