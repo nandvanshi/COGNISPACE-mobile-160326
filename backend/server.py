@@ -488,6 +488,8 @@ class AIAssessmentSuggestionRequest(BaseModel):
     query: Optional[str] = None  # Manual query from therapist
     include_intake: bool = True
     include_notes: bool = True
+    include_case_history: bool = True
+    include_prev_assessments: bool = True
 
 class AIAssessmentSuggestion(BaseModel):
     assessment_name: str
