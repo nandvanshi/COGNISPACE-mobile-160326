@@ -1934,90 +1934,129 @@ Remember: You are CogniVision Engine providing expert-level clinical analysis.""
         def format_with_linebreaks(text):
             if not text:
                 return "N/A"
-            # Replace common separators with line breaks
-            formatted = text.replace('. ', '.<br>\n')
-            formatted = formatted.replace('- ', '<br>\n• ')
-            formatted = formatted.replace('; ', ';<br>\n')
-            return formatted
+            # Replace common separators with proper line breaks
+            formatted = text.replace('. ', '.</p>\n<p style="margin: 6px 0;">')
+            formatted = formatted.replace('- ', '</p>\n<p style="margin: 6px 0;">• ')
+            formatted = formatted.replace('; ', ';</p>\n<p style="margin: 6px 0;">')
+            formatted = formatted.replace('\n', '</p>\n<p style="margin: 6px 0;">')
+            return f'<p style="margin: 6px 0;">{formatted}</p>'
         
         # Build formatted HTML report with professional layout
         raw_html = f"""
-<div class="diagnostic-report" style="font-family: 'Georgia', 'Times New Roman', serif; font-size: 12pt; line-height: 1.8; color: #1a1a1a;">
+<div class="diagnostic-report" style="font-family: 'Georgia', 'Times New Roman', serif; font-size: 12pt; line-height: 1.7; color: #1a1a1a;">
     
-    <!-- Therapist Header - Left Aligned -->
-    <div class="therapist-header" style="margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #16a34a;">
-        <p style="margin: 0; font-size: 14pt;"><strong>{therapist_name}</strong></p>
-        <p style="margin: 2px 0; font-size: 12pt; color: #444;">{therapist_title}</p>
-        {f'<p style="margin: 2px 0; font-size: 11pt; color: #555;">{therapist_clinic}</p>' if therapist_clinic else ''}
-        {f'<p style="margin: 2px 0; font-size: 11pt; color: #555;">{therapist_address}</p>' if therapist_address else ''}
-        <p style="margin: 2px 0; font-size: 11pt; color: #555;">Contact: {therapist_phone}</p>
-        <p style="margin: 2px 0; font-size: 11pt; color: #555;">Registration No: {therapist_reg}</p>
+    <!-- Therapist Header - LEFT ALIGNED, BOLD 14pt -->
+    <div class="therapist-header" style="margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid #16a34a; text-align: left;">
+        <p style="margin: 0 0 3px 0; font-size: 14pt; font-weight: bold; color: #1a1a1a;">{therapist_name}</p>
+        <p style="margin: 3px 0; font-size: 12pt; color: #444;">{therapist_title}</p>
+        {f'<p style="margin: 3px 0; font-size: 11pt; color: #555;">{therapist_clinic}</p>' if therapist_clinic else ''}
+        {f'<p style="margin: 3px 0; font-size: 11pt; color: #555;">{therapist_address}</p>' if therapist_address else ''}
+        <p style="margin: 3px 0; font-size: 11pt; color: #555;">Contact: {therapist_phone}</p>
+        <p style="margin: 3px 0; font-size: 11pt; color: #555;">Registration No: {therapist_reg}</p>
     </div>
     
-    <!-- Report Title -->
+    <!-- Report Title - Centered -->
     <div class="report-title" style="text-align: center; margin-bottom: 30px;">
-        <h1 style="color: #16a34a; margin: 0; font-size: 18pt; letter-spacing: 1px;">PSYCHODIAGNOSTIC EVALUATION REPORT</h1>
-        <p style="color: #666; margin: 10px 0; font-size: 11pt;">Report Date: {report_date}</p>
-        <p style="color: #666; margin: 5px 0; font-size: 10pt;">Report ID: CR-{uuid.uuid4().hex[:8].upper()}</p>
+        <h1 style="color: #16a34a; margin: 0; font-size: 16pt; letter-spacing: 1px; font-weight: bold;">PSYCHODIAGNOSTIC EVALUATION REPORT</h1>
+        <p style="color: #666; margin: 10px 0 3px 0; font-size: 11pt;">Report Date: {report_date}</p>
+        <p style="color: #666; margin: 3px 0; font-size: 10pt;">Report ID: CR-{uuid.uuid4().hex[:8].upper()}</p>
     </div>
     
-    <!-- Section 1: Patient Identification -->
+    <!-- SECTION 1: Patient Identification - GREY DIVIDER ABOVE -->
+    <hr style="border: none; border-top: 1px solid #cccccc; margin: 25px 0 15px 0;">
     <div class="section" style="margin-bottom: 25px; page-break-inside: avoid;">
-        <h3 style="color: #16a34a; font-size: 14pt; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 15px;">1. PATIENT IDENTIFICATION & REFERRAL CONTEXT</h3>
+        <h3 style="color: #16a34a; font-size: 14pt; margin-bottom: 15px; font-weight: bold;">1. PATIENT IDENTIFICATION & REFERRAL CONTEXT</h3>
         <div style="text-align: justify; font-size: 12pt;">
-            <p style="margin: 8px 0;"><strong>Patient Name:</strong><br>{client_name}</p>
-            <p style="margin: 8px 0;"><strong>Date of Birth:</strong><br>{client_dob}</p>
-            <p style="margin: 8px 0;"><strong>Contact:</strong><br>{client_phone}</p>
-            <div style="margin-top: 15px;">
-                {format_with_linebreaks(result.get('patient_identification', ''))}
-            </div>
-            <div style="margin-top: 10px;">
-                <strong>Referral Context:</strong><br>
-                {format_with_linebreaks(result.get('referral_context', 'Self-referred'))}
-            </div>
+            <p style="margin: 8px 0;"><strong>Patient Name:</strong></p>
+            <p style="margin: 4px 0 12px 0;">{client_name}</p>
+            
+            <p style="margin: 8px 0;"><strong>Date of Birth:</strong></p>
+            <p style="margin: 4px 0 12px 0;">{client_dob}</p>
+            
+            <p style="margin: 8px 0;"><strong>Contact:</strong></p>
+            <p style="margin: 4px 0 12px 0;">{client_phone}</p>
+            
+            <p style="margin: 12px 0 8px 0;"><strong>Clinical Details:</strong></p>
+            {format_with_linebreaks(result.get('patient_identification', ''))}
+            
+            <p style="margin: 12px 0 8px 0;"><strong>Referral Context:</strong></p>
+            {format_with_linebreaks(result.get('referral_context', 'Self-referred'))}
         </div>
     </div>
     
-    <!-- Section 2: Assessment Battery -->
+    <!-- SECTION 2: Assessment Battery - GREY DIVIDER ABOVE -->
+    <hr style="border: none; border-top: 1px solid #cccccc; margin: 25px 0 15px 0;">
     <div class="section" style="margin-bottom: 25px; page-break-inside: avoid;">
-        <h3 style="color: #16a34a; font-size: 14pt; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 15px;">2. ASSESSMENT BATTERY</h3>
+        <h3 style="color: #16a34a; font-size: 14pt; margin-bottom: 15px; font-weight: bold;">2. ASSESSMENT BATTERY</h3>
         <div style="text-align: justify; font-size: 12pt;">
             {format_with_linebreaks(result.get('assessment_battery', 'No standardized assessments administered.'))}
         </div>
     </div>
     
-    <!-- Section 3: Psychometric Findings -->
+    <!-- SECTION 3: Psychometric Findings - GREY DIVIDER ABOVE -->
+    <hr style="border: none; border-top: 1px solid #cccccc; margin: 25px 0 15px 0;">
     <div class="section" style="margin-bottom: 25px; page-break-inside: avoid;">
-        <h3 style="color: #16a34a; font-size: 14pt; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 15px;">3. PSYCHOMETRIC FINDINGS & DATA TRIANGULATION</h3>
+        <h3 style="color: #16a34a; font-size: 14pt; margin-bottom: 15px; font-weight: bold;">3. PSYCHOMETRIC FINDINGS & DATA TRIANGULATION</h3>
         <div style="text-align: justify; font-size: 12pt;">
             {format_with_linebreaks(result.get('psychometric_findings', 'N/A'))}
         </div>
     </div>
     
-    <!-- Section 4: Diagnostic Impression -->
+    <!-- SECTION 4: Diagnostic Impression - GREY DIVIDER ABOVE -->
+    <hr style="border: none; border-top: 1px solid #cccccc; margin: 25px 0 15px 0;">
     <div class="section" style="margin-bottom: 25px; page-break-inside: avoid;">
-        <h3 style="color: #16a34a; font-size: 14pt; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 15px;">4. DIAGNOSTIC IMPRESSION</h3>
+        <h3 style="color: #16a34a; font-size: 14pt; margin-bottom: 15px; font-weight: bold;">4. DIAGNOSTIC IMPRESSION</h3>
         <div style="text-align: justify; font-size: 12pt;">
             {format_with_linebreaks(result.get('diagnostic_impression', 'N/A'))}
         </div>
     </div>
     
-    <!-- Section 5: Treatment Roadmap -->
+    <!-- SECTION 5: Treatment Roadmap - GREY DIVIDER ABOVE -->
+    <hr style="border: none; border-top: 1px solid #cccccc; margin: 25px 0 15px 0;">
     <div class="section" style="margin-bottom: 25px; page-break-inside: avoid;">
-        <h3 style="color: #16a34a; font-size: 14pt; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 15px;">5. EVIDENCE-BASED TREATMENT ROADMAP</h3>
+        <h3 style="color: #16a34a; font-size: 14pt; margin-bottom: 15px; font-weight: bold;">5. EVIDENCE-BASED TREATMENT ROADMAP</h3>
         <div style="text-align: justify; font-size: 12pt;">
             {format_with_linebreaks(result.get('treatment_roadmap', 'N/A'))}
         </div>
     </div>
     
     <!-- Disclaimer Section -->
-    <div class="disclaimer" style="margin-top: 30px; padding: 15px; background: #f9fafb; border-radius: 8px; page-break-inside: avoid;">
-        <p style="font-size: 10pt; color: #666; margin: 5px 0;"><strong>CONFIDENTIALITY NOTICE:</strong> This report contains sensitive clinical information protected under applicable privacy laws. It is intended solely for the use of the named patient and their treating clinician. Unauthorized disclosure, copying, or distribution is strictly prohibited.</p>
-        <p style="font-size: 10pt; color: #666; margin: 5px 0;"><strong>DISCLAIMER:</strong> This report is generated by CogniVision Engine as a clinical decision-support tool. All findings and recommendations require therapist review and approval. This report does not constitute a final diagnosis and should be interpreted in conjunction with comprehensive clinical evaluation.</p>
+    <div class="disclaimer" style="margin-top: 30px; padding: 15px; background: #f8f8f8; border-radius: 6px; page-break-inside: avoid;">
+        <p style="font-size: 9pt; color: #555; margin: 5px 0; text-align: justify;"><strong>CONFIDENTIALITY NOTICE:</strong> This report contains sensitive clinical information protected under applicable privacy laws. It is intended solely for the use of the named patient and their treating clinician. Unauthorized disclosure, copying, or distribution is strictly prohibited.</p>
+        <p style="font-size: 9pt; color: #555; margin: 5px 0; text-align: justify;"><strong>DISCLAIMER:</strong> This report is generated by CogniVision Engine as a clinical decision-support tool. All findings and recommendations require therapist review and approval. This report does not constitute a final diagnosis and should be interpreted in conjunction with comprehensive clinical evaluation.</p>
     </div>
     
-    <!-- Signature Section -->
-    <div class="signature-section" style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; page-break-inside: avoid;">
+    <!-- SIGNATURE BLOCK with Space for Scanned Signature -->
+    <div class="signature-section" style="margin-top: 50px; page-break-inside: avoid;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+            <div style="text-align: left;">
+                <p style="margin: 0 0 5px 0; font-size: 11pt; color: #666;">Prepared by:</p>
+                
+                <!-- CLEAR SPACE FOR SCANNED SIGNATURE -->
+                <div style="height: 70px; width: 200px; margin: 10px 0; border-bottom: 1px solid #333;"></div>
+                
+                <p style="margin: 5px 0 3px 0; font-size: 12pt; font-weight: bold;">{therapist_name}</p>
+                <p style="margin: 3px 0; font-size: 11pt; color: #555;">{therapist_title}</p>
+                <p style="margin: 3px 0; font-size: 10pt; color: #666;">Reg. No: {therapist_reg}</p>
+            </div>
+            <div style="text-align: right;">
+                <p style="margin: 5px 0; font-size: 11pt; color: #666;">Date:</p>
+                <p style="margin: 5px 0; font-size: 12pt;">{report_date}</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- PAGE FOOTER with Cognispace Branding -->
+    <div class="page-footer" style="margin-top: 40px; padding-top: 15px; border-top: 1px solid #e0e0e0; display: flex; align-items: center; gap: 10px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" style="flex-shrink: 0;">
+            <circle cx="12" cy="12" r="10" stroke="#16a34a" stroke-width="2" fill="none"/>
+            <path d="M12 6v6l4 2" stroke="#16a34a" stroke-width="2" fill="none" stroke-linecap="round"/>
+        </svg>
+        <span style="font-size: 10pt; color: #16a34a; font-weight: 500;">Powered by Cognispace</span>
+        <span style="margin-left: auto; font-size: 9pt; color: #999;">Precision Insights. Personal Growth.</span>
+    </div>
+</div>
+"""
         <div style="display: flex; justify-content: space-between; align-items: flex-end;">
             <div>
                 <p style="margin: 5px 0; font-size: 12pt;"><strong>Prepared by:</strong></p>
