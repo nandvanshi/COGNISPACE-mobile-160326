@@ -250,7 +250,7 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
           </div>
           <div>
             <h2 className="text-4xl font-serif text-primary">TheraGenie ✨</h2>
-            <p className="text-muted-foreground">AI-Powered Clinical Intelligence</p>
+            <p className="text-muted-foreground">Insight-Driven CI (Clinical Intelligence)</p>
           </div>
         </div>
         
@@ -261,9 +261,9 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
             <div>
               <p className="text-sm font-medium text-purple-800 mb-1">How TheraGenie Works</p>
               <ul className="text-xs text-purple-700 space-y-1">
-                <li>• Analyzes inputs from <strong>Case History</strong>, <strong>Assessments</strong>, and <strong>Session Notes</strong></li>
-                <li>• <strong>No direct client advice</strong> - suggestions are for therapist reference only</li>
-                <li>• <strong>Therapist approval required</strong> for all AI-generated outputs</li>
+                <li>• Uses structured clinical data from <strong>Case History</strong>, <strong>Assessments</strong>, and <strong>Session Notes</strong></li>
+                <li>• Provides <strong>decision-support suggestions</strong> for therapist reference only</li>
+                <li>• <strong>All suggestions require therapist review and approval</strong></li>
               </ul>
             </div>
           </div>
@@ -296,10 +296,10 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
           <Card className="p-6 bg-white/70 backdrop-blur-xl border border-border/40">
             <div className="flex items-center gap-3 mb-4">
               <Sparkles className="text-purple-500" size={20} />
-              <h3 className="text-lg font-semibold">AI Assessment Suggestions</h3>
+              <h3 className="text-lg font-semibold">Diagnostic Insight</h3>
             </div>
             <p className="text-sm text-muted-foreground mb-4">
-              Get AI-powered suggestions for clinical assessments based on client data or your observations.
+              Get CI-powered suggestions for clinical assessments based on client data or your observations.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -362,7 +362,7 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
               {loadingAssessment ? (
                 <><Loader2 className="mr-2 animate-spin" size={16} /> Analyzing...</>
               ) : (
-                <><Sparkles className="mr-2" size={16} /> Get AI Suggestions</>
+                <><Sparkles className="mr-2" size={16} /> Get CI Suggestions</>
               )}
             </Button>
           </Card>
@@ -370,7 +370,7 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
           {/* Assessment Results */}
           {assessmentSuggestions && (
             <Card className="p-6 bg-white/70 backdrop-blur-xl border border-border/40">
-              <h3 className="text-lg font-semibold mb-2">AI Analysis</h3>
+              <h3 className="text-lg font-semibold mb-2">Clinical Analysis</h3>
               <p className="text-muted-foreground mb-4">{assessmentSuggestions.analysis_summary}</p>
               <p className="text-xs text-muted-foreground mb-4">
                 Data sources: {assessmentSuggestions.data_sources_used.join(', ')}
@@ -414,7 +414,7 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
           <Card className="p-6 bg-white/70 backdrop-blur-xl border border-border/40">
             <div className="flex items-center gap-3 mb-4">
               <BookOpen className="text-blue-500" size={20} />
-              <h3 className="text-lg font-semibold">AI Protocol Builder</h3>
+              <h3 className="text-lg font-semibold">Precision Protocol Engine</h3>
             </div>
             <p className="text-sm text-muted-foreground mb-4">
               Generate evidence-based therapy protocols tailored to your client's needs.
@@ -444,10 +444,10 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
                   onValueChange={(v) => setProtocolRequest({...protocolRequest, modality_preference: v === "auto" ? "" : v})}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Let AI decide" />
+                    <SelectValue placeholder="Auto-select best fit" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="auto">Let AI decide</SelectItem>
+                    <SelectItem value="auto">Auto-select best fit</SelectItem>
                     <SelectItem value="CBT">CBT (Cognitive Behavioral)</SelectItem>
                     <SelectItem value="DBT">DBT (Dialectical Behavior)</SelectItem>
                     <SelectItem value="ACT">ACT (Acceptance & Commitment)</SelectItem>
@@ -490,7 +490,7 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
           <Card className="p-6 bg-white/70 backdrop-blur-xl border border-border/40">
             <div className="flex items-center gap-3 mb-4">
               <FileText className="text-green-500" size={20} />
-              <h3 className="text-lg font-semibold">AI Homework Generator</h3>
+              <h3 className="text-lg font-semibold">CI Homework Generator</h3>
             </div>
             <p className="text-sm text-muted-foreground mb-4">
               Create personalized therapeutic homework and exercises for your clients.
