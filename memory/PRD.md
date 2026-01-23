@@ -1736,4 +1736,28 @@ Build a secure, therapist-first web application for managing a therapy practice 
 - Login page shows larger logo, correct text, helper message
 - Client Dashboard availability slots show times correctly (10:00, 11:10, 12:20, etc.)
 
+### Phase 41: LLM Change - Gemini to Claude Sonnet 4 (COMPLETED - Jan 23, 2026)
+**Feature:** Replaced Gemini 3 Flash with Claude Sonnet 4 for CogniVision Diagnostic Engine
+
+**Background:**
+- User reported hallucination issues with Gemini model (adding unselected assessments to reports)
+- Prompt hardening partially fixed the issue but user wanted to try a different LLM
+- User selected **Claude Sonnet 4** as the new model
+
+**Implementation:**
+- Updated `get_ai_chat()` function in `/app/backend/server.py`
+- Changed from: `.with_model("gemini", "gemini-3-flash-preview")`
+- Changed to: `.with_model("anthropic", "claude-4-sonnet-20250514")`
+- Using Emergent LLM Key (universal key) - no API key change needed
+- All CI features (Assessment Suggestions, Protocol Generation, Homework, Diagnostic Reports) now use Claude
+
+**Testing:**
+- ✅ Diagnostic Report API returns valid response
+- ✅ Report contains ONLY assessments provided in input (Y-BOCS mentioned, no hallucinated LSAS/DOCS)
+- ✅ Professional ICD-11/DSM-5 diagnostic format maintained
+- ✅ TheraGenie UI loads correctly with Diagnostic tab
+
+**Files Modified:**
+- `/app/backend/server.py` - Line ~1290: `get_ai_chat()` function updated to use Claude
+
 ---
