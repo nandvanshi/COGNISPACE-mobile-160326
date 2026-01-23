@@ -1735,6 +1735,387 @@ Respond in valid JSON format only:
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI service error: {str(e)}")
 
+# ============= COGNIVISION DIAGNOSTIC REPORT ENDPOINTS =============
+
+@api_router.post("/ai/generate-diagnostic-report", response_model=DiagnosticReportResponse)
+async def ai_generate_diagnostic_report(request: DiagnosticReportRequest, current_user: dict = Depends(require_active_therapist)):
+    """CogniVision Diagnostic Engine - Generate comprehensive psychodiagnostic report"""
+    await check_feature_enabled(current_user["id"], "ai_clinical")
+    
+    therapist_id = current_user["id"]
+    
+    # Get therapist info for signature
+    therapist = await db.users.find_one({"id": therapist_id}, {"_id": 0, "full_name": 1, "registration_number": 1})
+    therapist_name = therapist.get("full_name", "Unknown") if therapist else "Unknown"
+    therapist_reg = therapist.get("registration_number", "N/A") if therapist else "N/A"
+    
+    # Get client info
+    client_profile = await db.client_profiles.find_one(
+        {"user_id": request.client_id, "therapist_id": therapist_id},
+        {"_id": 0}
+    )
+    if not client_profile:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    client_user = await db.users.find_one({"id": request.client_id}, {"_id": 0, "full_name": 1, "phone": 1, "date_of_birth": 1})
+    client_name = client_user.get("full_name", "Unknown") if client_user else "Unknown"
+    client_phone = client_user.get("phone", "N/A") if client_user else "N/A"
+    client_dob = client_user.get("date_of_birth", "N/A") if client_user else "N/A"
+    
+    context = f"""
+PATIENT INFORMATION:
+- Name: {client_name}
+- Contact: {client_phone}
+- Date of Birth: {client_dob}
+- Referral Source: {client_profile.get('referral_source', 'Self-referred')}
+- Primary Concerns: {client_profile.get('presenting_concerns', 'Not specified')}
+"""
+    
+    # Include Case History
+    if request.include_case_history:
+        case_history = await db.case_histories.find_one(
+            {"client_id": request.client_id, "therapist_id": therapist_id},
+            {"_id": 0}
+        )
+        if case_history:
+            context += f"""
+CASE HISTORY:
+- Presenting Problem: {case_history.get('presenting_problem', 'N/A')}
+- History of Present Illness: {case_history.get('history_of_present_illness', 'N/A')}
+- Past Psychiatric History: {case_history.get('past_psychiatric_history', 'N/A')}
+- Family History: {case_history.get('family_history', 'N/A')}
+- Medical History: {case_history.get('medical_history', 'N/A')}
+- Mental Status Exam: {case_history.get('mental_status_exam', 'N/A')}
+- Previous Diagnosis: {case_history.get('diagnosis', 'N/A')}
+"""
+    
+    # Include Intake Notes
+    if request.include_intake and client_profile.get("intake_summary"):
+        context += f"""
+INTAKE NOTES:
+{client_profile['intake_summary']}
+"""
+    
+    # Include Session History
+    if request.include_session_history:
+        session_notes = await db.session_notes.find(
+            {"therapist_id": therapist_id, "client_id": request.client_id},
+            {"_id": 0, "subjective": 1, "objective": 1, "assessment": 1, "plan": 1, "created_at": 1}
+        ).sort("created_at", -1).to_list(10)
+        
+        if session_notes:
+            context += "\nSESSION HISTORY (Recent):\n"
+            for i, note in enumerate(session_notes[:5]):
+                context += f"""
+Session {i+1}:
+- Subjective: {note.get('subjective', 'N/A')[:300]}
+- Assessment: {note.get('assessment', 'N/A')[:300]}
+- Plan: {note.get('plan', 'N/A')[:200]}
+"""
+    
+    # Get Selected Assessments - THIS IS THE CORE DATA
+    if not request.assessment_ids:
+        raise HTTPException(status_code=400, detail="Please select at least one assessment")
+    
+    assessments = await db.assessments.find(
+        {"id": {"$in": request.assessment_ids}, "therapist_id": therapist_id, "status": "completed"},
+        {"_id": 0}
+    ).to_list(50)
+    
+    if not assessments:
+        raise HTTPException(status_code=400, detail="No completed assessments found")
+    
+    assessment_battery = []
+    context += "\nASSESSMENT BATTERY & SCORES:\n"
+    for a in assessments:
+        assessment_info = f"""
+Assessment: {a.get('assessment_type', 'Unknown')}
+- Score: {a.get('score', 'N/A')}
+- Interpretation: {a.get('interpretation', 'N/A')}
+- Severity: {a.get('severity', 'N/A')}
+- Administered: {a.get('created_at', 'N/A')}
+- Responses: {json.dumps(a.get('responses', {}))[:500] if a.get('responses') else 'N/A'}
+"""
+        context += assessment_info
+        assessment_battery.append({
+            "type": a.get('assessment_type'),
+            "score": a.get('score'),
+            "interpretation": a.get('interpretation'),
+            "severity": a.get('severity')
+        })
+    
+    # Include Therapist Notes (offline assessment data)
+    if request.therapist_notes:
+        context += f"""
+THERAPIST'S CLINICAL OBSERVATIONS:
+{request.therapist_notes}
+"""
+    
+    # Current date for report
+    from datetime import datetime
+    report_date = datetime.now().strftime("%d/%m/%Y")
+    
+    system_prompt = f"""You are CogniVision Engine, a Senior Clinical Psychologist AI system integrated into COGNISPACE. 
+Your task is to synthesize all provided clinical data into a Full-Scale Psychodiagnostic Evaluation Report.
+
+IMPORTANT GUIDELINES:
+1. Use objective, medical-grade terminology and formal clinical structure
+2. Identify clinical correlations across different tests to create a unified diagnostic picture
+3. Do NOT provide summaries - provide DEEP clinical interpretations
+4. Use ICD-11 and DSM-5 diagnostic standards
+5. Be evidence-based and cite which assessments support each conclusion
+6. Maintain professional, formal tone throughout
+
+REPORT STRUCTURE (Generate each section):
+
+1. PATIENT IDENTIFICATION & REFERRAL CONTEXT
+   - Demographics, referral source, presenting complaints
+   
+2. ASSESSMENT BATTERY
+   - Complete list of all administered tests with dates
+   
+3. PSYCHOMETRIC FINDINGS & DATA TRIANGULATION
+   - Cross-analysis of all test results
+   - Identify patterns, correlations, and discrepancies
+   - Clinical significance of scores
+   
+4. DIAGNOSTIC IMPRESSION
+   - Primary diagnosis with ICD-11/DSM-5 codes
+   - Differential diagnoses considered
+   - Rule-outs with reasoning
+   - Severity specifiers
+   
+5. EVIDENCE-BASED TREATMENT ROADMAP
+   - Recommended interventions
+   - Treatment modality suggestions
+   - Prognosis indicators
+   - Follow-up recommendations
+
+Respond in valid JSON format:
+{{
+    "patient_identification": "Full section text...",
+    "referral_context": "Full section text...",
+    "assessment_battery": "Full section text with all tests listed...",
+    "psychometric_findings": "Detailed cross-analysis text...",
+    "diagnostic_impression": "Full diagnostic formulation with codes...",
+    "treatment_roadmap": "Complete treatment recommendations..."
+}}
+
+Remember: You are CogniVision Engine providing expert-level clinical analysis."""
+
+    try:
+        chat = await get_ai_chat(f"cognivision-{therapist_id}-{uuid.uuid4()}", system_prompt)
+        user_message = UserMessage(text=f"Generate a comprehensive Psychodiagnostic Evaluation Report based on:\n\n{context}")
+        response = await chat.send_message(user_message)
+        
+        # Parse JSON response
+        response_text = response.strip()
+        if response_text.startswith("```json"):
+            response_text = response_text[7:]
+        if response_text.startswith("```"):
+            response_text = response_text[3:]
+        if response_text.endswith("```"):
+            response_text = response_text[:-3]
+        
+        result = json.loads(response_text.strip())
+        
+        # Build formatted HTML report
+        raw_html = f"""
+<div class="diagnostic-report">
+    <div class="report-header" style="text-align: center; border-bottom: 2px solid #16a34a; padding-bottom: 20px; margin-bottom: 30px;">
+        <h1 style="color: #16a34a; margin: 0;">COGNISPACE</h1>
+        <p style="color: #666; margin: 5px 0;">Precision Insights. Personal Growth.</p>
+        <h2 style="margin-top: 20px;">PSYCHODIAGNOSTIC EVALUATION REPORT</h2>
+        <p><strong>Report Date:</strong> {report_date}</p>
+        <p><strong>Report ID:</strong> CR-{uuid.uuid4().hex[:8].upper()}</p>
+    </div>
+    
+    <div class="section">
+        <h3 style="color: #16a34a; border-bottom: 1px solid #e5e7eb;">1. PATIENT IDENTIFICATION & REFERRAL CONTEXT</h3>
+        <p>{result.get('patient_identification', 'N/A')}</p>
+        <p>{result.get('referral_context', '')}</p>
+    </div>
+    
+    <div class="section">
+        <h3 style="color: #16a34a; border-bottom: 1px solid #e5e7eb;">2. ASSESSMENT BATTERY</h3>
+        <p>{result.get('assessment_battery', 'N/A')}</p>
+    </div>
+    
+    <div class="section">
+        <h3 style="color: #16a34a; border-bottom: 1px solid #e5e7eb;">3. PSYCHOMETRIC FINDINGS & DATA TRIANGULATION</h3>
+        <p>{result.get('psychometric_findings', 'N/A')}</p>
+    </div>
+    
+    <div class="section">
+        <h3 style="color: #16a34a; border-bottom: 1px solid #e5e7eb;">4. DIAGNOSTIC IMPRESSION</h3>
+        <p>{result.get('diagnostic_impression', 'N/A')}</p>
+    </div>
+    
+    <div class="section">
+        <h3 style="color: #16a34a; border-bottom: 1px solid #e5e7eb;">5. EVIDENCE-BASED TREATMENT ROADMAP</h3>
+        <p>{result.get('treatment_roadmap', 'N/A')}</p>
+    </div>
+    
+    <div class="report-footer" style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #e5e7eb;">
+        <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <p style="font-size: 11px; color: #666;"><strong>CONFIDENTIALITY NOTICE:</strong> This report contains sensitive clinical information protected under applicable privacy laws. It is intended solely for the use of the named patient and their treating clinician. Unauthorized disclosure, copying, or distribution is strictly prohibited.</p>
+            <p style="font-size: 11px; color: #666;"><strong>DISCLAIMER:</strong> This report is generated by CogniVision Engine as a clinical decision-support tool. All findings and recommendations require therapist review and approval. This report does not constitute a final diagnosis and should be interpreted in conjunction with comprehensive clinical evaluation.</p>
+        </div>
+        
+        <div style="display: flex; justify-content: space-between; margin-top: 30px;">
+            <div>
+                <p><strong>Prepared by:</strong></p>
+                <p>{therapist_name}</p>
+                <p>Registration No: {therapist_reg}</p>
+            </div>
+            <div style="text-align: right;">
+                <p><strong>Digital Signature:</strong></p>
+                <p>_______________________</p>
+                <p style="font-size: 11px;">Date: {report_date}</p>
+            </div>
+        </div>
+    </div>
+</div>
+"""
+        
+        disclaimer = """This report is generated by CogniVision Engine as a clinical decision-support tool. All findings require therapist review and approval. This does not constitute a final diagnosis."""
+        
+        return DiagnosticReportResponse(
+            header=f"COGNISPACE - Psychodiagnostic Evaluation Report - {report_date}",
+            patient_identification=result.get('patient_identification', ''),
+            referral_context=result.get('referral_context', ''),
+            assessment_battery=result.get('assessment_battery', ''),
+            psychometric_findings=result.get('psychometric_findings', ''),
+            diagnostic_impression=result.get('diagnostic_impression', ''),
+            treatment_roadmap=result.get('treatment_roadmap', ''),
+            disclaimer=disclaimer,
+            raw_html=raw_html
+        )
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=500, detail=f"Report generation error: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"CogniVision error: {str(e)}")
+
+@api_router.post("/diagnostic-reports", response_model=DiagnosticReport)
+async def save_diagnostic_report(report: DiagnosticReportCreate, current_user: dict = Depends(require_active_therapist)):
+    """Save a diagnostic report (draft or final)"""
+    report_doc = {
+        "id": str(uuid.uuid4()),
+        "therapist_id": current_user["id"],
+        "client_id": report.client_id,
+        "assessment_ids": report.assessment_ids,
+        "report_content": report.report_content,
+        "status": report.status,
+        "therapist_signature": report.therapist_signature,
+        "therapist_reg_no": report.therapist_reg_no,
+        "created_at": datetime.now(timezone.utc),
+        "updated_at": None,
+        "approved_at": None,
+        "shared_at": None
+    }
+    
+    await db.diagnostic_reports.insert_one(report_doc)
+    report_doc.pop("_id", None)
+    return DiagnosticReport(**report_doc)
+
+@api_router.get("/diagnostic-reports")
+async def get_diagnostic_reports(client_id: Optional[str] = None, current_user: dict = Depends(get_current_user)):
+    """Get diagnostic reports - therapist sees all, client sees only shared"""
+    query = {}
+    
+    if current_user["role"] == "client":
+        query = {"client_id": current_user["id"], "status": "shared"}
+    else:
+        query = {"therapist_id": current_user["id"]}
+        if client_id:
+            query["client_id"] = client_id
+    
+    reports = await db.diagnostic_reports.find(query, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return reports
+
+@api_router.get("/diagnostic-reports/{report_id}")
+async def get_diagnostic_report(report_id: str, current_user: dict = Depends(get_current_user)):
+    """Get a specific diagnostic report"""
+    report = await db.diagnostic_reports.find_one({"id": report_id}, {"_id": 0})
+    
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found")
+    
+    # Client can only see shared reports
+    if current_user["role"] == "client":
+        if report["client_id"] != current_user["id"] or report["status"] != "shared":
+            raise HTTPException(status_code=403, detail="Access denied")
+    else:
+        if report["therapist_id"] != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Access denied")
+    
+    return report
+
+@api_router.put("/diagnostic-reports/{report_id}")
+async def update_diagnostic_report(report_id: str, update_data: dict, current_user: dict = Depends(require_active_therapist)):
+    """Update a diagnostic report"""
+    report = await db.diagnostic_reports.find_one({"id": report_id, "therapist_id": current_user["id"]})
+    
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found")
+    
+    update_fields = {"updated_at": datetime.now(timezone.utc)}
+    
+    if "report_content" in update_data:
+        update_fields["report_content"] = update_data["report_content"]
+    if "therapist_signature" in update_data:
+        update_fields["therapist_signature"] = update_data["therapist_signature"]
+    if "therapist_reg_no" in update_data:
+        update_fields["therapist_reg_no"] = update_data["therapist_reg_no"]
+    
+    await db.diagnostic_reports.update_one({"id": report_id}, {"$set": update_fields})
+    
+    updated_report = await db.diagnostic_reports.find_one({"id": report_id}, {"_id": 0})
+    return updated_report
+
+@api_router.post("/diagnostic-reports/{report_id}/approve")
+async def approve_diagnostic_report(report_id: str, current_user: dict = Depends(require_active_therapist)):
+    """Approve a diagnostic report (still not shared with client)"""
+    report = await db.diagnostic_reports.find_one({"id": report_id, "therapist_id": current_user["id"]})
+    
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found")
+    
+    await db.diagnostic_reports.update_one(
+        {"id": report_id},
+        {"$set": {"status": "approved", "approved_at": datetime.now(timezone.utc)}}
+    )
+    
+    return {"message": "Report approved successfully"}
+
+@api_router.post("/diagnostic-reports/{report_id}/share")
+async def share_diagnostic_report(report_id: str, current_user: dict = Depends(require_active_therapist)):
+    """Share diagnostic report with client"""
+    report = await db.diagnostic_reports.find_one({"id": report_id, "therapist_id": current_user["id"]})
+    
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found")
+    
+    if report["status"] not in ["approved", "shared"]:
+        raise HTTPException(status_code=400, detail="Report must be approved before sharing")
+    
+    await db.diagnostic_reports.update_one(
+        {"id": report_id},
+        {"$set": {"status": "shared", "shared_at": datetime.now(timezone.utc)}}
+    )
+    
+    return {"message": "Report shared with client successfully"}
+
+@api_router.delete("/diagnostic-reports/{report_id}")
+async def delete_diagnostic_report(report_id: str, current_user: dict = Depends(require_active_therapist)):
+    """Delete a diagnostic report"""
+    result = await db.diagnostic_reports.delete_one({"id": report_id, "therapist_id": current_user["id"]})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Report not found")
+    
+    return {"message": "Report deleted successfully"}
+
 # ============= RESOURCE LIBRARY ENDPOINTS =============
 
 @api_router.post("/resources", response_model=Resource)
