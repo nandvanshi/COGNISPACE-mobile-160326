@@ -1431,6 +1431,40 @@ async def ai_generate_protocol(request: AIProtocolRequest, current_user: dict = 
         context += f"Client: {client_name}\n"
         if client_profile.get("intake_summary"):
             context += f"Intake: {client_profile['intake_summary']}\n"
+        
+        # Include Case History if requested
+        if request.include_case_history:
+            case_history = await db.case_histories.find_one(
+                {"client_id": request.client_id, "therapist_id": therapist_id},
+                {"_id": 0}
+            )
+            if case_history:
+                ch_text = ""
+                if case_history.get("presenting_problem"):
+                    ch_text += f"Presenting Problem: {case_history['presenting_problem']}\n"
+                if case_history.get("history_of_present_illness"):
+                    ch_text += f"History: {case_history['history_of_present_illness']}\n"
+                if case_history.get("diagnosis"):
+                    ch_text += f"Diagnosis: {case_history['diagnosis']}\n"
+                if case_history.get("mental_status_exam"):
+                    ch_text += f"MSE: {case_history['mental_status_exam']}\n"
+                if ch_text:
+                    context += f"\nCase History:\n{ch_text}"
+        
+        # Include Previous Assessments if requested
+        if request.include_prev_assessments:
+            prev_assessments = await db.assessments.find(
+                {"therapist_id": therapist_id, "client_id": request.client_id, "status": "completed"},
+                {"_id": 0, "assessment_type": 1, "score": 1, "interpretation": 1}
+            ).to_list(10)
+            
+            if prev_assessments:
+                context += "\nPrevious Assessment Results:\n"
+                for a in prev_assessments:
+                    context += f"- {a['assessment_type']}: Score {a.get('score', 'N/A')}"
+                    if a.get('interpretation'):
+                        context += f" ({a['interpretation'][:100]})"
+                    context += "\n"
     
     # Get assessment results if provided
     if request.assessment_ids:
@@ -1440,7 +1474,7 @@ async def ai_generate_protocol(request: AIProtocolRequest, current_user: dict = 
         ).to_list(10)
         
         if assessments:
-            context += "\nAssessment Results:\n"
+            context += "\nSelected Assessment Results:\n"
             for a in assessments:
                 context += f"- {a['assessment_type']}: Score {a.get('score', 'N/A')}\n"
     
