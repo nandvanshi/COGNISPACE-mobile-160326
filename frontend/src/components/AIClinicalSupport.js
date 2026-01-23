@@ -449,25 +449,20 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
       letter-spacing: 0.5px;
     }
     
-    /* Force ALL elements to NEW LINE */
-    p, li, span, div {
+    /* Patient Info - Label and Value on SAME LINE */
+    .patient-info p {
+      margin: 6px 0;
       display: block;
+      font-size: 11pt;
     }
-    .patient-info p, .report-content p {
+    .patient-info strong {
+      font-weight: 600;
+      color: #000;
+    }
+    .report-content p {
       margin-bottom: 8px;
       display: block;
       text-align: justify;
-    }
-    .data-label {
-      font-weight: 600;
-      color: #000;
-      display: block;
-      margin-bottom: 2px;
-    }
-    .data-value {
-      display: block;
-      margin-bottom: 10px;
-      color: #333;
     }
     
     /* Lists - Each item on NEW LINE */
