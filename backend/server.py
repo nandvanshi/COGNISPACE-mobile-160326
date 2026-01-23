@@ -1744,10 +1744,21 @@ async def ai_generate_diagnostic_report(request: DiagnosticReportRequest, curren
     
     therapist_id = current_user["id"]
     
-    # Get therapist info for signature
-    therapist = await db.users.find_one({"id": therapist_id}, {"_id": 0, "full_name": 1, "registration_number": 1})
+    # Get therapist info for header and signature
+    therapist = await db.users.find_one({"id": therapist_id}, {"_id": 0})
     therapist_name = therapist.get("full_name", "Unknown") if therapist else "Unknown"
     therapist_reg = therapist.get("registration_number", "N/A") if therapist else "N/A"
+    therapist_phone = therapist.get("phone", "N/A") if therapist else "N/A"
+    
+    # Get therapist profile for additional details
+    therapist_profile = await db.therapist_profiles.find_one({"user_id": therapist_id}, {"_id": 0})
+    therapist_title = therapist_profile.get("professional_title", "Clinical Psychologist") if therapist_profile else "Clinical Psychologist"
+    therapist_clinic = therapist_profile.get("clinic_name", "") if therapist_profile else ""
+    therapist_address = ""
+    if therapist_profile and therapist_profile.get("address"):
+        addr = therapist_profile["address"]
+        addr_parts = [addr.get("line1", ""), addr.get("line2", ""), addr.get("city", ""), addr.get("state", ""), addr.get("pincode", "")]
+        therapist_address = ", ".join([p for p in addr_parts if p])
     
     # Get client info
     client_profile = await db.client_profiles.find_one(
