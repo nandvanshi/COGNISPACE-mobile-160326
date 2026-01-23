@@ -1288,7 +1288,7 @@ STANDARD_ASSESSMENTS = {
 }
 
 async def get_ai_chat(session_id: str, system_message: str):
-    """Initialize AI chat with Gemini 3 Flash"""
+    """Initialize AI chat with Claude Sonnet 4"""
     if not EMERGENT_LLM_KEY:
         raise HTTPException(status_code=500, detail="AI service not configured")
     
@@ -1296,7 +1296,7 @@ async def get_ai_chat(session_id: str, system_message: str):
         api_key=EMERGENT_LLM_KEY,
         session_id=session_id,
         system_message=system_message
-    ).with_model("gemini", "gemini-3-flash-preview")
+    ).with_model("anthropic", "claude-sonnet-4-5-20250929")
     
     return chat
 
