@@ -76,6 +76,26 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
   const [loadingHomework, setLoadingHomework] = useState(false);
   const [showHomeworkDialog, setShowHomeworkDialog] = useState(false);
 
+  // CogniVision Diagnostic Reports State
+  const [diagnosticRequest, setDiagnosticRequest] = useState({
+    client_id: '',
+    assessment_ids: [],
+    include_intake: true,
+    include_session_history: true,
+    include_case_history: true,
+    therapist_notes: ''
+  });
+  const [completedAssessments, setCompletedAssessments] = useState([]);
+  const [generatedReport, setGeneratedReport] = useState(null);
+  const [loadingReport, setLoadingReport] = useState(false);
+  const [savedReports, setSavedReports] = useState([]);
+  const [showReportEditor, setShowReportEditor] = useState(false);
+  const [editableReport, setEditableReport] = useState('');
+  const [currentReportId, setCurrentReportId] = useState(null);
+  const [showReportPreview, setShowReportPreview] = useState(false);
+  const [previewReport, setPreviewReport] = useState(null);
+  const reportEditorRef = useRef(null);
+
   // Resources State
   const [resources, setResources] = useState([]);
   const [showResourceDialog, setShowResourceDialog] = useState(false);
@@ -89,6 +109,7 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
   useEffect(() => {
     fetchClients();
     fetchResources();
+    fetchSavedReports();
   }, []);
 
   const fetchClients = async () => {
