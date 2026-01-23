@@ -259,8 +259,8 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
       toast.error('Please select a client');
       return;
     }
-    if (diagnosticRequest.assessment_ids.length === 0) {
-      toast.error('Please select at least one assessment');
+    if (diagnosticRequest.assessment_ids.length === 0 && !diagnosticRequest.therapist_notes.trim()) {
+      toast.error('Please select assessments or provide clinical observations');
       return;
     }
 
