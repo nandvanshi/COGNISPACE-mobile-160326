@@ -537,10 +537,10 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
   <!-- Fixed Branded Footer with Logo URL -->
   <div class="branded-footer">
     <div class="footer-logo">
-      <img src="https://i.ibb.co/placeholder/cognispace-logo.png" alt="Cognispace" onerror="this.style.display='none'" />
+      <img src="/logo-cognispace.png" alt="Cognispace" style="height: 22px; width: auto;" onerror="this.outerHTML='<span style=color:#000080;font-weight:600>⬢</span>'" />
       <span style="color: #000080; font-weight: 500;">Powered by Cognispace</span>
     </div>
-    <span>Precision Insights. Personal Growth.</span>
+    <span style="color: #333;">Precision Insights. Personal Growth.</span>
   </div>
   
   <div class="footer-spacer"></div>
