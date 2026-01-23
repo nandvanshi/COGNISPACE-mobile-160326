@@ -1488,7 +1488,7 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
         <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <FileSearch className="text-emerald-500" size={20} />
+              <FileSearch className="text-teal-700" size={20} />
               CogniVision Diagnostic Report Editor
             </DialogTitle>
           </DialogHeader>
@@ -1500,14 +1500,35 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
               </p>
             </div>
 
-            {/* Rich Text Editor (contentEditable) */}
+            {/* Report Preview with Clinical CSS */}
+            <style>{`
+              .clinical-report { font-family: 'Inter', Arial, sans-serif; color: #333; line-height: 1.6; }
+              .therapist-header { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #004d40; }
+              .therapist-header h1 { font-size: 18pt; margin: 0 0 5px 0; color: #004d40; font-weight: 700; }
+              .therapist-header p { margin: 3px 0; font-size: 10pt; color: #555; }
+              .report-title { text-align: center; font-size: 16pt; font-weight: 600; letter-spacing: 2px; margin: 20px 0; color: #004d40; }
+              .report-meta { text-align: center; font-size: 9pt; color: #666; margin-bottom: 20px; }
+              .report-meta p { margin: 3px 0; }
+              .section-divider { border: none; border-top: 1px solid #ddd; margin: 20px 0 15px 0; }
+              .report-section { margin-bottom: 18px; }
+              .section-heading { font-size: 12pt; font-weight: 600; color: #004d40; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+              .patient-info p, .report-content p { margin-bottom: 8px; display: block; text-align: justify; }
+              .data-label { font-weight: 600; color: #333; display: block; margin-bottom: 2px; }
+              .data-value { display: block; margin-bottom: 10px; color: #444; }
+              .disclaimer-box { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 4px; padding: 12px; margin: 20px 0; font-size: 8pt; color: #666; }
+              .disclaimer-box p { margin: 5px 0; text-align: justify; }
+              .signature-section { margin-top: 30px; }
+              .signature-space { height: 60px; border-bottom: 1px solid #333; width: 180px; margin: 15px 0 8px 0; }
+              .signature-name { font-weight: 600; font-size: 11pt; margin: 5px 0 2px 0; }
+              .signature-details { font-size: 9pt; color: #555; margin: 2px 0; }
+            `}</style>
+
             <div 
               ref={reportEditorRef}
-              className="min-h-[400px] border rounded-lg p-6 bg-white prose prose-sm max-w-none"
+              className="min-h-[400px] border rounded-lg p-6 bg-white"
               contentEditable={!isReadOnly}
               dangerouslySetInnerHTML={{ __html: editableReport }}
               onBlur={(e) => setEditableReport(e.currentTarget.innerHTML)}
-              style={{ lineHeight: 1.6 }}
             />
           </div>
 
