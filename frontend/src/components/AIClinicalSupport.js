@@ -38,7 +38,9 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
     client_id: '',
     query: '',
     include_intake: true,
-    include_notes: true
+    include_notes: true,
+    include_case_history: true,
+    include_prev_assessments: true
   });
   const [assessmentSuggestions, setAssessmentSuggestions] = useState(null);
   const [loadingAssessment, setLoadingAssessment] = useState(false);
@@ -47,7 +49,9 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
   const [protocolRequest, setProtocolRequest] = useState({
     client_id: '',
     query: '',
-    modality_preference: ''
+    modality_preference: '',
+    include_case_history: true,
+    include_prev_assessments: true
   });
   const [generatedProtocol, setGeneratedProtocol] = useState(null);
   const [loadingProtocol, setLoadingProtocol] = useState(false);
@@ -57,7 +61,9 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
   const [homeworkRequest, setHomeworkRequest] = useState({
     client_id: '',
     context: '',
-    homework_type: 'exercise'
+    homework_type: 'exercise',
+    include_case_history: true,
+    include_prev_assessments: true
   });
   const [generatedHomework, setGeneratedHomework] = useState(null);
   const [loadingHomework, setLoadingHomework] = useState(false);
