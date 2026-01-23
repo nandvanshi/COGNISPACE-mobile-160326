@@ -354,83 +354,210 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Diagnostic Report - COGNISPACE</title>
+          <title>Psychodiagnostic Evaluation Report</title>
           <style>
             @page {
               size: A4;
-              margin: 20mm 15mm 25mm 15mm;
+              margin: 15mm 15mm 30mm 15mm;
+              @bottom-left {
+                content: none;
+              }
+              @bottom-right {
+                content: none;
+              }
             }
             @media print {
-              body { 
+              html, body {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
               }
-              .page-footer {
+              thead { display: table-header-group; }
+              tfoot { display: table-footer-group; }
+              .page-footer-print {
                 position: fixed;
                 bottom: 0;
                 left: 0;
                 right: 0;
-                padding: 10px 15mm;
+                height: 25mm;
+                padding: 8px 15mm;
+                background: #fff;
+                border-top: 1px solid #e0e0e0;
+                display: flex;
+                align-items: center;
+                gap: 10px;
               }
+              .no-print { display: none !important; }
             }
-            * { box-sizing: border-box; }
+            * { 
+              box-sizing: border-box; 
+              margin: 0;
+              padding: 0;
+            }
             body { 
               font-family: 'Georgia', 'Times New Roman', serif; 
               font-size: 12pt;
-              line-height: 1.8;
+              line-height: 1.7;
               color: #1a1a1a;
               max-width: 210mm;
               margin: 0 auto;
-              padding: 0;
+              padding: 10mm;
+              background: #fff;
             }
-            h1 { font-size: 18pt; }
-            h2 { font-size: 16pt; }
-            h3 { font-size: 14pt; color: #16a34a; }
-            p { margin: 8px 0; }
-            .section { 
-              margin-bottom: 20px; 
+            
+            /* Therapist Header - Bold 14pt Left Aligned */
+            .therapist-header {
+              margin-bottom: 20px;
+              padding-bottom: 15px;
+              border-bottom: 2px solid #16a34a;
+            }
+            .therapist-header p {
+              margin: 3px 0;
+              text-align: left;
+            }
+            .therapist-name {
+              font-size: 14pt;
+              font-weight: bold;
+              color: #1a1a1a;
+            }
+            .therapist-details {
+              font-size: 11pt;
+              color: #444;
+            }
+            
+            /* Report Title */
+            .report-title {
+              text-align: center;
+              margin: 25px 0;
+              padding-bottom: 15px;
+            }
+            .report-title h1 {
+              font-size: 16pt;
+              color: #16a34a;
+              letter-spacing: 1px;
+              margin-bottom: 10px;
+            }
+            .report-title p {
+              font-size: 10pt;
+              color: #666;
+              margin: 3px 0;
+            }
+            
+            /* Section Styling with Grey Divider */
+            .section {
+              margin-bottom: 20px;
               page-break-inside: avoid;
+            }
+            .section-divider {
+              border: none;
+              border-top: 1px solid #cccccc;
+              margin: 25px 0 15px 0;
+            }
+            .section h3 {
+              font-size: 14pt;
+              color: #16a34a;
+              margin-bottom: 12px;
+              padding-bottom: 5px;
+            }
+            .section-content {
+              text-align: justify;
+              font-size: 12pt;
+            }
+            .section-content p {
+              margin: 8px 0;
+            }
+            
+            /* Data Points - Each on New Line */
+            .data-point {
+              display: block;
+              margin: 6px 0;
+            }
+            .data-label {
+              font-weight: bold;
+              color: #333;
+            }
+            
+            /* Disclaimer */
+            .disclaimer {
+              background: #f8f8f8;
+              padding: 12px;
+              border-radius: 4px;
+              margin: 25px 0;
+              page-break-inside: avoid;
+            }
+            .disclaimer p {
+              font-size: 9pt;
+              color: #555;
+              margin: 5px 0;
               text-align: justify;
             }
-            .therapist-header { 
-              margin-bottom: 25px; 
-              padding-bottom: 15px; 
-              border-bottom: 2px solid #16a34a; 
-            }
-            .report-title { 
-              text-align: center; 
-              margin-bottom: 25px; 
-            }
-            .disclaimer { 
-              background: #f5f5f5; 
-              padding: 12px; 
-              border-radius: 5px;
-              font-size: 10pt;
-            }
-            .signature-section { 
-              margin-top: 30px; 
-              padding-top: 15px; 
-              border-top: 1px solid #ccc;
+            
+            /* Signature Block with Space for Scanned Signature */
+            .signature-section {
+              margin-top: 40px;
+              padding-top: 20px;
               page-break-inside: avoid;
             }
-            .page-footer {
-              margin-top: 30px;
-              padding-top: 10px;
-              border-top: 1px solid #eee;
+            .signature-block {
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-end;
+            }
+            .signature-left {
+              text-align: left;
+            }
+            .signature-left p {
+              margin: 3px 0;
+            }
+            .signature-space {
+              height: 60px;
+              margin-bottom: 5px;
+              border-bottom: 1px solid #333;
+              width: 200px;
+            }
+            .signature-right {
+              text-align: right;
+            }
+            
+            /* Fixed Footer for Print */
+            .page-footer-print {
+              position: fixed;
+              bottom: 0;
+              left: 0;
+              right: 0;
+              height: 20mm;
+              padding: 5px 15mm;
+              background: #fff;
+              border-top: 1px solid #e5e5e5;
               display: flex;
               align-items: center;
-              justify-content: space-between;
+              gap: 8px;
               font-size: 9pt;
               color: #888;
             }
-            .page-footer img {
-              height: 25px;
+            .page-footer-print img {
+              height: 20px;
               width: auto;
+            }
+            .footer-spacer {
+              height: 25mm;
             }
           </style>
         </head>
         <body>
           ${reportContent}
+          
+          <!-- Fixed Footer on Every Page -->
+          <div class="page-footer-print">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#16a34a">
+              <circle cx="12" cy="12" r="10" stroke="#16a34a" stroke-width="2" fill="none"/>
+              <path d="M12 6v6l4 2" stroke="#16a34a" stroke-width="2" fill="none"/>
+            </svg>
+            <span style="color: #16a34a; font-weight: 500;">Powered by Cognispace</span>
+            <span style="margin-left: auto; font-size: 8pt;">Precision Insights. Personal Growth.</span>
+          </div>
+          
+          <!-- Spacer for footer -->
+          <div class="footer-spacer"></div>
         </body>
       </html>
     `);
