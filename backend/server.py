@@ -1570,6 +1570,36 @@ async def ai_generate_homework(request: AIHomeworkRequest, current_user: dict = 
     
     context = f"Client: {client_name}\n"
     
+    # Include Case History if requested
+    if request.include_case_history:
+        case_history = await db.case_histories.find_one(
+            {"client_id": request.client_id, "therapist_id": therapist_id},
+            {"_id": 0}
+        )
+        if case_history:
+            ch_text = ""
+            if case_history.get("presenting_problem"):
+                ch_text += f"Presenting Problem: {case_history['presenting_problem']}\n"
+            if case_history.get("diagnosis"):
+                ch_text += f"Diagnosis: {case_history['diagnosis']}\n"
+            if ch_text:
+                context += f"\nCase History:\n{ch_text}"
+    
+    # Include Previous Assessments if requested
+    if request.include_prev_assessments:
+        prev_assessments = await db.assessments.find(
+            {"therapist_id": therapist_id, "client_id": request.client_id, "status": "completed"},
+            {"_id": 0, "assessment_type": 1, "score": 1, "interpretation": 1}
+        ).to_list(5)
+        
+        if prev_assessments:
+            context += "\nPrevious Assessments:\n"
+            for a in prev_assessments:
+                context += f"- {a['assessment_type']}: Score {a.get('score', 'N/A')}"
+                if a.get('interpretation'):
+                    context += f" ({a['interpretation'][:80]})"
+                context += "\n"
+    
     # Get recent session notes for context
     recent_note = await db.session_notes.find_one(
         {"therapist_id": therapist_id, "client_id": request.client_id},
