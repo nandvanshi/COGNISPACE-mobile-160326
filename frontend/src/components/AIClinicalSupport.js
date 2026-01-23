@@ -349,22 +349,95 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
 
   const handlePrintReport = () => {
     const printWindow = window.open('', '_blank');
+    const reportContent = editableReport || previewReport?.report_content;
     printWindow.document.write(`
+      <!DOCTYPE html>
       <html>
         <head>
           <title>Diagnostic Report - COGNISPACE</title>
           <style>
-            body { font-family: 'Georgia', serif; padding: 40px; max-width: 800px; margin: 0 auto; line-height: 1.6; }
-            h1, h2, h3 { color: #16a34a; }
-            .section { margin-bottom: 20px; }
-            @media print { body { padding: 20px; } }
+            @page {
+              size: A4;
+              margin: 20mm 15mm 25mm 15mm;
+            }
+            @media print {
+              body { 
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
+              .page-footer {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                padding: 10px 15mm;
+              }
+            }
+            * { box-sizing: border-box; }
+            body { 
+              font-family: 'Georgia', 'Times New Roman', serif; 
+              font-size: 12pt;
+              line-height: 1.8;
+              color: #1a1a1a;
+              max-width: 210mm;
+              margin: 0 auto;
+              padding: 0;
+            }
+            h1 { font-size: 18pt; }
+            h2 { font-size: 16pt; }
+            h3 { font-size: 14pt; color: #16a34a; }
+            p { margin: 8px 0; }
+            .section { 
+              margin-bottom: 20px; 
+              page-break-inside: avoid;
+              text-align: justify;
+            }
+            .therapist-header { 
+              margin-bottom: 25px; 
+              padding-bottom: 15px; 
+              border-bottom: 2px solid #16a34a; 
+            }
+            .report-title { 
+              text-align: center; 
+              margin-bottom: 25px; 
+            }
+            .disclaimer { 
+              background: #f5f5f5; 
+              padding: 12px; 
+              border-radius: 5px;
+              font-size: 10pt;
+            }
+            .signature-section { 
+              margin-top: 30px; 
+              padding-top: 15px; 
+              border-top: 1px solid #ccc;
+              page-break-inside: avoid;
+            }
+            .page-footer {
+              margin-top: 30px;
+              padding-top: 10px;
+              border-top: 1px solid #eee;
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              font-size: 9pt;
+              color: #888;
+            }
+            .page-footer img {
+              height: 25px;
+              width: auto;
+            }
           </style>
         </head>
-        <body>${editableReport || previewReport?.report_content}</body>
+        <body>
+          ${reportContent}
+        </body>
       </html>
     `);
     printWindow.document.close();
-    printWindow.print();
+    setTimeout(() => {
+      printWindow.print();
+    }, 500);
   };
 
   const toggleAssessmentSelection = (assessmentId) => {
