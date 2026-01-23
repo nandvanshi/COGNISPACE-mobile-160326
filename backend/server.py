@@ -1279,6 +1279,32 @@ async def ai_suggest_assessments(request: AIAssessmentSuggestionRequest, current
         
         client_context += f"Client: {client_name}\n"
         
+        # Include Case History if requested
+        if request.include_case_history:
+            case_history = await db.case_histories.find_one(
+                {"client_id": request.client_id, "therapist_id": therapist_id},
+                {"_id": 0}
+            )
+            if case_history:
+                ch_text = ""
+                if case_history.get("presenting_problem"):
+                    ch_text += f"Presenting Problem: {case_history['presenting_problem']}\n"
+                if case_history.get("history_of_present_illness"):
+                    ch_text += f"History of Present Illness: {case_history['history_of_present_illness']}\n"
+                if case_history.get("past_psychiatric_history"):
+                    ch_text += f"Past Psychiatric History: {case_history['past_psychiatric_history']}\n"
+                if case_history.get("family_history"):
+                    ch_text += f"Family History: {case_history['family_history']}\n"
+                if case_history.get("medical_history"):
+                    ch_text += f"Medical History: {case_history['medical_history']}\n"
+                if case_history.get("mental_status_exam"):
+                    ch_text += f"Mental Status Exam: {case_history['mental_status_exam']}\n"
+                if case_history.get("diagnosis"):
+                    ch_text += f"Diagnosis: {case_history['diagnosis']}\n"
+                if ch_text:
+                    client_context += f"\nCase History:\n{ch_text}"
+                    data_sources.append("case_history")
+        
         if request.include_intake and client_profile.get("intake_summary"):
             client_context += f"Intake Summary: {client_profile['intake_summary']}\n"
             data_sources.append("intake_summary")
@@ -1305,16 +1331,20 @@ async def ai_suggest_assessments(request: AIAssessmentSuggestionRequest, current
                 data_sources.append("session_notes")
         
         # Get completed assessments
-        completed_assessments = await db.assessments.find(
-            {"therapist_id": therapist_id, "client_id": request.client_id, "status": "completed"},
-            {"_id": 0, "assessment_type": 1, "score": 1}
-        ).to_list(20)
-        
-        if completed_assessments:
-            client_context += "\nPreviously Completed Assessments:\n"
-            for a in completed_assessments:
-                client_context += f"- {a['assessment_type']}: Score {a.get('score', 'N/A')}\n"
-            data_sources.append("previous_assessments")
+        if request.include_prev_assessments:
+            completed_assessments = await db.assessments.find(
+                {"therapist_id": therapist_id, "client_id": request.client_id, "status": "completed"},
+                {"_id": 0, "assessment_type": 1, "score": 1, "interpretation": 1}
+            ).to_list(20)
+            
+            if completed_assessments:
+                client_context += "\nPreviously Completed Assessments:\n"
+                for a in completed_assessments:
+                    client_context += f"- {a['assessment_type']}: Score {a.get('score', 'N/A')}"
+                    if a.get('interpretation'):
+                        client_context += f" ({a['interpretation'][:100]})"
+                    client_context += "\n"
+                data_sources.append("previous_assessments")
     
     # Add therapist's manual query
     if request.query:
