@@ -508,6 +508,8 @@ class AIProtocolRequest(BaseModel):
     assessment_ids: Optional[List[str]] = None  # Based on completed assessments
     query: Optional[str] = None  # Manual description
     modality_preference: Optional[str] = None  # CBT, DBT, ACT, etc.
+    include_case_history: bool = True
+    include_prev_assessments: bool = True
 
 class AIProtocolSession(BaseModel):
     session_number: int
