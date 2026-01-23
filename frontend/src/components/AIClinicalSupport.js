@@ -598,6 +598,31 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
               />
             </div>
 
+            {/* Data Source Checkboxes for Homework */}
+            <div className="bg-slate-50 rounded-lg p-3 mb-4">
+              <p className="text-xs font-medium text-muted-foreground mb-2">Include data from:</p>
+              <div className="flex flex-wrap gap-4">
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={homeworkRequest.include_case_history}
+                    onChange={(e) => setHomeworkRequest({...homeworkRequest, include_case_history: e.target.checked})}
+                    className="rounded border-slate-300"
+                  />
+                  <span>Case History</span>
+                </label>
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={homeworkRequest.include_prev_assessments}
+                    onChange={(e) => setHomeworkRequest({...homeworkRequest, include_prev_assessments: e.target.checked})}
+                    className="rounded border-slate-300"
+                  />
+                  <span>Previous Assessments</span>
+                </label>
+              </div>
+            </div>
+
             <Button 
               onClick={handleGenerateHomework} 
               disabled={loadingHomework || isReadOnly || !homeworkRequest.client_id}
