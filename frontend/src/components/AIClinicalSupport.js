@@ -132,6 +132,25 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
     }
   };
 
+  const fetchSavedReports = async () => {
+    try {
+      const response = await axios.get(`${API}/diagnostic-reports`);
+      setSavedReports(response.data);
+    } catch (error) {
+      console.error('Failed to load reports:', error);
+    }
+  };
+
+  const fetchClientAssessments = async (clientId) => {
+    try {
+      const response = await axios.get(`${API}/assessments?client_id=${clientId}&status=completed`);
+      setCompletedAssessments(response.data);
+    } catch (error) {
+      console.error('Failed to load assessments:', error);
+      setCompletedAssessments([]);
+    }
+  };
+
   // ============= ASSESSMENT SUGGESTIONS =============
   const handleSuggestAssessments = async () => {
     if (!assessmentRequest.client_id && !assessmentRequest.query) {
