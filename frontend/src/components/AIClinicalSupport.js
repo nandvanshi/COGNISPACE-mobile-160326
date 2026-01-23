@@ -730,18 +730,21 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
 
             {/* Therapist Notes */}
             <div className="mb-4">
-              <Label>Additional Clinical Observations (optional)</Label>
+              <Label>Additional Clinical Observations or Assessment Details (optional)</Label>
               <Textarea
-                placeholder="Add any offline assessment data, behavioral observations, or clinical notes..."
+                placeholder="Add any offline assessment data, behavioral observations, clinical notes, or manual assessment details..."
                 value={diagnosticRequest.therapist_notes}
                 onChange={(e) => setDiagnosticRequest({...diagnosticRequest, therapist_notes: e.target.value})}
-                rows={3}
+                rows={4}
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                This field can be used as the sole source for report generation if no assessments are selected.
+              </p>
             </div>
 
             <Button 
               onClick={handleGenerateDiagnosticReport} 
-              disabled={loadingReport || isReadOnly || !diagnosticRequest.client_id || diagnosticRequest.assessment_ids.length === 0}
+              disabled={loadingReport || isReadOnly || !diagnosticRequest.client_id || (diagnosticRequest.assessment_ids.length === 0 && !diagnosticRequest.therapist_notes.trim())}
               className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600"
               data-testid="generate-report-btn"
             >
