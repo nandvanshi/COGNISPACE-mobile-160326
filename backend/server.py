@@ -1930,11 +1930,11 @@ Remember: You are CogniVision Engine providing expert-level clinical analysis.""
         
         result = json.loads(response_text.strip())
         
-        # Build clean HTML report with professional layout
+        # Build clean HTML report - Navy Blue (#000080) color scheme
         raw_html = f"""
 <div class="clinical-report">
     
-    <!-- Therapist Header -->
+    <!-- Therapist Header - Navy Blue -->
     <div class="therapist-header">
         <h1>{therapist_name}</h1>
         <p>{therapist_title}</p>
@@ -2017,7 +2017,7 @@ Remember: You are CogniVision Engine providing expert-level clinical analysis.""
     
     <!-- Signature Block -->
     <div class="signature-section">
-        <p style="font-size: 10pt; color: #666; margin-bottom: 5px;">Prepared by:</p>
+        <p class="signature-details">Prepared by:</p>
         <div class="signature-space"></div>
         <p class="signature-name">{therapist_name}</p>
         <p class="signature-details">{therapist_title}</p>
