@@ -448,22 +448,26 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4 mb-6">
+        <TabsList className="grid w-full grid-cols-5 mb-6">
           <TabsTrigger value="assessments" className="flex items-center gap-2">
             <ClipboardCheck size={16} />
-            Assessments
+            <span className="hidden sm:inline">Assessments</span>
+          </TabsTrigger>
+          <TabsTrigger value="diagnostic" className="flex items-center gap-2">
+            <FileSearch size={16} />
+            <span className="hidden sm:inline">Diagnostic</span>
           </TabsTrigger>
           <TabsTrigger value="protocols" className="flex items-center gap-2">
             <BookOpen size={16} />
-            Protocols
+            <span className="hidden sm:inline">Protocols</span>
           </TabsTrigger>
           <TabsTrigger value="homework" className="flex items-center gap-2">
             <FileText size={16} />
-            Homework
+            <span className="hidden sm:inline">Homework</span>
           </TabsTrigger>
           <TabsTrigger value="resources" className="flex items-center gap-2">
             <Library size={16} />
-            Resources
+            <span className="hidden sm:inline">Resources</span>
           </TabsTrigger>
         </TabsList>
 
