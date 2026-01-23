@@ -2057,27 +2057,6 @@ Remember: You are CogniVision Engine providing expert-level clinical analysis.""
     </div>
 </div>
 """
-        <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-            <div>
-                <p style="margin: 5px 0; font-size: 12pt;"><strong>Prepared by:</strong></p>
-                <p style="margin: 3px 0; font-size: 12pt;"><strong>{therapist_name}</strong></p>
-                <p style="margin: 3px 0; font-size: 11pt; color: #555;">{therapist_title}</p>
-                <p style="margin: 3px 0; font-size: 11pt; color: #555;">Reg. No: {therapist_reg}</p>
-            </div>
-            <div style="text-align: right;">
-                <p style="margin: 5px 0; font-size: 12pt;"><strong>Digital Signature:</strong></p>
-                <p style="margin: 15px 0; font-size: 12pt;">_______________________</p>
-                <p style="margin: 3px 0; font-size: 10pt; color: #666;">Date: {report_date}</p>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Page Footer with Cognispace Branding -->
-    <div class="page-footer" style="margin-top: 40px; padding-top: 15px; border-top: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <img src="/logo-cognispace.png" alt="Cognispace" style="height: 30px; width: auto;" onerror="this.style.display='none'"/>
-            <span style="font-size: 10pt; color: #888;">Powered by Cognispace</span>
-        </div>
         <p style="font-size: 9pt; color: #999; margin: 0;">Precision Insights. Personal Growth.</p>
     </div>
 </div>
