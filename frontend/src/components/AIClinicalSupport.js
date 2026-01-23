@@ -377,12 +377,6 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
   };
 
   // ============= RESOURCES =============
-    } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to assign homework');
-    }
-  };
-
-  // ============= RESOURCES =============
   const handleCreateResource = async () => {
     if (!newResource.title || !newResource.content) {
       toast.error('Please fill in title and content');
