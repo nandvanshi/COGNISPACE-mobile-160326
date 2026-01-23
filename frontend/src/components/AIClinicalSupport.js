@@ -1309,6 +1309,90 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* CogniVision Report Editor Dialog */}
+      <Dialog open={showReportEditor} onOpenChange={setShowReportEditor}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileSearch className="text-emerald-500" size={20} />
+              CogniVision Diagnostic Report Editor
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto">
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+              <p className="text-xs text-amber-700">
+                <strong>Review Required:</strong> Edit the report as needed. All content requires your approval before sharing with the client.
+              </p>
+            </div>
+
+            {/* Rich Text Editor (contentEditable) */}
+            <div 
+              ref={reportEditorRef}
+              className="min-h-[400px] border rounded-lg p-6 bg-white prose prose-sm max-w-none"
+              contentEditable={!isReadOnly}
+              dangerouslySetInnerHTML={{ __html: editableReport }}
+              onBlur={(e) => setEditableReport(e.currentTarget.innerHTML)}
+              style={{ lineHeight: 1.6 }}
+            />
+          </div>
+
+          <DialogFooter className="flex justify-between items-center pt-4 border-t">
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={handlePrintReport}>
+                <Printer size={16} className="mr-2" /> Print / PDF
+              </Button>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setShowReportEditor(false)}>
+                Cancel
+              </Button>
+              <Button variant="outline" onClick={() => handleSaveReport('draft')}>
+                <Save size={16} className="mr-2" /> Save Draft
+              </Button>
+              <Button 
+                onClick={handleApproveReport}
+                className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600"
+              >
+                <CheckCircle2 size={16} className="mr-2" /> Approve Report
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Report Preview Dialog */}
+      <Dialog open={showReportPreview} onOpenChange={setShowReportPreview}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Diagnostic Report Preview</DialogTitle>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto">
+            {previewReport && (
+              <div 
+                className="prose prose-sm max-w-none p-6 bg-white border rounded-lg"
+                dangerouslySetInnerHTML={{ __html: previewReport.report_content }}
+              />
+            )}
+          </div>
+
+          <DialogFooter className="pt-4 border-t">
+            <Button variant="outline" onClick={handlePrintReport}>
+              <Printer size={16} className="mr-2" /> Print / PDF
+            </Button>
+            <Button variant="outline" onClick={() => setShowReportPreview(false)}>
+              Close
+            </Button>
+            {previewReport?.status === 'approved' && (
+              <Button onClick={() => handleShareReport(previewReport.id)}>
+                <Share2 size={16} className="mr-2" /> Share with Client
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
