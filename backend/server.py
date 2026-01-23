@@ -1813,22 +1813,18 @@ Session {i+1}:
 - Plan: {note.get('plan', 'N/A')[:200]}
 """
     
-    # Get Selected Assessments - THIS IS THE CORE DATA
-    if not request.assessment_ids:
-        raise HTTPException(status_code=400, detail="Please select at least one assessment")
-    
-    assessments = await db.assessments.find(
-        {"id": {"$in": request.assessment_ids}, "therapist_id": therapist_id, "status": "completed"},
-        {"_id": 0}
-    ).to_list(50)
-    
-    if not assessments:
-        raise HTTPException(status_code=400, detail="No completed assessments found")
-    
+    # Get Selected Assessments - Optional now
     assessment_battery = []
-    context += "\nASSESSMENT BATTERY & SCORES:\n"
-    for a in assessments:
-        assessment_info = f"""
+    if request.assessment_ids:
+        assessments = await db.assessments.find(
+            {"id": {"$in": request.assessment_ids}, "therapist_id": therapist_id, "status": "completed"},
+            {"_id": 0}
+        ).to_list(50)
+        
+        if assessments:
+            context += "\nASSESSMENT BATTERY & SCORES:\n"
+            for a in assessments:
+                assessment_info = f"""
 Assessment: {a.get('assessment_type', 'Unknown')}
 - Score: {a.get('score', 'N/A')}
 - Interpretation: {a.get('interpretation', 'N/A')}
@@ -1836,20 +1832,24 @@ Assessment: {a.get('assessment_type', 'Unknown')}
 - Administered: {a.get('created_at', 'N/A')}
 - Responses: {json.dumps(a.get('responses', {}))[:500] if a.get('responses') else 'N/A'}
 """
-        context += assessment_info
-        assessment_battery.append({
-            "type": a.get('assessment_type'),
-            "score": a.get('score'),
-            "interpretation": a.get('interpretation'),
-            "severity": a.get('severity')
-        })
+                context += assessment_info
+                assessment_battery.append({
+                    "type": a.get('assessment_type'),
+                    "score": a.get('score'),
+                    "interpretation": a.get('interpretation'),
+                    "severity": a.get('severity')
+                })
     
-    # Include Therapist Notes (offline assessment data)
+    # Include Therapist Notes (offline assessment data) - Can be primary source
     if request.therapist_notes:
         context += f"""
-THERAPIST'S CLINICAL OBSERVATIONS:
+THERAPIST'S CLINICAL OBSERVATIONS / ASSESSMENT DETAILS:
 {request.therapist_notes}
 """
+    
+    # Validate that we have at least some data to generate report
+    if not request.assessment_ids and not request.therapist_notes:
+        raise HTTPException(status_code=400, detail="Please select assessments or provide clinical observations")
     
     # Current date for report
     from datetime import datetime
