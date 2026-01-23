@@ -15,7 +15,7 @@ import { Plus, Trash2, CreditCard, Settings, FileText, ClipboardCheck, Brain, Bo
 const FEATURE_CONFIG = [
   { key: 'session_notes', label: 'Session Notes', icon: FileText, description: 'SOAP/DAP clinical notes' },
   { key: 'assessments', label: 'Assessments', icon: ClipboardCheck, description: 'Clinical assessment tools' },
-  { key: 'ai_clinical', label: 'AI Clinical', icon: Brain, description: 'AI-powered suggestions' },
+  { key: 'ai_clinical', label: 'TheraGenie', icon: Brain, description: 'CI-powered insights' },
   { key: 'protocols', label: 'Protocols', icon: BookOpen, description: 'Therapy protocols' },
   { key: 'messaging', label: 'Messaging', icon: MessageSquare, description: 'Client messaging' },
   { key: 'payments', label: 'Payments', icon: DollarSign, description: 'Payment tracking' },
