@@ -1983,17 +1983,10 @@ Remember: You are CogniVision Engine providing expert-level clinical analysis.""
     <div class="report-section">
         <div class="section-heading">1. Patient Identification & Referral Context</div>
         <div class="patient-info">
-            <span class="data-label">Patient Name:</span>
-            <span class="data-value">{client_name}</span>
-            
-            <span class="data-label">Date of Birth:</span>
-            <span class="data-value">{client_dob}</span>
-            
-            <span class="data-label">Contact:</span>
-            <span class="data-value">{client_phone}</span>
-            
-            <span class="data-label">Referral Context:</span>
-            <span class="data-value">{result.get('referral_context', 'Self-referred')}</span>
+            <p><strong>Patient Name:</strong> {client_name}</p>
+            <p><strong>Age:</strong> {client_age}</p>
+            <p><strong>Contact:</strong> {client_phone}</p>
+            <p><strong>Referral Context:</strong> {result.get('referral_context', 'Self-referred')}</p>
         </div>
         <div class="report-content">
             <p>{result.get('patient_identification', '')}</p>
