@@ -1536,11 +1536,11 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
               .section-divider { border: none; border-top: 1px solid #ccc; margin: 20px 0 15px 0; }
               .report-section { margin-bottom: 18px; }
               .section-heading { font-size: 12pt; font-weight: 600; color: #000080; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
-              .patient-info p, .report-content p { margin-bottom: 8px; display: block; text-align: justify; }
-              .data-label { font-weight: 600; color: #000; display: block; margin-bottom: 2px; }
-              .data-value { display: block; margin-bottom: 10px; color: #333; }
+              .patient-info p { margin: 6px 0; display: block; font-size: 11pt; }
+              .patient-info strong { font-weight: 600; color: #000; }
+              .report-content p { margin-bottom: 8px; display: block; text-align: justify; }
               ul, ol { margin: 10px 0; padding-left: 20px; }
-              li { display: block; margin-bottom: 6px; text-align: justify; }
+              li { display: list-item; margin-bottom: 6px; text-align: justify; }
               .disclaimer-box { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 4px; padding: 12px; margin: 20px 0; font-size: 8pt; color: #333; }
               .disclaimer-box p { margin: 5px 0; text-align: justify; display: block; }
               .signature-section { margin-top: 30px; }
