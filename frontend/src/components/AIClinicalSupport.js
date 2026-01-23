@@ -350,6 +350,11 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
   const handlePrintReport = () => {
     const printWindow = window.open('', '_blank');
     const reportContent = editableReport || previewReport?.report_content;
+    
+    // Get current date in DD/MM/YYYY format
+    const today = new Date();
+    const reportDate = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
+    
     printWindow.document.write(`
 <!DOCTYPE html>
 <html>
@@ -357,11 +362,18 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
   <title>Psychodiagnostic Evaluation Report</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    /* Print Settings - Remove Browser Headers/Footers */
+    /* Print Settings - Remove ALL Browser Headers/Footers */
     @media print {
-      @page { margin: 2cm; size: A4; }
-      body { margin: 0; padding: 0; }
-      header, footer { position: fixed; width: 100%; }
+      @page { 
+        margin: 2cm; 
+        size: A4;
+      }
+      html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
       .no-print { display: none !important; }
     }
     
@@ -382,7 +394,7 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
       padding: 0;
     }
     
-    /* Therapist Header - Navy Blue */
+    /* Therapist Header - Navy Blue #000080 */
     .therapist-header {
       margin-bottom: 25px;
       padding-bottom: 15px;
@@ -401,7 +413,7 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
       display: block;
     }
     
-    /* Report Title - Navy Blue */
+    /* Report Title - Navy Blue #000080 */
     .report-title {
       text-align: center;
       font-size: 16pt;
@@ -418,7 +430,7 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
     }
     .report-meta p { margin: 3px 0; display: block; }
     
-    /* Sections with Grey Dividers */
+    /* Sections with Grey Dividers - Navy Blue headings */
     .report-section {
       margin-bottom: 20px;
       page-break-inside: avoid;
@@ -437,7 +449,7 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
       letter-spacing: 0.5px;
     }
     
-    /* Force ALL paragraphs, lists, bullets to NEW LINE */
+    /* Force ALL elements to NEW LINE */
     p, li, span, div {
       display: block;
     }
@@ -462,11 +474,13 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
     ul, ol {
       margin: 10px 0;
       padding-left: 20px;
+      list-style-position: outside;
     }
     li {
-      display: block;
-      margin-bottom: 6px;
+      display: list-item;
+      margin-bottom: 8px;
       text-align: justify;
+      padding-left: 5px;
     }
     
     /* Disclaimer */
@@ -505,50 +519,46 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
       display: block;
     }
     
-    /* Branded Footer - Fixed at Bottom */
+    /* Branded Footer */
     .branded-footer {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
+      margin-top: 40px;
+      padding-top: 15px;
       border-top: 1px solid #ddd;
-      padding: 10px 2cm;
       display: flex;
       justify-content: space-between;
       align-items: center;
       font-size: 9pt;
       color: #555;
-      background: #fff;
     }
     .footer-logo {
       display: flex;
       align-items: center;
       gap: 8px;
     }
-    .footer-logo img { height: 20px; width: auto; }
-    
-    /* Content spacer for footer */
-    .footer-spacer { height: 50px; }
+    .footer-logo img { height: 22px; width: auto; }
   </style>
 </head>
 <body>
   ${reportContent}
   
-  <!-- Fixed Branded Footer with Logo URL -->
+  <!-- Branded Footer -->
   <div class="branded-footer">
     <div class="footer-logo">
-      <img src="/logo-cognispace.png" alt="Cognispace" style="height: 22px; width: auto;" onerror="this.outerHTML='<span style=color:#000080;font-weight:600>⬢</span>'" />
+      <img src="/logo-cognispace.png" alt="Cognispace" style="height: 22px;" onerror="this.outerHTML=''" />
       <span style="color: #000080; font-weight: 500;">Powered by Cognispace</span>
     </div>
     <span style="color: #333;">Precision Insights. Personal Growth.</span>
   </div>
-  
-  <div class="footer-spacer"></div>
 </body>
 </html>
     `);
     printWindow.document.close();
-    setTimeout(() => printWindow.print(), 500);
+    
+    // Wait for fonts to load then print
+    setTimeout(() => {
+      printWindow.focus();
+      printWindow.print();
+    }, 800);
   };
 
   const toggleAssessmentSelection = (assessmentId) => {
