@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { API } from '../App';
 import { Card } from './ui/card';
@@ -7,7 +7,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { toast } from 'sonner';
 import { 
@@ -25,7 +25,14 @@ import {
   Plus,
   Send,
   Download,
-  Library
+  Library,
+  FileSearch,
+  Eye,
+  Share2,
+  Edit3,
+  Trash2,
+  Save,
+  Printer
 } from 'lucide-react';
 
 const AIClinicalSupport = ({ isReadOnly = false }) => {
