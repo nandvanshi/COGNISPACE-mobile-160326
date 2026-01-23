@@ -1768,16 +1768,43 @@ async def ai_generate_diagnostic_report(request: DiagnosticReportRequest, curren
     if not client_profile:
         raise HTTPException(status_code=404, detail="Client not found")
     
-    client_user = await db.users.find_one({"id": request.client_id}, {"_id": 0, "full_name": 1, "phone": 1, "date_of_birth": 1})
+    client_user = await db.users.find_one({"id": request.client_id}, {"_id": 0, "full_name": 1, "phone": 1, "date_of_birth": 1, "age": 1})
     client_name = client_user.get("full_name", "Unknown") if client_user else "Unknown"
     client_phone = client_user.get("phone", "N/A") if client_user else "N/A"
-    client_dob = client_user.get("date_of_birth", "N/A") if client_user else "N/A"
+    client_dob = client_user.get("date_of_birth", None) if client_user else None
+    
+    # Calculate age from DOB or use stored age
+    client_age = "N/A"
+    if client_user and client_user.get("age"):
+        client_age = f"{client_user['age']} years"
+    elif client_dob and client_dob != "N/A":
+        try:
+            from datetime import datetime
+            if isinstance(client_dob, str):
+                # Try different date formats
+                for fmt in ["%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y"]:
+                    try:
+                        dob_date = datetime.strptime(client_dob, fmt)
+                        break
+                    except:
+                        continue
+                else:
+                    dob_date = None
+            else:
+                dob_date = client_dob
+            
+            if dob_date:
+                today = datetime.now()
+                age = today.year - dob_date.year - ((today.month, today.day) < (dob_date.month, dob_date.day))
+                client_age = f"{age} years"
+        except:
+            client_age = "N/A"
     
     context = f"""
 PATIENT INFORMATION:
 - Name: {client_name}
 - Contact: {client_phone}
-- Date of Birth: {client_dob}
+- Age: {client_age}
 - Referral Source: {client_profile.get('referral_source', 'Self-referred')}
 - Primary Concerns: {client_profile.get('presenting_concerns', 'Not specified')}
 """
