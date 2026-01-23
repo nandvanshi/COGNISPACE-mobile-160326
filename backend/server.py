@@ -534,6 +534,8 @@ class AIHomeworkRequest(BaseModel):
     context: Optional[str] = None  # What was discussed in session
     homework_type: Optional[str] = None  # worksheet, exercise, reading, reflection
     protocol_id: Optional[str] = None  # If following a protocol
+    include_case_history: bool = True
+    include_prev_assessments: bool = True
 
 class AIHomeworkResponse(BaseModel):
     title: str
