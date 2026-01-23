@@ -545,6 +545,53 @@ class AIHomeworkResponse(BaseModel):
     estimated_time_minutes: int
     therapeutic_rationale: str
 
+# CogniVision Diagnostic Report Models
+class DiagnosticReportRequest(BaseModel):
+    client_id: str
+    assessment_ids: List[str]  # Selected completed assessments
+    include_intake: bool = True
+    include_session_history: bool = True
+    include_case_history: bool = True
+    therapist_notes: Optional[str] = None  # Offline assessment data / additional input
+
+class DiagnosticReportSection(BaseModel):
+    title: str
+    content: str
+
+class DiagnosticReportResponse(BaseModel):
+    header: str
+    patient_identification: str
+    referral_context: str
+    assessment_battery: str
+    psychometric_findings: str
+    diagnostic_impression: str
+    treatment_roadmap: str
+    disclaimer: str
+    raw_html: str  # Full formatted report
+
+class DiagnosticReportCreate(BaseModel):
+    client_id: str
+    assessment_ids: List[str]
+    report_content: str  # Rich text HTML content
+    status: str = "draft"  # draft, approved, shared
+    therapist_signature: Optional[str] = None
+    therapist_reg_no: Optional[str] = None
+
+class DiagnosticReport(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    therapist_id: str
+    client_id: str
+    assessment_ids: List[str]
+    report_content: str
+    status: str  # draft, approved, shared
+    therapist_signature: Optional[str] = None
+    therapist_reg_no: Optional[str] = None
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    approved_at: Optional[datetime] = None
+    shared_at: Optional[datetime] = None
+
 # Resource Library Models
 class ResourceCreate(BaseModel):
     title: str
