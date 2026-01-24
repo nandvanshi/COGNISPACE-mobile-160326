@@ -1781,8 +1781,11 @@ async def ai_generate_diagnostic_report(request: DiagnosticReportRequest, curren
     if not client_profile:
         raise HTTPException(status_code=404, detail="Client not found")
     
-    # Get client data directly from client_profiles
-    client_name = client_profile.get("full_name", "Unknown")
+    # Get client name from users table, other data from client_profiles
+    client_user = await db.users.find_one({"id": request.client_id}, {"_id": 0, "full_name": 1})
+    client_name = client_user.get("full_name", "Unknown") if client_user else client_profile.get("full_name", "Unknown")
+    
+    # Get age and referred_by from client_profiles
     client_age = client_profile.get("age", "N/A")
     if client_age and client_age != "N/A":
         client_age = f"{client_age} years"
