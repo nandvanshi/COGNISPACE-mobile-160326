@@ -2081,9 +2081,9 @@ Produce a hospital-grade psychological assessment report that:
     <!-- Therapist Header -->
     <div class="therapist-header">
         <h1>{therapist_name}</h1>
-        <p>{therapist_qualifications}</p>
-        {f'<p>{therapist_address}</p>' if therapist_address else ''}
-        <p>{therapist_phone}</p>
+        {f'<p>{therapist_qualifications}</p>' if therapist_qualifications else ''}
+        {f'<p>{therapist_address}</p>' if therapist_address and therapist_address != 'N/A' else ''}
+        {f'<p>{therapist_phone}</p>' if therapist_phone and therapist_phone != 'N/A' else ''}
     </div>
     
     <!-- Report Title -->
