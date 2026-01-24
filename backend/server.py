@@ -1788,33 +1788,6 @@ async def ai_generate_diagnostic_report(request: DiagnosticReportRequest, curren
         client_age = f"{client_age} years"
     client_referred_by = client_profile.get("referred_by", "Self-referred") or "Self-referred"
     
-    # Calculate age from DOB or use stored age
-    client_age = "N/A"
-    if client_user and client_user.get("age"):
-        client_age = f"{client_user['age']} years"
-    elif client_dob and client_dob != "N/A":
-        try:
-            from datetime import datetime
-            if isinstance(client_dob, str):
-                # Try different date formats
-                for fmt in ["%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y"]:
-                    try:
-                        dob_date = datetime.strptime(client_dob, fmt)
-                        break
-                    except:
-                        continue
-                else:
-                    dob_date = None
-            else:
-                dob_date = client_dob
-            
-            if dob_date:
-                today = datetime.now()
-                age = today.year - dob_date.year - ((today.month, today.day) < (dob_date.month, dob_date.day))
-                client_age = f"{age} years"
-        except:
-            client_age = "N/A"
-    
     context = f"""
 PATIENT INFORMATION:
 - Name: {client_name}
