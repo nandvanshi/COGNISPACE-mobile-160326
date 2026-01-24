@@ -1751,20 +1751,29 @@ async def ai_generate_diagnostic_report(request: DiagnosticReportRequest, curren
     # Get therapist info for header and signature
     therapist = await db.users.find_one({"id": therapist_id}, {"_id": 0})
     therapist_name = therapist.get("full_name", "Unknown") if therapist else "Unknown"
-    therapist_reg = therapist.get("registration_number", "N/A") if therapist else "N/A"
     therapist_phone = therapist.get("phone", "N/A") if therapist else "N/A"
     
     # Get therapist profile for additional details
-    therapist_profile = await db.therapist_profiles.find_one({"user_id": therapist_id}, {"_id": 0})
-    therapist_title = therapist_profile.get("professional_title", "Clinical Psychologist") if therapist_profile else "Clinical Psychologist"
-    therapist_clinic = therapist_profile.get("clinic_name", "") if therapist_profile else ""
+    therapist_profile = await db.therapist_profiles.find_one({"therapist_id": therapist_id}, {"_id": 0})
+    if not therapist_profile:
+        # Try with user_id field
+        therapist_profile = await db.therapist_profiles.find_one({"user_id": therapist_id}, {"_id": 0})
+    
+    therapist_qualifications = therapist_profile.get("qualifications", "") if therapist_profile else ""
+    
+    # Build therapist address from profile
     therapist_address = ""
-    if therapist_profile and therapist_profile.get("address"):
-        addr = therapist_profile["address"]
-        addr_parts = [addr.get("line1", ""), addr.get("line2", ""), addr.get("city", ""), addr.get("state", ""), addr.get("pincode", "")]
+    if therapist_profile:
+        addr_parts = [
+            therapist_profile.get("address_line_1", ""),
+            therapist_profile.get("address_line_2", ""),
+            therapist_profile.get("city", ""),
+            therapist_profile.get("state", ""),
+            therapist_profile.get("pincode", "")
+        ]
         therapist_address = ", ".join([p for p in addr_parts if p])
     
-    # Get client info
+    # Get client info from client_profiles (NOT users table)
     client_profile = await db.client_profiles.find_one(
         {"user_id": request.client_id, "therapist_id": therapist_id},
         {"_id": 0}
@@ -1772,18 +1781,12 @@ async def ai_generate_diagnostic_report(request: DiagnosticReportRequest, curren
     if not client_profile:
         raise HTTPException(status_code=404, detail="Client not found")
     
-    client_user = await db.users.find_one({"id": request.client_id}, {"_id": 0, "full_name": 1, "phone": 1, "date_of_birth": 1, "age": 1, "gender": 1, "email": 1})
-    client_name = client_user.get("full_name", "Unknown") if client_user else "Unknown"
-    client_phone = client_user.get("phone", "N/A") if client_user else "N/A"
-    client_dob = client_user.get("date_of_birth", None) if client_user else None
-    client_gender = client_user.get("gender", "N/A") if client_user else "N/A"
-    client_email = client_user.get("email", "") if client_user else ""
-    
-    # Get referral source from client profile
-    client_referral = client_profile.get("referral_source", "Self-referred")
-    client_education = client_profile.get("education", "N/A")
-    client_occupation = client_profile.get("occupation", "N/A")
-    client_marital_status = client_profile.get("marital_status", "N/A")
+    # Get client data directly from client_profiles
+    client_name = client_profile.get("full_name", "Unknown")
+    client_age = client_profile.get("age", "N/A")
+    if client_age and client_age != "N/A":
+        client_age = f"{client_age} years"
+    client_referred_by = client_profile.get("referred_by", "Self-referred") or "Self-referred"
     
     # Calculate age from DOB or use stored age
     client_age = "N/A"
