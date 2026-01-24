@@ -174,7 +174,14 @@ const Messaging = ({ isReadOnly = false }) => {
 
   // Client Mobile View - Full Screen Messages
   if (isClient) {
-    const therapistName = conversations[0]?.user_name || contacts[0]?.full_name || 'Your Therapist';
+    const therapistContact = contacts[0];
+    const therapistName = conversations[0]?.user_name || therapistContact?.name || 'Your Therapist';
+    
+    // Auto-set selected conversation for client if they have a therapist contact
+    const effectiveConversation = selectedConversation || (therapistContact ? {
+      user_id: therapistContact.id,
+      user_name: therapistContact.name
+    } : null);
     
     return (
       <div data-testid="messaging" className="h-[calc(100vh-120px)] flex flex-col">
@@ -247,20 +254,37 @@ const Messaging = ({ isReadOnly = false }) => {
             </div>
 
             {/* Message Input - Fixed at Bottom */}
-            {!isReadOnly ? (
+            {!isReadOnly && therapistContact?.messaging_enabled !== false ? (
               <div className="border-t border-border p-3 bg-white">
-                <form onSubmit={handleSendMessage} className="flex gap-2">
+                <form onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!newMessage.trim() || sending || !effectiveConversation) return;
+                  setSending(true);
+                  try {
+                    await axios.post(`${API}/messages`, {
+                      receiver_id: effectiveConversation.user_id,
+                      content: newMessage.trim(),
+                    });
+                    setNewMessage('');
+                    await fetchMessages(effectiveConversation.user_id);
+                    await fetchConversations();
+                  } catch (error) {
+                    toast.error(error.response?.data?.detail || 'Failed to send message');
+                  } finally {
+                    setSending(false);
+                  }
+                }} className="flex gap-2">
                   <Input
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     placeholder="Type your message..."
                     className="flex-1 rounded-full px-4"
-                    disabled={sending || contacts.length === 0}
+                    disabled={sending || !effectiveConversation}
                     data-testid="message-input"
                   />
                   <Button
                     type="submit"
-                    disabled={!newMessage.trim() || sending || contacts.length === 0}
+                    disabled={!newMessage.trim() || sending || !effectiveConversation}
                     className="rounded-full w-12 h-10 p-0 bg-primary hover:bg-primary-700"
                     data-testid="send-message-button"
                   >
