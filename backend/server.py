@@ -1771,7 +1771,14 @@ async def ai_generate_diagnostic_report(request: DiagnosticReportRequest, curren
             therapist_profile.get("state", ""),
             therapist_profile.get("pincode", "")
         ]
-        therapist_address = ", ".join([p for p in addr_parts if p])
+        # Clean each part - remove trailing commas and extra spaces
+        cleaned_parts = []
+        for p in addr_parts:
+            if p:
+                cleaned = p.strip().rstrip(',').strip()
+                if cleaned:
+                    cleaned_parts.append(cleaned)
+        therapist_address = ", ".join(cleaned_parts)
     
     # Get client info from client_profiles (NOT users table)
     client_profile = await db.client_profiles.find_one(
