@@ -2000,7 +2000,7 @@ Respond in valid JSON format:
     "functional_impact": "How symptoms affect daily functioning - use 'the client' not name",
     "strengths_protective_factors": "Strengths, support systems, resilience factors - use 'the client' not name",
     "areas_of_concern": "Key clinical concerns - use 'the client' not name",
-    "recommendations": "IMPORTANT: Use double newlines (blank line) between each recommendation. Format each as:\\n\\nHeading Name\\nRecommendation description text.\\n\\nNext Heading\\nNext recommendation text."
+    "recommendations": "IMPORTANT: Use double newlines (blank line) between each recommendation. Format each as:\\n\\nHeading Name\\nRecommendation description text.\\n\\nSTRICTLY DO NOT mention session duration or time (like 60-minute, 45-minute sessions). Only mention frequency (weekly, bi-weekly) without specifying session length."
 }
 
 --------------------------------------------------
