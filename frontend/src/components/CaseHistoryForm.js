@@ -176,7 +176,7 @@ const CaseHistoryForm = ({ clientId, clientName, clientProfile, onComplete, onCl
       await saveCurrentSection();
       
       // Mark as complete
-      await axios.patch(`${API}/case-history/${clientId}/complete`);
+      await axios.post(`${API}/case-history/${clientId}/complete`);
       
       toast.success('Case History completed successfully');
       setIsComplete(true);
