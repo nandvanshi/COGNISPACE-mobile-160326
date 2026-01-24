@@ -292,7 +292,7 @@ const Messaging = ({ isReadOnly = false }) => {
           </Card>
 
           {/* Messages Panel */}
-          <Card className="lg:col-span-2 p-6 bg-white/70 backdrop-blur-xl border border-border/40 rounded-xl flex flex-col" data-testid="messages-panel">
+          <Card className="lg:col-span-2 p-6 bg-white/70 backdrop-blur-xl border border-border/40 rounded-xl flex flex-col h-[600px]" data-testid="messages-panel">
             {selectedConversation ? (
               <>
                 <div className="border-b border-border pb-4 mb-4 flex items-center gap-3">
@@ -308,7 +308,7 @@ const Messaging = ({ isReadOnly = false }) => {
                 </div>
 
                 {/* Messages */}
-                <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2" data-testid="messages-container">
+                <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2 max-h-[400px]" data-testid="messages-container">
                   {messages.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <p>No messages yet. Start the conversation!</p>
