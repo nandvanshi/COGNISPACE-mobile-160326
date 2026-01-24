@@ -1110,7 +1110,7 @@ const renderSectionFields = (sectionId, data, updateField, isReadOnly) => {
       return (
         <>
           <div>
-            <Label className={labelClass}>Clinical Formulation *</Label>
+            <Label className={labelClass}>Clinical Formulation</Label>
             <Textarea
               className={fieldClass}
               value={data.clinical_formulation || ''}
