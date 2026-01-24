@@ -551,29 +551,25 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
       padding-top: 15px;
       border-top: 1px solid #ddd;
       display: flex;
-      justify-content: space-between;
+      justify-content: center;
       align-items: center;
-      font-size: 9pt;
-      color: #555;
     }
     .footer-logo {
       display: flex;
       align-items: center;
-      gap: 8px;
+      justify-content: center;
     }
-    .footer-logo img { height: 22px; width: auto; }
+    .footer-logo img { height: 50px; width: auto; }
   </style>
 </head>
 <body>
   ${reportContent}
   
-  <!-- Branded Footer -->
+  <!-- Branded Footer - Logo Only -->
   <div class="branded-footer">
     <div class="footer-logo">
-      <img src="/logo-cognispace.png" alt="Cognispace" style="height: 22px;" onerror="this.outerHTML=''" />
-      <span style="color: #000080; font-weight: 500;">Powered by Cognispace</span>
+      <img src="/logo-cognispace.png" alt="Cognispace" style="height: 50px;" onerror="this.outerHTML=''" />
     </div>
-    <span style="color: #333;">Precision Insights. Personal Growth.</span>
   </div>
 </body>
 </html>
