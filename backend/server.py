@@ -2029,6 +2029,66 @@ Produce a hospital-grade psychological assessment report that:
         
         result = json.loads(response_text.strip())
         
+        # Helper function to format Test Results with proper line breaks and bold headings
+        def format_test_results(text):
+            if not text:
+                return "N/A"
+            import re
+            # Split by double newlines or assessment names (patterns like "Assessment Name" followed by "Raw Score:")
+            lines = text.split('\n\n')
+            if len(lines) <= 1:
+                # Try splitting by known patterns
+                # Look for patterns like "Assessment Name Raw Score:" and split before them
+                text = re.sub(r'(?<=[.)])\s*([A-Z][A-Za-z\s\-()]+(?:Domain|Scale|Inventory|Questionnaire|Checklist|Assessment|Test))', r'</p><p class="assessment-item"><strong>\1</strong>', text)
+                text = re.sub(r'Raw Score:', r'<br/><em>Raw Score:</em>', text)
+                text = re.sub(r'(Scale Range:[^–-]+[–-][^)]+\))\s*[–-]\s*', r'<br/>\1 – <strong>', text)
+                text = re.sub(r'(Clinically Significant|Moderate|Mild|Severe|Within Normal Limits|Moderately High|Moderately Elevated|High|Low|Normal)', r'\1</strong><br/>', text)
+                return f'<p class="assessment-item">{text}</p>'
+            
+            formatted = []
+            for block in lines:
+                block = block.strip()
+                if not block:
+                    continue
+                # Bold the assessment name (first line of each block)
+                parts = block.split('\n')
+                if parts:
+                    assessment_name = parts[0]
+                    rest = '<br/>'.join(parts[1:]) if len(parts) > 1 else ''
+                    formatted.append(f'<p class="assessment-item"><strong>{assessment_name}</strong><br/>{rest}</p>')
+            return ''.join(formatted) if formatted else f'<p>{text}</p>'
+        
+        # Helper function to format Recommendations with proper headings
+        def format_recommendations(text):
+            if not text:
+                return "N/A"
+            import re
+            lines = text.split('\n\n')
+            if len(lines) <= 1:
+                # Try to find heading patterns (Title Case followed by description)
+                # Pattern: "Heading Name" followed by description text
+                text = re.sub(r'([A-Z][A-Za-z\s/\-]+(?:Therapy|Consultation|Evaluation|Training|Assessment|Referral|Monitoring|Accommodations|Psychoeducation|Management|Intervention|Support|Schedule|Approach|Treatment))\s+([A-Z])', r'<p class="recommendation-item"><strong>\1</strong><br/>\2', text)
+                if '<p class="recommendation-item">' in text:
+                    text = text + '</p>'
+                    return text
+                return f'<p>{text}</p>'
+            
+            formatted = []
+            for block in lines:
+                block = block.strip()
+                if not block:
+                    continue
+                parts = block.split('\n')
+                if parts:
+                    heading = parts[0]
+                    description = ' '.join(parts[1:]) if len(parts) > 1 else ''
+                    formatted.append(f'<p class="recommendation-item"><strong>{heading}</strong><br/>{description}</p>')
+            return ''.join(formatted) if formatted else f'<p>{text}</p>'
+        
+        # Format special sections
+        test_results_html = format_test_results(result.get('test_results_interpretation', ''))
+        recommendations_html = format_recommendations(result.get('recommendations', ''))
+        
         # Build clean HTML report - Navy Blue (#000080) color scheme
         raw_html = f"""
 <div class="clinical-report">
