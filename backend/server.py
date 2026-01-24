@@ -2072,7 +2072,7 @@ Produce a hospital-grade psychological assessment report that:
     <!-- Section 6: Clinical Impressions -->
     <hr class="section-divider">
     <div class="report-section">
-        <div class="section-heading">6. Clinical Impressions (Non-Diagnostic)</div>
+        <div class="section-heading">6. Clinical Impressions</div>
         <div class="report-content">
             <p>{result.get('clinical_impressions', 'N/A')}</p>
         </div>
@@ -2105,25 +2105,16 @@ Produce a hospital-grade psychological assessment report that:
         </div>
     </div>
     
-    <!-- Section 10: Recommendations for Therapy Focus -->
+    <!-- Section 10: Recommendations -->
     <hr class="section-divider">
     <div class="report-section">
-        <div class="section-heading">10. Recommendations for Therapy Focus</div>
+        <div class="section-heading">10. Recommendations</div>
         <div class="report-content">
-            <p>{result.get('recommendations_therapy_focus', 'N/A')}</p>
+            <p>{result.get('recommendations', 'N/A')}</p>
         </div>
     </div>
     
-    <!-- Section 11: Limitations of Assessment -->
-    <hr class="section-divider">
-    <div class="report-section">
-        <div class="section-heading">11. Limitations of Assessment</div>
-        <div class="report-content">
-            <p>{result.get('limitations_of_assessment', 'This assessment is based on the information provided at the time of evaluation.')}</p>
-        </div>
-    </div>
-    
-    <!-- Section 12: Disclaimer & Therapist Review Note -->
+    <!-- Disclaimer & Therapist Review Note -->
     <div class="disclaimer-box">
         <p><strong>DISCLAIMER:</strong> This report is generated as a clinical documentation aid. It does NOT constitute a final diagnosis or treatment recommendation. All findings require review and approval by the treating clinician. The information contained herein is confidential and intended solely for the named patient and authorized healthcare providers.</p>
         <p><strong>THERAPIST REVIEW NOTE:</strong> This report must be reviewed, edited if necessary, and approved by the treating therapist before being used for clinical purposes or shared with third parties.</p>
