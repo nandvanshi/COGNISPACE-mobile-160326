@@ -1539,13 +1539,80 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
             </DialogTitle>
           </DialogHeader>
 
-          <div className="flex-1 overflow-y-auto">
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
-              <p className="text-xs text-amber-700">
-                <strong>Review Required:</strong> Edit the report as needed. All content requires your approval before sharing with the client.
-              </p>
-            </div>
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-2">
+            <p className="text-xs text-amber-700">
+              <strong>Review Required:</strong> Edit the report as needed. All content requires your approval before sharing with the client.
+            </p>
+          </div>
 
+          {/* Editor Toolbar - Sticky at top */}
+          {!isReadOnly && (
+            <div className="sticky top-0 z-10 flex items-center gap-1 p-2 bg-gray-100 border border-gray-300 rounded-lg mb-2">
+              <button
+                type="button"
+                onClick={() => document.execCommand('bold')}
+                className="p-2 hover:bg-gray-200 rounded font-bold"
+                title="Bold"
+              >
+                B
+              </button>
+              <button
+                type="button"
+                onClick={() => document.execCommand('italic')}
+                className="p-2 hover:bg-gray-200 rounded italic"
+                title="Italic"
+              >
+                I
+              </button>
+              <button
+                type="button"
+                onClick={() => document.execCommand('underline')}
+                className="p-2 hover:bg-gray-200 rounded underline"
+                title="Underline"
+              >
+                U
+              </button>
+              <div className="w-px h-6 bg-gray-300 mx-1"></div>
+              <button
+                type="button"
+                onClick={() => document.execCommand('insertUnorderedList')}
+                className="p-2 hover:bg-gray-200 rounded text-sm"
+                title="Bullet List"
+              >
+                • List
+              </button>
+              <button
+                type="button"
+                onClick={() => document.execCommand('insertOrderedList')}
+                className="p-2 hover:bg-gray-200 rounded text-sm"
+                title="Numbered List"
+              >
+                1. List
+              </button>
+              <div className="w-px h-6 bg-gray-300 mx-1"></div>
+              <button
+                type="button"
+                onClick={() => document.execCommand('undo')}
+                className="p-2 hover:bg-gray-200 rounded text-sm"
+                title="Undo"
+              >
+                ↩
+              </button>
+              <button
+                type="button"
+                onClick={() => document.execCommand('redo')}
+                className="p-2 hover:bg-gray-200 rounded text-sm"
+                title="Redo"
+              >
+                ↪
+              </button>
+              <div className="ml-auto text-xs text-gray-500">
+                Click inside report to edit
+              </div>
+            </div>
+          )}
+
+          <div className="flex-1 overflow-y-auto">
             {/* Report Preview with Clinical CSS - Navy Blue */}
             <style>{`
               .clinical-report { font-family: 'Inter', Arial, sans-serif; color: #000; line-height: 1.6; }
