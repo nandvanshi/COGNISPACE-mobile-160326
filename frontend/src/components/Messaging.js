@@ -260,7 +260,7 @@ const Messaging = ({ isReadOnly = false }) => {
                   />
                   <Button
                     type="submit"
-                    disabled={!newMessage.trim() || sending || conversations.length === 0}
+                    disabled={!newMessage.trim() || sending || contacts.length === 0}
                     className="rounded-full w-12 h-10 p-0 bg-primary hover:bg-primary-700"
                     data-testid="send-message-button"
                   >
