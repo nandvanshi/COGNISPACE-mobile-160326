@@ -25,7 +25,10 @@ const Messaging = ({ isReadOnly = false }) => {
   const [clientMessagingSettings, setClientMessagingSettings] = useState({});
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [mobileShowMessages, setMobileShowMessages] = useState(false); // Mobile: show messages panel
   const messagesEndRef = useRef(null);
+  
+  const isClient = user?.role === 'client';
 
   useEffect(() => {
     fetchData();
