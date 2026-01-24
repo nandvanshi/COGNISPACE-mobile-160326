@@ -262,7 +262,7 @@ const Messaging = ({ isReadOnly = false }) => {
                   setSending(true);
                   try {
                     await axios.post(`${API}/messages`, {
-                      receiver_id: effectiveConversation.user_id,
+                      recipient_id: effectiveConversation.user_id,
                       content: newMessage.trim(),
                     });
                     setNewMessage('');
