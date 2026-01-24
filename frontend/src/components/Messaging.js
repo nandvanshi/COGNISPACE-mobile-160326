@@ -167,6 +167,114 @@ const Messaging = ({ isReadOnly = false }) => {
     return <div className="text-center py-12">Loading messages...</div>;
   }
 
+  // Client Mobile View - Full Screen Messages
+  if (isClient) {
+    return (
+      <div data-testid="messaging" className="h-[calc(100vh-120px)] flex flex-col">
+        {/* Header - Compact for mobile */}
+        <div className="mb-4 flex items-center justify-between px-2">
+          <div>
+            <h2 className="text-2xl md:text-4xl font-serif text-primary">Messages</h2>
+            <p className="text-sm text-muted-foreground">Chat with your therapist</p>
+          </div>
+        </div>
+
+        {contacts.length === 0 ? (
+          <Card className="flex-1 flex items-center justify-center bg-white/70 backdrop-blur-xl border border-border/40">
+            <div className="text-center p-8">
+              <MessageCircle size={48} className="mx-auto text-muted-foreground/30 mb-4" />
+              <p className="text-muted-foreground">You are not assigned to a therapist yet.</p>
+            </div>
+          </Card>
+        ) : (
+          <Card className="flex-1 flex flex-col bg-white/70 backdrop-blur-xl border border-border/40 rounded-xl overflow-hidden">
+            {/* Therapist Header */}
+            {conversations.length > 0 && (
+              <div className="border-b border-border p-4 bg-primary/5">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <User size={24} className="text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-primary">{conversations[0]?.user_name || 'Your Therapist'}</h3>
+                    <p className="text-xs text-muted-foreground">Therapist</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Messages Area - Full Height */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3" data-testid="messages-container">
+              {messages.length === 0 ? (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <MessageCircle size={40} className="mx-auto text-muted-foreground/30 mb-3" />
+                    <p className="text-muted-foreground">No messages yet. Start the conversation!</p>
+                  </div>
+                </div>
+              ) : (
+                messages.map((msg) => {
+                  const isSender = msg.sender_id === user?.id;
+                  return (
+                    <div
+                      key={msg.id}
+                      className={`flex ${isSender ? 'justify-end' : 'justify-start'}`}
+                      data-testid={`message-${msg.id}`}
+                    >
+                      <div
+                        className={`max-w-[80%] p-3 rounded-2xl ${
+                          isSender
+                            ? 'bg-primary text-white rounded-br-sm'
+                            : 'bg-gray-100 text-foreground rounded-bl-sm'
+                        }`}
+                      >
+                        <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                        <p className={`text-xs mt-1 ${isSender ? 'text-white/70' : 'text-muted-foreground'}`}>
+                          {formatTime(msg.created_at)}
+                          {msg.read && isSender && ' ✓'}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* Message Input - Fixed at Bottom */}
+            {!isReadOnly ? (
+              <div className="border-t border-border p-3 bg-white">
+                <form onSubmit={handleSendMessage} className="flex gap-2">
+                  <Input
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Type your message..."
+                    className="flex-1 rounded-full px-4"
+                    disabled={sending || conversations.length === 0}
+                    data-testid="message-input"
+                  />
+                  <Button
+                    type="submit"
+                    disabled={!newMessage.trim() || sending || conversations.length === 0}
+                    className="rounded-full w-12 h-10 p-0 bg-primary hover:bg-primary-700"
+                    data-testid="send-message-button"
+                  >
+                    <Send size={18} />
+                  </Button>
+                </form>
+              </div>
+            ) : (
+              <div className="border-t border-border p-3 bg-warning/10">
+                <p className="text-sm text-center text-warning">Messaging disabled - Contact your therapist</p>
+              </div>
+            )}
+          </Card>
+        )}
+      </div>
+    );
+  }
+
+  // Therapist View - Original Layout
   return (
     <div data-testid="messaging">
       {/* Header */}
