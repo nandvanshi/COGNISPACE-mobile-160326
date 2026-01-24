@@ -1248,6 +1248,7 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
               <CaseHistoryForm
                 clientId={client.id}
                 clientName={client.full_name}
+                clientProfile={client}
                 isReadOnly={isReadOnly}
                 onComplete={() => {
                   setShowCaseHistoryDialog(false);
