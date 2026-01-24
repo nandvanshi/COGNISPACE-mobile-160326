@@ -2200,8 +2200,8 @@ Produce a hospital-grade psychological assessment report that:
     <hr class="section-divider">
     <div class="report-section">
         <div class="section-heading">10. Recommendations</div>
-        <div class="report-content">
-            <p>{result.get('recommendations', 'N/A')}</p>
+        <div class="report-content recommendations">
+            {recommendations_html}
         </div>
     </div>
     
