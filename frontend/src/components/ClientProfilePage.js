@@ -859,6 +859,7 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
             <CaseHistoryForm
               clientId={clientId}
               clientName={client.full_name}
+              clientProfile={client}
               isReadOnly={isReadOnly}
               onComplete={() => {
                 setShowCaseHistory(false);
