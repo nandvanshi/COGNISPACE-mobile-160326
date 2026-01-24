@@ -1791,10 +1791,8 @@ async def ai_generate_diagnostic_report(request: DiagnosticReportRequest, curren
     context = f"""
 PATIENT INFORMATION:
 - Name: {client_name}
-- Contact: {client_phone}
 - Age: {client_age}
-- Referral Source: {client_profile.get('referral_source', 'Self-referred')}
-- Primary Concerns: {client_profile.get('presenting_concerns', 'Not specified')}
+- Referred By: {client_referred_by}
 """
     
     # Include Case History
