@@ -1751,7 +1751,7 @@ async def ai_generate_diagnostic_report(request: DiagnosticReportRequest, curren
     # Get therapist info for header and signature
     therapist = await db.users.find_one({"id": therapist_id}, {"_id": 0})
     therapist_name = therapist.get("full_name", "Unknown") if therapist else "Unknown"
-    therapist_phone = therapist.get("phone", "N/A") if therapist else "N/A"
+    therapist_phone = therapist.get("mobile", "") or therapist.get("phone", "") if therapist else ""
     
     # Get therapist profile for additional details
     therapist_profile = await db.therapist_profiles.find_one({"therapist_id": therapist_id}, {"_id": 0})
@@ -1761,24 +1761,31 @@ async def ai_generate_diagnostic_report(request: DiagnosticReportRequest, curren
     
     therapist_qualifications = therapist_profile.get("qualifications", "") if therapist_profile else ""
     
-    # Build therapist address from profile
-    therapist_address = ""
+    # Build therapist address from profile - each part on new line
+    therapist_address_lines = []
     if therapist_profile:
-        addr_parts = [
-            therapist_profile.get("address_line_1", ""),
-            therapist_profile.get("address_line_2", ""),
-            therapist_profile.get("city", ""),
-            therapist_profile.get("state", ""),
-            therapist_profile.get("pincode", "")
-        ]
-        # Clean each part - remove trailing commas and extra spaces
-        cleaned_parts = []
-        for p in addr_parts:
-            if p:
-                cleaned = p.strip().rstrip(',').strip()
-                if cleaned:
-                    cleaned_parts.append(cleaned)
-        therapist_address = ", ".join(cleaned_parts)
+        line1 = therapist_profile.get("address_line_1", "")
+        line2 = therapist_profile.get("address_line_2", "")
+        city = therapist_profile.get("city", "")
+        state = therapist_profile.get("state", "")
+        pincode = therapist_profile.get("pincode", "")
+        
+        # Clean and add each line
+        if line1:
+            therapist_address_lines.append(line1.strip().rstrip(','))
+        if line2:
+            therapist_address_lines.append(line2.strip().rstrip(','))
+        
+        # City, State, Pincode on one line
+        city_state = []
+        if city:
+            city_state.append(city.strip())
+        if state:
+            city_state.append(state.strip())
+        if pincode:
+            city_state.append(pincode.strip())
+        if city_state:
+            therapist_address_lines.append(", ".join(city_state))
     
     # Get client info from client_profiles (NOT users table)
     client_profile = await db.client_profiles.find_one(
