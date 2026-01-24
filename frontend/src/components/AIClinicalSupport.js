@@ -559,7 +559,7 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
       align-items: center;
       justify-content: center;
     }
-    .footer-logo img { height: 50px; width: auto; }
+    .footer-logo img { height: 150px; width: auto; }
   </style>
 </head>
 <body>
