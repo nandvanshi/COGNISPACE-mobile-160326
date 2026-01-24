@@ -1988,7 +1988,7 @@ Produce a hospital-grade psychological assessment report that:
 
     try:
         chat = await get_ai_chat(f"cognivision-{therapist_id}-{uuid.uuid4()}", system_prompt)
-        user_message = UserMessage(text=f"Generate a comprehensive Psychodiagnostic Evaluation Report based on:\n\n{context}")
+        user_message = UserMessage(text=f"Generate a comprehensive Psychological Assessment Report based on:\n\n{context}")
         response = await chat.send_message(user_message)
         
         # Parse JSON response
@@ -2017,67 +2017,120 @@ Produce a hospital-grade psychological assessment report that:
     </div>
     
     <!-- Report Title -->
-    <div class="report-title">PSYCHODIAGNOSTIC EVALUATION REPORT</div>
+    <div class="report-title">PSYCHOLOGICAL ASSESSMENT REPORT</div>
     <div class="report-meta">
         <p>Report Date: {report_date}</p>
         <p>Report ID: CR-{uuid.uuid4().hex[:8].upper()}</p>
     </div>
     
-    <!-- Section 1: Patient Identification -->
+    <!-- Section 1: Identifying Information -->
     <hr class="section-divider">
     <div class="report-section">
-        <div class="section-heading">1. Patient Identification & Referral Context</div>
+        <div class="section-heading">1. Identifying Information</div>
         <div class="patient-info">
             <p><strong>Patient Name:</strong> {client_name}</p>
             <p><strong>Age:</strong> {client_age}</p>
             <p><strong>Contact:</strong> {client_phone}</p>
-            <p><strong>Referral Context:</strong> {result.get('referral_context', 'Self-referred')}</p>
         </div>
         <div class="report-content">
-            <p>{result.get('patient_identification', '')}</p>
+            <p>{result.get('identifying_information', '')}</p>
         </div>
     </div>
     
-    <!-- Section 2: Assessment Battery -->
+    <!-- Section 2: Reason for Referral -->
     <hr class="section-divider">
     <div class="report-section">
-        <div class="section-heading">2. Assessment Battery</div>
+        <div class="section-heading">2. Reason for Referral</div>
         <div class="report-content">
-            <p>{result.get('assessment_battery', 'Clinical observations and therapist-administered assessments.')}</p>
+            <p>{result.get('reason_for_referral', 'Self-referred for psychological assessment.')}</p>
         </div>
     </div>
     
-    <!-- Section 3: Psychometric Findings -->
+    <!-- Section 3: Assessment Tools Used -->
     <hr class="section-divider">
     <div class="report-section">
-        <div class="section-heading">3. Psychometric Findings & Data Triangulation</div>
+        <div class="section-heading">3. Assessment Tools Used</div>
         <div class="report-content">
-            <p>{result.get('psychometric_findings', 'N/A')}</p>
+            <p>{result.get('assessment_tools_used', 'Clinical interview and behavioral observation.')}</p>
         </div>
     </div>
     
-    <!-- Section 4: Diagnostic Impression -->
+    <!-- Section 4: Behavioral Observations -->
     <hr class="section-divider">
     <div class="report-section">
-        <div class="section-heading">4. Diagnostic Impression</div>
+        <div class="section-heading">4. Behavioral Observations</div>
         <div class="report-content">
-            <p>{result.get('diagnostic_impression', 'N/A')}</p>
+            <p>{result.get('behavioral_observations', 'Not available for this assessment.')}</p>
         </div>
     </div>
     
-    <!-- Section 5: Treatment Roadmap -->
+    <!-- Section 5: Test Results & Interpretation -->
     <hr class="section-divider">
     <div class="report-section">
-        <div class="section-heading">5. Evidence-Based Treatment Roadmap</div>
+        <div class="section-heading">5. Test Results & Interpretation</div>
         <div class="report-content">
-            <p>{result.get('treatment_roadmap', 'N/A')}</p>
+            <p>{result.get('test_results_interpretation', 'N/A')}</p>
         </div>
     </div>
     
-    <!-- Disclaimer -->
+    <!-- Section 6: Clinical Impressions -->
+    <hr class="section-divider">
+    <div class="report-section">
+        <div class="section-heading">6. Clinical Impressions (Non-Diagnostic)</div>
+        <div class="report-content">
+            <p>{result.get('clinical_impressions', 'N/A')}</p>
+        </div>
+    </div>
+    
+    <!-- Section 7: Functional Impact -->
+    <hr class="section-divider">
+    <div class="report-section">
+        <div class="section-heading">7. Functional Impact</div>
+        <div class="report-content">
+            <p>{result.get('functional_impact', 'N/A')}</p>
+        </div>
+    </div>
+    
+    <!-- Section 8: Strengths & Protective Factors -->
+    <hr class="section-divider">
+    <div class="report-section">
+        <div class="section-heading">8. Strengths & Protective Factors</div>
+        <div class="report-content">
+            <p>{result.get('strengths_protective_factors', 'N/A')}</p>
+        </div>
+    </div>
+    
+    <!-- Section 9: Areas of Concern -->
+    <hr class="section-divider">
+    <div class="report-section">
+        <div class="section-heading">9. Areas of Concern</div>
+        <div class="report-content">
+            <p>{result.get('areas_of_concern', 'N/A')}</p>
+        </div>
+    </div>
+    
+    <!-- Section 10: Recommendations for Therapy Focus -->
+    <hr class="section-divider">
+    <div class="report-section">
+        <div class="section-heading">10. Recommendations for Therapy Focus</div>
+        <div class="report-content">
+            <p>{result.get('recommendations_therapy_focus', 'N/A')}</p>
+        </div>
+    </div>
+    
+    <!-- Section 11: Limitations of Assessment -->
+    <hr class="section-divider">
+    <div class="report-section">
+        <div class="section-heading">11. Limitations of Assessment</div>
+        <div class="report-content">
+            <p>{result.get('limitations_of_assessment', 'This assessment is based on the information provided at the time of evaluation.')}</p>
+        </div>
+    </div>
+    
+    <!-- Section 12: Disclaimer & Therapist Review Note -->
     <div class="disclaimer-box">
-        <p><strong>CONFIDENTIALITY:</strong> This report contains sensitive clinical information protected under applicable privacy laws. Intended solely for the named patient and treating clinician.</p>
-        <p><strong>DISCLAIMER:</strong> Generated by CogniVision Engine as a clinical decision-support tool. All findings require therapist review and approval.</p>
+        <p><strong>DISCLAIMER:</strong> This report is generated as a clinical documentation aid. It does NOT constitute a final diagnosis or treatment recommendation. All findings require review and approval by the treating clinician. The information contained herein is confidential and intended solely for the named patient and authorized healthcare providers.</p>
+        <p><strong>THERAPIST REVIEW NOTE:</strong> This report must be reviewed, edited if necessary, and approved by the treating therapist before being used for clinical purposes or shared with third parties.</p>
     </div>
     
     <!-- Signature Block -->
@@ -2092,16 +2145,21 @@ Produce a hospital-grade psychological assessment report that:
 </div>
 """
         
-        disclaimer = """This report is generated by CogniVision Engine as a clinical decision-support tool. All findings require therapist review and approval. This does not constitute a final diagnosis."""
+        disclaimer = """This report is generated as a clinical documentation aid. It does NOT constitute a final diagnosis or treatment recommendation. All findings require review and approval by the treating clinician."""
         
         return DiagnosticReportResponse(
-            header=f"COGNISPACE - Psychodiagnostic Evaluation Report - {report_date}",
-            patient_identification=result.get('patient_identification', ''),
-            referral_context=result.get('referral_context', ''),
-            assessment_battery=result.get('assessment_battery', ''),
-            psychometric_findings=result.get('psychometric_findings', ''),
-            diagnostic_impression=result.get('diagnostic_impression', ''),
-            treatment_roadmap=result.get('treatment_roadmap', ''),
+            header=f"COGNISPACE - Psychological Assessment Report - {report_date}",
+            identifying_information=result.get('identifying_information', ''),
+            reason_for_referral=result.get('reason_for_referral', ''),
+            assessment_tools_used=result.get('assessment_tools_used', ''),
+            behavioral_observations=result.get('behavioral_observations', ''),
+            test_results_interpretation=result.get('test_results_interpretation', ''),
+            clinical_impressions=result.get('clinical_impressions', ''),
+            functional_impact=result.get('functional_impact', ''),
+            strengths_protective_factors=result.get('strengths_protective_factors', ''),
+            areas_of_concern=result.get('areas_of_concern', ''),
+            recommendations_therapy_focus=result.get('recommendations_therapy_focus', ''),
+            limitations_of_assessment=result.get('limitations_of_assessment', ''),
             disclaimer=disclaimer,
             raw_html=raw_html
         )
