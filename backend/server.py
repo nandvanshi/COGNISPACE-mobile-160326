@@ -560,12 +560,17 @@ class DiagnosticReportSection(BaseModel):
 
 class DiagnosticReportResponse(BaseModel):
     header: str
-    patient_identification: str
-    referral_context: str
-    assessment_battery: str
-    psychometric_findings: str
-    diagnostic_impression: str
-    treatment_roadmap: str
+    identifying_information: str
+    reason_for_referral: str
+    assessment_tools_used: str
+    behavioral_observations: str
+    test_results_interpretation: str
+    clinical_impressions: str
+    functional_impact: str
+    strengths_protective_factors: str
+    areas_of_concern: str
+    recommendations_therapy_focus: str
+    limitations_of_assessment: str
     disclaimer: str
     raw_html: str  # Full formatted report
 
