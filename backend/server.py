@@ -2145,8 +2145,7 @@ Produce a hospital-grade psychological assessment report that:
             functional_impact=result.get('functional_impact', ''),
             strengths_protective_factors=result.get('strengths_protective_factors', ''),
             areas_of_concern=result.get('areas_of_concern', ''),
-            recommendations_therapy_focus=result.get('recommendations_therapy_focus', ''),
-            limitations_of_assessment=result.get('limitations_of_assessment', ''),
+            recommendations=result.get('recommendations', ''),
             disclaimer=disclaimer,
             raw_html=raw_html
         )
