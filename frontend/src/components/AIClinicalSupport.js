@@ -556,10 +556,12 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
     }
     .footer-logo {
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
     }
-    .footer-logo img { height: 150px; width: auto; }
+    .footer-logo span { font-size: 10pt; color: #666; margin-bottom: 5px; }
+    .footer-logo img { height: 100px; width: auto; }
   </style>
 </head>
 <body>
@@ -568,7 +570,8 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
   <!-- Branded Footer - Logo Only -->
   <div class="branded-footer">
     <div class="footer-logo">
-      <img src="/logo-cognispace.png" alt="Cognispace" style="height: 150px;" onerror="this.outerHTML=''" />
+      <span>Powered by</span>
+      <img src="/logo-cognispace.png" alt="Cognispace" style="height: 100px;" onerror="this.outerHTML=''" />
     </div>
   </div>
 </body>
