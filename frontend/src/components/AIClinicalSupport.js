@@ -1567,6 +1567,11 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
               .patient-info p { margin: 6px 0; display: block; font-size: 11pt; }
               .patient-info strong { font-weight: 600; color: #000; }
               .report-content p { margin-bottom: 8px; display: block; text-align: justify; }
+              .assessment-item { margin-bottom: 18px; padding: 12px; background: #f9f9f9; border-left: 3px solid #000080; display: block; }
+              .assessment-item strong { font-size: 11pt; color: #000080; display: block; margin-bottom: 5px; }
+              .assessment-item em { font-style: normal; font-weight: 600; }
+              .recommendation-item { margin-bottom: 15px; padding: 10px 0; border-bottom: 1px solid #eee; display: block; }
+              .recommendation-item strong { font-size: 11pt; color: #000080; display: block; margin-bottom: 5px; }
               ul, ol { margin: 10px 0; padding-left: 20px; }
               li { display: list-item; margin-bottom: 6px; text-align: justify; }
               .disclaimer-box { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 4px; padding: 12px; margin: 20px 0; font-size: 8pt; color: #333; }
