@@ -2198,7 +2198,7 @@ Produce a hospital-grade psychological assessment report that:
         <p class="signature-label">Prepared by:</p>
         <div class="signature-space"></div>
         <p class="signature-name">{therapist_name}</p>
-        <p class="signature-details">{therapist_title} | Reg. No: {therapist_reg}</p>
+        <p class="signature-details">{therapist_qualifications}</p>
         <p class="signature-details" style="margin-top: 10px;">Date: {report_date}</p>
     </div>
 </div>
