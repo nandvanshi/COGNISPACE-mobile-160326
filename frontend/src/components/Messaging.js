@@ -174,6 +174,8 @@ const Messaging = ({ isReadOnly = false }) => {
 
   // Client Mobile View - Full Screen Messages
   if (isClient) {
+    const therapistName = conversations[0]?.user_name || contacts[0]?.full_name || 'Your Therapist';
+    
     return (
       <div data-testid="messaging" className="h-[calc(100vh-120px)] flex flex-col">
         {/* Header - Compact for mobile */}
@@ -193,20 +195,18 @@ const Messaging = ({ isReadOnly = false }) => {
           </Card>
         ) : (
           <Card className="flex-1 flex flex-col bg-white/70 backdrop-blur-xl border border-border/40 rounded-xl overflow-hidden">
-            {/* Therapist Header */}
-            {conversations.length > 0 && (
-              <div className="border-b border-border p-4 bg-primary/5">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <User size={24} className="text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-primary">{conversations[0]?.user_name || 'Your Therapist'}</h3>
-                    <p className="text-xs text-muted-foreground">Therapist</p>
-                  </div>
+            {/* Therapist Header - Always show if contacts exist */}
+            <div className="border-b border-border p-4 bg-primary/5">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <User size={24} className="text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-primary">{therapistName}</h3>
+                  <p className="text-xs text-muted-foreground">Therapist</p>
                 </div>
               </div>
-            )}
+            </div>
 
             {/* Messages Area - Full Height */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3" data-testid="messages-container">
@@ -255,7 +255,7 @@ const Messaging = ({ isReadOnly = false }) => {
                     onChange={(e) => setNewMessage(e.target.value)}
                     placeholder="Type your message..."
                     className="flex-1 rounded-full px-4"
-                    disabled={sending || conversations.length === 0}
+                    disabled={sending || contacts.length === 0}
                     data-testid="message-input"
                   />
                   <Button
