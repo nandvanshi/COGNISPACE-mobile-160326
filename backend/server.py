@@ -1995,12 +1995,12 @@ Respond in valid JSON format:
     "reason_for_referral": "Why the assessment was requested, presenting concerns - use 'the client' not name",
     "assessment_tools_used": "List ONLY the assessments explicitly mentioned in input",
     "behavioral_observations": "Observations during assessment - use 'the client' not name",
-    "test_results_interpretation": "Each assessment on separate lines with: Assessment Name, Raw Score (Scale Range) – Severity, Clinical interpretation. NO TABLES. Use 'the client' not name.",
+    "test_results_interpretation": "IMPORTANT: Use double newlines (blank line) between each assessment. Format each assessment as:\\n\\nAssessment Name\\nRaw Score: X (Scale Range: 0–Max) – Severity Level\\nClinical interpretation sentence.\\n\\nNext Assessment Name\\nRaw Score: Y (Scale Range: 0–Max) – Severity Level\\nClinical interpretation sentence.",
     "clinical_impressions": "Provide clinical diagnosis with ICD-10 and DSM-5 codes. Primary diagnosis, differential diagnoses, severity specifiers. Use 'the client' not name.",
     "functional_impact": "How symptoms affect daily functioning - use 'the client' not name",
     "strengths_protective_factors": "Strengths, support systems, resilience factors - use 'the client' not name",
     "areas_of_concern": "Key clinical concerns - use 'the client' not name",
-    "recommendations": "Each recommendation on SEPARATE LINE with CLEAR HEADING. Format: Heading followed by recommendation text. NOT in paragraph form."
+    "recommendations": "IMPORTANT: Use double newlines (blank line) between each recommendation. Format each as:\\n\\nHeading Name\\nRecommendation description text.\\n\\nNext Heading\\nNext recommendation text."
 }
 
 --------------------------------------------------
