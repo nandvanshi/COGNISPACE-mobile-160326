@@ -2205,10 +2205,10 @@ Produce a hospital-grade psychological assessment report that:
         </div>
     </div>
     
-    <!-- Disclaimer & Therapist Review Note -->
+    <!-- Disclaimer & Confidentiality Notice -->
     <div class="disclaimer-box">
-        <p><strong>DISCLAIMER:</strong> This report is generated as a clinical documentation aid. It does NOT constitute a final diagnosis or treatment recommendation. All findings require review and approval by the treating clinician. The information contained herein is confidential and intended solely for the named patient and authorized healthcare providers.</p>
-        <p><strong>THERAPIST REVIEW NOTE:</strong> This report must be reviewed, edited if necessary, and approved by the treating therapist before being used for clinical purposes or shared with third parties.</p>
+        <p><strong>DISCLAIMER:</strong> This report is generated as a clinical documentation aid. It does NOT constitute a final diagnosis or treatment recommendation. All findings require review and approval by the treating clinician.</p>
+        <p><strong>Confidentiality Notice:</strong> This document is strictly Confidential and intended solely for the use of the named recipient, their treating clinician, or authorized medical personnel. Unauthorized reproduction, distribution, or disclosure of this report is strictly prohibited under the Personal Data Protection laws and clinical ethics guidelines.</p>
     </div>
     
     <!-- Signature Block -->
