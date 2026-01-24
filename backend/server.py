@@ -2088,6 +2088,11 @@ Produce a hospital-grade psychological assessment report that:
         test_results_html = format_test_results(result.get('test_results_interpretation', ''))
         recommendations_html = format_recommendations(result.get('recommendations', ''))
         
+        # Build address HTML with line breaks
+        address_html = ""
+        for line in therapist_address_lines:
+            address_html += f"<p>{line}</p>"
+        
         # Build clean HTML report - Navy Blue (#000080) color scheme
         raw_html = f"""
 <div class="clinical-report">
@@ -2096,8 +2101,8 @@ Produce a hospital-grade psychological assessment report that:
     <div class="therapist-header">
         <h1>{therapist_name}</h1>
         {f'<p>{therapist_qualifications}</p>' if therapist_qualifications else ''}
-        {f'<p>{therapist_address}</p>' if therapist_address and therapist_address != 'N/A' else ''}
-        {f'<p>{therapist_phone}</p>' if therapist_phone and therapist_phone != 'N/A' else ''}
+        {address_html}
+        {f'<p>{therapist_phone}</p>' if therapist_phone else ''}
     </div>
     
     <!-- Report Title -->
