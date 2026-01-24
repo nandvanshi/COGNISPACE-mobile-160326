@@ -1754,10 +1754,47 @@ Build a secure, therapist-first web application for managing a therapy practice 
 **Testing:**
 - ✅ Diagnostic Report API returns valid response
 - ✅ Report contains ONLY assessments provided in input (Y-BOCS mentioned, no hallucinated LSAS/DOCS)
-- ✅ Professional ICD-11/DSM-5 diagnostic format maintained
+- ✅ Professional ICD-10/DSM-5 diagnostic format maintained
 - ✅ TheraGenie UI loads correctly with Diagnostic tab
 
 **Files Modified:**
 - `/app/backend/server.py` - Line ~1290: `get_ai_chat()` function updated to use Claude
+
+### Phase 42: Professional Clinical Documentation Prompt (COMPLETED - Jan 24, 2026)
+**Feature:** Complete rewrite of CogniVision prompt to professional clinical documentation standards
+
+**New Prompt Structure:**
+- Positioned as "Senior Clinical Documentation Assistant"
+- Explicit safety rules: NO definitive diagnoses, use non-diagnostic phrasing
+- 12-section professional report format:
+  1. Identifying Information
+  2. Reason for Referral
+  3. Assessment Tools Used
+  4. Behavioral Observations
+  5. Test Results & Interpretation
+  6. Clinical Impressions (Non-Diagnostic)
+  7. Functional Impact
+  8. Strengths & Protective Factors
+  9. Areas of Concern
+  10. Recommendations for Therapy Focus
+  11. Limitations of Assessment
+  12. Disclaimer & Therapist Review Note
+
+**Key Changes:**
+- Uses ICD-10 (not ICD-11) and DSM-5 coding standards
+- Non-diagnostic language: "findings suggestive of...", "patterns consistent with...", "may be considered..."
+- Added Strengths & Protective Factors section
+- Added Limitations of Assessment section
+- Stronger disclaimer and therapist review note
+- Hospital-grade professional report format
+
+**Files Modified:**
+- `/app/backend/server.py` - Complete rewrite of `system_prompt` and `DiagnosticReportResponse` model
+- `/app/frontend/src/components/AIClinicalSupport.js` - Changed ICD-11 to ICD-10 in UI text
+
+**Testing:**
+- ✅ 12 sections generating correctly
+- ✅ Non-diagnostic language used ("findings are suggestive of...", "consistent with...")
+- ✅ Recommendations use proper therapeutic language ("may be considered", "could be explored")
 
 ---
