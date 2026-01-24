@@ -465,6 +465,39 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
       text-align: justify;
     }
     
+    /* Assessment Items - Clear formatting */
+    .assessment-item {
+      margin-bottom: 18px;
+      padding: 12px;
+      background: #f9f9f9;
+      border-left: 3px solid #000080;
+      display: block;
+    }
+    .assessment-item strong {
+      font-size: 11pt;
+      color: #000080;
+      display: block;
+      margin-bottom: 5px;
+    }
+    .assessment-item em {
+      font-style: normal;
+      font-weight: 600;
+    }
+    
+    /* Recommendation Items - Clear formatting */
+    .recommendation-item {
+      margin-bottom: 15px;
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+      display: block;
+    }
+    .recommendation-item strong {
+      font-size: 11pt;
+      color: #000080;
+      display: block;
+      margin-bottom: 5px;
+    }
+    
     /* Lists - Each item on NEW LINE */
     ul, ol {
       margin: 10px 0;
