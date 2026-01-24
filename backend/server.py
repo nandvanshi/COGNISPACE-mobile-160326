@@ -2104,11 +2104,8 @@ Produce a hospital-grade psychological assessment report that:
     <!-- Therapist Header - Navy Blue -->
     <div class="therapist-header">
         <h1>{therapist_name}</h1>
-        <p>{therapist_title}</p>
-        {f'<p>{therapist_clinic}</p>' if therapist_clinic else ''}
+        <p>{therapist_title} | Reg. No: {therapist_reg}</p>
         {f'<p>{therapist_address}</p>' if therapist_address else ''}
-        <p>Contact: {therapist_phone}</p>
-        <p>Registration No: {therapist_reg}</p>
     </div>
     
     <!-- Report Title -->
@@ -2125,7 +2122,12 @@ Produce a hospital-grade psychological assessment report that:
         <div class="patient-info">
             <p><strong>Patient Name:</strong> {client_name}</p>
             <p><strong>Age:</strong> {client_age}</p>
+            <p><strong>Gender:</strong> {client_gender}</p>
             <p><strong>Contact:</strong> {client_phone}</p>
+            <p><strong>Education:</strong> {client_education}</p>
+            <p><strong>Occupation:</strong> {client_occupation}</p>
+            <p><strong>Marital Status:</strong> {client_marital_status}</p>
+            <p><strong>Referred By:</strong> {client_referral}</p>
         </div>
         <div class="report-content">
             <p>{result.get('identifying_information', '')}</p>
