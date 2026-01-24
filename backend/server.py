@@ -2077,11 +2077,12 @@ Produce a hospital-grade psychological assessment report that:
         raw_html = f"""
 <div class="clinical-report">
     
-    <!-- Therapist Header - Navy Blue -->
+    <!-- Therapist Header -->
     <div class="therapist-header">
         <h1>{therapist_name}</h1>
-        <p>{therapist_title} | Reg. No: {therapist_reg}</p>
+        <p>{therapist_qualifications}</p>
         {f'<p>{therapist_address}</p>' if therapist_address else ''}
+        <p>{therapist_phone}</p>
     </div>
     
     <!-- Report Title -->
@@ -2098,12 +2099,7 @@ Produce a hospital-grade psychological assessment report that:
         <div class="patient-info">
             <p><strong>Patient Name:</strong> {client_name}</p>
             <p><strong>Age:</strong> {client_age}</p>
-            <p><strong>Gender:</strong> {client_gender}</p>
-            <p><strong>Contact:</strong> {client_phone}</p>
-            <p><strong>Education:</strong> {client_education}</p>
-            <p><strong>Occupation:</strong> {client_occupation}</p>
-            <p><strong>Marital Status:</strong> {client_marital_status}</p>
-            <p><strong>Referred By:</strong> {client_referral}</p>
+            <p><strong>Referred By:</strong> {client_referred_by}</p>
         </div>
         <div class="report-content">
             <p>{result.get('identifying_information', '')}</p>
