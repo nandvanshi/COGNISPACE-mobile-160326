@@ -242,7 +242,7 @@ const Messaging = ({ isReadOnly = false }) => {
                       >
                         <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                         <p className={`text-xs mt-1 ${isSender ? 'text-white/70' : 'text-muted-foreground'}`}>
-                          {formatTime(msg.created_at)}
+                          {formatDateTime(msg.created_at)}
                           {msg.read && isSender && ' ✓'}
                         </p>
                       </div>
