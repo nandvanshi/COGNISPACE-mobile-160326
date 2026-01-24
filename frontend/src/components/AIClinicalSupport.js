@@ -525,7 +525,6 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
     /* Signature Block */
     .signature-section {
       margin-top: 40px;
-      page-break-inside: avoid;
     }
     .signature-space {
       height: 60px;
