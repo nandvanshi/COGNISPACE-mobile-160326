@@ -28,7 +28,7 @@ const SECTIONS = [
   { id: 'consent_disclaimer', label: 'Consent & Disclaimer', icon: FileCheck },
 ];
 
-const CaseHistoryForm = ({ clientId, clientName, onComplete, onClose, isReadOnly = false }) => {
+const CaseHistoryForm = ({ clientId, clientName, clientProfile, onComplete, onClose, isReadOnly = false }) => {
   const [currentSection, setCurrentSection] = useState(0);
   const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(true);
@@ -37,14 +37,34 @@ const CaseHistoryForm = ({ clientId, clientName, onComplete, onClose, isReadOnly
   const [showFullView, setShowFullView] = useState(false);
   const printRef = useRef(null);
 
+  // Build default basic_identification from client profile
+  const getDefaultBasicIdentification = () => {
+    const defaults = { name: clientName || '' };
+    if (clientProfile) {
+      if (clientProfile.age) defaults.age_dob = `${clientProfile.age} years`;
+      if (clientProfile.gender) defaults.gender = clientProfile.gender;
+      if (clientProfile.mobile) defaults.contact = clientProfile.mobile;
+      if (clientProfile.referred_by) defaults.referred_by = clientProfile.referred_by;
+      if (clientProfile.education) defaults.education = clientProfile.education;
+      if (clientProfile.occupation) defaults.occupation = clientProfile.occupation;
+      if (clientProfile.marital_status) defaults.marital_status = clientProfile.marital_status;
+      if (clientProfile.address) defaults.address = clientProfile.address;
+    }
+    return defaults;
+  };
+
   // Fetch existing case history
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await axios.get(`${API}/case-history/${clientId}`);
         if (response.data) {
+          // Merge existing data with profile defaults (existing data takes priority)
+          const defaultBasic = getDefaultBasicIdentification();
+          const existingBasic = response.data.basic_identification || {};
+          
           setFormData({
-            basic_identification: response.data.basic_identification || { name: clientName || '' },
+            basic_identification: { ...defaultBasic, ...existingBasic },
             presenting_complaints: response.data.presenting_complaints || {},
             history_of_present_illness: response.data.history_of_present_illness || {},
             past_psychiatric_history: response.data.past_psychiatric_history || {},
@@ -59,9 +79,9 @@ const CaseHistoryForm = ({ clientId, clientName, onComplete, onClose, isReadOnly
           setIsComplete(response.data.is_complete || false);
         }
       } catch (error) {
-        // Initialize with defaults
+        // Initialize with defaults from profile
         setFormData({
-          basic_identification: { name: clientName || '' },
+          basic_identification: getDefaultBasicIdentification(),
           presenting_complaints: {},
           history_of_present_illness: {},
           past_psychiatric_history: {},
