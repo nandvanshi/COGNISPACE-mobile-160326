@@ -1772,10 +1772,18 @@ async def ai_generate_diagnostic_report(request: DiagnosticReportRequest, curren
     if not client_profile:
         raise HTTPException(status_code=404, detail="Client not found")
     
-    client_user = await db.users.find_one({"id": request.client_id}, {"_id": 0, "full_name": 1, "phone": 1, "date_of_birth": 1, "age": 1})
+    client_user = await db.users.find_one({"id": request.client_id}, {"_id": 0, "full_name": 1, "phone": 1, "date_of_birth": 1, "age": 1, "gender": 1, "email": 1})
     client_name = client_user.get("full_name", "Unknown") if client_user else "Unknown"
     client_phone = client_user.get("phone", "N/A") if client_user else "N/A"
     client_dob = client_user.get("date_of_birth", None) if client_user else None
+    client_gender = client_user.get("gender", "N/A") if client_user else "N/A"
+    client_email = client_user.get("email", "") if client_user else ""
+    
+    # Get referral source from client profile
+    client_referral = client_profile.get("referral_source", "Self-referred")
+    client_education = client_profile.get("education", "N/A")
+    client_occupation = client_profile.get("occupation", "N/A")
+    client_marital_status = client_profile.get("marital_status", "N/A")
     
     # Calculate age from DOB or use stored age
     client_age = "N/A"
