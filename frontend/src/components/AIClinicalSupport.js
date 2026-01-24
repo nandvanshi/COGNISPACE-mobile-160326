@@ -568,7 +568,7 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
   <!-- Branded Footer - Logo Only -->
   <div class="branded-footer">
     <div class="footer-logo">
-      <img src="/logo-cognispace.png" alt="Cognispace" style="height: 50px;" onerror="this.outerHTML=''" />
+      <img src="/logo-cognispace.png" alt="Cognispace" style="height: 150px;" onerror="this.outerHTML=''" />
     </div>
   </div>
 </body>
