@@ -269,7 +269,10 @@ const Messaging = ({ isReadOnly = false }) => {
                     await fetchMessages(effectiveConversation.user_id);
                     await fetchConversations();
                   } catch (error) {
-                    toast.error(error.response?.data?.detail || 'Failed to send message');
+                    const errMsg = typeof error.response?.data?.detail === 'string' 
+                      ? error.response.data.detail 
+                      : 'Failed to send message';
+                    toast.error(errMsg);
                   } finally {
                     setSending(false);
                   }
