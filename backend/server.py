@@ -569,8 +569,7 @@ class DiagnosticReportResponse(BaseModel):
     functional_impact: str
     strengths_protective_factors: str
     areas_of_concern: str
-    recommendations_therapy_focus: str
-    limitations_of_assessment: str
+    recommendations: str
     disclaimer: str
     raw_html: str  # Full formatted report
 
