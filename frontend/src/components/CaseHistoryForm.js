@@ -37,9 +37,13 @@ const CaseHistoryForm = ({ clientId, clientName, clientProfile, onComplete, onCl
   const [showFullView, setShowFullView] = useState(false);
   const printRef = useRef(null);
 
+  // Debug log
+  console.log('CaseHistoryForm props:', { clientId, clientName, clientProfile, isReadOnly });
+
   // Build default basic_identification from client profile
   const getDefaultBasicIdentification = () => {
     const defaults = { name: clientName || '' };
+    console.log('Building defaults from clientProfile:', clientProfile);
     if (clientProfile) {
       if (clientProfile.age) defaults.age_dob = `${clientProfile.age} years`;
       if (clientProfile.gender) defaults.gender = clientProfile.gender;
@@ -50,6 +54,7 @@ const CaseHistoryForm = ({ clientId, clientName, clientProfile, onComplete, onCl
       if (clientProfile.marital_status) defaults.marital_status = clientProfile.marital_status;
       if (clientProfile.address) defaults.address = clientProfile.address;
     }
+    console.log('Default basic_identification:', defaults);
     return defaults;
   };
 
