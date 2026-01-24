@@ -2223,11 +2223,10 @@ Produce a hospital-grade psychological assessment report that:
     
     <!-- Signature Block -->
     <div class="signature-section">
-        <p class="signature-details">Prepared by:</p>
+        <p class="signature-label">Prepared by:</p>
         <div class="signature-space"></div>
         <p class="signature-name">{therapist_name}</p>
-        <p class="signature-details">{therapist_title}</p>
-        <p class="signature-details">Reg. No: {therapist_reg}</p>
+        <p class="signature-details">{therapist_title} | Reg. No: {therapist_reg}</p>
         <p class="signature-details" style="margin-top: 10px;">Date: {report_date}</p>
     </div>
 </div>
