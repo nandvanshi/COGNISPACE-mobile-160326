@@ -433,7 +433,6 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
     /* Sections with Grey Dividers - Navy Blue headings */
     .report-section {
       margin-bottom: 20px;
-      page-break-inside: avoid;
     }
     .section-divider {
       border: none;
