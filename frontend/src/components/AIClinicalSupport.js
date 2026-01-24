@@ -817,7 +817,7 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
             <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 mb-4">
               <p className="text-xs text-emerald-700">
                 <strong>Note:</strong> CogniVision synthesizes data from selected assessments, case history, and session notes 
-                to generate comprehensive clinical reports following ICD-11/DSM-5 standards.
+                to generate comprehensive clinical reports following ICD-10/DSM-5 standards.
               </p>
             </div>
 
