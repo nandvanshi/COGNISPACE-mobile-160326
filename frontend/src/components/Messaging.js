@@ -60,6 +60,11 @@ const Messaging = ({ isReadOnly = false }) => {
       setConversations(convsRes.data);
       setContacts(contactsRes.data);
       
+      // Auto-select conversation for client (they usually have only one therapist)
+      if (user?.role === 'client' && convsRes.data.length > 0 && !selectedConversation) {
+        setSelectedConversation(convsRes.data[0]);
+      }
+      
       // If therapist, load messaging settings for all clients
       if (user?.role === 'therapist') {
         const clients = contactsRes.data.filter(c => c.type === 'client');
