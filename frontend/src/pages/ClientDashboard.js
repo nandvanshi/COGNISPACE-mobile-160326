@@ -249,7 +249,7 @@ const ClientDashboard = () => {
 
   const handleViewDiagnosticReport = async (reportId) => {
     try {
-      const res = await axios.get(`${API}/ai/diagnostic-reports/${reportId}`);
+      const res = await axios.get(`${API}/diagnostic-reports/${reportId}`);
       setSelectedDiagnosticReport(res.data);
       setShowDiagnosticReport(true);
     } catch (error) {
