@@ -113,6 +113,11 @@ const ClientDashboard = () => {
   const [showMessaging, setShowMessaging] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
+  // Diagnostic Reports state
+  const [diagnosticReports, setDiagnosticReports] = useState([]);
+  const [showDiagnosticReport, setShowDiagnosticReport] = useState(false);
+  const [selectedDiagnosticReport, setSelectedDiagnosticReport] = useState(null);
+
   useEffect(() => {
     checkConsentStatus();
   }, []);
