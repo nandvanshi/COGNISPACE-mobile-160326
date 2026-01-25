@@ -169,6 +169,12 @@ const ClientDashboard = () => {
         setUnreadCount(unreadRes.data?.count || 0);
       } catch (e) { /* ignore */ }
       
+      // Fetch shared diagnostic reports
+      try {
+        const reportsRes = await axios.get(`${API}/ai/diagnostic-reports`);
+        setDiagnosticReports(reportsRes.data || []);
+      } catch (e) { /* ignore */ }
+      
       // Try to get therapist name from consent or user data
       if (!therapistName && user?.therapist_id) {
         try {
