@@ -15,7 +15,7 @@ import requests
 import os
 from datetime import datetime, timedelta
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://clinicalhelper.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://cognitrack-1.preview.emergentagent.com').rstrip('/')
 
 # IST offset for verification
 IST_OFFSET = timedelta(hours=5, minutes=30)
