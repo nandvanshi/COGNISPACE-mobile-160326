@@ -798,13 +798,16 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
                           ? 'bg-amber-50 border-amber-200' 
                           : alert.type === 'error'
                             ? 'bg-red-50 border-red-200'
-                            : 'bg-blue-50 border-blue-200'
+                            : alert.type === 'success'
+                              ? 'bg-green-50 border-green-200'
+                              : 'bg-blue-50 border-blue-200'
                       }`}
                       data-testid={`alert-${idx}`}
                     >
                       <Icon size={18} className={`flex-shrink-0 mt-0.5 ${
                         alert.type === 'warning' ? 'text-amber-500' : 
-                        alert.type === 'error' ? 'text-red-500' : 'text-blue-500'
+                        alert.type === 'error' ? 'text-red-500' :
+                        alert.type === 'success' ? 'text-green-600' : 'text-blue-500'
                       }`} />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-foreground">{alert.message}</p>
