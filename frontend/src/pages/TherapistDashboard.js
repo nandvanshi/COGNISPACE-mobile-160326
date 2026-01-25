@@ -359,6 +359,25 @@ const TherapistDashboard = () => {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto bg-background pt-14 lg:pt-0">
+        {/* Desktop Top Bar - Hidden on mobile */}
+        <div className="hidden lg:flex items-center justify-between px-6 py-3 bg-surface border-b border-border sticky top-0 z-40">
+          <div className="flex items-center gap-3">
+            <h1 className="text-lg font-semibold text-foreground">{getCurrentViewLabel()}</h1>
+          </div>
+          <div className="flex items-center gap-4">
+            <NotificationBell onNavigate={(view) => handleNavigate(view)} />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setCurrentView('profile')}
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+            >
+              <UserCircle size={20} />
+              <span className="text-sm">{user?.full_name?.split(' ')[0]}</span>
+            </Button>
+          </div>
+        </div>
+
         {/* Expiry Warning Banner */}
         {expiryWarning && !isReadOnly && (
           <div 
