@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatTime, formatTimeRange, formatDateLong, getRelativeDate, getTimeUntil, toIST, nowIST, formatCurrency } from '../utils/formatUtils';
+import ClientRegistrationLink from './ClientRegistrationLink';
 
 const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
   const { user } = useAuth();
