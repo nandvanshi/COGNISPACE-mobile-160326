@@ -164,6 +164,17 @@ const TherapistDashboard = () => {
     setMobileMenuOpen(false);
   };
 
+  // Handle navigation from notifications and other components
+  const handleNavigate = (viewId, context = {}) => {
+    setCurrentView(viewId);
+    setMobileMenuOpen(false);
+    // Context can be used for filtering or highlighting specific items
+    if (context.clientId) {
+      // Navigate to specific client profile
+      navigate(`/dashboard/clients/${context.clientId}`);
+    }
+  };
+
   // Cash Settlement handlers
   const handleConfirmSettlement = async () => {
     if (!selectedSettlement) return;
