@@ -193,6 +193,20 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
         });
       }
 
+      // New client registrations alert
+      const newRegistrations = newRegsRes.data || [];
+      if (newRegistrations.length > 0) {
+        alertsList.unshift({
+          type: 'success',
+          message: `${newRegistrations.length} new client(s) registered!`,
+          action: 'View Clients',
+          actionNav: 'clients',
+          icon: UserPlus,
+          isNewRegistration: true,
+          newClients: newRegistrations
+        });
+      }
+
       if (completedWithoutNotes > 0) {
         alertsList.push({
           type: 'warning',
