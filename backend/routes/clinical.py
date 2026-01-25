@@ -569,6 +569,13 @@ async def assign_homework(hw_data: HomeworkCreate, current_user: dict = Depends(
     await db.homework.insert_one(hw_doc)
     await log_audit(current_user["id"], "therapist", "assign", "homework", hw_id)
     
+    # Send notification to client about homework
+    try:
+        from routes.notifications import notify_client_homework_assigned
+        await notify_client_homework_assigned(hw_data.client_id, hw_data.title)
+    except Exception as e:
+        print(f"Failed to send homework notification: {e}")
+    
     return Homework(**{k: parse_datetime(v) if k in ["due_date", "completed_at", "created_at"] else v for k, v in hw_doc.items()})
 
 
