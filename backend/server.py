@@ -2355,6 +2355,13 @@ async def share_diagnostic_report(report_id: str, current_user: dict = Depends(r
         {"$set": {"status": "shared", "shared_at": datetime.now(timezone.utc)}}
     )
     
+    # Send notification to client about shared report
+    try:
+        from routes.notifications import notify_client_report_shared
+        await notify_client_report_shared(report["client_id"], report.get("title", "Diagnostic Report"))
+    except Exception as e:
+        print(f"Failed to send report notification: {e}")
+    
     return {"message": "Report shared with client successfully"}
 
 @api_router.delete("/diagnostic-reports/{report_id}")
