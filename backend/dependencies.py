@@ -42,6 +42,15 @@ def generate_client_id() -> str:
     return f"CL-{random.randint(100000, 999999)}"
 
 
+def generate_registration_code() -> str:
+    """Generate a simple unique registration code for therapist's client registration link"""
+    import random
+    import string
+    # 8 character alphanumeric code (lowercase + digits)
+    chars = string.ascii_lowercase + string.digits
+    return ''.join(random.choices(chars, k=8))
+
+
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
