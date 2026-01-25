@@ -261,11 +261,236 @@ const ClientDashboard = () => {
     const reportContent = selectedDiagnosticReport?.report_html || selectedDiagnosticReport?.report_content;
     if (reportContent) {
       const printWindow = window.open('', '_blank');
-      printWindow.document.write(reportContent);
+      
+      printWindow.document.write(`
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Psychodiagnostic Evaluation Report</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Print Settings - Remove ALL Browser Headers/Footers */
+    @media print {
+      @page { 
+        margin: 2cm; 
+        size: A4;
+      }
+      html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .no-print { display: none !important; }
+    }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: 'Inter', Arial, sans-serif;
+      font-size: 11pt;
+      color: #000;
+      line-height: 1.6;
+      background: #fff;
+      padding: 0;
+    }
+    
+    .clinical-report {
+      max-width: 210mm;
+      margin: 0 auto;
+      padding: 0;
+    }
+    
+    /* Therapist Header - Navy Blue #000080 */
+    .therapist-header {
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #000080;
+    }
+    .therapist-header h1 {
+      font-size: 18pt;
+      font-weight: 700;
+      margin: 0 0 5px 0;
+      color: #000080;
+    }
+    .therapist-header p {
+      margin: 3px 0;
+      font-size: 10pt;
+      color: #333;
+      display: block;
+    }
+    
+    /* Report Title - Navy Blue #000080 */
+    .report-title {
+      text-align: center;
+      font-size: 16pt;
+      font-weight: 600;
+      letter-spacing: 2px;
+      margin: 25px 0;
+      color: #000080;
+    }
+    .report-meta {
+      text-align: center;
+      font-size: 9pt;
+      color: #333;
+      margin-bottom: 25px;
+    }
+    .report-meta p { margin: 3px 0; display: block; }
+    
+    /* Sections with Grey Dividers - Navy Blue headings */
+    .report-section {
+      margin-bottom: 20px;
+    }
+    .section-divider {
+      border: none;
+      border-top: 1px solid #ccc;
+      margin: 20px 0 15px 0;
+    }
+    .section-heading {
+      font-size: 12pt;
+      font-weight: 600;
+      color: #000080;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    /* Patient Info - Label and Value on SAME LINE */
+    .patient-info p {
+      margin: 6px 0;
+      display: block;
+      font-size: 11pt;
+    }
+    .patient-info strong {
+      font-weight: 600;
+      color: #000;
+    }
+    .report-content p {
+      margin-bottom: 8px;
+      display: block;
+      text-align: justify;
+    }
+    
+    /* Assessment Items - Clear formatting */
+    .assessment-item {
+      margin-bottom: 18px;
+      padding: 12px;
+      background: #f9f9f9;
+      border-left: 3px solid #000080;
+      display: block;
+    }
+    .assessment-item strong {
+      font-size: 11pt;
+      color: #000080;
+      display: block;
+      margin-bottom: 5px;
+    }
+    .assessment-item em {
+      font-style: normal;
+      font-weight: 600;
+    }
+    
+    /* Recommendation Items - Clear formatting */
+    .recommendation-item {
+      margin-bottom: 15px;
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+      display: block;
+    }
+    .recommendation-item strong {
+      font-size: 11pt;
+      color: #000080;
+      display: block;
+      margin-bottom: 5px;
+    }
+    
+    /* Lists - Each item on NEW LINE */
+    ul, ol {
+      margin: 10px 0;
+      padding-left: 20px;
+      list-style-position: outside;
+    }
+    li {
+      display: list-item;
+      margin-bottom: 8px;
+      text-align: justify;
+      padding-left: 5px;
+    }
+    
+    /* Disclaimer */
+    .disclaimer-box {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 4px;
+      padding: 12px;
+      margin: 25px 0;
+      font-size: 8pt;
+      color: #333;
+    }
+    .disclaimer-box p { margin: 5px 0; text-align: justify; display: block; }
+    
+    /* Signature Block */
+    .signature-section {
+      margin-top: 40px;
+    }
+    .signature-space {
+      height: 60px;
+      border-bottom: 1px solid #000;
+      width: 180px;
+      margin: 15px 0 8px 0;
+    }
+    .signature-name {
+      font-weight: 600;
+      font-size: 11pt;
+      margin: 5px 0 2px 0;
+      color: #000;
+    }
+    .signature-details {
+      font-size: 9pt;
+      color: #333;
+      margin: 2px 0;
+      display: block;
+    }
+    
+    /* Branded Footer */
+    .branded-footer {
+      margin-top: 40px;
+      padding-top: 15px;
+      border-top: 1px solid #ddd;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .footer-logo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .footer-logo span { font-size: 10pt; color: #666; margin-bottom: 5px; }
+    .footer-logo img { height: 100px; width: auto; }
+  </style>
+</head>
+<body>
+  ${reportContent}
+  
+  <!-- Branded Footer - Logo Only -->
+  <div class="branded-footer">
+    <div class="footer-logo">
+      <span>Powered by</span>
+      <img src="/logo-cognispace.png" alt="Cognispace" style="height: 100px;" onerror="this.outerHTML=''" />
+    </div>
+  </div>
+</body>
+</html>
+      `);
       printWindow.document.close();
+      
+      // Wait for fonts to load then print
       setTimeout(() => {
+        printWindow.focus();
         printWindow.print();
-      }, 500);
+      }, 800);
     }
   };
 
