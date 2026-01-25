@@ -9,6 +9,7 @@ import TherapistDashboard from './pages/TherapistDashboard';
 import ClientDashboard from './pages/ClientDashboard';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import AssistantDashboard from './pages/AssistantDashboard';
+import ClientRegisterPage from './pages/ClientRegisterPage';
 import InstallPWA from './components/InstallPWA';
 import { applyTheme, getStoredTheme } from './config/themes';
 import { SubscriptionProvider } from './contexts/SubscriptionContext';
