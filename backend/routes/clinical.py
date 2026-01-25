@@ -339,16 +339,50 @@ async def get_therapy_consent(client_id: str, current_user: dict = Depends(get_c
     if not consent:
         if not therapist_id:
             # For clients without consent yet, get their assigned therapist
-            client_profile = await db.client_profiles.find_one({"client_id": client_id}, {"_id": 0})
+            client_profile = await db.client_profiles.find_one({"user_id": client_id}, {"_id": 0})
             if client_profile:
                 therapist_id = client_profile.get("therapist_id")
         
         if therapist_id:
+            # Get therapist details
+            therapist = await db.users.find_one({"id": therapist_id}, {"_id": 0, "full_name": 1})
+            therapist_name = therapist.get("full_name", "Your Therapist") if therapist else "Your Therapist"
+            
+            # Get therapist profile for qualifications
+            therapist_profile = await db.therapist_profiles.find_one({"therapist_id": therapist_id}, {"_id": 0})
+            qualifications = therapist_profile.get("qualifications", "") if therapist_profile else ""
+            
+            # Default consent text
+            consent_text = f"""INFORMED CONSENT FOR PSYCHOLOGICAL SERVICES
+
+1. Services Offered
+{therapist_name} ({qualifications}) will provide psychological assessment, counseling, and therapeutic services.
+
+2. Confidentiality
+All information shared during sessions is confidential and will not be disclosed without your written consent, except as required by law.
+
+3. Session Details
+• Sessions are typically 45-60 minutes
+• 24-hour advance notice required for cancellations
+• Missed sessions may be charged
+
+4. Rights and Responsibilities
+• You have the right to ask questions about treatment
+• You may discontinue services at any time
+• Payment is expected at time of service
+
+5. Emergency Procedures
+In case of emergency, contact emergency services (112) or your nearest hospital.
+
+By signing this consent, you acknowledge that you have read, understood, and agree to the terms above."""
+
             consent_id = str(uuid.uuid4())
             consent = {
                 "id": consent_id,
                 "client_id": client_id,
                 "therapist_id": therapist_id,
+                "therapist_name": therapist_name,
+                "consent_text": consent_text,
                 "is_signed": False,
                 "signature_date": None,
                 "witnessed_by": None,
@@ -357,6 +391,13 @@ async def get_therapy_consent(client_id: str, current_user: dict = Depends(get_c
             await db.therapy_consents.insert_one(consent)
         else:
             return {"exists": False, "is_signed": False}
+    
+    # Add therapist_name if missing
+    if consent and not consent.get("therapist_name"):
+        therapist_id = consent.get("therapist_id")
+        if therapist_id:
+            therapist = await db.users.find_one({"id": therapist_id}, {"_id": 0, "full_name": 1})
+            consent["therapist_name"] = therapist.get("full_name", "Your Therapist") if therapist else "Your Therapist"
     
     return consent
 
