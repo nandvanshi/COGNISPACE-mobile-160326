@@ -1798,3 +1798,44 @@ Build a secure, therapist-first web application for managing a therapy practice 
 - ✅ Recommendations use proper therapeutic language ("may be considered", "could be explored")
 
 ---
+### Phase 43: P0 Bug Fix - Client Consent Flow (COMPLETED - Jan 25, 2026)
+**Critical Bug:** Client dashboard was showing blank/incorrect page after therapist completed case history.
+
+**Root Cause:**
+- When therapist completed a client's case history, the consent document was being created but with incomplete data
+- The frontend consent page would fail to render properly due to missing `therapist_name` and `consent_text`
+
+**Fix Applied:**
+1. **Updated Default Consent Template** in `/app/backend/routes/clinical.py`:
+   - Expanded from 5 basic sections to comprehensive 12-section professional consent
+   - Added "Services Offered" as first section with therapist credentials
+   - Added detailed sections: Purpose of Therapy, Nature of Therapy, Role of Therapist, Confidentiality, Records & Documentation, Fees & Payments, Appointments & Attendance, Use of Digital Systems, Client Responsibilities, Right to Withdraw, Consent Statement
+
+2. **Consent Text Structure:**
+   - Section 1: Services Offered (therapist name and qualifications)
+   - Section 2: Purpose of Therapy (collaborative process description)
+   - Section 3: Nature of Therapy (discussion of personal topics, gradual progress)
+   - Section 4: Role of the Therapist (professional guidelines)
+   - Section 5: Confidentiality (detailed exceptions)
+   - Section 6: Records & Documentation (clinical records storage)
+   - Section 7: Fees & Payments (session charges, cancellation policy)
+   - Section 8: Appointments & Attendance (punctuality, late arrival)
+   - Section 9: Use of Digital Systems (consent for digital tools)
+   - Section 10: Client Responsibilities (active participation)
+   - Section 11: Right to Withdraw (discontinuation rights)
+   - Section 12: Consent Statement (final confirmation)
+
+**Testing Results:**
+- ✅ Client login shows informed consent page correctly
+- ✅ All 12 sections display with proper formatting
+- ✅ Therapist name and credentials appear in Services Offered section
+- ✅ "Sign Consent" button works correctly
+- ✅ After signing, client dashboard loads with full functionality
+- ✅ "Good Morning/Afternoon/Evening" greeting shows correctly
+- ✅ Therapist name displays in header
+
+**Files Modified:**
+- `/app/backend/routes/clinical.py` - Updated default consent text template (Lines 355-420)
+- Database: Updated existing Divya Sharma's consent document with new template
+
+---
