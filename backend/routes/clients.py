@@ -343,3 +343,65 @@ async def update_client_photo(client_id: str, photo_url: str, current_user: dict
         raise HTTPException(status_code=404, detail="Client not found")
     
     return {"message": "Photo updated"}
+
+
+
+# ============= NEW CLIENT NOTIFICATIONS =============
+
+@router.get("/new-registrations/count")
+async def get_new_registration_count(current_user: dict = Depends(require_therapist_or_assistant)):
+    """Get count of self-registered clients not yet acknowledged"""
+    therapist_id = get_effective_therapist_id(current_user)
+    
+    # Find self-registered clients that haven't been acknowledged
+    count = await db.client_profiles.count_documents({
+        "therapist_id": therapist_id,
+        "self_registered": True,
+        "registration_acknowledged": {"$ne": True}
+    })
+    
+    return {"count": count}
+
+
+@router.get("/new-registrations")
+async def get_new_registrations(current_user: dict = Depends(require_therapist_or_assistant)):
+    """Get list of self-registered clients not yet acknowledged"""
+    therapist_id = get_effective_therapist_id(current_user)
+    
+    profiles = await db.client_profiles.find({
+        "therapist_id": therapist_id,
+        "self_registered": True,
+        "registration_acknowledged": {"$ne": True}
+    }, {"_id": 0}).to_list(100)
+    
+    result = []
+    for profile in profiles:
+        user = await db.users.find_one({"id": profile["user_id"]}, {"_id": 0, "password_hash": 0})
+        if user:
+            result.append({
+                "id": user["id"],
+                "client_id": user.get("client_id"),
+                "full_name": user["full_name"],
+                "mobile": user.get("mobile"),
+                "registered_at": profile.get("registered_at"),
+                "age": profile.get("age")
+            })
+    
+    return result
+
+
+@router.post("/new-registrations/acknowledge")
+async def acknowledge_new_registrations(current_user: dict = Depends(require_therapist_or_assistant)):
+    """Mark all new self-registered clients as acknowledged"""
+    therapist_id = get_effective_therapist_id(current_user)
+    
+    result = await db.client_profiles.update_many(
+        {
+            "therapist_id": therapist_id,
+            "self_registered": True,
+            "registration_acknowledged": {"$ne": True}
+        },
+        {"$set": {"registration_acknowledged": True}}
+    )
+    
+    return {"acknowledged": result.modified_count}
