@@ -258,9 +258,10 @@ const ClientDashboard = () => {
   };
 
   const handlePrintDiagnosticReport = () => {
-    if (selectedDiagnosticReport?.report_html) {
+    const reportContent = selectedDiagnosticReport?.report_html || selectedDiagnosticReport?.report_content;
+    if (reportContent) {
       const printWindow = window.open('', '_blank');
-      printWindow.document.write(selectedDiagnosticReport.report_html);
+      printWindow.document.write(reportContent);
       printWindow.document.close();
       setTimeout(() => {
         printWindow.print();
