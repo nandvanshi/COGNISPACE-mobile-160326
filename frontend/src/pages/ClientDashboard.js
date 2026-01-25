@@ -247,6 +247,27 @@ const ClientDashboard = () => {
     }
   };
 
+  const handleViewDiagnosticReport = async (reportId) => {
+    try {
+      const res = await axios.get(`${API}/ai/diagnostic-reports/${reportId}`);
+      setSelectedDiagnosticReport(res.data);
+      setShowDiagnosticReport(true);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Report not available');
+    }
+  };
+
+  const handlePrintDiagnosticReport = () => {
+    if (selectedDiagnosticReport?.report_html) {
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(selectedDiagnosticReport.report_html);
+      printWindow.document.close();
+      setTimeout(() => {
+        printWindow.print();
+      }, 500);
+    }
+  };
+
   // Appointment Booking Functions
   const handleOpenBooking = () => {
     const today = new Date();
