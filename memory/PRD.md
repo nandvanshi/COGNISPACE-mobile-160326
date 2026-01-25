@@ -1839,3 +1839,59 @@ Build a secure, therapist-first web application for managing a therapy practice 
 - Database: Updated existing Divya Sharma's consent document with new template
 
 ---
+
+### Phase 44: Client Self-Registration Link (COMPLETED - Jan 25, 2026)
+**Feature:** Unique registration link for each therapist to share with new clients
+
+**How it works:**
+1. Each therapist gets a unique registration code (8-character alphanumeric)
+2. Therapist shares link like: `https://app.com/register/client/{code}`
+3. Client opens link, fills registration form, and gets automatically linked to that therapist
+
+**Backend Implementation:**
+- `GET /api/auth/therapist-registration-link` - Get therapist's unique registration link
+- `POST /api/auth/therapist-registration-link/regenerate` - Generate new link (invalidates old)
+- `GET /api/auth/verify-registration-code/{code}` - Verify if code is valid (public)
+- `POST /api/auth/client-self-register/{code}` - Client self-registration (public)
+- Registration code stored in `therapist_profiles.registration_code`
+
+**Frontend Implementation:**
+- New page: `/register/client/:therapistCode` (`ClientRegisterPage.js`)
+- Registration form with same fields as therapist-created client:
+  - Required: Full Name, Mobile (10 digits), Password
+  - Optional: Email, Age, Guardian Name, Address, Referred By, Emergency Contact
+- Success page shows Client ID and therapist name with "Go to Login" button
+
+**Therapist Dashboard Integration:**
+- `ClientRegistrationLink.js` component added to TherapistOverview
+- Shows registration link with copy button
+- "Share Link" button (uses Web Share API on mobile)
+- "Preview" button to open link in new tab
+- "Regenerate" button to create new link
+
+**Security:**
+- Link is always valid until regenerated
+- Registration code uniqueness enforced
+- Therapist status checked before allowing registration
+- Client automatically linked to correct therapist
+
+**Files Created:**
+- `/app/frontend/src/pages/ClientRegisterPage.js`
+- `/app/frontend/src/components/ClientRegistrationLink.js`
+
+**Files Modified:**
+- `/app/backend/routes/auth.py` - Added 4 new endpoints
+- `/app/backend/dependencies.py` - Added `generate_registration_code()` function
+- `/app/frontend/src/App.js` - Added route for client registration
+- `/app/frontend/src/components/TherapistOverview.js` - Added registration link card
+
+**Testing Results:**
+- ✅ Therapist can get/regenerate registration link
+- ✅ Link verification works (valid/invalid codes)
+- ✅ Client can self-register with all form fields
+- ✅ Validation works (duplicate mobile/email, password match)
+- ✅ Success page shows client ID and therapist name
+- ✅ New client auto-linked to correct therapist
+- ✅ `self_registered: true` flag added to client profile
+
+---
