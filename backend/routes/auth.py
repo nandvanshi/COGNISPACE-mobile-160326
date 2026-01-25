@@ -293,3 +293,178 @@ async def update_user_preferences(prefs: UserPreferences, current_user: dict = D
     )
     
     return {"message": "Preferences updated", "theme": prefs.theme}
+
+
+# ============= CLIENT SELF-REGISTRATION VIA THERAPIST LINK =============
+
+class ClientSelfRegister(BaseModel):
+    mobile: str
+    password: str
+    full_name: str
+    email: Optional[str] = None
+    age: Optional[int] = None
+    guardian_name: Optional[str] = None
+    address: Optional[str] = None
+    referred_by: Optional[str] = None
+    emergency_contact_name: Optional[str] = None
+    emergency_contact_phone: Optional[str] = None
+
+
+@router.get("/therapist-registration-link")
+async def get_therapist_registration_link(current_user: dict = Depends(get_current_user)):
+    """Get or generate therapist's unique client registration link"""
+    if current_user["role"] != "therapist":
+        raise HTTPException(status_code=403, detail="Only therapists can access registration links")
+    
+    therapist_id = current_user["id"]
+    
+    # Check if therapist already has a registration code
+    therapist_profile = await db.therapist_profiles.find_one({"therapist_id": therapist_id}, {"_id": 0})
+    
+    if not therapist_profile:
+        # Create profile if doesn't exist
+        therapist_profile = {"therapist_id": therapist_id}
+        await db.therapist_profiles.insert_one(therapist_profile)
+    
+    registration_code = therapist_profile.get("registration_code")
+    
+    if not registration_code:
+        # Generate new registration code
+        registration_code = generate_registration_code()
+        # Ensure uniqueness
+        while await db.therapist_profiles.find_one({"registration_code": registration_code}):
+            registration_code = generate_registration_code()
+        
+        await db.therapist_profiles.update_one(
+            {"therapist_id": therapist_id},
+            {"$set": {"registration_code": registration_code}}
+        )
+    
+    return {
+        "registration_code": registration_code,
+        "therapist_name": current_user["full_name"]
+    }
+
+
+@router.post("/therapist-registration-link/regenerate")
+async def regenerate_registration_link(current_user: dict = Depends(get_current_user)):
+    """Regenerate therapist's client registration link (invalidates old link)"""
+    if current_user["role"] != "therapist":
+        raise HTTPException(status_code=403, detail="Only therapists can regenerate registration links")
+    
+    therapist_id = current_user["id"]
+    
+    # Generate new unique code
+    new_code = generate_registration_code()
+    while await db.therapist_profiles.find_one({"registration_code": new_code}):
+        new_code = generate_registration_code()
+    
+    await db.therapist_profiles.update_one(
+        {"therapist_id": therapist_id},
+        {"$set": {"registration_code": new_code}},
+        upsert=True
+    )
+    
+    return {
+        "registration_code": new_code,
+        "message": "Registration link regenerated. Old link is now invalid."
+    }
+
+
+@router.get("/verify-registration-code/{code}")
+async def verify_registration_code(code: str):
+    """Verify if a registration code is valid (public endpoint)"""
+    therapist_profile = await db.therapist_profiles.find_one({"registration_code": code}, {"_id": 0})
+    
+    if not therapist_profile:
+        raise HTTPException(status_code=404, detail="Invalid registration link")
+    
+    therapist_id = therapist_profile.get("therapist_id")
+    therapist = await db.users.find_one({"id": therapist_id, "role": "therapist"}, {"_id": 0, "password_hash": 0})
+    
+    if not therapist:
+        raise HTTPException(status_code=404, detail="Therapist not found")
+    
+    if therapist.get("status") != "approved":
+        raise HTTPException(status_code=403, detail="Therapist account is not active")
+    
+    return {
+        "valid": True,
+        "therapist_name": therapist["full_name"],
+        "therapist_id": therapist_id
+    }
+
+
+@router.post("/client-self-register/{code}")
+async def client_self_register(code: str, client_data: ClientSelfRegister):
+    """Client self-registration via therapist's unique link (public endpoint)"""
+    # Verify the registration code
+    therapist_profile = await db.therapist_profiles.find_one({"registration_code": code}, {"_id": 0})
+    
+    if not therapist_profile:
+        raise HTTPException(status_code=404, detail="Invalid registration link")
+    
+    therapist_id = therapist_profile.get("therapist_id")
+    therapist = await db.users.find_one({"id": therapist_id, "role": "therapist"}, {"_id": 0})
+    
+    if not therapist:
+        raise HTTPException(status_code=404, detail="Therapist not found")
+    
+    if therapist.get("status") != "approved":
+        raise HTTPException(status_code=403, detail="Therapist account is not active")
+    
+    # Validate mobile
+    if not validate_mobile(client_data.mobile):
+        raise HTTPException(status_code=400, detail="Mobile number must be exactly 10 digits")
+    
+    # Check for existing mobile
+    existing_mobile = await db.users.find_one({"mobile": client_data.mobile})
+    if existing_mobile:
+        raise HTTPException(status_code=400, detail="Mobile number already registered")
+    
+    # Check for existing email
+    if client_data.email:
+        existing_email = await db.users.find_one({"email": client_data.email})
+        if existing_email:
+            raise HTTPException(status_code=400, detail="Email already registered")
+    
+    # Create client
+    client_id = str(uuid.uuid4())
+    unique_client_id = generate_client_id()
+    
+    user_doc = {
+        "id": client_id,
+        "client_id": unique_client_id,
+        "mobile": client_data.mobile,
+        "email": client_data.email,
+        "password_hash": hash_password(client_data.password),
+        "full_name": client_data.full_name,
+        "role": "client",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.users.insert_one(user_doc)
+    
+    # Create client profile linked to therapist
+    profile_doc = {
+        "user_id": client_id,
+        "therapist_id": therapist_id,
+        "age": client_data.age,
+        "guardian_name": client_data.guardian_name,
+        "address": client_data.address,
+        "referred_by": client_data.referred_by,
+        "emergency_contact_name": client_data.emergency_contact_name,
+        "emergency_contact_phone": client_data.emergency_contact_phone,
+        "profile_photo": None,
+        "self_registered": True,  # Flag to indicate self-registration
+        "registered_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.client_profiles.insert_one(profile_doc)
+    await log_audit(client_id, "client", "self_register", "client", client_id, {"therapist_id": therapist_id})
+    
+    return {
+        "message": "Registration successful! You can now login.",
+        "client_id": unique_client_id,
+        "therapist_name": therapist["full_name"]
+    }
