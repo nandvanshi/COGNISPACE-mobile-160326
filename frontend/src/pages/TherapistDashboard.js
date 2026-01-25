@@ -24,6 +24,7 @@ import AIClinicalSupport from '../components/AIClinicalSupport';
 import TherapistProfileSettings from '../components/TherapistProfileSettings';
 import SupportTickets from '../components/SupportTickets';
 import Settings from '../components/Settings';
+import NotificationBell from '../components/NotificationBell';
 import { toast } from 'sonner';
 import { formatCurrency } from '../utils/formatUtils';
 
