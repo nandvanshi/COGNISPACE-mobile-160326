@@ -765,7 +765,7 @@ const ClientDashboard = () => {
             <span className="font-serif text-lg text-primary">COGNISPACE</span>
           </div>
           <div className="flex items-center gap-1">
-            <NotificationBell onNavigate={(view) => console.log('Navigate to:', view)} />
+            <NotificationBell onNavigate={handleNotificationNavigate} />
             <Button onClick={() => setShowSettings(true)} variant="ghost" size="sm" className="p-2" data-testid="client-settings-button">
               <SettingsIcon size={18} className="text-gray-500" />
             </Button>
