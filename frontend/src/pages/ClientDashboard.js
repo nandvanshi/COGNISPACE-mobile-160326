@@ -1055,10 +1055,10 @@ const ClientDashboard = () => {
               
               {/* Report Content - HTML rendered */}
               <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
-                {selectedDiagnosticReport.report_html ? (
+                {(selectedDiagnosticReport.report_html || selectedDiagnosticReport.report_content) ? (
                   <div 
                     className="bg-white rounded-xl shadow-sm border p-6 prose prose-sm max-w-none"
-                    dangerouslySetInnerHTML={{ __html: selectedDiagnosticReport.report_html }}
+                    dangerouslySetInnerHTML={{ __html: selectedDiagnosticReport.report_html || selectedDiagnosticReport.report_content }}
                   />
                 ) : (
                   <div className="text-center py-10 text-gray-500">
