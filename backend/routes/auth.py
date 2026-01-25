@@ -12,7 +12,8 @@ from database import db
 from dependencies import (
     validate_mobile, hash_password, verify_password, create_token,
     get_current_user, log_audit, get_feature_toggles_for_therapist,
-    calculate_days_remaining, DEFAULT_FEATURE_TOGGLES
+    calculate_days_remaining, DEFAULT_FEATURE_TOGGLES, generate_client_id,
+    generate_registration_code
 )
 
 router = APIRouter(prefix="/auth", tags=["auth"])
