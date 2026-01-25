@@ -172,8 +172,11 @@ const ClientDashboard = () => {
       // Fetch shared diagnostic reports
       try {
         const reportsRes = await axios.get(`${API}/diagnostic-reports`);
+        console.log('Diagnostic reports response:', reportsRes.data);
         setDiagnosticReports(reportsRes.data || []);
-      } catch (e) { /* ignore */ }
+      } catch (e) { 
+        console.error('Failed to fetch diagnostic reports:', e);
+      }
       
       // Try to get therapist name from consent or user data
       if (!therapistName && user?.therapist_id) {
