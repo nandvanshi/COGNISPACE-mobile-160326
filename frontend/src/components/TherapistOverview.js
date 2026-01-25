@@ -831,6 +831,9 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
               </div>
             </div>
           </Card>
+
+          {/* Client Registration Link */}
+          {!isReadOnly && <ClientRegistrationLink />}
         </div>
       </div>
     </div>
