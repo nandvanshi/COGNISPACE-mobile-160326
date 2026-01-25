@@ -569,6 +569,37 @@ const ClientDashboard = () => {
     navigate('/login');
   };
 
+  // Handle notification navigation
+  const handleNotificationNavigate = (link) => {
+    if (!link) return;
+    
+    switch (link) {
+      case 'appointments':
+        setShowBookingDialog(true);
+        break;
+      case 'homework':
+        // Scroll to homework section
+        const hwSection = document.querySelector('[data-testid="homework-card"]');
+        if (hwSection) hwSection.scrollIntoView({ behavior: 'smooth' });
+        break;
+      case 'payments':
+        // Scroll to payments section
+        const paySection = document.querySelector('[data-testid="payments-card"]');
+        if (paySection) paySection.scrollIntoView({ behavior: 'smooth' });
+        break;
+      case 'reports':
+        // Scroll to diagnostic reports section
+        const reportsSection = document.querySelector('[data-testid="diagnostic-reports-card"]');
+        if (reportsSection) reportsSection.scrollIntoView({ behavior: 'smooth' });
+        break;
+      case 'messages':
+        setShowMessaging(true);
+        break;
+      default:
+        console.log('Unknown navigation link:', link);
+    }
+  };
+
   // Loading state
   if (loading || consentLoading) {
     return (
