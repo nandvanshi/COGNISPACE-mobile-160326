@@ -20,6 +20,7 @@ import ClientManagement from '../components/ClientManagement';
 import ClientProfilePage from '../components/ClientProfilePage';
 import TherapistSchedule from '../components/TherapistSchedule';
 import Payments from '../components/Payments';
+import NotificationBell from '../components/NotificationBell';
 import { toast } from 'sonner';
 import { formatDate, formatTime, formatCurrency } from '../utils/formatUtils';
 
