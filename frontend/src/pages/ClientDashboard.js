@@ -171,7 +171,7 @@ const ClientDashboard = () => {
       
       // Fetch shared diagnostic reports
       try {
-        const reportsRes = await axios.get(`${API}/ai/diagnostic-reports`);
+        const reportsRes = await axios.get(`${API}/diagnostic-reports`);
         setDiagnosticReports(reportsRes.data || []);
       } catch (e) { /* ignore */ }
       
