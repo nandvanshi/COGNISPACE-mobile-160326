@@ -65,7 +65,8 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
         messagesRes, 
         subscriptionRes,
         notesRes,
-        paymentsRes
+        paymentsRes,
+        newRegsRes
       ] = await Promise.all([
         axios.get(`${API}/clients`),
         axios.get(`${API}/appointments`),
@@ -73,6 +74,7 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
         axios.get(`${API}/auth/subscription-status`),
         axios.get(`${API}/session-notes`).catch(() => ({ data: [] })),
         axios.get(`${API}/payments`).catch(() => ({ data: [] })),
+        axios.get(`${API}/clients/new-registrations`).catch(() => ({ data: [] })),
       ]);
 
       const today = nowIST();
