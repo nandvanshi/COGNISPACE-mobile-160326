@@ -200,6 +200,20 @@ async def create_appointment(appt_data: AppointmentCreate, current_user: dict = 
     await db.appointments.insert_one(appointment_doc)
     await log_audit(current_user["id"], current_user["role"], "create", "appointment", appointment_id)
     
+    # Send notification to client about appointment confirmation
+    try:
+        from routes.notifications import notify_client_appointment_confirmed
+        from utils.formatUtils import format_datetime_ist
+        formatted_time = f"{appointment_doc['start_time'][:10]} {appointment_doc['start_time'][11:16]}"
+        await notify_client_appointment_confirmed(
+            appointment_doc["client_id"],
+            therapist_name,
+            formatted_time,
+            appointment_id
+        )
+    except Exception as e:
+        print(f"Failed to send appointment notification: {e}")
+    
     return Appointment(
         id=appointment_doc["id"],
         therapist_id=appointment_doc["therapist_id"],
