@@ -420,6 +420,56 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
         </Card>
       </div>
 
+      {/* NEEDS ATTENTION - Priority Alerts Section (Moved to Top) */}
+      {alerts.length > 0 && (
+        <Card className="p-5 bg-gradient-to-r from-amber-50/80 to-orange-50/80 border-amber-300 border-2 shadow-md" data-testid="needs-attention-section">
+          <h3 className="text-lg font-bold text-amber-800 mb-4 flex items-center gap-2">
+            <div className="p-1.5 bg-amber-200 rounded-lg">
+              <Bell size={18} className="text-amber-600" />
+            </div>
+            Needs Attention
+            <span className="ml-2 px-2.5 py-1 bg-amber-500 text-white text-xs font-bold rounded-full">{alerts.length}</span>
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {alerts.map((alert, idx) => {
+              const Icon = alert.icon;
+              // Different bright colors for each alert type
+              const colorConfig = alert.isNewRegistration 
+                ? { bg: 'bg-gradient-to-br from-emerald-200 to-teal-200', border: 'border-emerald-500', iconBg: 'bg-emerald-400', iconColor: 'text-white', textColor: 'text-emerald-900', linkColor: 'text-emerald-700 hover:text-emerald-900' }
+                : alert.type === 'warning' 
+                  ? { bg: 'bg-gradient-to-br from-amber-200 to-yellow-200', border: 'border-amber-500', iconBg: 'bg-amber-400', iconColor: 'text-white', textColor: 'text-amber-900', linkColor: 'text-amber-700 hover:text-amber-900' }
+                  : alert.type === 'error'
+                    ? { bg: 'bg-gradient-to-br from-red-200 to-rose-200', border: 'border-red-500', iconBg: 'bg-red-400', iconColor: 'text-white', textColor: 'text-red-900', linkColor: 'text-red-700 hover:text-red-900' }
+                    : alert.type === 'info'
+                      ? { bg: 'bg-gradient-to-br from-sky-200 to-blue-200', border: 'border-sky-500', iconBg: 'bg-sky-400', iconColor: 'text-white', textColor: 'text-sky-900', linkColor: 'text-sky-700 hover:text-sky-900' }
+                      : { bg: 'bg-gradient-to-br from-violet-200 to-purple-200', border: 'border-violet-500', iconBg: 'bg-violet-400', iconColor: 'text-white', textColor: 'text-violet-900', linkColor: 'text-violet-700 hover:text-violet-900' };
+              
+              return (
+                <div
+                  key={idx}
+                  className={`p-4 rounded-xl border-2 flex items-start gap-3 shadow-sm hover:shadow-lg hover:scale-[1.02] transition-all cursor-pointer ${colorConfig.bg} ${colorConfig.border}`}
+                  onClick={() => !isReadOnly && handleNavigate(alert.actionNav, alert.actionContext || {})}
+                  data-testid={`alert-${idx}`}
+                >
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${colorConfig.iconBg}`}>
+                    <Icon size={20} className={colorConfig.iconColor} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-semibold ${colorConfig.textColor}`}>{alert.message}</p>
+                    {alert.action && !isReadOnly && (
+                      <p className={`text-xs mt-1 font-medium flex items-center gap-1 ${colorConfig.linkColor}`}>
+                        {alert.action} <ArrowRight size={12} />
+                      </p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
+
       {/* Lightweight Reporting Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* This Week at a Glance */}
