@@ -232,6 +232,8 @@ const TherapistDashboard = () => {
           </div>
           <div className="flex items-center gap-3">
             <span className="text-base text-muted-foreground hidden sm:block">{getCurrentViewLabel()}</span>
+            {/* Notification Bell */}
+            <NotificationBell onNavigate={(view) => handleNavigate(view)} />
             <Button
               variant="ghost"
               size="sm"
