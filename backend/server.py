@@ -2512,6 +2512,7 @@ async def mark_resource_completed(assignment_id: str, current_user: dict = Depen
     return {"message": "Marked as completed"}
 
 app.include_router(api_router)
+app.include_router(notifications_router, prefix="/api")
 
 app.add_middleware(
     CORSMiddleware,
