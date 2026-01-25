@@ -463,6 +463,10 @@ async def client_self_register(code: str, client_data: ClientSelfRegister):
     await db.client_profiles.insert_one(profile_doc)
     await log_audit(client_id, "client", "self_register", "client", client_id, {"therapist_id": therapist_id})
     
+    # Send notification to therapist
+    from routes.notifications import notify_therapist_new_client
+    await notify_therapist_new_client(therapist_id, client_data.full_name, client_id)
+    
     return {
         "message": "Registration successful! You can now login.",
         "client_id": unique_client_id,
