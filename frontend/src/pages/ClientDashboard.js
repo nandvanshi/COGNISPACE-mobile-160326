@@ -788,6 +788,55 @@ const ClientDashboard = () => {
           )}
         </Card>
 
+        {/* My Diagnostic Reports Section */}
+        {diagnosticReports.length > 0 && (
+          <Card className="p-5 bg-gradient-to-br from-violet-50 to-purple-50 rounded-3xl border-violet-100 shadow-sm" data-testid="diagnostic-reports-card">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="p-2 bg-violet-100 rounded-lg">
+                <Sparkles className="text-violet-600" size={18} />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-violet-800">My Diagnostic Reports</h3>
+                <p className="text-xs text-violet-600">Professional assessment reports from your therapist</p>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              {diagnosticReports.map((report) => (
+                <div 
+                  key={report.id} 
+                  className="p-4 bg-white rounded-2xl border border-violet-100 hover:shadow-md transition-shadow"
+                >
+                  <div className="flex justify-between items-start gap-3">
+                    <div className="flex-1">
+                      <p className="font-semibold text-violet-900">{report.title || 'Diagnostic Report'}</p>
+                      <p className="text-xs text-violet-600 mt-1">
+                        Generated: {report.created_at ? formatDate(report.created_at) : 'N/A'}
+                      </p>
+                      {report.shared_at && (
+                        <p className="text-xs text-emerald-600 mt-0.5">
+                          Shared: {formatDate(report.shared_at)}
+                        </p>
+                      )}
+                    </div>
+                    <Badge className="bg-violet-100 text-violet-700 border-0 text-xs flex-shrink-0">
+                      <FileText size={12} className="mr-1" /> Report
+                    </Badge>
+                  </div>
+                  <Button
+                    onClick={() => handleViewDiagnosticReport(report.id)}
+                    size="sm"
+                    className="mt-3 w-full rounded-xl bg-violet-600 hover:bg-violet-700"
+                    data-testid={`view-diagnostic-report-${report.id}`}
+                  >
+                    <Eye size={14} className="mr-1" /> View Full Report
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
+
         {/* Support Note */}
         <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
           <p className="text-xs text-emerald-700 text-center">
