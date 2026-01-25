@@ -22,6 +22,7 @@ import { PaymentReceiptView } from '../components/PaymentReceipt';
 import Settings from '../components/Settings';
 import ClientAssessmentTaker from '../components/ClientAssessmentTaker';
 import Messaging from '../components/Messaging';
+import NotificationBell from '../components/NotificationBell';
 
 // ============= TIME-BASED GREETING =============
 const getGreeting = () => {
