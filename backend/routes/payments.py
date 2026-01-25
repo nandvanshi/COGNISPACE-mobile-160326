@@ -156,6 +156,17 @@ async def record_payment(payment_data: PaymentCreate, current_user: dict = Depen
     await db.payments.insert_one(payment_doc)
     await log_audit(current_user["id"], current_user["role"], "create", "payment", payment_id)
     
+    # Send notification to client about payment receipt
+    try:
+        from routes.notifications import notify_client_payment_receipt
+        await notify_client_payment_receipt(
+            payment_data.client_id,
+            payment_data.amount,
+            payment_id
+        )
+    except Exception as e:
+        print(f"Failed to send payment notification: {e}")
+    
     return Payment(
         id=payment_id,
         bill_number=bill_number,
