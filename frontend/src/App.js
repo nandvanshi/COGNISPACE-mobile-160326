@@ -154,6 +154,7 @@ function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/admin-login" element={<AdminLoginPage />} />
               <Route path="/therapist-application" element={<TherapistApplicationPage />} />
+              <Route path="/register/client/:therapistCode" element={<ClientRegisterPage />} />
               <Route
                 path="/therapist/*"
                 element={
