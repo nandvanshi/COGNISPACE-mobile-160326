@@ -818,15 +818,18 @@ const AssistantDashboard = () => {
             <img src="/logo-symbol.png" alt="COGNISPACE" className="h-8 w-auto" />
             <span className="font-serif text-lg text-primary">COGNISPACE</span>
           </div>
-          <Button
-            onClick={handleLogout}
-            variant="ghost"
-            size="icon"
-            className="rounded-full"
-            data-testid="mobile-logout"
-          >
-            <LogOut size={18} />
-          </Button>
+          <div className="flex items-center gap-2">
+            <NotificationBell onNavigate={(view) => setCurrentView(view)} />
+            <Button
+              onClick={handleLogout}
+              variant="ghost"
+              size="icon"
+              className="rounded-full"
+              data-testid="mobile-logout"
+            >
+              <LogOut size={18} />
+            </Button>
+          </div>
         </div>
       </header>
 
