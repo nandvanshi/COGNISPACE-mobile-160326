@@ -133,6 +133,7 @@ const TherapistDashboard = () => {
         { id: 'recurring', label: 'Recurring', icon: Repeat },
         { id: 'messages', label: 'Messages', icon: MessageSquare, feature: 'messaging' },
         { id: 'payments', label: 'Payments', icon: DollarSign, feature: 'payments' },
+        { id: 'payment-reports', label: 'Reports', icon: BarChart2, feature: 'payments' },
         { id: 'assistants', label: 'Assistants', icon: UserCog, feature: 'assistants' },
         { id: 'profile', label: 'My Profile', icon: UserCircle },
         { id: 'support', label: 'Support', icon: HelpCircle },
