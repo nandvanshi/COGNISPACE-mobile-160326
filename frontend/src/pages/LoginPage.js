@@ -130,6 +130,10 @@ const LoginPage = () => {
         <div className="max-w-4xl mx-auto">
           {/* Legal Links */}
           <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs text-muted-foreground mb-4">
+            <Link to="/about" className="hover:text-primary transition-colors">
+              About
+            </Link>
+            <span className="text-border">•</span>
             <Link to="/privacy-policy" className="hover:text-primary transition-colors">
               Privacy Policy
             </Link>
