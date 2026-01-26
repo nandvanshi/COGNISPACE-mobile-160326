@@ -259,14 +259,14 @@ async def ai_suggest_assessments(request: AIAssessmentSuggestionRequest, current
         if not client_profile:
             raise HTTPException(status_code=404, detail="Client not found")
         
-        client_user = await db.users.find_one({"id": request.client_id}, {"_id": 0, "full_name": 1})
+        client_user = await _db.users.find_one({"id": request.client_id}, {"_id": 0, "full_name": 1})
         client_name = client_user.get("full_name", "Unknown") if client_user else "Unknown"
         
         client_context += f"Client: {client_name}\n"
         
         # Include Case History if requested
         if request.include_case_history:
-            case_history = await db.case_histories.find_one(
+            case_history = await _db.case_histories.find_one(
                 {"client_id": request.client_id, "therapist_id": therapist_id},
                 {"_id": 0}
             )
@@ -296,7 +296,7 @@ async def ai_suggest_assessments(request: AIAssessmentSuggestionRequest, current
         
         # Get recent session notes
         if request.include_notes:
-            notes = await db.session_notes.find(
+            notes = await _db.session_notes.find(
                 {"therapist_id": therapist_id, "client_id": request.client_id},
                 {"_id": 0, "subjective": 1, "objective": 1, "assessment": 1, "data": 1, "created_at": 1}
             ).sort("created_at", -1).to_list(5)
@@ -317,7 +317,7 @@ async def ai_suggest_assessments(request: AIAssessmentSuggestionRequest, current
         
         # Get completed assessments
         if request.include_prev_assessments:
-            completed_assessments = await db.assessments.find(
+            completed_assessments = await _db.assessments.find(
                 {"therapist_id": therapist_id, "client_id": request.client_id, "status": "completed"},
                 {"_id": 0, "assessment_type": 1, "score": 1, "interpretation": 1}
             ).to_list(20)
@@ -396,21 +396,21 @@ Respond in valid JSON format only with this structure:
 
 
 @router.post("/ai/generate-protocol", response_model=AIProtocolResponse)
-async def ai_generate_protocol(request: AIProtocolRequest, current_user: dict = Depends(lambda: require_active_therapist)):
+async def ai_generate_protocol(request: AIProtocolRequest, current_user: dict = Depends(require_active_therapist)):
     """AI-powered therapy protocol generation"""
     therapist_id = current_user["id"]
     context = ""
     
     # Gather client information
     if request.client_id:
-        client_profile = await db.client_profiles.find_one(
+        client_profile = await _db.client_profiles.find_one(
             {"user_id": request.client_id, "therapist_id": therapist_id},
             {"_id": 0}
         )
         if not client_profile:
             raise HTTPException(status_code=404, detail="Client not found")
         
-        client_user = await db.users.find_one({"id": request.client_id}, {"_id": 0, "full_name": 1})
+        client_user = await _db.users.find_one({"id": request.client_id}, {"_id": 0, "full_name": 1})
         client_name = client_user.get("full_name", "Unknown") if client_user else "Unknown"
         
         context += f"Client: {client_name}\n"
@@ -419,7 +419,7 @@ async def ai_generate_protocol(request: AIProtocolRequest, current_user: dict = 
         
         # Include Case History if requested
         if request.include_case_history:
-            case_history = await db.case_histories.find_one(
+            case_history = await _db.case_histories.find_one(
                 {"client_id": request.client_id, "therapist_id": therapist_id},
                 {"_id": 0}
             )
@@ -438,7 +438,7 @@ async def ai_generate_protocol(request: AIProtocolRequest, current_user: dict = 
         
         # Include Previous Assessments if requested
         if request.include_prev_assessments:
-            prev_assessments = await db.assessments.find(
+            prev_assessments = await _db.assessments.find(
                 {"therapist_id": therapist_id, "client_id": request.client_id, "status": "completed"},
                 {"_id": 0, "assessment_type": 1, "score": 1, "interpretation": 1}
             ).to_list(10)
@@ -453,7 +453,7 @@ async def ai_generate_protocol(request: AIProtocolRequest, current_user: dict = 
     
     # Get assessment results if provided
     if request.assessment_ids:
-        assessments = await db.assessments.find(
+        assessments = await _db.assessments.find(
             {"id": {"$in": request.assessment_ids}, "therapist_id": therapist_id, "status": "completed"},
             {"_id": 0}
         ).to_list(10)
@@ -538,26 +538,26 @@ Respond in valid JSON format only:
 
 
 @router.post("/ai/generate-homework", response_model=AIHomeworkResponse)
-async def ai_generate_homework(request: AIHomeworkRequest, current_user: dict = Depends(lambda: require_active_therapist)):
+async def ai_generate_homework(request: AIHomeworkRequest, current_user: dict = Depends(require_active_therapist)):
     """AI-powered homework/worksheet generation"""
     therapist_id = current_user["id"]
     
     # Get client info
-    client_profile = await db.client_profiles.find_one(
+    client_profile = await _db.client_profiles.find_one(
         {"user_id": request.client_id, "therapist_id": therapist_id},
         {"_id": 0}
     )
     if not client_profile:
         raise HTTPException(status_code=404, detail="Client not found")
     
-    client_user = await db.users.find_one({"id": request.client_id}, {"_id": 0, "full_name": 1})
+    client_user = await _db.users.find_one({"id": request.client_id}, {"_id": 0, "full_name": 1})
     client_name = client_user.get("full_name", "Unknown") if client_user else "Unknown"
     
     context = f"Client: {client_name}\n"
     
     # Include Case History if requested
     if request.include_case_history:
-        case_history = await db.case_histories.find_one(
+        case_history = await _db.case_histories.find_one(
             {"client_id": request.client_id, "therapist_id": therapist_id},
             {"_id": 0}
         )
@@ -572,7 +572,7 @@ async def ai_generate_homework(request: AIHomeworkRequest, current_user: dict = 
     
     # Include Previous Assessments if requested
     if request.include_prev_assessments:
-        prev_assessments = await db.assessments.find(
+        prev_assessments = await _db.assessments.find(
             {"therapist_id": therapist_id, "client_id": request.client_id, "status": "completed"},
             {"_id": 0, "assessment_type": 1, "score": 1, "interpretation": 1}
         ).to_list(5)
@@ -586,7 +586,7 @@ async def ai_generate_homework(request: AIHomeworkRequest, current_user: dict = 
                 context += "\n"
     
     # Get recent session notes for context
-    recent_note = await db.session_notes.find_one(
+    recent_note = await _db.session_notes.find_one(
         {"therapist_id": therapist_id, "client_id": request.client_id},
         {"_id": 0},
         sort=[("created_at", -1)]
@@ -599,7 +599,7 @@ async def ai_generate_homework(request: AIHomeworkRequest, current_user: dict = 
     
     # Get protocol if provided
     if request.protocol_id:
-        protocol = await db.protocols.find_one(
+        protocol = await _db.protocols.find_one(
             {"id": request.protocol_id, "therapist_id": therapist_id},
             {"_id": 0}
         )
@@ -675,21 +675,21 @@ Respond in valid JSON format only:
 
 
 @router.post("/ai/generate-diagnostic-report", response_model=DiagnosticReportResponse)
-async def ai_generate_diagnostic_report(request: DiagnosticReportRequest, current_user: dict = Depends(lambda: require_active_therapist)):
+async def ai_generate_diagnostic_report(request: DiagnosticReportRequest, current_user: dict = Depends(require_active_therapist)):
     """CogniVision Diagnostic Engine - Generate comprehensive psychodiagnostic report"""
     await check_feature_enabled(current_user["id"], "ai_clinical")
     
     therapist_id = current_user["id"]
     
     # Get therapist info for header and signature
-    therapist = await db.users.find_one({"id": therapist_id}, {"_id": 0})
+    therapist = await _db.users.find_one({"id": therapist_id}, {"_id": 0})
     therapist_name = therapist.get("full_name", "Unknown") if therapist else "Unknown"
     therapist_phone = therapist.get("mobile", "") or therapist.get("phone", "") if therapist else ""
     
     # Get therapist profile for additional details
-    therapist_profile = await db.therapist_profiles.find_one({"therapist_id": therapist_id}, {"_id": 0})
+    therapist_profile = await _db.therapist_profiles.find_one({"therapist_id": therapist_id}, {"_id": 0})
     if not therapist_profile:
-        therapist_profile = await db.therapist_profiles.find_one({"user_id": therapist_id}, {"_id": 0})
+        therapist_profile = await _db.therapist_profiles.find_one({"user_id": therapist_id}, {"_id": 0})
     
     therapist_qualifications = therapist_profile.get("qualifications", "") if therapist_profile else ""
     
@@ -718,7 +718,7 @@ async def ai_generate_diagnostic_report(request: DiagnosticReportRequest, curren
             therapist_address_lines.append(", ".join(city_state))
     
     # Get client info from client_profiles
-    client_profile = await db.client_profiles.find_one(
+    client_profile = await _db.client_profiles.find_one(
         {"user_id": request.client_id, "therapist_id": therapist_id},
         {"_id": 0}
     )
@@ -726,7 +726,7 @@ async def ai_generate_diagnostic_report(request: DiagnosticReportRequest, curren
         raise HTTPException(status_code=404, detail="Client not found")
     
     # Get client name from users table
-    client_user = await db.users.find_one({"id": request.client_id}, {"_id": 0, "full_name": 1})
+    client_user = await _db.users.find_one({"id": request.client_id}, {"_id": 0, "full_name": 1})
     client_name = client_user.get("full_name", "Unknown") if client_user else client_profile.get("full_name", "Unknown")
     
     # Get age and referred_by from client_profiles
@@ -744,7 +744,7 @@ PATIENT INFORMATION:
     
     # Include Case History
     if request.include_case_history:
-        case_history = await db.case_histories.find_one(
+        case_history = await _db.case_histories.find_one(
             {"client_id": request.client_id, "therapist_id": therapist_id},
             {"_id": 0}
         )
@@ -769,7 +769,7 @@ INTAKE NOTES:
     
     # Include Session History
     if request.include_session_history:
-        session_notes = await db.session_notes.find(
+        session_notes = await _db.session_notes.find(
             {"therapist_id": therapist_id, "client_id": request.client_id},
             {"_id": 0, "subjective": 1, "objective": 1, "assessment": 1, "plan": 1, "created_at": 1}
         ).sort("created_at", -1).to_list(10)
@@ -787,7 +787,7 @@ Session {i+1}:
     # Get Selected Assessments - Optional now
     assessment_battery = []
     if request.assessment_ids:
-        assessments = await db.assessments.find(
+        assessments = await _db.assessments.find(
             {"id": {"$in": request.assessment_ids}, "therapist_id": therapist_id, "status": "completed"},
             {"_id": 0}
         ).to_list(50)
