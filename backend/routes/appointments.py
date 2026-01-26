@@ -181,6 +181,22 @@ async def client_request_appointment(appt_data: ClientAppointmentRequest, curren
     except Exception as e:
         print(f"Failed to send appointment confirmation email: {e}")
     
+    # Send WhatsApp confirmation (if configured and opted-in)
+    try:
+        from services.whatsapp import WhatsAppService
+        if WhatsAppService.is_configured():
+            appt_date = appointment_doc["start_time"][:10]
+            appt_time = appointment_doc["start_time"][11:16]
+            await WhatsAppService.send_appointment_confirmation(
+                client_id=current_user["id"],
+                therapist_id=therapist_id,
+                therapist_name=therapist_name,
+                appointment_date=appt_date,
+                appointment_time=appt_time
+            )
+    except Exception as e:
+        print(f"Failed to send WhatsApp confirmation: {e}")
+    
     # Notify therapist about client booking
     try:
         from routes.notifications import notify_therapist_appointment_booked
