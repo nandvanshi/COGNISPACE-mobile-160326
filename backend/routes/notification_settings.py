@@ -54,10 +54,17 @@ NOTIFICATION_EVENTS = [
 
 async def get_subscription_channel_availability(therapist_id: str) -> ChannelAvailability:
     """Check which notification channels are allowed by subscription"""
-    subscription = await db.therapist_subscriptions.find_one(
+    # Check both collections for backward compatibility
+    subscription = await db.subscriptions.find_one(
         {"therapist_id": therapist_id},
-        {"_id": 0, "plan_id": 1, "end_date": 1}
+        {"_id": 0, "plan_id": 1, "end_date": 1, "status": 1}
     )
+    
+    if not subscription:
+        subscription = await db.therapist_subscriptions.find_one(
+            {"therapist_id": therapist_id},
+            {"_id": 0, "plan_id": 1, "end_date": 1}
+        )
     
     # Default: email allowed, whatsapp not allowed
     result = ChannelAvailability(email_allowed=True, whatsapp_allowed=False)
@@ -85,8 +92,9 @@ async def get_subscription_channel_availability(therapist_id: str) -> ChannelAva
         )
         if plan:
             features = plan.get("features", {})
-            result.email_allowed = features.get("email_notifications", True)
-            result.whatsapp_allowed = features.get("whatsapp_notifications", False)
+            if isinstance(features, dict):
+                result.email_allowed = features.get("email_notifications", True)
+                result.whatsapp_allowed = features.get("whatsapp_notifications", False)
     
     return result
 
