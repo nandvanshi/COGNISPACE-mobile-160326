@@ -576,6 +576,103 @@ async def get_all_clients(
     return result
 
 
+@router.get("/clients/orphaned/list")
+async def get_orphaned_clients(current_user: dict = Depends(require_super_admin)):
+    """Get clients who are not linked to any therapist (orphaned after therapist deletion)"""
+    # Get all client users
+    all_clients = await db.users.find({"role": "client"}, {"_id": 0, "password_hash": 0}).to_list(5000)
+    
+    orphaned = []
+    for client in all_clients:
+        # Check if client has a profile linked to a therapist
+        profile = await db.client_profiles.find_one({"user_id": client["id"]}, {"_id": 0})
+        
+        if not profile:
+            # No profile at all - orphaned
+            orphaned.append({
+                **client,
+                "profile": None,
+                "therapist_id": None,
+                "therapist_name": None,
+                "reason": "No profile exists"
+            })
+        elif not profile.get("therapist_id"):
+            # Profile exists but no therapist linked
+            orphaned.append({
+                **client,
+                "profile": profile,
+                "therapist_id": None,
+                "therapist_name": None,
+                "reason": "Profile has no therapist"
+            })
+        else:
+            # Check if therapist still exists
+            therapist = await db.users.find_one({"id": profile["therapist_id"], "role": "therapist"}, {"_id": 0})
+            if not therapist:
+                orphaned.append({
+                    **client,
+                    "profile": profile,
+                    "therapist_id": profile["therapist_id"],
+                    "therapist_name": None,
+                    "reason": "Therapist deleted"
+                })
+    
+    return {
+        "total_orphaned": len(orphaned),
+        "clients": orphaned
+    }
+
+
+@router.post("/clients/{client_id}/link-therapist")
+async def link_client_to_therapist(
+    client_id: str, 
+    therapist_id: str = Query(..., description="Therapist ID to link the client to"),
+    current_user: dict = Depends(require_super_admin)
+):
+    """Link an orphaned client to a new therapist"""
+    # Verify client exists
+    client = await db.users.find_one({"id": client_id, "role": "client"}, {"_id": 0})
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    # Verify therapist exists
+    therapist = await db.users.find_one({"id": therapist_id, "role": "therapist"}, {"_id": 0})
+    if not therapist:
+        raise HTTPException(status_code=404, detail="Therapist not found")
+    
+    # Check if client already has a profile
+    existing_profile = await db.client_profiles.find_one({"user_id": client_id}, {"_id": 0})
+    
+    if existing_profile:
+        # Update existing profile with new therapist
+        await db.client_profiles.update_one(
+            {"user_id": client_id},
+            {"$set": {"therapist_id": therapist_id}}
+        )
+    else:
+        # Create new profile
+        import uuid
+        new_profile = {
+            "id": str(uuid.uuid4()),
+            "user_id": client_id,
+            "therapist_id": therapist_id,
+            "full_name": client.get("full_name", ""),
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.client_profiles.insert_one(new_profile)
+    
+    await log_audit(current_user["id"], "super_admin", "link", "client", client_id, {
+        "linked_to_therapist": therapist_id,
+        "therapist_name": therapist.get("full_name")
+    })
+    
+    return {
+        "message": f"Client '{client.get('full_name')}' linked to therapist '{therapist.get('full_name')}'",
+        "client_id": client_id,
+        "therapist_id": therapist_id
+    }
+
+
 @router.get("/clients/{client_id}")
 async def get_client_detail(client_id: str, current_user: dict = Depends(require_super_admin)):
     user = await db.users.find_one({"id": client_id, "role": "client"}, {"_id": 0, "password_hash": 0})
