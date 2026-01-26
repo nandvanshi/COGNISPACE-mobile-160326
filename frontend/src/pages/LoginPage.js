@@ -30,7 +30,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex flex-col lg:flex-row">
       <div
         className="hidden lg:flex lg:w-1/2 bg-cover bg-center relative"
         style={{
