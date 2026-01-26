@@ -602,6 +602,15 @@ const TherapistManagement = ({ onViewClients }) => {
                         <CheckCircle size={16} className="mr-1" /> Activate
                       </Button>
                     )}
+                    <Button 
+                      onClick={() => handleDeleteTherapist(therapist)} 
+                      variant="ghost" 
+                      size="sm"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      data-testid={`delete-therapist-${therapist.id}`}
+                    >
+                      <Trash2 size={16} />
+                    </Button>
                   </div>
                 </div>
               </div>
