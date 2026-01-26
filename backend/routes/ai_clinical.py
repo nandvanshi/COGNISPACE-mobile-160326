@@ -8,6 +8,7 @@ Contains AI-powered endpoints for:
 """
 
 from fastapi import APIRouter, HTTPException, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from typing import List, Optional
 import uuid
@@ -15,29 +16,110 @@ import json
 from datetime import datetime
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
+import jwt
 
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
 # Router setup
 router = APIRouter(tags=["AI Clinical Support"])
 
-# Database connection (will be set from server.py)
-db = None
+# Module-level variables (set via setup_ai_clinical)
+_db = None
+_EMERGENT_LLM_KEY = None
+_JWT_SECRET = None
+_JWT_ALGORITHM = "HS256"
 
-# LLM Key (will be set from server.py)
-EMERGENT_LLM_KEY = None
+security = HTTPBearer()
 
-# Dependency functions (will be set from server.py)
-require_active_therapist = None
-check_feature_enabled = None
 
-def setup_ai_clinical(database, llm_key, active_therapist_dep, feature_check_func):
+def setup_ai_clinical(database, llm_key, jwt_secret, jwt_algorithm="HS256"):
     """Setup function to inject dependencies from server.py"""
-    global db, EMERGENT_LLM_KEY, require_active_therapist, check_feature_enabled
-    db = database
-    EMERGENT_LLM_KEY = llm_key
-    require_active_therapist = active_therapist_dep
-    check_feature_enabled = feature_check_func
+    global _db, _EMERGENT_LLM_KEY, _JWT_SECRET, _JWT_ALGORITHM
+    _db = database
+    _EMERGENT_LLM_KEY = llm_key
+    _JWT_SECRET = jwt_secret
+    _JWT_ALGORITHM = jwt_algorithm
+
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get current user from JWT token"""
+    try:
+        token = credentials.credentials
+        payload = jwt.decode(token, _JWT_SECRET, algorithms=[_JWT_ALGORITHM])
+        user_id = payload.get("user_id")
+        
+        user = await _db.users.find_one({"id": user_id}, {"_id": 0})
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+        return user
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+
+async def require_active_therapist(current_user: dict = Depends(get_current_user)):
+    """Requires therapist with active/trial subscription"""
+    if current_user["role"] != "therapist":
+        raise HTTPException(status_code=403, detail="Therapist access required")
+    status = current_user.get("status")
+    if status == "suspended":
+        raise HTTPException(status_code=403, detail="Your account has been suspended")
+    if status == "rejected":
+        raise HTTPException(status_code=403, detail="Your application was rejected")
+    subscription_status = current_user.get("subscription_status")
+    if subscription_status not in ["trial", "active"]:
+        raise HTTPException(
+            status_code=403, 
+            detail="Your subscription has expired. You are in read-only mode. Please renew to make changes."
+        )
+    return current_user
+
+
+async def get_feature_toggles_for_therapist(therapist_id: str):
+    """Get active feature toggles for a therapist based on their subscription plan"""
+    DEFAULT_FEATURE_TOGGLES = {
+        "session_notes": True,
+        "assessments": True,
+        "ai_clinical": True,
+        "protocols": True,
+        "messaging": True,
+        "payments": True,
+        "assistants": True,
+        "reports": True
+    }
+    
+    if not therapist_id:
+        return DEFAULT_FEATURE_TOGGLES
+    
+    therapist = await _db.users.find_one({"id": therapist_id}, {"_id": 0})
+    if not therapist:
+        return DEFAULT_FEATURE_TOGGLES
+    
+    subscription = await _db.subscriptions.find_one(
+        {"therapist_id": therapist_id},
+        {"_id": 0},
+        sort=[("start_date", -1)]
+    )
+    
+    if not subscription:
+        return DEFAULT_FEATURE_TOGGLES
+    
+    plan = await _db.subscription_plans.find_one({"id": subscription.get("plan_id")}, {"_id": 0})
+    if not plan or not plan.get("feature_toggles"):
+        return DEFAULT_FEATURE_TOGGLES
+    
+    return {**DEFAULT_FEATURE_TOGGLES, **plan.get("feature_toggles", {})}
+
+
+async def check_feature_enabled(therapist_id: str, feature_name: str):
+    """Check if a feature is enabled for a therapist based on their subscription plan"""
+    toggles = await get_feature_toggles_for_therapist(therapist_id)
+    if not toggles.get(feature_name, True):
+        raise HTTPException(
+            status_code=403, 
+            detail=f"Feature '{feature_name}' is not included in your subscription plan"
+        )
 
 
 # ============= AI MODELS =============
