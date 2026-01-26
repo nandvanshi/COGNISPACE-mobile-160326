@@ -143,7 +143,9 @@ export const PaymentReceiptView = ({ paymentId, isOpen, onClose }) => {
               <span class="label">Therapist:</span>
               <span class="value">${receipt?.therapist_name || 'N/A'}</span>
             </div>
-            ${receipt?.therapist_phone ? `<div class="row"><span class="label">Phone:</span><span class="value">${receipt.therapist_phone}</span></div>` : ''}
+            ${receipt?.therapist_mobile ? `<div class="row"><span class="label">Phone:</span><span class="value">${receipt.therapist_mobile}</span></div>` : ''}
+            ${receipt?.therapist_email ? `<div class="row"><span class="label">Email:</span><span class="value" style="font-size:12px">${receipt.therapist_email}</span></div>` : ''}
+            ${receipt?.clinic_address ? `<div class="row"><span class="label">Address:</span><span class="value" style="font-size:12px;text-align:right;max-width:200px">${receipt.clinic_address}</span></div>` : ''}
           </div>
 
           <div class="section">
