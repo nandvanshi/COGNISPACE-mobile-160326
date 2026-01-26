@@ -89,7 +89,7 @@ class EmailProviderRegistry:
             })
             
             # Also save to database for future reference
-            if cls._db:
+            if cls._db is not None:
                 await cls._db.email_providers.update_one(
                     {"code": "resend"},
                     {"$set": {
@@ -143,7 +143,7 @@ class EmailProviderRegistry:
             raise ValueError(f"Unknown provider code: {code}")
         
         # Save to database
-        if cls._db:
+        if cls._db is not None:
             await cls._db.email_providers.update_one(
                 {"code": code},
                 {"$set": {
@@ -166,7 +166,7 @@ class EmailProviderRegistry:
         if code in cls._providers:
             del cls._providers[code]
         
-        if cls._db:
+        if cls._db is not None:
             await cls._db.email_providers.update_one(
                 {"code": code},
                 {"$set": {"is_active": False}}
