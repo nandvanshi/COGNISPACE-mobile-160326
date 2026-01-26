@@ -206,3 +206,60 @@ class WhatsAppService:
         }
         
         await cls._db.notification_logs.insert_one(log_entry)
+    
+    # ============= CONVENIENCE METHODS FOR SPECIFIC EVENTS =============
+    
+    @classmethod
+    async def send_appointment_confirmation(
+        cls,
+        client_id: str,
+        therapist_id: str,
+        therapist_name: str,
+        appointment_date: str,
+        appointment_time: str
+    ) -> WhatsAppResult:
+        """Send WhatsApp appointment confirmation to client"""
+        return await cls.send_notification(
+            to_user_id=client_id,
+            event="appointment_confirmation",
+            template_params=[therapist_name, appointment_date, appointment_time],
+            therapist_id=therapist_id
+        )
+    
+    @classmethod
+    async def send_appointment_reminder(
+        cls,
+        client_id: str,
+        therapist_id: str,
+        therapist_name: str,
+        time_until: str
+    ) -> WhatsAppResult:
+        """Send WhatsApp appointment reminder to client"""
+        return await cls.send_notification(
+            to_user_id=client_id,
+            event="appointment_reminder",
+            template_params=[therapist_name, time_until],
+            therapist_id=therapist_id
+        )
+    
+    @classmethod
+    async def send_payment_receipt(
+        cls,
+        client_id: str,
+        therapist_id: str,
+        amount: str,
+        payment_date: str
+    ) -> WhatsAppResult:
+        """Send WhatsApp payment receipt to client"""
+        return await cls.send_notification(
+            to_user_id=client_id,
+            event="payment_receipt",
+            template_params=[amount, payment_date],
+            therapist_id=therapist_id
+        )
+    
+    @classmethod
+    def is_configured(cls) -> bool:
+        """Check if WhatsApp service is configured and ready"""
+        return WhatsAppProviderRegistry.is_configured()
+
