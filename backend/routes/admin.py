@@ -453,6 +453,90 @@ async def get_therapist_clients(therapist_id: str, current_user: dict = Depends(
     return result
 
 
+@router.delete("/therapists/{therapist_id}")
+async def delete_therapist(therapist_id: str, current_user: dict = Depends(require_super_admin)):
+    """Delete a therapist and all associated data - allows re-registration with same details"""
+    therapist = await db.users.find_one({"id": therapist_id, "role": "therapist"}, {"_id": 0})
+    if not therapist:
+        raise HTTPException(status_code=404, detail="Therapist not found")
+    
+    therapist_mobile = therapist.get("mobile")
+    therapist_email = therapist.get("email")
+    therapist_name = therapist.get("full_name")
+    
+    # Delete all associated data
+    # 1. Delete therapist profile
+    await db.therapist_profiles.delete_many({"therapist_id": therapist_id})
+    await db.therapist_profiles.delete_many({"user_id": therapist_id})
+    
+    # 2. Delete subscriptions
+    await db.subscriptions.delete_many({"therapist_id": therapist_id})
+    
+    # 3. Delete availability settings
+    await db.availability.delete_many({"therapist_id": therapist_id})
+    
+    # 4. Delete fee slots
+    await db.fee_slots.delete_many({"therapist_id": therapist_id})
+    
+    # 5. Delete appointments (or optionally keep for client records)
+    await db.appointments.delete_many({"therapist_id": therapist_id})
+    
+    # 6. Delete session notes
+    await db.session_notes.delete_many({"therapist_id": therapist_id})
+    
+    # 7. Delete assessments
+    await db.assessments.delete_many({"therapist_id": therapist_id})
+    
+    # 8. Delete diagnostic reports
+    await db.diagnostic_reports.delete_many({"therapist_id": therapist_id})
+    
+    # 9. Delete payments
+    await db.payments.delete_many({"therapist_id": therapist_id})
+    
+    # 10. Delete protocols
+    await db.protocols.delete_many({"therapist_id": therapist_id})
+    
+    # 11. Delete resources
+    await db.resources.delete_many({"therapist_id": therapist_id})
+    
+    # 12. Delete resource assignments
+    await db.resource_assignments.delete_many({"therapist_id": therapist_id})
+    
+    # 13. Delete case histories
+    await db.case_histories.delete_many({"therapist_id": therapist_id})
+    
+    # 14. Delete messages
+    await db.messages.delete_many({"therapist_id": therapist_id})
+    
+    # 15. Delete notifications
+    await db.notifications.delete_many({"user_id": therapist_id})
+    
+    # 16. Delete assistants associated with this therapist
+    await db.users.delete_many({"therapist_id": therapist_id, "role": "assistant"})
+    
+    # 17. Delete client profiles (unlink clients from this therapist)
+    await db.client_profiles.delete_many({"therapist_id": therapist_id})
+    
+    # 18. Finally delete the therapist user
+    result = await db.users.delete_one({"id": therapist_id, "role": "therapist"})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Failed to delete therapist")
+    
+    await log_audit(current_user["id"], "super_admin", "delete", "therapist", therapist_id, {
+        "deleted_mobile": therapist_mobile,
+        "deleted_email": therapist_email,
+        "deleted_name": therapist_name
+    })
+    
+    return {
+        "message": f"Therapist '{therapist_name}' deleted successfully",
+        "deleted_mobile": therapist_mobile,
+        "deleted_email": therapist_email,
+        "note": "This mobile/email can now be used for new registration"
+    }
+
+
 # ============= CLIENT MANAGEMENT ENDPOINTS =============
 
 @router.get("/clients", response_model=List[ClientDetailResponse])
