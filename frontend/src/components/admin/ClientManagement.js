@@ -336,6 +336,60 @@ const ClientManagement = ({ onViewTherapist }) => {
           </div>
         )}
       </div>
+        </TabsContent>
+
+        {/* Orphaned Clients Tab */}
+        <TabsContent value="orphaned">
+          {orphanedClients.length === 0 ? (
+            <div className="text-center py-12 bg-surface rounded-xl">
+              <UserX size={48} className="mx-auto mb-4 text-muted-foreground" />
+              <h3 className="text-lg font-medium mb-2">No Orphaned Clients</h3>
+              <p className="text-muted-foreground">All clients are linked to active therapists.</p>
+            </div>
+          ) : (
+            <>
+              <div className="mb-4 p-4 bg-warning/10 border border-warning/20 rounded-xl">
+                <p className="text-sm text-warning-foreground">
+                  <strong>Note:</strong> These clients were unlinked when their therapist was deleted. 
+                  You can link them to a new therapist.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {orphanedClients.map((client) => (
+                  <Card
+                    key={client.id}
+                    className="p-6 bg-white/70 backdrop-blur-xl border border-amber-200 rounded-xl"
+                    data-testid={`orphaned-client-${client.id}`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-start gap-3">
+                        <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
+                          <UserX size={24} className="text-amber-600" />
+                        </div>
+                        <div>
+                          <h4 className="text-lg font-medium">{client.full_name}</h4>
+                          <p className="text-sm text-muted-foreground flex items-center gap-1">
+                            <Phone size={14} /> {client.mobile || 'N/A'}
+                          </p>
+                          <p className="text-xs text-amber-600 mt-1">{client.reason}</p>
+                        </div>
+                      </div>
+                      <Button
+                        onClick={() => handleLinkClient(client)}
+                        size="sm"
+                        className="gap-1"
+                        data-testid={`link-client-${client.id}`}
+                      >
+                        <Link2 size={16} /> Link
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </>
+          )}
+        </TabsContent>
+      </Tabs>
 
       <div className="mt-8 p-6 bg-info/10 border border-info/20 rounded-xl">
         <p className="text-sm text-info">
