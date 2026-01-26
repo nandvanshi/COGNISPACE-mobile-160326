@@ -49,7 +49,7 @@ class WhatsAppProviderRegistry:
     @classmethod
     async def _load_providers(cls):
         """Load active providers from database"""
-        if not cls._db:
+        if cls._db is None:
             return
         
         # Get all active WhatsApp providers
@@ -73,7 +73,7 @@ class WhatsAppProviderRegistry:
     @classmethod
     async def _load_templates(cls):
         """Load WhatsApp templates from database"""
-        if not cls._db:
+        if cls._db is None:
             return
         
         templates = await cls._db.whatsapp_templates.find({}).to_list(500)

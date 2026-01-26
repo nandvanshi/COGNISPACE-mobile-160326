@@ -25,7 +25,7 @@ class WhatsAppService:
     @classmethod
     async def check_subscription_allows_whatsapp(cls, therapist_id: str) -> bool:
         """Check if therapist's subscription allows WhatsApp notifications"""
-        if not cls._db:
+        if cls._db is None:
             return False
         
         subscription = await cls._db.therapist_subscriptions.find_one(
@@ -62,7 +62,7 @@ class WhatsAppService:
     @classmethod
     async def check_user_whatsapp_opt_in(cls, user_id: str) -> bool:
         """Check if user has opted in for WhatsApp notifications (MANDATORY)"""
-        if not cls._db:
+        if cls._db is None:
             return False
         
         user = await cls._db.users.find_one(
@@ -97,7 +97,7 @@ class WhatsAppService:
         Returns:
             WhatsAppResult
         """
-        if not cls._db:
+        if cls._db is None:
             return WhatsAppResult(
                 success=False,
                 provider="none",
@@ -191,7 +191,7 @@ class WhatsAppService:
     @classmethod
     async def _log_whatsapp_attempt(cls, user_id: str, event: str, result: WhatsAppResult):
         """Log WhatsApp send attempt to database"""
-        if not cls._db:
+        if cls._db is None:
             return
         
         log_entry = {
