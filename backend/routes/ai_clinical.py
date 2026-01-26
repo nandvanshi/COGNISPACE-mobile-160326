@@ -226,11 +226,11 @@ STANDARD_ASSESSMENTS = {
 
 async def get_ai_chat(session_id: str, system_message: str):
     """Initialize AI chat with Claude Sonnet 4"""
-    if not EMERGENT_LLM_KEY:
+    if not _EMERGENT_LLM_KEY:
         raise HTTPException(status_code=500, detail="AI service not configured")
     
     chat = LlmChat(
-        api_key=EMERGENT_LLM_KEY,
+        api_key=_EMERGENT_LLM_KEY,
         session_id=session_id,
         system_message=system_message
     ).with_model("anthropic", "claude-4-sonnet-20250514")
