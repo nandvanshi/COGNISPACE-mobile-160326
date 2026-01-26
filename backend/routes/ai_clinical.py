@@ -13,7 +13,6 @@ from pydantic import BaseModel
 from typing import List, Optional
 import uuid
 import json
-import re
 from datetime import datetime
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
@@ -388,7 +387,6 @@ Respond in valid JSON format only with this structure:
         response_text = response_text.strip()
         
         # Extract JSON from response - find the JSON block
-        import re
         json_match = re.search(r'\{[\s\S]*\}', response_text)
         if json_match:
             response_text = json_match.group()
@@ -556,7 +554,6 @@ Respond in valid JSON format only:
         response_text = response_text.strip()
         
         # Extract JSON from response
-        import re
         json_match = re.search(r'\{[\s\S]*\}', response_text)
         if json_match:
             response_text = json_match.group()
@@ -706,7 +703,6 @@ Respond in valid JSON format only:
         response_text = response_text.strip()
         
         # Extract JSON from response
-        import re
         json_match = re.search(r'\{[\s\S]*\}', response_text)
         if json_match:
             response_text = json_match.group()
@@ -1014,7 +1010,6 @@ Produce a hospital-grade psychological assessment report that:
         response_text = response_text.strip()
         
         # Extract JSON from response
-        import re
         json_match = re.search(r'\{[\s\S]*\}', response_text)
         if json_match:
             response_text = json_match.group()
@@ -1027,7 +1022,6 @@ Produce a hospital-grade psychological assessment report that:
         def format_test_results(text):
             if not text:
                 return "N/A"
-            import re
             lines = text.split('\n\n')
             if len(lines) <= 1:
                 text = re.sub(r'(?<=[.)])\s*([A-Z][A-Za-z\s\-()]+(?:Domain|Scale|Inventory|Questionnaire|Checklist|Assessment|Test))', r'</p><p class="assessment-item"><strong>\1</strong>', text)
@@ -1052,7 +1046,6 @@ Produce a hospital-grade psychological assessment report that:
         def format_recommendations(text):
             if not text:
                 return "N/A"
-            import re
             lines = text.split('\n\n')
             if len(lines) <= 1:
                 text = re.sub(r'([A-Z][A-Za-z\s/\-]+(?:Therapy|Consultation|Evaluation|Training|Assessment|Referral|Monitoring|Accommodations|Psychoeducation|Management|Intervention|Support|Schedule|Approach|Treatment))\s+([A-Z])', r'<p class="recommendation-item"><strong>\1</strong><br/>\2', text)
