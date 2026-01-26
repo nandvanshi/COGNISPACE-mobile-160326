@@ -48,6 +48,8 @@ class ResendProvider(EmailProviderBase):
             )
         
         try:
+            import asyncio
+            
             default_email, default_name = self.get_default_sender()
             from_email = message.from_email or default_email
             from_name = message.from_name or default_name
@@ -71,8 +73,8 @@ class ResendProvider(EmailProviderBase):
             if message.bcc:
                 params["bcc"] = message.bcc
             
-            # Send via Resend
-            response = self.resend_client.Emails.send(params)
+            # Run sync SDK in thread to keep FastAPI non-blocking
+            response = await asyncio.to_thread(self.resend_client.Emails.send, params)
             
             return EmailResult(
                 success=True,
