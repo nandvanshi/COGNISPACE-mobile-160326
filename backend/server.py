@@ -72,6 +72,9 @@ JWT_SECRET = os.environ.get('JWT_SECRET', 'your-secret-key-change-in-production'
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_HOURS = 24 * 7  # 7 days
 
+# Setup AI Clinical module with dependencies
+setup_ai_clinical(db, EMERGENT_LLM_KEY, JWT_SECRET, JWT_ALGORITHM)
+
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
 
@@ -91,6 +94,7 @@ api_router.include_router(assistant_dashboard_router)
 api_router.include_router(recurring_router)
 api_router.include_router(protocols_router)
 api_router.include_router(therapist_profile_router)
+api_router.include_router(ai_clinical_router)
 
 # ============= MODELS =============
 
