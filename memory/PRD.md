@@ -1,139 +1,154 @@
-# COGNISPACE - Practice Management & Clinical Decision Support
+# COGNISPACE - Product Requirements Document
 
 ## Original Problem Statement
 Build a secure, therapist-first web application for practice management and clinical decision support with AI-powered diagnostic tools.
 
-## Core Features (Implemented)
-- ✅ JWT-based authentication (Therapist, Client, Super Admin, Assistant)
-- ✅ Client management with self-registration via unique therapist links
-- ✅ Appointment scheduling with recurring appointments
-- ✅ Session notes (SOAP format)
-- ✅ Assessments with scoring
-- ✅ TheraGenie AI (Claude Sonnet 4) - Assessment suggestions, Protocol generation, Homework, Diagnostic reports
-- ✅ CogniVision - AI-powered psychodiagnostic report generation with PDF export
-- ✅ In-app notification system (bell icon, dropdown)
-- ✅ Email notifications (Resend)
-- ✅ WhatsApp notifications (Twilio)
-- ✅ Time-based scheduler (apscheduler)
-- ✅ Payment tracking with receipts
-- ✅ **Payment Reporting with analytics (NEW)**
+---
 
-## What's Been Implemented (Latest Session - Jan 26, 2026)
+## Product Vision
+COGNISPACE is a therapist-first clinical platform designed to help mental health professionals manage clients, sessions, documentation, and practice operations — all in one secure place.
 
-### Backend Refactoring (Completed)
-1. **AI Clinical Routes** → `/app/backend/routes/ai_clinical.py`
-   - `/ai/suggest-assessments`
-   - `/ai/generate-protocol`
-   - `/ai/generate-homework`
-   - `/ai/generate-diagnostic-report`
+---
 
-2. **Diagnostic Reports Routes** → `/app/backend/routes/diagnostic_reports.py`
-   - CRUD operations for diagnostic reports
-   - Approve and share functionality
+## Target Users
 
-3. **Resources Routes** → `/app/backend/routes/resources.py`
-   - Resource library management
-   - Client assignments
+### 1. Therapists
+- Private practitioners
+- Clinical psychologists
+- Counselors
+- Psychiatrists
 
-4. **server.py reduction**: 2570 → 1287 lines (~50% reduction)
+### 2. Clinics & Teams
+- Multi-practitioner clinics
+- Mental health centers
+- Assistants handling non-clinical tasks
 
-### Bug Fixes
-- ✅ AI response parsing error (empty JSON handling)
-- ✅ subscription_end_date not showing in Admin panel
-- ✅ Login Page Footer Desktop Layout Fix (Jan 26, 2026)
-  - Fixed footer alignment issue on desktop view
-  - Changed layout structure: outer flex-col with inner flex-row for two-column layout
-  - Footer now spans full width and stays centered at bottom on all screen sizes
+### 3. Clients
+- Individuals seeking therapy
+- Patients of registered therapists
 
-### New Pages Added (Jan 26, 2026)
-- ✅ **About Page** (`/about`) - Public-facing page with:
-  - Hero section with tagline
-  - "What is COGNISPACE?" section
-  - "Who is it for?" cards (Therapists, Clinics, Clients)
-  - Philosophy section with clinical disclaimer
-  - Privacy, Ethics & Safety points
-  - Compliance & Standards (IST, ₹, DD/MM/YYYY)
-  - CTA buttons for Registration & Support
-  - Footer with legal links
+---
 
-### Frontend Refactoring (Jan 26, 2026)
-- ✅ **AIClinicalSupport.js Component Breakdown** (1721 lines → 12 modular files)
-  - `/app/frontend/src/components/ai-clinical/` directory structure:
-    ```
-    ai-clinical/
-    ├── index.js           (267 lines) - Main wrapper
-    ├── AssessmentsTab.js  (162 lines)
-    ├── DiagnosticTab.js   (220 lines)
-    ├── ProtocolsTab.js    (120 lines)
-    ├── HomeworkTab.js     (118 lines)
-    ├── ResourcesTab.js    (81 lines)
-    ├── hooks/
-    │   └── useAIClinical.js (510 lines) - All API calls & state
-    └── dialogs/
-        ├── ProtocolDialog.js    (133 lines)
-        ├── HomeworkDialog.js    (87 lines)
-        ├── ResourceDialog.js    (78 lines)
-        ├── ReportEditorDialog.js (167 lines)
-        └── ReportPreviewDialog.js (47 lines)
-    ```
-  - Total: ~1990 lines split across 12 files (avg 165 lines each)
-  - Original file now re-exports for backward compatibility
-  - "What is COGNISPACE?" section
-  - "Who is it for?" cards (Therapists, Clinics, Clients)
-  - Philosophy section with clinical disclaimer
-  - Privacy, Ethics & Safety points
-  - Compliance & Standards (IST, ₹, DD/MM/YYYY)
-  - CTA buttons for Registration & Support
-  - Footer with legal links
+## Core Features
 
-### Payment Reporting (NEW - P1 Complete)
-**Backend APIs:**
-- `GET /payments/stats/summary` - Basic stats
-- `GET /payments/reports/detailed` - Detailed report with filters
-- `GET /payments/reports/monthly-trend` - Monthly trends & growth
-- `GET /payments/reports/client-wise` - Client-wise breakdown
-- `GET /payments/reports/daily-summary` - Daily summary
-- `GET /payments/reports/export` - CSV/JSON export
+### Authentication & Access Control
+- JWT-based authentication
+- 4 roles: Super Admin, Therapist, Assistant, Client
+- Role-based access control (RBAC)
 
-**Frontend Component:**
-- `PaymentReports.js` with tabs (Overview, Transactions, By Client)
-- Date range filtering
-- Summary cards (Revenue, Collected, Pending, Growth)
-- Monthly trend chart
-- Payment method breakdown
-- Export functionality
+### Client Management
+- Client profiles with demographics
+- Self-registration via unique therapist links
+- Case history documentation
+- Intake notes
+
+### Appointments
+- Create, reschedule, cancel
+- Recurring appointments (weekly/biweekly)
+- 60/30 minute reminders
+
+### Session Notes
+- SOAP format documentation
+- Linked to appointments
+- PDF export
+
+### Assessments
+- Assessment library (30+ standardized tools)
+- Online administration
+- Auto-scoring
+- Progress tracking
+
+### TheraGenie AI (Clinical Intelligence)
+- Assessment suggestions based on client data
+- Treatment protocol generation
+- Homework/exercise generation
+- **CogniVision**: AI-powered psychodiagnostic reports
+
+### Payments
+- Payment tracking
+- Receipt generation
+- Comprehensive analytics dashboard
+
+### Notifications
+- In-app notifications (bell icon)
+- Email (Resend)
+- WhatsApp (Twilio) - opt-in required
+
+### Admin Features
+- Therapist approval/rejection
+- Subscription management
+- Therapist deletion with client re-linking
+- System-wide settings
+
+---
 
 ## Tech Stack
-- **Frontend**: React 18, Tailwind CSS, Shadcn/UI
-- **Backend**: FastAPI, Motor (async MongoDB)
-- **Database**: MongoDB
-- **AI**: Claude Sonnet 4 via Emergent LLM Key
-- **Notifications**: Resend (Email), Twilio (WhatsApp)
-- **Scheduler**: APScheduler
 
-## Key API Endpoints
-- `/api/auth/*` - Authentication
-- `/api/admin/*` - Admin management
-- `/api/clients/*` - Client management
-- `/api/appointments/*` - Scheduling
-- `/api/payments/*` - Payment tracking
-- `/api/payments/reports/*` - Payment analytics (NEW)
-- `/api/ai/*` - AI clinical support
-- `/api/diagnostic-reports/*` - Report management
+| Component | Technology |
+|-----------|------------|
+| Frontend | React 18, Tailwind CSS, Shadcn/UI |
+| Backend | FastAPI (Python), Motor (async MongoDB) |
+| Database | MongoDB |
+| AI | Claude Sonnet 4 via Emergent LLM Key |
+| Email | Resend |
+| WhatsApp | Twilio |
+| Scheduler | APScheduler |
+| PDF | jsPDF + html2canvas |
 
-## Credentials
+---
+
+## API Structure
+
+```
+/api/
+├── auth/           # Authentication
+├── admin/          # Super admin operations
+├── clients/        # Client management
+├── appointments/   # Scheduling
+├── sessions/       # Session notes
+├── assessments/    # Assessment management
+├── payments/       # Payment tracking + reports
+├── ai/             # TheraGenie AI features
+├── diagnostic-reports/  # CogniVision reports
+├── notifications/  # In-app notifications
+├── resources/      # Resource library
+└── protocols/      # Treatment protocols
+```
+
+---
+
+## Test Credentials
+
 | Role | Login | Password | URL |
 |------|-------|----------|-----|
 | Super Admin | admin | admin123 | /admin-login |
 | Therapist 1 | 9807306444 | Abcd@1234 | /login |
 | Therapist 2 | 7275005007 | newpassword | /login |
+| Assistant | support@mindlabs.co.in | Abcd@1234 | /login |
 | Client | 8299683186 | Abcd@1234 | /login |
 
-## Upcoming Tasks (P1)
-1. Profile Photo Upload backend
+---
 
-## Future/Backlog
-- AI-powered SOAP/DAP note generation
-- Usage tracking/rate limiting for CI features
-- Note templates sharing
-- Coupon code management
+## Compliance & Standards
+
+- India Standard Time (IST)
+- DD/MM/YYYY date format
+- Indian Rupee (₹)
+- HIPAA-minded security practices
+- Consent-driven data handling
+- No clinical data via WhatsApp
+
+---
+
+## Legal Pages
+- Privacy Policy (`/privacy-policy`)
+- Terms & Conditions (`/terms-conditions`)
+- Clinical Disclaimer (`/clinical-disclaimer`)
+- Contact/Support (`/contact`)
+- About Page (`/about`)
+
+---
+
+## Brand
+**COGNISPACE** by Vedic Wellness Solutions
+*Precision Insights. Personal Growth.*
