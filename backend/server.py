@@ -497,64 +497,8 @@ class HomeworkComplete(BaseModel):
     client_notes: str
 
 # AI Clinical Support Models - MOVED TO routes/ai_clinical.py
-# DiagnosticReportCreate and DiagnosticReport models kept here for diagnostic-reports endpoints
-
-class DiagnosticReportCreate(BaseModel):
-    client_id: str
-    assessment_ids: List[str]
-    report_content: str  # Rich text HTML content
-    status: str = "draft"  # draft, approved, shared
-    therapist_signature: Optional[str] = None
-    therapist_reg_no: Optional[str] = None
-
-class DiagnosticReport(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    id: str
-    therapist_id: str
-    client_id: str
-    assessment_ids: List[str]
-    report_content: str
-    status: str  # draft, approved, shared
-    therapist_signature: Optional[str] = None
-    therapist_reg_no: Optional[str] = None
-    created_at: datetime
-    updated_at: Optional[datetime] = None
-    approved_at: Optional[datetime] = None
-    shared_at: Optional[datetime] = None
-
-# Resource Library Models
-class ResourceCreate(BaseModel):
-    title: str
-    category: str  # worksheet, exercise, psychoeducation, reading, meditation
-    content: str
-    tags: List[str] = []
-    is_downloadable: bool = True
-
-class Resource(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    id: str
-    therapist_id: str
-    title: str
-    category: str
-    content: str
-    tags: List[str]
-    is_downloadable: bool
-    usage_count: int = 0
-    created_at: datetime
-
-class ResourceAssignment(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    id: str
-    therapist_id: str
-    client_id: str
-    client_name: str
-    resource_id: str
-    resource_title: str
-    notes: Optional[str] = None
-    status: str = "assigned"  # assigned, viewed, completed
-    assigned_at: datetime
-    viewed_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
+# DiagnosticReport Models - MOVED TO routes/diagnostic_reports.py
+# Resource Library Models - MOVED TO routes/resources.py
 
 # ============= CASE HISTORY MODELS (MMS-Style) =============
 
