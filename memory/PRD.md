@@ -40,6 +40,10 @@ Build a secure, therapist-first web application for practice management and clin
 ### Bug Fixes
 - ✅ AI response parsing error (empty JSON handling)
 - ✅ subscription_end_date not showing in Admin panel
+- ✅ Login Page Footer Desktop Layout Fix (Jan 26, 2026)
+  - Fixed footer alignment issue on desktop view
+  - Changed layout structure: outer flex-col with inner flex-row for two-column layout
+  - Footer now spans full width and stays centered at bottom on all screen sizes
 
 ### Payment Reporting (NEW - P1 Complete)
 **Backend APIs:**
