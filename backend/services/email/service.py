@@ -35,7 +35,7 @@ class EmailService:
         Returns:
             True if email is allowed, False otherwise
         """
-        if not cls._db:
+        if cls._db is None:
             return False
         
         # Get therapist's subscription
