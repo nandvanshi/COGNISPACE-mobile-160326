@@ -155,7 +155,7 @@ export const PaymentReceiptView = ({ paymentId, isOpen, onClose }) => {
             </div>
             <div class="row">
               <span class="label">Client ID:</span>
-              <span class="value">${receipt?.client_id || 'N/A'}</span>
+              <span class="value">${receipt?.client_code || 'N/A'}</span>
             </div>
           </div>
 
