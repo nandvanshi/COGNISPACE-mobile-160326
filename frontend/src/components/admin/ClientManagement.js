@@ -64,6 +64,46 @@ const ClientManagement = ({ onViewTherapist }) => {
     }
   };
 
+  const fetchOrphanedClients = async () => {
+    try {
+      const response = await axios.get(`${API}/admin/clients/orphaned/list`);
+      setOrphanedClients(response.data.clients || []);
+    } catch (error) {
+      console.error('Failed to load orphaned clients');
+    }
+  };
+
+  const fetchTherapists = async () => {
+    try {
+      const response = await axios.get(`${API}/admin/therapists`);
+      setTherapists(response.data.filter(t => t.status === 'approved'));
+    } catch (error) {
+      console.error('Failed to load therapists');
+    }
+  };
+
+  const handleLinkClient = (client) => {
+    setSelectedClient(client);
+    setSelectedTherapistId('');
+    setShowLinkDialog(true);
+  };
+
+  const confirmLinkClient = async () => {
+    if (!selectedTherapistId) {
+      toast.error('Please select a therapist');
+      return;
+    }
+    try {
+      await axios.post(`${API}/admin/clients/${selectedClient.id}/link-therapist?therapist_id=${selectedTherapistId}`);
+      toast.success('Client linked to therapist successfully');
+      setShowLinkDialog(false);
+      fetchClients();
+      fetchOrphanedClients();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to link client');
+    }
+  };
+
   const handleViewDetail = async (client) => {
     try {
       const response = await axios.get(`${API}/admin/clients/${client.id}`);
