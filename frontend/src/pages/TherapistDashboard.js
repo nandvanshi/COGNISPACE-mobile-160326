@@ -109,6 +109,7 @@ const TherapistDashboard = () => {
     'protocols': 'protocols',
     'messages': 'messaging',
     'payments': 'payments',
+    'payment-reports': 'payments',
     'assistants': 'assistants',
   };
 
