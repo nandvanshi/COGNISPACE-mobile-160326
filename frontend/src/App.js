@@ -10,6 +10,7 @@ import ClientDashboard from './pages/ClientDashboard';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import AssistantDashboard from './pages/AssistantDashboard';
 import ClientRegisterPage from './pages/ClientRegisterPage';
+import AboutPage from './pages/AboutPage';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsConditions from './pages/TermsConditions';
 import ClinicalDisclaimer from './pages/ClinicalDisclaimer';
