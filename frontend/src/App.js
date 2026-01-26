@@ -159,6 +159,11 @@ function App() {
               <Route path="/admin-login" element={<AdminLoginPage />} />
               <Route path="/therapist-application" element={<TherapistApplicationPage />} />
               <Route path="/register/client/:therapistCode" element={<ClientRegisterPage />} />
+              {/* Legal & Compliance Pages */}
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/terms-conditions" element={<TermsConditions />} />
+              <Route path="/clinical-disclaimer" element={<ClinicalDisclaimer />} />
+              <Route path="/contact" element={<ContactSupport />} />
               <Route
                 path="/therapist/*"
                 element={
