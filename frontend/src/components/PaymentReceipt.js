@@ -9,7 +9,7 @@ import {
   Receipt, Printer, Download, X, CheckCircle, 
   Clock, User, CreditCard, Calendar, FileText, Loader2
 } from 'lucide-react';
-import { formatCurrency } from '../utils/formatUtils';
+import { formatCurrency, formatDate, formatDateTime } from '../utils/formatUtils';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
