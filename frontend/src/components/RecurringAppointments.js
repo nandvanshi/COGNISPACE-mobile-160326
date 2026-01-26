@@ -206,8 +206,8 @@ const RecurringAppointments = ({ isReadOnly = false }) => {
                     <p className="text-sm text-muted-foreground mt-1">{pattern.notes}</p>
                   )}
                   <p className="text-xs text-muted-foreground mt-2">
-                    Starts: {new Date(pattern.start_date).toLocaleDateString()}
-                    {pattern.end_date && ` • Ends: ${new Date(pattern.end_date).toLocaleDateString()}`}
+                    Starts: {formatDate(pattern.start_date)}
+                    {pattern.end_date && ` • Ends: ${formatDate(pattern.end_date)}`}
                   </p>
                 </div>
               </div>
