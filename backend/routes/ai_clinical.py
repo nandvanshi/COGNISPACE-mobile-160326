@@ -373,8 +373,23 @@ Respond in valid JSON format only with this structure:
         user_message = UserMessage(text=f"Based on the following client information, suggest appropriate clinical assessments:\n\n{client_context}")
         response = await chat.send_message(user_message)
         
+        # Debug logging
+        import logging
+        logging.info(f"AI Response type: {type(response)}")
+        logging.info(f"AI Response: {str(response)[:500]}")
+        
+        # Handle response - could be string or object
+        if hasattr(response, 'content'):
+            response_text = response.content
+        elif hasattr(response, 'text'):
+            response_text = response.text
+        elif isinstance(response, str):
+            response_text = response
+        else:
+            response_text = str(response)
+        
         # Parse JSON response
-        response_text = response.strip()
+        response_text = response_text.strip()
         if response_text.startswith("```json"):
             response_text = response_text[7:]
         if response_text.startswith("```"):
