@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Switch } from './ui/switch';
 import { toast } from 'sonner';
 import { Plus, Repeat, Trash2, Play, Pause, Calendar, Clock, User } from 'lucide-react';
+import { formatDate } from '../utils/formatUtils';
 
 const DAYS_OF_WEEK = [
   { value: 0, label: 'Monday' },
