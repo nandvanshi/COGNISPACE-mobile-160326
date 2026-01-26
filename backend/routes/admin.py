@@ -398,11 +398,17 @@ async def get_therapist_detail(therapist_id: str, current_user: dict = Depends(r
         sort=[("start_date", -1)]
     )
     
+    # Extract subscription_end_date for frontend compatibility
+    subscription_end_date = None
+    if subscription:
+        subscription_end_date = subscription.get("end_date")
+    
     return {
         **therapist,
         "clients_count": clients_count,
         "appointments_count": appointments_count,
-        "current_subscription": subscription
+        "current_subscription": subscription,
+        "subscription_end_date": subscription_end_date
     }
 
 
