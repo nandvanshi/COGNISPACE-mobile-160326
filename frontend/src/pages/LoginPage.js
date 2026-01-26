@@ -119,6 +119,48 @@ const LoginPage = () => {
           </div>
         </Card>
       </div>
+
+      {/* Footer */}
+      <footer className="mt-auto py-8 px-4">
+        <div className="max-w-lg mx-auto">
+          {/* Clinical Disclaimer - Short Version */}
+          <div className="text-center mb-6">
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              COGNISPACE is a practice-management and clinical support platform. 
+              It does not provide medical or psychological treatment. 
+              All clinical responsibility remains with the registered therapist.{' '}
+              <Link to="/clinical-disclaimer" className="text-primary hover:underline">
+                Learn more
+              </Link>
+            </p>
+          </div>
+          
+          {/* Legal Links */}
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs text-muted-foreground mb-6">
+            <Link to="/privacy-policy" className="hover:text-primary transition-colors">
+              Privacy Policy
+            </Link>
+            <span className="text-border">•</span>
+            <Link to="/terms-conditions" className="hover:text-primary transition-colors">
+              Terms & Conditions
+            </Link>
+            <span className="text-border">•</span>
+            <Link to="/clinical-disclaimer" className="hover:text-primary transition-colors">
+              Clinical Disclaimer
+            </Link>
+            <span className="text-border">•</span>
+            <Link to="/contact" className="hover:text-primary transition-colors">
+              Contact / Support
+            </Link>
+          </div>
+          
+          {/* Company Info */}
+          <div className="text-center text-xs text-muted-foreground/70">
+            <p>© 2026 COGNISPACE by Vedic Wellness Solutions</p>
+            <p className="mt-1">GSTIN: 09APSPD8480L1Z2 | Lucknow, India</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
