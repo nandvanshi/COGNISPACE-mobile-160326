@@ -114,7 +114,7 @@ class WhatsAppProviderRegistry:
         if code not in PROVIDER_CLASSES:
             raise ValueError(f"Unknown provider code: {code}. Available: {list(PROVIDER_CLASSES.keys())}")
         
-        if cls._db:
+        if cls._db is not None:
             await cls._db.whatsapp_providers.update_one(
                 {"code": code},
                 {"$set": {
@@ -133,7 +133,7 @@ class WhatsAppProviderRegistry:
     @classmethod
     async def add_template(cls, event: str, provider_code: str, template_id: str, language: str = "en"):
         """Add a template mapping"""
-        if cls._db:
+        if cls._db is not None:
             await cls._db.whatsapp_templates.update_one(
                 {"event": event, "provider_code": provider_code},
                 {"$set": {
