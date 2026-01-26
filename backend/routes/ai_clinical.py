@@ -1000,14 +1000,25 @@ Produce a hospital-grade psychological assessment report that:
         user_message = UserMessage(text=f"Generate a comprehensive Psychological Assessment Report based on:\n\n{context}")
         response = await chat.send_message(user_message)
         
-        # Parse JSON response
-        response_text = response.strip()
-        if response_text.startswith("```json"):
-            response_text = response_text[7:]
-        if response_text.startswith("```"):
-            response_text = response_text[3:]
-        if response_text.endswith("```"):
-            response_text = response_text[:-3]
+        # Handle response type
+        if hasattr(response, 'content'):
+            response_text = response.content
+        elif hasattr(response, 'text'):
+            response_text = response.text
+        elif isinstance(response, str):
+            response_text = response
+        else:
+            response_text = str(response)
+        
+        response_text = response_text.strip()
+        
+        # Extract JSON from response
+        import re
+        json_match = re.search(r'\{[\s\S]*\}', response_text)
+        if json_match:
+            response_text = json_match.group()
+        else:
+            raise HTTPException(status_code=500, detail="Unable to generate diagnostic report - please ensure sufficient clinical data is provided")
         
         result = json.loads(response_text.strip())
         
