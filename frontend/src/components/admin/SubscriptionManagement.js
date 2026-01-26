@@ -9,7 +9,7 @@ import { Badge } from '../ui/badge';
 import { Switch } from '../ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { toast } from 'sonner';
-import { Plus, Trash2, CreditCard, Settings, FileText, ClipboardCheck, Brain, BookOpen, MessageSquare, DollarSign, Users, BarChart } from 'lucide-react';
+import { Plus, Trash2, CreditCard, Settings, FileText, ClipboardCheck, Brain, BookOpen, MessageSquare, DollarSign, Users, BarChart, Mail, Phone } from 'lucide-react';
 
 // Feature toggle configuration with icons and labels
 const FEATURE_CONFIG = [
@@ -21,6 +21,8 @@ const FEATURE_CONFIG = [
   { key: 'payments', label: 'Payments', icon: DollarSign, description: 'Payment tracking' },
   { key: 'assistants', label: 'Assistants', icon: Users, description: 'Therapist assistants' },
   { key: 'reports', label: 'Reports', icon: BarChart, description: 'Analytics & reports' },
+  { key: 'email_notifications', label: 'Email Notifications', icon: Mail, description: 'Send emails to clients' },
+  { key: 'whatsapp_notifications', label: 'WhatsApp Notifications', icon: Phone, description: 'Send WhatsApp messages' },
 ];
 
 const SubscriptionManagement = () => {
