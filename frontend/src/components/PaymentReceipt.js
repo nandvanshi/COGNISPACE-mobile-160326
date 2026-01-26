@@ -234,25 +234,55 @@ export const PaymentReceiptView = ({ paymentId, isOpen, onClose }) => {
     };
   };
 
-  const handleDownloadPDF = () => {
-    if (!receipt) return;
+  const handleDownloadPDF = async () => {
+    if (!receipt || !receiptRef.current) return;
     
-    const receiptHTML = generateReceiptHTML();
-    
-    // Create a Blob with HTML content
-    const blob = new Blob([receiptHTML], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    
-    // Create download link
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `Receipt-${receipt.bill_number}.html`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    
-    toast.success('Receipt downloaded! Open the file and use browser Print → Save as PDF');
+    try {
+      toast.info('Generating PDF...');
+      
+      // Create a temporary container with receipt content for PDF generation
+      const tempContainer = document.createElement('div');
+      tempContainer.style.position = 'absolute';
+      tempContainer.style.left = '-9999px';
+      tempContainer.style.top = '0';
+      tempContainer.style.width = '380px';
+      tempContainer.style.padding = '20px';
+      tempContainer.style.backgroundColor = 'white';
+      tempContainer.innerHTML = generateReceiptHTML();
+      document.body.appendChild(tempContainer);
+      
+      // Wait for content to render
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Generate canvas from the temporary container
+      const canvas = await html2canvas(tempContainer, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false
+      });
+      
+      // Remove temporary container
+      document.body.removeChild(tempContainer);
+      
+      // Create PDF
+      const imgWidth = 190;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgData = canvas.toDataURL('image/png');
+      
+      // Add image to PDF with some margin
+      pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+      
+      // Save the PDF
+      pdf.save(`Receipt-${receipt.bill_number}.pdf`);
+      
+      toast.success('Receipt downloaded successfully!');
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      toast.error('Failed to generate PDF. Please try again.');
+    }
   };
 
   if (!isOpen) return null;
