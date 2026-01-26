@@ -290,6 +290,23 @@ async def create_appointment(appt_data: AppointmentCreate, current_user: dict = 
     except Exception as e:
         print(f"Failed to send appointment confirmation email: {e}")
     
+    # Send WhatsApp confirmation to client (if configured and opted-in)
+    try:
+        from services.whatsapp import WhatsAppService
+        if WhatsAppService.is_configured():
+            # Parse date and time for WhatsApp message
+            appt_date = appointment_doc["start_time"][:10]  # YYYY-MM-DD
+            appt_time = appointment_doc["start_time"][11:16]  # HH:MM
+            await WhatsAppService.send_appointment_confirmation(
+                client_id=appt_data.client_id,
+                therapist_id=therapist_id,
+                therapist_name=therapist_name,
+                appointment_date=appt_date,
+                appointment_time=appt_time
+            )
+    except Exception as e:
+        print(f"Failed to send WhatsApp confirmation: {e}")
+    
     return Appointment(
         id=appointment_doc["id"],
         therapist_id=appointment_doc["therapist_id"],
