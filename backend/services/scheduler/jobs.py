@@ -97,13 +97,13 @@ async def _send_appointment_reminder(db, appointment: dict, time_until: str) -> 
         # Create in-app notification
         from routes.notifications import create_notification
         await create_notification(
-            db=db,
             user_id=client_id,
             role="client",
             notification_type="appointment_reminder",
             title="Appointment Reminder",
             message=f"Your session with {therapist['full_name']} is in {time_until}",
-            link="/dashboard"
+            link="/dashboard",
+            db_override=db
         )
         
         # Send email notification
@@ -217,13 +217,13 @@ async def _send_pending_note_reminder(db, appointment: dict) -> bool:
                 pass
         
         await create_notification(
-            db=db,
             user_id=therapist_id,
             role="therapist",
             notification_type="pending_note",
             title="Session Note Pending",
             message=f"Please add notes for session with {client['full_name']} ({appt_time})",
-            link="/session-notes"
+            link="/session-notes",
+            db_override=db
         )
         
         return True
@@ -295,13 +295,13 @@ async def _send_subscription_expiry_warning(db, subscription: dict, days_remaini
         # Create in-app notification
         from routes.notifications import create_notification
         await create_notification(
-            db=db,
             user_id=therapist_id,
             role="therapist",
             notification_type="subscription_expiry",
             title="Subscription Expiring Soon",
             message=f"{plan_name} expires in {days_remaining} day{'s' if days_remaining > 1 else ''}. Renew now to avoid interruption.",
-            link="/subscription"
+            link="/subscription",
+            db_override=db
         )
         
         # Send email notification
