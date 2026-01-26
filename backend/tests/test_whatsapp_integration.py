@@ -210,7 +210,7 @@ class TestChannelAvailabilityAPI:
             "password": "Abcd@1234"
         })
         if response.status_code == 200:
-            return response.json().get("access_token")
+            return response.json().get("token")
         pytest.skip("Could not authenticate therapist")
     
     def test_channel_availability_endpoint_exists(self, therapist_token):
@@ -266,7 +266,7 @@ class TestAppointmentCreationWhatsAppTrigger:
             "password": "Abcd@1234"
         })
         if response.status_code == 200:
-            return response.json().get("access_token")
+            return response.json().get("token")
         pytest.skip("Could not authenticate therapist")
     
     def test_appointment_creation_does_not_fail_without_whatsapp(self, therapist_token):
