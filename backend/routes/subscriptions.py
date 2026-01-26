@@ -330,9 +330,23 @@ async def update_plan_feature_toggles(plan_id: str, feature_toggles: dict, curre
     
     merged_toggles = {**DEFAULT_FEATURE_TOGGLES, **plan.get("feature_toggles", {}), **feature_toggles}
     
+    # Also update the features dict for notification settings
+    features_update = plan.get("features", {})
+    if isinstance(features_update, list):
+        features_update = {}  # Convert legacy list to dict
+    
+    # Sync notification features
+    if "email_notifications" in feature_toggles:
+        features_update["email_notifications"] = feature_toggles["email_notifications"]
+    if "whatsapp_notifications" in feature_toggles:
+        features_update["whatsapp_notifications"] = feature_toggles["whatsapp_notifications"]
+    
     await db.subscription_plans.update_one(
         {"id": plan_id},
-        {"$set": {"feature_toggles": merged_toggles}}
+        {"$set": {
+            "feature_toggles": merged_toggles,
+            "features": features_update
+        }}
     )
     
     await log_audit(current_user["id"], current_user["role"], "update_toggles", "subscription_plan", plan_id)
