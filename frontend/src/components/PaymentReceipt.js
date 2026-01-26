@@ -314,10 +314,22 @@ export const PaymentReceiptView = ({ paymentId, isOpen, onClose }) => {
                 <span className="text-muted-foreground">Therapist:</span>
                 <span className="font-medium">{receipt.therapist_name}</span>
               </div>
-              {receipt.therapist_phone && (
+              {receipt.therapist_mobile && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Phone:</span>
-                  <span>{receipt.therapist_phone}</span>
+                  <span>{receipt.therapist_mobile}</span>
+                </div>
+              )}
+              {receipt.therapist_email && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Email:</span>
+                  <span className="text-xs">{receipt.therapist_email}</span>
+                </div>
+              )}
+              {receipt.clinic_address && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Address:</span>
+                  <span className="text-xs text-right max-w-[200px]">{receipt.clinic_address}</span>
                 </div>
               )}
             </div>
