@@ -29,6 +29,7 @@ class TherapistProfile(BaseModel):
     status: Optional[str] = None
     subscription_status: Optional[str] = None
     subscription_plan: Optional[str] = None
+    subscription_end_date: Optional[datetime] = None
     created_at: datetime
     approved_at: Optional[datetime] = None
 
