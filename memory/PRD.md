@@ -2015,12 +2015,69 @@ Build a secure, therapist-first web application for managing a therapy practice 
 
 ---
 
-## Pending Tasks (Priority Order)
+### Phase 48: WhatsApp Integration with Twilio (COMPLETED - Jan 26, 2026)
+**Feature:** Provider-agnostic WhatsApp notification system using Twilio
 
-### P1 - WhatsApp Integration
-- Implement WhatsApp provider using Twilio or similar
-- Add WhatsApp templates for key events
-- Enable WhatsApp toggles in UI when configured
+**Status:** MOCK MODE - Twilio credentials not configured yet
+
+**Architecture:**
+- Provider abstraction pattern (same as Email)
+- Base class: `WhatsAppProviderBase` with abstract methods
+- Registry: `WhatsAppProviderRegistry` with dynamic provider loading
+- Service: `WhatsAppService` with subscription/preference/opt-in checks
+
+**Twilio Provider Implementation:**
+- `/app/backend/services/whatsapp/twilio_provider.py`
+- Uses Twilio REST API for WhatsApp messages
+- Async implementation via `asyncio.to_thread`
+- Phone normalization to +91XXXXXXXXXX format
+
+**WhatsApp Allowed Events (No Clinical Content):**
+1. `appointment_confirmation` - "Your session with {therapist} is scheduled for {date} at {time}"
+2. `appointment_reminder` - "Your session with {therapist} is in {time_until}"
+3. `payment_receipt` - "Amount: ₹{amount}, Date: {date}"
+
+**Security & Privacy:**
+- Requires EXPLICIT user opt-in (`notification_opt_in.whatsapp = true`)
+- Respects therapist notification preferences
+- Checks subscription plan allows WhatsApp
+- NO clinical content in any WhatsApp message
+
+**Integration Points:**
+- Appointment creation → WhatsApp confirmation (if configured)
+- Scheduler reminder job → WhatsApp reminder (if configured)
+- Payment recording → WhatsApp receipt (to be added)
+
+**Configuration Required:**
+```env
+TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxx
+TWILIO_AUTH_TOKEN=your_auth_token
+TWILIO_WHATSAPP_FROM=+14155238886
+```
+
+**Files Created:**
+- `/app/backend/services/whatsapp/twilio_provider.py`
+
+**Files Modified:**
+- `/app/backend/services/whatsapp/registry.py` - Added TwilioWhatsAppProvider
+- `/app/backend/services/whatsapp/service.py` - Added convenience methods
+- `/app/backend/routes/appointments.py` - WhatsApp confirmation trigger
+- `/app/backend/services/scheduler/jobs.py` - WhatsApp reminder trigger
+- `/app/backend/routes/notification_settings.py` - Dynamic whatsapp_configured check
+
+**Dependencies Added:**
+- `twilio>=9.10.0`
+- `aiohttp-retry>=2.9.1`
+
+**Testing Results (iteration_33.json):**
+- ✅ Backend: 100% (40/40 tests passed)
+- ✅ Provider architecture verified
+- ✅ Graceful skip when not configured
+- ✅ Opt-in requirement enforced
+
+---
+
+## Pending Tasks (Priority Order)
 
 ### P2 - Global Standards Audit
 - Date format: DD/MM/YYYY everywhere
@@ -2029,5 +2086,9 @@ Build a secure, therapist-first web application for managing a therapy practice 
 ### P2 - Code Refactoring
 - Split `server.py` into smaller modules (models/, routes/, templates/)
 - Decompose `AIClinicalSupport.js` component
+
+### P3 - WhatsApp Activation
+- User to add Twilio credentials to .env
+- Enable WhatsApp in subscription plans
 
 ---
