@@ -2542,6 +2542,16 @@ async def startup_event():
     """Run on application startup - migrate therapists without subscriptions"""
     logger.info("Running startup migration for therapists without subscriptions...")
     
+    # Initialize Email and WhatsApp services
+    try:
+        from services.email import EmailService
+        from services.whatsapp import WhatsAppService
+        await EmailService.initialize(db)
+        await WhatsAppService.initialize(db)
+        logger.info("Email and WhatsApp services initialized.")
+    except Exception as e:
+        logger.error(f"Failed to initialize notification services: {e}")
+    
     # Find all therapists without subscription_status or with null/empty subscription_status
     therapists_without_subscription = await db.users.find(
         {"role": "therapist", "$or": [
