@@ -241,7 +241,7 @@ async def get_ai_chat(session_id: str, system_message: str):
 # ============= AI ENDPOINTS =============
 
 @router.post("/ai/suggest-assessments", response_model=AIAssessmentSuggestionResponse)
-async def ai_suggest_assessments(request: AIAssessmentSuggestionRequest, current_user: dict = Depends(lambda: require_active_therapist)):
+async def ai_suggest_assessments(request: AIAssessmentSuggestionRequest, current_user: dict = Depends(require_active_therapist)):
     """AI-powered assessment suggestion based on client data and/or therapist query"""
     # Check feature access
     await check_feature_enabled(current_user["id"], "ai_clinical")
@@ -252,7 +252,7 @@ async def ai_suggest_assessments(request: AIAssessmentSuggestionRequest, current
     
     # Gather client data if client_id provided
     if request.client_id:
-        client_profile = await db.client_profiles.find_one(
+        client_profile = await _db.client_profiles.find_one(
             {"user_id": request.client_id, "therapist_id": therapist_id},
             {"_id": 0}
         )
