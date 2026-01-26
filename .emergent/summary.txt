@@ -1,0 +1,209 @@
+<analysis>**original_problem_statement**: Build a secure, therapist-first web application named **COGNISPACE** for practice management and clinical decision support.
+
+**PRODUCT REQUIREMENTS**
+*   **Core Features**: Secure JWT-based authentication for Therapists, Clients, Super Admins, and Assistants. Includes client management, appointments, session notes, messaging, and payment tracking.
+*   **TheraGenie & CogniVision**: An AI module for clinical intelligence, including the generation of editable, exportable (PDF) psychodiagnostic reports.
+*   **Client Self-Registration (New)**: Therapists must have a unique, permanent link they can share with clients to allow them to create their own profiles.
+*   **Client-Facing Reports (New)**: Clients must be able to view diagnostic reports shared by their therapist directly from their dashboard.
+*   **In-App Notifications (New)**: A role-aware, real-time notification system (bell icon, dropdown panel) for events like new appointments, payments, homework, and new client registrations.
+*   **Email & WhatsApp Notifications (New)**: An extension of the notification system to send emails and WhatsApp messages. This system must be **provider-agnostic**, allowing providers (e.g., Resend, Twilio) to be changed without code refactoring. Availability must be controlled by Super Admin-managed subscription plans and configurable by therapists.
+
+**User's preferred language**: Hindi. The user communicates in Hindi and Hinglish. The next agent **MUST** respond in Hindi.
+
+**what currently exists?**
+The agent successfully fixed a critical P0 bug that caused the client dashboard to be blank, a fix that was verified by the testing subagent. Following this, several major features were implemented:
+
+1.  **Client Self-Registration**: A unique, permanent registration link is now generated for each therapist. This link is displayed on the therapist's dashboard and can be shared with new clients to create their accounts.
+2.  **Shared Diagnostic Reports in Client View**: A My Diagnostic Reports section was added to the client dashboard, allowing clients to view and download PDF reports shared by their therapist. The PDF styling for the client-side download was improved to match the professional quality of the therapist's view.
+3.  **In-App Notification System**: A full-featured in-app notification system was built from scratch. It includes a bell icon with an unread count in the header for all user roles, a dropdown panel to view notifications, read/unread status management, and click-to-navigate functionality. Event triggers for new client registration, appointments, payments, and homework have been implemented.
+4.  **Provider-Agnostic Notification Scaffolding**: The backend architecture for a provider-agnostic Email and WhatsApp notification system has been scaffolded. This includes a service layer with a base provider class, a dynamic registry, and an initial implementation for email using **Resend**. The database models for subscription plans were updated to include feature flags for  and .
+
+**Last working item**:
+-   **Last item agent was working**: Implementing the provider-agnostic email notification system. The agent installed the  package, retrieved the API key via the , and scaffolded the service architecture. The last step was recognizing the need to make the methods in  asynchronous to work with FastAPI.
+-   **Status**: IN PROGRESS
+-   **Agent Testing Done**: N
+-   **Which testing method agent to use?**: backend testing agent. After implementation, the agent should trigger an event (e.g., create a new user) and verify that the  is called and an email is successfully sent via Resend by checking logs or a test inbox.
+-   **User Testing Done**: N
+
+**All Pending/In progress Issue list**:
+-   **Issue 1**: Complete Provider-Agnostic Email Notification System (P0)
+-   **Issue 2**: Implement Time-Based Notification Scheduler (P1)
+-   **Issue 3**: Global Standards Audit (Date/Currency) (P2)
+-   **Issue 4**: Backend & Frontend Refactoring (P2)
+
+**Issues Detail**:
+-   **Issue 1**: Complete Provider-Agnostic Email Notification System
+    -   **Attempted fixes**: The backend service structure () has been created,  is installed, and the subscription model has been updated. The agent has the Resend API key.
+    -   **Next debug checklist**:
+        1.  Make the  method in  asynchronous ().
+        2.  Integrate the  call into an existing event trigger, such as the new client registration flow in .
+        3.  The logic must check the therapist's subscription plan to see if  is  before attempting to send an email.
+        4.  Create the API endpoints in  for therapists to manage their preferences.
+        5.  Build the corresponding frontend UI for therapists under Settings.
+    -   **Why fix this issue and what will be achieved with the fix?**: This will complete a core part of the user's latest feature request, enabling scalable and configurable email notifications.
+    -   **Status**: IN PROGRESS
+    -   **Is recurring issue?**: N
+    -   **Should Test frontend/backend/both after fix?**: both
+    -   **Blocked on other issue**: None
+
+-   **Issue 2**: Implement Time-Based Notification Scheduler
+    -   **Attempted fixes**: None.
+    -   **Next debug checklist**:
+        1.  Choose and implement a background task runner compatible with FastAPI (e.g., , ).
+        2.  Create a recurring job that runs every few minutes.
+        3.  The job should query for upcoming events (e.g., appointments starting in 30 mins) or overdue tasks (e.g., notes pending 1 hour after a session).
+        4.  For each event found, create a notification using the existing notification service.
+    -   **Why fix this issue and what will be achieved with the fix?**: Enables proactive reminders for therapists and clients, a key part of the original notification system requirements.
+    -   **Status**: NOT STARTED
+    -   **Is recurring issue?**: N
+    -   **Should Test frontend/backend/both after fix?**: backend
+    -   **Blocked on other issue**: None
+
+-   **Issue 3**: Global Standards Audit
+    -   **Attempted fixes**: None.
+    -   **Next debug checklist**: Review all frontend components and backend APIs handling dates and currency to ensure DD/MM/YYYY and ₹ are used consistently.
+    -   **Why fix this issue and what will be achieved with the fix?**: Ensures compliance with core business requirements.
+    -   **Status**: NOT STARTED
+    -   **Is recurring issue?**: N
+    -   **Should Test frontend/backend/both after fix?**: both
+    -   **Blocked on other issue**: None
+
+-   **Issue 4**: Backend & Frontend Refactoring
+    -   **Attempted fixes**: None.
+    -   **Next debug checklist**:
+        -   Backend: Move Pydantic models, API routes, and large HTML templates from  into separate directories (, , ).
+        -   Frontend: Decompose the monolithic  component.
+    -   **Why fix this issue and what will be achieved with the fix?**: Improves code organization and maintainability.
+    -   **Status**: NOT STARTED
+    -   **Is recurring issue?**: N
+    -   **Should Test frontend/backend/both after fix?**: both
+    -   **Blocked on other issue**: None
+
+**In progress Task List**:
+-   **Task 1**: Implement Provider-Agnostic Email System
+    -   **Where to resume**: Fix the  to use  for its  method, then wire it into an event trigger like new client registration.
+    -   **What will be achieved with this?**: The first end-to-end, provider-agnostic email notification will be functional.
+    -   **Status**: IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?**: backend
+    -   **Blocked on something**: None
+
+**Upcoming and Future Tasks**
+-   **Upcoming Tasks**:
+    -   (P1) **Therapist Notification Settings**: Build the UI and API for therapists to enable/disable specific email/WhatsApp notifications.
+    -   (P1) **WhatsApp Provider Integration**: Implement WhatsApp notifications using the provider abstraction, starting with a provider like Twilio.
+-   **Future Tasks**:
+    -   Implement full backend logic for payment reporting.
+    -   Implement backend storage for profile photo uploads.
+    -   Add AI-powered SOAP/DAP note generation.
+    -   Implement usage tracking/rate limiting for CI features.
+    -   Build a feature for therapists to share note templates.
+    -   Implement backend logic for coupon code management.
+
+**Completed work in this session**
+-   **P0 Bug Fix**: Resolved the blank client dashboard issue after case history completion (Verified by testing agent).
+-   **Client Self-Registration**: Implemented the entire flow, from the therapist's unique link to the client's registration and success page.
+-   **Dashboard Alerts**: Added a Needs Attention section to the therapist dashboard for new client sign-ups and improved its UI/UX.
+-   **Client Report Viewing**: Added a My Diagnostic Reports section to the client dashboard.
+-   **PDF Styling Fix**: Corrected the client-side PDF download styling to match the professional therapist-side version.
+-   **In-App Notifications**: Built a complete, event-driven in-app notification system for all roles.
+-   **Notification Architecture**: Scaffolded the provider-agnostic backend services for Email and WhatsApp.
+
+**Earlier issues found/mentioned but not fixed**
+-   None new. The pending refactoring and standards audit remain.
+
+**Known issue recurrence from previous fork**
+-   The user has high expectations for feature quality and often requires multiple detailed iterations to achieve the desired outcome. The agent should be prepared for specific feedback.
+
+**Code Architecture**
+
+
+**Key Technical Concepts**
+-   **Provider Abstraction Pattern**: Implemented a scalable architecture for external services (Email, WhatsApp) to avoid vendor lock-in, using a base class, a dynamic registry, and provider-specific adapters.
+-   **Event-Driven Notifications**: Shifted from simple counters to a robust system where backend actions (e.g., creating a client, sharing a report) trigger the creation of notifications.
+-   **Frontend Polling**: The  component uses a  to poll the backend periodically for new notifications, providing a near real-time experience.
+-   **Dynamic Routing and UI**: The application uses URL parameters () for dynamic pages and conditional rendering extensively to tailor dashboards for different user roles and states (e.g., showing consent form vs. main dashboard).
+
+**key DB schema**
+-   **notifications** (NEW): .
+-   **therapist_profiles**: Added .
+-   **users**: Added  to track new sign-ups.
+-   **subscription_plans**: Added .
+
+**changes in tech stack**
+-   **Resend**: Added as the first email provider via the  Python package.
+
+**All files of reference**
+-   **/app/backend/services/email/service.py**: The main service for sending emails, abstracting the provider logic.
+-   **/app/backend/services/email/resend_provider.py**: The specific implementation for the Resend API.
+-   **/app/backend/routes/auth.py**: Contains the client self-registration logic, a key trigger for notifications.
+-   **/app/backend/routes/notifications.py**: The API for the in-app notification system.
+-   **/app/frontend/src/components/NotificationBell.js**: The reusable frontend component for displaying notifications.
+-   **/app/frontend/src/pages/ClientRegisterPage.js**: The new client-facing registration page.
+-   **/app/frontend/src/pages/ClientDashboard.js**: Heavily modified to include diagnostic reports and the notification bell.
+
+**Areas that need refactoring**:
+-   **/app/backend/server.py**: Still monolithic and urgently needs to be broken down into smaller, more focused modules (models, routes, etc.).
+-   **/app/frontend/src/components/AIClinicalSupport.js**: Remains very large and should be decomposed.
+-   **/app/memory/PRD.md**: Now extremely long (over 1700 lines). Should be split into , , and .
+
+**key api endpoints**
+-   ****: Creates a new client account linked to a therapist.
+-   ****: Retrieves the therapist's unique registration link and code.
+-   ****: Fetches newly registered clients for dashboard alerts.
+-   ****: Retrieves unread notifications for the current user.
+-   ****: Marks a single notification as read.
+-   ****: (For Client) Retrieves diagnostic reports shared with the client.
+
+**Critical Info for New Agent**
+-   **You MUST communicate in Hindi.**
+-   Your immediate task is to complete the **provider-agnostic email notification system**. Start by fixing the  implementation in  and then integrate it into an event trigger (like new client registration).
+-   The user has provided a detailed master plan for Email/WhatsApp notifications. You must adhere to the requirements for subscription control, therapist preferences, and provider abstraction.
+-   The in-app notification system is fully functional. The new work on email/WhatsApp should extend, not break, it.
+
+**documents and test reports created in this job**
+-   
+-    (heavily updated)
+
+**Last 10 User Messages and any pending HUMAN messages**
+1.  **User**: Requested a link for therapists to share for client self-registration. **Status: COMPLETED**.
+2.  **User**: Clarified the registration link should be permanent and use a simple unique code. **Status: COMPLETED**.
+3.  **User**: Asked for an alert on the therapist's dashboard when a new client registers. **Status: COMPLETED**.
+4.  **User**: Requested UI improvements for the Needs Attention section (move to top, add bright colors). **Status: COMPLETED**.
+5.  **User**: Asked where clients can see shared CogniVision diagnostic reports. **Status: ADDRESSED**.
+6.  **User**: Confirmed the plan to add a My Diagnostic Reports section to the client dashboard. **Status: COMPLETED**.
+7.  **User**: Stated the client-side PDF download for reports has poor styling compared to the therapist's view and asked for a fix. **Status: COMPLETED**.
+8.  **User**: Provided detailed requirements for an in-app notification system. **Status: COMPLETED**.
+9.  **User**: Confirmed choices for the notification system (Dropdown UI, Polling). **Status: COMPLETED**.
+10. **User**: Provided detailed requirements to add Email & WhatsApp notifications using a provider-agnostic architecture. **Status: IN PROGRESS**.
+
+**Project Health Check:**
+-   **Broken**: No critical systems are broken.
+-   **Mocked**:
+    -   The Email/WhatsApp notification system is scaffolding only; it does not send messages yet.
+    -   Profile photo upload backend is not implemented.
+    -   Payment reporting is not implemented.
+
+**3rd Party Integrations**
+-   **Claude Sonnet 4** — uses Emergent LLM Key (For diagnostic reports)
+-   **Indian Postal API** — No key required
+-   **Resend** — requires User API Key (key has been obtained and is available)
+
+**Testing status**
+-   **Testing agent used after significant changes**: YES (for the P0 bug fix)
+-   **Troubleshoot agent used after agent stuck in loop**: NO
+-   **Test files created**: None
+-   **Known regressions**: None
+
+**Credentials to test flow:**
+| Role | Login ID | Password | Login URL |
+|---|---|---|---|
+| **Super Admin** |  |  |  |
+| **Therapist 1 (Dr. Kavita)** |  |  |  |
+| **Assistant** |  |  |  |
+| **Client (Divya Sharma)** |  |  |  |
+| **Client (Test Consent)**|  |  |  |
+
+**What agent forgot to execute**
+-   The agent has not started the **Global Standards Audit** for date/currency formatting.
+-   The agent has not performed the critical **refactoring** of  and .
+-   The agent has not implemented the **background scheduler** for time-based notifications, which was part of the original notification request.</analysis>
