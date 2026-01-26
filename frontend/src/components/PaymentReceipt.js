@@ -10,6 +10,8 @@ import {
   Clock, User, CreditCard, Calendar, FileText, Loader2
 } from 'lucide-react';
 import { formatCurrency } from '../utils/formatUtils';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 // Helper to safely extract error message
 const getErrorMessage = (error, fallback = 'An error occurred') => {
