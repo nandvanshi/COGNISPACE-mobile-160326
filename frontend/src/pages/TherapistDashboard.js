@@ -550,6 +550,7 @@ const TherapistDashboard = () => {
           {currentView === 'protocols' && <Protocols isReadOnly={isReadOnly} />}
           {currentView === 'ai-support' && <AIClinicalSupport isReadOnly={isReadOnly} />}
           {currentView === 'payments' && <Payments isReadOnly={isReadOnly} />}
+          {currentView === 'payment-reports' && <PaymentReports />}
           {currentView === 'assistants' && <AssistantManagement isReadOnly={isReadOnly} />}
           {currentView === 'profile' && <TherapistProfileSettings isReadOnly={isReadOnly} />}
           {currentView === 'support' && <SupportTickets />}
