@@ -137,6 +137,7 @@ async def client_request_appointment(appt_data: ClientAppointmentRequest, curren
         "actual_duration_minutes": None,
         "checked_in_by": None,
         "checked_out_by": None,
+        "confirmation_email_sent": False,  # Track instant email confirmation
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     
@@ -164,13 +165,19 @@ async def client_request_appointment(appt_data: ClientAppointmentRequest, curren
     try:
         from services.email import EmailService
         duration = int((appt_data.end_time - appt_data.start_time).total_seconds() / 60)
-        await EmailService.send_appointment_confirmation_email(
+        email_result = await EmailService.send_appointment_confirmation_email(
             client_id=current_user["id"],
             therapist_id=therapist_id,
             therapist_name=therapist_name,
             appointment_time=appointment_doc["start_time"],
             duration=duration
         )
+        # Mark confirmation email as sent to avoid duplicate from scheduler
+        if email_result.success:
+            await db.appointments.update_one(
+                {"id": appointment_id},
+                {"$set": {"confirmation_email_sent": True}}
+            )
     except Exception as e:
         print(f"Failed to send appointment confirmation email: {e}")
     
