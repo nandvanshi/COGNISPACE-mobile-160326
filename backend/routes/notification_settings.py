@@ -108,8 +108,9 @@ async def get_channel_availability(current_user: dict = Depends(get_current_user
     
     availability = await get_subscription_channel_availability(therapist_id)
     
-    # Check if WhatsApp is configured at system level
-    whatsapp_provider_configured = await db.whatsapp_providers.count_documents({"is_active": True}) > 0
+    # Check if WhatsApp is configured at system level (provider available)
+    from services.whatsapp import WhatsAppService
+    whatsapp_provider_configured = WhatsAppService.is_configured()
     
     return {
         "email_allowed": availability.email_allowed,
