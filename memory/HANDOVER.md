@@ -296,8 +296,8 @@ await db.whatsapp_templates.insert_one({
 | Issue | Severity | Notes |
 |-------|----------|-------|
 | Korean text "가능한" | Low | Rare AI response anomaly, ignore for now |
-| Large `AIClinicalSupport.js` | Low | 800+ lines, needs decomposition |
-| Large `PRD.md` | Low | 2000+ lines, needs splitting |
+| ~~Large `AIClinicalSupport.js`~~ | ✅ FIXED | Split into 12 modular files (Jan 26, 2026) |
+| ~~Large `PRD.md`~~ | ✅ FIXED | Split into PRD.md, CHANGELOG.md, ROADMAP.md |
 
 ### Areas to Avoid Touching
 
