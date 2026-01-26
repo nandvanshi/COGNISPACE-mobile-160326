@@ -56,6 +56,36 @@ Build a secure, therapist-first web application for practice management and clin
   - CTA buttons for Registration & Support
   - Footer with legal links
 
+### Frontend Refactoring (Jan 26, 2026)
+- ✅ **AIClinicalSupport.js Component Breakdown** (1721 lines → 12 modular files)
+  - `/app/frontend/src/components/ai-clinical/` directory structure:
+    ```
+    ai-clinical/
+    ├── index.js           (267 lines) - Main wrapper
+    ├── AssessmentsTab.js  (162 lines)
+    ├── DiagnosticTab.js   (220 lines)
+    ├── ProtocolsTab.js    (120 lines)
+    ├── HomeworkTab.js     (118 lines)
+    ├── ResourcesTab.js    (81 lines)
+    ├── hooks/
+    │   └── useAIClinical.js (510 lines) - All API calls & state
+    └── dialogs/
+        ├── ProtocolDialog.js    (133 lines)
+        ├── HomeworkDialog.js    (87 lines)
+        ├── ResourceDialog.js    (78 lines)
+        ├── ReportEditorDialog.js (167 lines)
+        └── ReportPreviewDialog.js (47 lines)
+    ```
+  - Total: ~1990 lines split across 12 files (avg 165 lines each)
+  - Original file now re-exports for backward compatibility
+  - "What is COGNISPACE?" section
+  - "Who is it for?" cards (Therapists, Clinics, Clients)
+  - Philosophy section with clinical disclaimer
+  - Privacy, Ethics & Safety points
+  - Compliance & Standards (IST, ₹, DD/MM/YYYY)
+  - CTA buttons for Registration & Support
+  - Footer with legal links
+
 ### Payment Reporting (NEW - P1 Complete)
 **Backend APIs:**
 - `GET /payments/stats/summary` - Basic stats
