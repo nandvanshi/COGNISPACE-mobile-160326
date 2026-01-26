@@ -1895,3 +1895,86 @@ Build a secure, therapist-first web application for managing a therapy practice 
 - ✅ `self_registered: true` flag added to client profile
 
 ---
+
+### Phase 46: Email Notification System (COMPLETED - Jan 26, 2026)
+**Feature:** Provider-agnostic Email Notification System with Resend integration
+
+**Architecture:**
+- Provider-agnostic design allowing easy provider switching (Resend, SendGrid, SES, etc.)
+- Base class pattern: `EmailProviderBase` with abstract methods
+- Dynamic registry: `EmailProviderRegistry` loads providers from database
+- Service layer: `EmailService` handles business logic (subscription checks, preferences)
+- Template system: HTML email templates with COGNISPACE branding
+
+**Email Provider Abstraction:**
+- `/app/backend/services/email/base.py` - Base class, EmailMessage, EmailResult models
+- `/app/backend/services/email/registry.py` - Dynamic provider registry
+- `/app/backend/services/email/resend_provider.py` - Resend API implementation (async)
+- `/app/backend/services/email/service.py` - Business logic with subscription/preference checks
+- `/app/backend/services/email/templates.py` - HTML email templates
+
+**Email Templates Implemented:**
+1. Welcome Credentials - New client login ID + password
+2. Password Changed - Security notification
+3. Appointment Confirmation - Booking confirmation
+4. Appointment Reminder - Upcoming session reminder
+5. Payment Receipt - Payment confirmation with ₹ amount
+6. Subscription Expiry - Renewal warning
+
+**Notification Settings API:**
+- `GET /api/notification-settings/events` - List all notification events with preferences
+- `GET /api/notification-settings/channel-availability` - Check email/whatsapp availability per subscription
+- `PUT /api/notification-settings/preference` - Update individual preference
+- `PUT /api/notification-settings/preferences/bulk` - Bulk update preferences
+
+**Frontend UI:**
+- Settings modal updated with "Notification Preferences" section
+- Channel availability badges (Email Enabled/Disabled, WhatsApp Enabled/Disabled)
+- Toggle switches for each notification event (Email and WhatsApp columns)
+- N/A shown for events that don't support a channel
+- Toast messages on preference update
+
+**Subscription Integration:**
+- Email notifications allowed based on subscription plan features
+- `subscription_plans.features.email_notifications` controls access
+- Therapists can toggle individual events on/off
+
+**Email Trigger Implemented:**
+- Client self-registration sends welcome email with credentials
+- Email service checks: subscription allows, therapist preference enabled, user opted in
+
+**Configuration:**
+- `RESEND_API_KEY` in backend .env
+- `SENDER_EMAIL` configurable (default: noreply@cognispace.in)
+
+**Testing Results (iteration_31.json):**
+- ✅ Backend: 100% (12/12 tests passed)
+- ✅ Frontend: 100% (all UI working)
+- ✅ All 6 notification events displayed
+- ✅ Email toggles functional
+- ✅ WhatsApp correctly disabled (not configured)
+- ✅ Preference updates working with toast
+
+---
+
+## Pending Tasks (Priority Order)
+
+### P1 - WhatsApp Integration
+- Implement WhatsApp provider using Twilio or similar
+- Add WhatsApp templates for key events
+- Enable WhatsApp toggles in UI when configured
+
+### P1 - Time-Based Notification Scheduler
+- Background job to send appointment reminders (30 min before)
+- Pending notes reminder (1 hour after session)
+- Subscription expiry warnings
+
+### P2 - Global Standards Audit
+- Date format: DD/MM/YYYY everywhere
+- Currency: ₹ (INR) everywhere
+
+### P2 - Code Refactoring
+- Split `server.py` into smaller modules (models/, routes/, templates/)
+- Decompose `AIClinicalSupport.js` component
+
+---
