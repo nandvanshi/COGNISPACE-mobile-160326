@@ -137,6 +137,19 @@ async def _send_appointment_reminder(db, appointment: dict, time_until: str) -> 
             except Exception as e:
                 logger.warning(f"Failed to send appointment reminder email: {e}")
         
+        # Send WhatsApp reminder (if configured and opted-in)
+        try:
+            from services.whatsapp import WhatsAppService
+            if WhatsAppService.is_configured():
+                await WhatsAppService.send_appointment_reminder(
+                    client_id=client_id,
+                    therapist_id=therapist_id,
+                    therapist_name=therapist["full_name"],
+                    time_until=time_until
+                )
+        except Exception as e:
+            logger.warning(f"Failed to send WhatsApp reminder: {e}")
+        
         return True
         
     except Exception as e:
