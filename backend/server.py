@@ -2525,6 +2525,35 @@ app.include_router(notifications_router, prefix="/api")
 app.include_router(notification_settings_router, prefix="/api")
 app.include_router(scheduler_admin_router, prefix="/api")
 
+
+# ============= USER PREFERENCES (Direct route for all users) =============
+VALID_THEMES = ["calm-professional", "soft-reassuring", "warm-approachable", "clean-saas", "dark-calm"]
+
+@app.get("/api/user/preferences")
+async def get_user_preferences_direct(current_user: dict = Depends(get_current_user)):
+    """Get user preferences - works for all roles"""
+    prefs = await db.user_preferences.find_one({"user_id": current_user["id"]}, {"_id": 0})
+    if not prefs:
+        return {"theme": "calm-professional"}
+    return {"theme": prefs.get("theme", "calm-professional")}
+
+
+@app.put("/api/user/preferences")
+async def update_user_preferences_direct(prefs: dict, current_user: dict = Depends(get_current_user)):
+    """Update user preferences - works for all roles"""
+    theme = prefs.get("theme", "calm-professional")
+    if theme not in VALID_THEMES:
+        raise HTTPException(status_code=400, detail=f"Invalid theme. Must be one of: {', '.join(VALID_THEMES)}")
+    
+    await db.user_preferences.update_one(
+        {"user_id": current_user["id"]},
+        {"$set": {"user_id": current_user["id"], "theme": theme, "updated_at": datetime.now(timezone.utc).isoformat()}},
+        upsert=True
+    )
+    
+    return {"message": "Preferences updated", "theme": theme}
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
