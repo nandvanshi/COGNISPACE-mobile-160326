@@ -44,9 +44,12 @@ async def create_notification(
     title: str,
     message: str,
     link: Optional[str] = None,
-    metadata: Optional[dict] = None
+    metadata: Optional[dict] = None,
+    db_override = None  # Allow passing db from scheduler
 ) -> dict:
     """Create a new notification for a user"""
+    target_db = db_override if db_override is not None else db
+    
     notification = {
         "id": str(uuid.uuid4()),
         "user_id": user_id,
@@ -60,7 +63,7 @@ async def create_notification(
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     
-    await db.notifications.insert_one(notification)
+    await target_db.notifications.insert_one(notification)
     return notification
 
 
