@@ -253,6 +253,64 @@ async def get_payment(payment_id: str, current_user: dict = Depends(get_current_
     )
 
 
+@router.get("/{payment_id}/receipt")
+async def get_payment_receipt(payment_id: str, current_user: dict = Depends(get_current_user)):
+    """Get payment receipt data for PDF generation"""
+    payment = await db.payments.find_one({"id": payment_id}, {"_id": 0})
+    if not payment:
+        raise HTTPException(status_code=404, detail="Payment not found")
+    
+    # Access check
+    if current_user["role"] == "client" and payment["client_id"] != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    elif current_user["role"] in ["therapist", "assistant"]:
+        therapist_id = get_effective_therapist_id(current_user)
+        if payment["therapist_id"] != therapist_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Get therapist profile for receipt
+    therapist = await db.users.find_one({"id": payment["therapist_id"]}, {"_id": 0, "full_name": 1, "mobile": 1, "email": 1})
+    profile = await db.therapist_profiles.find_one({"user_id": payment["therapist_id"]}, {"_id": 0})
+    
+    clinic_name = profile.get("clinic_name", "COGNISPACE") if profile else "COGNISPACE"
+    clinic_address = profile.get("clinic_address", "") if profile else ""
+    show_mobile = profile.get("show_mobile_on_receipt", True) if profile else True
+    show_email = profile.get("show_email_on_receipt", True) if profile else True
+    
+    # Format date
+    created_at = payment.get("created_at", "")
+    if created_at:
+        try:
+            dt = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+            formatted_date = dt.strftime("%d/%m/%Y")
+            formatted_time = dt.strftime("%I:%M %p")
+        except:
+            formatted_date = created_at[:10]
+            formatted_time = ""
+    else:
+        formatted_date = ""
+        formatted_time = ""
+    
+    return {
+        "id": payment["id"],
+        "bill_number": payment.get("bill_number", ""),
+        "clinic_name": clinic_name,
+        "clinic_address": clinic_address,
+        "therapist_name": therapist.get("full_name", "") if therapist else payment.get("therapist_name", ""),
+        "therapist_mobile": therapist.get("mobile", "") if therapist and show_mobile else "",
+        "therapist_email": therapist.get("email", "") if therapist and show_email else "",
+        "client_name": payment.get("client_name", ""),
+        "client_code": payment.get("client_code", ""),
+        "amount": payment["amount"],
+        "payment_method": payment.get("payment_method", "cash"),
+        "payment_status": payment.get("payment_status", "paid"),
+        "notes": payment.get("notes", ""),
+        "date": formatted_date,
+        "time": formatted_time,
+        "created_at": payment.get("created_at", "")
+    }
+
+
 @router.put("/{payment_id}", response_model=Payment)
 async def update_payment(payment_id: str, data: PaymentUpdate, current_user: dict = Depends(require_active_therapist_or_assistant)):
     """Update payment details"""
