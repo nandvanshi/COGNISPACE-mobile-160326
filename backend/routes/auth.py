@@ -463,9 +463,23 @@ async def client_self_register(code: str, client_data: ClientSelfRegister):
     await db.client_profiles.insert_one(profile_doc)
     await log_audit(client_id, "client", "self_register", "client", client_id, {"therapist_id": therapist_id})
     
-    # Send notification to therapist
+    # Send notification to therapist (in-app)
     from routes.notifications import notify_therapist_new_client
     await notify_therapist_new_client(therapist_id, client_data.full_name, client_id)
+    
+    # Send welcome email to client (if email provided)
+    if client_data.email:
+        try:
+            from services.email import EmailService
+            await EmailService.send_welcome_email(
+                user_id=client_id,
+                login_id=client_data.mobile,
+                password=client_data.password,  # Original password before hashing
+                therapist_name=therapist["full_name"]
+            )
+        except Exception as e:
+            # Log but don't fail registration if email fails
+            print(f"Failed to send welcome email: {e}")
     
     return {
         "message": "Registration successful! You can now login.",
