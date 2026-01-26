@@ -179,6 +179,10 @@ async def create_appointment(appt_data: AppointmentCreate, current_user: dict = 
     if existing:
         raise HTTPException(status_code=400, detail="Time slot conflicts with existing appointment")
     
+    # Get therapist name for notifications
+    therapist = await db.users.find_one({"id": therapist_id}, {"_id": 0, "full_name": 1})
+    therapist_name = therapist["full_name"] if therapist else "Your Therapist"
+    
     appointment_id = str(uuid.uuid4())
     appointment_doc = {
         "id": appointment_id,
@@ -200,10 +204,10 @@ async def create_appointment(appt_data: AppointmentCreate, current_user: dict = 
     await db.appointments.insert_one(appointment_doc)
     await log_audit(current_user["id"], current_user["role"], "create", "appointment", appointment_id)
     
-    # Send notification to client about appointment confirmation
+    # Send in-app notification to client about appointment confirmation
     try:
         from routes.notifications import notify_client_appointment_confirmed
-        from utils.formatUtils import format_datetime_ist
+        # Format time nicely
         formatted_time = f"{appointment_doc['start_time'][:10]} {appointment_doc['start_time'][11:16]}"
         await notify_client_appointment_confirmed(
             appointment_doc["client_id"],
@@ -212,7 +216,22 @@ async def create_appointment(appt_data: AppointmentCreate, current_user: dict = 
             appointment_id
         )
     except Exception as e:
-        print(f"Failed to send appointment notification: {e}")
+        print(f"Failed to send in-app notification: {e}")
+    
+    # Send email confirmation to client
+    try:
+        from services.email import EmailService
+        # Calculate duration in minutes
+        duration = int((appt_data.end_time - appt_data.start_time).total_seconds() / 60)
+        await EmailService.send_appointment_confirmation_email(
+            client_id=appt_data.client_id,
+            therapist_id=therapist_id,
+            therapist_name=therapist_name,
+            appointment_time=appointment_doc["start_time"],
+            duration=duration
+        )
+    except Exception as e:
+        print(f"Failed to send appointment confirmation email: {e}")
     
     return Appointment(
         id=appointment_doc["id"],
