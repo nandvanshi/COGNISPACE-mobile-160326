@@ -3,7 +3,7 @@ Subscription and Support Ticket management routes
 """
 from fastapi import APIRouter, HTTPException, Depends, Query
 from pydantic import BaseModel, ConfigDict
-from typing import List, Optional
+from typing import List, Optional, Union
 from datetime import datetime, timezone, timedelta
 import uuid
 
