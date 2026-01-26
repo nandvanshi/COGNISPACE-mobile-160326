@@ -9,6 +9,7 @@ import {
   MessageSquare, ChevronRight, RefreshCw, TrendingUp, Shield
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { formatDate } from '../../utils/formatUtils';
 
 const AdminOverview = ({ onNavigate }) => {
   const [stats, setStats] = useState(null);
