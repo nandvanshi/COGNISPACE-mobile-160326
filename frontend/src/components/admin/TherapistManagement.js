@@ -120,6 +120,37 @@ const TherapistManagement = ({ onViewClients }) => {
     }
   };
 
+  const handleDeleteTherapist = async (therapist) => {
+    const confirmMessage = `⚠️ WARNING: This will permanently delete therapist "${therapist.full_name}" and ALL associated data:\n\n` +
+      `• Profile & Settings\n` +
+      `• All Appointments\n` +
+      `• All Session Notes\n` +
+      `• All Assessments & Reports\n` +
+      `• All Payments\n` +
+      `• All Client Associations\n\n` +
+      `Mobile: ${therapist.mobile}\n` +
+      `Email: ${therapist.email || 'N/A'}\n\n` +
+      `This action CANNOT be undone. The mobile/email can be used for new registration after deletion.\n\n` +
+      `Type "DELETE" to confirm:`;
+    
+    const userInput = window.prompt(confirmMessage);
+    if (userInput !== 'DELETE') {
+      if (userInput !== null) {
+        toast.error('Deletion cancelled - you must type DELETE to confirm');
+      }
+      return;
+    }
+    
+    try {
+      const res = await axios.delete(`${API}/admin/therapists/${therapist.id}`);
+      toast.success(res.data.message || 'Therapist deleted successfully');
+      fetchTherapists();
+      setShowDetailDialog(false);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to delete therapist');
+    }
+  };
+
   const handleResetPassword = (therapist) => {
     setSelectedTherapist(therapist);
     setNewPassword(generatePassword());
