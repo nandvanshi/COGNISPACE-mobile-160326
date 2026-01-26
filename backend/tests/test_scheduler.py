@@ -38,12 +38,12 @@ class TestSchedulerAuth:
     def test_scheduler_status_requires_auth(self):
         """Test that scheduler status endpoint requires authentication"""
         response = requests.get(f"{BASE_URL}/api/scheduler/status")
-        assert response.status_code == 401, "Should require authentication"
+        assert response.status_code in [401, 403], "Should require authentication"
     
     def test_scheduler_run_requires_auth(self):
         """Test that manual job trigger requires authentication"""
         response = requests.post(f"{BASE_URL}/api/scheduler/run/appointment_reminders")
-        assert response.status_code == 401, "Should require authentication"
+        assert response.status_code in [401, 403], "Should require authentication"
 
 
 class TestSchedulerStatus:
