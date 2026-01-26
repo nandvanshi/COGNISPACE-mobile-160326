@@ -17,6 +17,7 @@ import Messaging from '../components/Messaging';
 import Assessments from '../components/Assessments';
 import Protocols from '../components/Protocols';
 import Payments from '../components/Payments';
+import PaymentReports from '../components/PaymentReports';
 import AvailabilitySettings from '../components/AvailabilitySettings';
 import RecurringAppointments from '../components/RecurringAppointments';
 import AssistantManagement from '../components/AssistantManagement';
