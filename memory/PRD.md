@@ -1957,17 +1957,70 @@ Build a secure, therapist-first web application for managing a therapy practice 
 
 ---
 
+### Phase 47: Time-Based Notification Scheduler (COMPLETED - Jan 26, 2026)
+**Feature:** Background job scheduler using APScheduler for automated notifications
+
+**Architecture:**
+- Uses APScheduler AsyncIOScheduler (async-compatible with FastAPI)
+- IST timezone (Asia/Kolkata) for all job schedules
+- Jobs registered at startup, stopped at shutdown
+- Coalescing enabled (missed runs combined into one)
+- Max 1 instance per job to prevent overlap
+
+**Scheduled Jobs:**
+
+1. **Appointment Reminders** (Every 5 minutes)
+   - Checks for appointments starting in 55-65 minutes (60-min reminder)
+   - Checks for appointments starting in 25-35 minutes (30-min reminder)
+   - Creates in-app notification for client
+   - Sends email via EmailService
+   - Marks `reminder_60_sent` / `reminder_30_sent` to prevent duplicates
+
+2. **Pending Session Notes** (Every 15 minutes)
+   - Checks completed appointments from last 24 hours
+   - Identifies sessions without linked notes (> 1 hour old)
+   - Creates in-app notification for therapist
+   - Marks `note_reminder_sent` to prevent duplicates
+
+3. **Subscription Expiry Warnings** (Daily at 9 AM IST)
+   - Checks subscriptions expiring in 7/3/1 days
+   - Creates in-app notification for therapist
+   - Sends email with renewal reminder
+   - Marks `expiry_warning_7d/3d/1d_sent` to prevent duplicates
+
+**Admin API Endpoints:**
+- `GET /api/scheduler/status` - View scheduler status and job list (Therapist+)
+- `POST /api/scheduler/run/{job_id}` - Manually trigger job (Super Admin only)
+- `GET /api/scheduler/logs` - View execution logs (Super Admin only)
+
+**Files Created:**
+- `/app/backend/services/scheduler/__init__.py`
+- `/app/backend/services/scheduler/scheduler.py` - APScheduler setup
+- `/app/backend/services/scheduler/jobs.py` - Job implementations
+- `/app/backend/routes/scheduler_admin.py` - Admin API
+
+**Files Modified:**
+- `/app/backend/server.py` - Scheduler startup/shutdown
+- `/app/backend/routes/notifications.py` - Added db_override parameter
+
+**Dependencies Added:**
+- `APScheduler>=3.11.2`
+- `tzlocal>=5.3.1`
+
+**Testing Results (iteration_32.json):**
+- ✅ Backend: 100% (17/17 tests passed)
+- ✅ All 3 jobs registered with correct intervals
+- ✅ Manual job trigger working (Super Admin only)
+- ✅ Access controls verified
+
+---
+
 ## Pending Tasks (Priority Order)
 
 ### P1 - WhatsApp Integration
 - Implement WhatsApp provider using Twilio or similar
 - Add WhatsApp templates for key events
 - Enable WhatsApp toggles in UI when configured
-
-### P1 - Time-Based Notification Scheduler
-- Background job to send appointment reminders (30 min before)
-- Pending notes reminder (1 hour after session)
-- Subscription expiry warnings
 
 ### P2 - Global Standards Audit
 - Date format: DD/MM/YYYY everywhere
