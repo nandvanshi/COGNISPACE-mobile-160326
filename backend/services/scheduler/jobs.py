@@ -87,6 +87,20 @@ async def _send_appointment_reminder(db, appointment: dict, time_until: str) -> 
         if not client_id or not therapist_id:
             return False
         
+        # Skip 60-min reminder if confirmation email was sent recently (within last 60 mins)
+        # This prevents sending both confirmation and reminder too close together
+        if time_until == "60 minutes" and appointment.get("confirmation_email_sent"):
+            created_at = appointment.get("created_at", "")
+            if created_at:
+                try:
+                    created_dt = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                    minutes_since_creation = (datetime.now(timezone.utc) - created_dt).total_seconds() / 60
+                    if minutes_since_creation < 60:
+                        logger.info(f"Skipping 60-min reminder for appointment {appointment.get('id')} - confirmation sent recently")
+                        return False
+                except:
+                    pass
+        
         # Get client and therapist info
         client = await db.users.find_one({"id": client_id}, {"_id": 0, "full_name": 1, "email": 1})
         therapist = await db.users.find_one({"id": therapist_id}, {"_id": 0, "full_name": 1})
