@@ -75,21 +75,63 @@ const PaymentReports = () => {
   const [filterMethod, setFilterMethod] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
 
-  useEffect(() => {
-    fetchClients();
-    fetchAllData();
-  }, []);
-
-  const fetchClients = async () => {
+  const fetchClients = useCallback(async () => {
     try {
       const res = await axios.get(`${API}/clients`);
       setClients(res.data);
     } catch (error) {
       console.error('Failed to load clients');
     }
-  };
+  }, []);
 
-  const fetchAllData = async () => {
+  const fetchSummary = useCallback(async () => {
+    try {
+      const res = await axios.get(`${API}/payments/stats/summary`, {
+        params: { start_date: startDate, end_date: endDate }
+      });
+      setSummaryStats(res.data);
+    } catch (error) {
+      console.error('Failed to load summary');
+    }
+  }, [startDate, endDate]);
+
+  const fetchDetailedReport = useCallback(async () => {
+    try {
+      const params = { start_date: startDate, end_date: endDate };
+      if (filterClient) params.client_id = filterClient;
+      if (filterMethod) params.payment_method = filterMethod;
+      if (filterStatus) params.payment_status = filterStatus;
+      
+      const res = await axios.get(`${API}/payments/reports/detailed`, { params });
+      setDetailedReport(res.data);
+    } catch (error) {
+      console.error('Failed to load detailed report');
+    }
+  }, [startDate, endDate, filterClient, filterMethod, filterStatus]);
+
+  const fetchMonthlyTrend = useCallback(async () => {
+    try {
+      const res = await axios.get(`${API}/payments/reports/monthly-trend`, {
+        params: { months: 6 }
+      });
+      setMonthlyTrend(res.data);
+    } catch (error) {
+      console.error('Failed to load monthly trend');
+    }
+  }, []);
+
+  const fetchClientWise = useCallback(async () => {
+    try {
+      const res = await axios.get(`${API}/payments/reports/client-wise`, {
+        params: { start_date: startDate, end_date: endDate, sort_by: 'total' }
+      });
+      setClientWiseReport(res.data);
+    } catch (error) {
+      console.error('Failed to load client-wise report');
+    }
+  }, [startDate, endDate]);
+
+  const fetchAllData = useCallback(async () => {
     setLoading(true);
     try {
       await Promise.all([
@@ -103,6 +145,12 @@ const PaymentReports = () => {
     } finally {
       setLoading(false);
     }
+  }, [fetchSummary, fetchDetailedReport, fetchMonthlyTrend, fetchClientWise]);
+
+  useEffect(() => {
+    fetchClients();
+    fetchAllData();
+  }, [fetchClients, fetchAllData]);
   };
 
   const fetchSummary = async () => {
