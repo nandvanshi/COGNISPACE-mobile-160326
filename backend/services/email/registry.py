@@ -38,7 +38,7 @@ class EmailProviderRegistry:
     @classmethod
     async def initialize(cls, db=None):
         """Initialize registry with database connection"""
-        if db:
+        if db is not None:
             cls._db = db
         else:
             mongo_url = os.environ.get('MONGO_URL')
