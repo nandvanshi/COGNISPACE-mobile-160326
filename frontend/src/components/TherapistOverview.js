@@ -470,13 +470,17 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
               // Different bright colors for each alert type
               const colorConfig = alert.isNewRegistration 
                 ? { bg: 'bg-gradient-to-br from-emerald-200 to-teal-200', border: 'border-emerald-500', iconBg: 'bg-emerald-400', iconColor: 'text-white', textColor: 'text-emerald-900', linkColor: 'text-emerald-700 hover:text-emerald-900' }
-                : alert.type === 'warning' 
-                  ? { bg: 'bg-gradient-to-br from-amber-200 to-yellow-200', border: 'border-amber-500', iconBg: 'bg-amber-400', iconColor: 'text-white', textColor: 'text-amber-900', linkColor: 'text-amber-700 hover:text-amber-900' }
-                  : alert.type === 'error'
-                    ? { bg: 'bg-gradient-to-br from-red-200 to-rose-200', border: 'border-red-500', iconBg: 'bg-red-400', iconColor: 'text-white', textColor: 'text-red-900', linkColor: 'text-red-700 hover:text-red-900' }
-                    : alert.type === 'info'
-                      ? { bg: 'bg-gradient-to-br from-sky-200 to-blue-200', border: 'border-sky-500', iconBg: 'bg-sky-400', iconColor: 'text-white', textColor: 'text-sky-900', linkColor: 'text-sky-700 hover:text-sky-900' }
-                      : { bg: 'bg-gradient-to-br from-violet-200 to-purple-200', border: 'border-violet-500', iconBg: 'bg-violet-400', iconColor: 'text-white', textColor: 'text-violet-900', linkColor: 'text-violet-700 hover:text-violet-900' };
+                : alert.isSubscription && alert.type === 'success'
+                  ? { bg: 'bg-gradient-to-br from-green-200 to-emerald-200', border: 'border-green-500', iconBg: 'bg-green-500', iconColor: 'text-white', textColor: 'text-green-900', linkColor: 'text-green-700 hover:text-green-900' }
+                  : alert.isSubscription && alert.type === 'info'
+                    ? { bg: 'bg-gradient-to-br from-indigo-200 to-purple-200', border: 'border-indigo-500', iconBg: 'bg-indigo-500', iconColor: 'text-white', textColor: 'text-indigo-900', linkColor: 'text-indigo-700 hover:text-indigo-900' }
+                    : alert.type === 'warning' 
+                      ? { bg: 'bg-gradient-to-br from-amber-200 to-yellow-200', border: 'border-amber-500', iconBg: 'bg-amber-400', iconColor: 'text-white', textColor: 'text-amber-900', linkColor: 'text-amber-700 hover:text-amber-900' }
+                      : alert.type === 'error'
+                        ? { bg: 'bg-gradient-to-br from-red-200 to-rose-200', border: 'border-red-500', iconBg: 'bg-red-400', iconColor: 'text-white', textColor: 'text-red-900', linkColor: 'text-red-700 hover:text-red-900' }
+                        : alert.type === 'info'
+                          ? { bg: 'bg-gradient-to-br from-sky-200 to-blue-200', border: 'border-sky-500', iconBg: 'bg-sky-400', iconColor: 'text-white', textColor: 'text-sky-900', linkColor: 'text-sky-700 hover:text-sky-900' }
+                          : { bg: 'bg-gradient-to-br from-violet-200 to-purple-200', border: 'border-violet-500', iconBg: 'bg-violet-400', iconColor: 'text-white', textColor: 'text-violet-900', linkColor: 'text-violet-700 hover:text-violet-900' };
               
               return (
                 <div
