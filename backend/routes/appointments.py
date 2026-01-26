@@ -143,6 +143,49 @@ async def client_request_appointment(appt_data: ClientAppointmentRequest, curren
     await db.appointments.insert_one(appointment_doc)
     await log_audit(current_user["id"], "client", "create", "appointment", appointment_id, {"booked_by_client": True})
     
+    # Get therapist name and send notifications
+    therapist = await db.users.find_one({"id": therapist_id}, {"_id": 0, "full_name": 1})
+    therapist_name = therapist["full_name"] if therapist else "Your Therapist"
+    
+    # Send in-app notification
+    try:
+        from routes.notifications import notify_client_appointment_confirmed
+        formatted_time = f"{appointment_doc['start_time'][:10]} {appointment_doc['start_time'][11:16]}"
+        await notify_client_appointment_confirmed(
+            current_user["id"],
+            therapist_name,
+            formatted_time,
+            appointment_id
+        )
+    except Exception as e:
+        print(f"Failed to send in-app notification: {e}")
+    
+    # Send email confirmation
+    try:
+        from services.email import EmailService
+        duration = int((appt_data.end_time - appt_data.start_time).total_seconds() / 60)
+        await EmailService.send_appointment_confirmation_email(
+            client_id=current_user["id"],
+            therapist_id=therapist_id,
+            therapist_name=therapist_name,
+            appointment_time=appointment_doc["start_time"],
+            duration=duration
+        )
+    except Exception as e:
+        print(f"Failed to send appointment confirmation email: {e}")
+    
+    # Notify therapist about client booking
+    try:
+        from routes.notifications import notify_therapist_appointment_booked
+        await notify_therapist_appointment_booked(
+            therapist_id,
+            current_user["full_name"],
+            formatted_time,
+            appointment_id
+        )
+    except Exception as e:
+        print(f"Failed to notify therapist: {e}")
+    
     return Appointment(
         id=appointment_doc["id"],
         therapist_id=appointment_doc["therapist_id"],
