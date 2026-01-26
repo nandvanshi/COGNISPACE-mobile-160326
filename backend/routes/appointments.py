@@ -241,6 +241,7 @@ async def create_appointment(appt_data: AppointmentCreate, current_user: dict = 
         "actual_duration_minutes": None,
         "checked_in_by": None,
         "checked_out_by": None,
+        "confirmation_email_sent": False,  # Track instant email confirmation
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     
