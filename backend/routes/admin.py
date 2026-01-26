@@ -211,6 +211,20 @@ async def get_all_therapists(
     therapists = await db.users.find(query, {"_id": 0, "password_hash": 0}).to_list(1000)
     result = []
     for t in therapists:
+        # Get subscription end_date for this therapist
+        subscription = await db.subscriptions.find_one(
+            {"therapist_id": t["id"]},
+            {"_id": 0, "end_date": 1},
+            sort=[("start_date", -1)]
+        )
+        subscription_end_date = None
+        if subscription and subscription.get("end_date"):
+            end_date_str = subscription.get("end_date")
+            if isinstance(end_date_str, str):
+                subscription_end_date = datetime.fromisoformat(end_date_str.replace("Z", "+00:00"))
+            elif isinstance(end_date_str, datetime):
+                subscription_end_date = end_date_str
+        
         result.append(TherapistProfile(
             id=t["id"],
             mobile=t.get("mobile", ""),
@@ -222,6 +236,7 @@ async def get_all_therapists(
             status=t.get("status"),
             subscription_status=t.get("subscription_status"),
             subscription_plan=t.get("subscription_plan"),
+            subscription_end_date=subscription_end_date,
             created_at=datetime.fromisoformat(t["created_at"]) if t.get("created_at") else datetime.now(timezone.utc),
             approved_at=datetime.fromisoformat(t["approved_at"]) if t.get("approved_at") else None
         ))
