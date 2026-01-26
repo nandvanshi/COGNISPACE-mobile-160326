@@ -376,7 +376,7 @@ const Assessments = ({ isReadOnly = false }) => {
             {assess.due_date && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
                 <Calendar className="w-4 h-4" />
-                Due: {new Date(assess.due_date).toLocaleDateString('en-IN')}
+                Due: {formatDate(assess.due_date)}
               </div>
             )}
 
@@ -389,7 +389,7 @@ const Assessments = ({ isReadOnly = false }) => {
                       Score: <span className="font-medium text-foreground">{assess.score}</span>
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Completed: {new Date(assess.completed_at).toLocaleDateString('en-IN')}
+                      Completed: {formatDate(assess.completed_at)}
                     </p>
                   </div>
                   <Button
@@ -686,7 +686,7 @@ const Assessments = ({ isReadOnly = false }) => {
                   <p className="font-medium text-lg">{selectedResult.client_name}</p>
                   <p className="text-sm text-muted-foreground">{selectedResult.assessment_type}</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Completed: {new Date(selectedResult.completed_at).toLocaleDateString('en-IN')}
+                    Completed: {formatDate(selectedResult.completed_at)}
                   </p>
                 </div>
                 {!isReadOnly && (
