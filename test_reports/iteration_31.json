@@ -1,0 +1,96 @@
+{
+  "summary": "Email Notification Settings feature fully tested. All 3 backend APIs working correctly. Frontend Settings modal shows Notification Preferences section with Email/WhatsApp toggles. Email is enabled, WhatsApp is disabled as expected.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_notification_settings.py",
+    "/app/test_reports/pytest/pytest_results_notification_settings.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Minor: Console shows 404 errors for /api/user/preferences endpoint - not critical but should be investigated"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_notification_settings.py"
+  ],
+  "success_rate": {
+    "backend": "100% (12/12 tests passed)",
+    "frontend": "100% (all notification settings UI working)"
+  },
+  "test_credentials": {
+    "therapist": {
+      "name": "Dr. Kavita Dhingra",
+      "mobile": "9807306444",
+      "password": "Abcd@1234"
+    }
+  },
+  "seed_data_creation": "None - used existing therapist data",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Email notification settings feature complete. APIs: GET /api/notification-settings/events, GET /api/notification-settings/channel-availability, PUT /api/notification-settings/preference all working. Frontend Settings modal has Notification Preferences section with toggles. Email enabled, WhatsApp disabled.",
+  "features_tested": {
+    "GET_notification_events": {
+      "status": "PASS",
+      "endpoint": "GET /api/notification-settings/events",
+      "notes": "Returns 6 notification events with email/whatsapp toggles and allowed status"
+    },
+    "GET_channel_availability": {
+      "status": "PASS",
+      "endpoint": "GET /api/notification-settings/channel-availability",
+      "notes": "Returns email_allowed: true, whatsapp_allowed: false, whatsapp_configured: false"
+    },
+    "PUT_preference_update": {
+      "status": "PASS",
+      "endpoint": "PUT /api/notification-settings/preference",
+      "notes": "Successfully updates individual notification preferences, validates event_key, blocks WhatsApp when not allowed"
+    },
+    "PUT_bulk_update": {
+      "status": "PASS",
+      "endpoint": "PUT /api/notification-settings/preferences/bulk",
+      "notes": "Successfully updates multiple preferences at once"
+    },
+    "settings_modal_notification_section": {
+      "status": "PASS",
+      "notes": "Notification Preferences section visible in Settings modal for therapist role"
+    },
+    "email_enabled_badge": {
+      "status": "PASS",
+      "notes": "Green 'Email Enabled' badge displayed correctly"
+    },
+    "whatsapp_disabled_badge": {
+      "status": "PASS",
+      "notes": "Gray 'WhatsApp Disabled' badge displayed correctly"
+    },
+    "email_toggles_functional": {
+      "status": "PASS",
+      "notes": "6 email toggles found, all enabled and functional (can toggle ON/OFF)"
+    },
+    "whatsapp_toggles_disabled": {
+      "status": "PASS",
+      "notes": "4 WhatsApp toggles found, all correctly disabled (grayed out)"
+    },
+    "na_for_unsupported_events": {
+      "status": "PASS",
+      "notes": "N/A shown for Password Changed and Subscription Expiry Warning WhatsApp toggles"
+    },
+    "preference_update_toast": {
+      "status": "PASS",
+      "notes": "'Preference updated' toast message appears when toggling"
+    }
+  },
+  "notification_events_verified": [
+    "Login Credentials (New Client)",
+    "Password Changed",
+    "Appointment Confirmation",
+    "Appointment Reminder",
+    "Payment Receipt",
+    "Subscription Expiry Warning"
+  ]
+}
