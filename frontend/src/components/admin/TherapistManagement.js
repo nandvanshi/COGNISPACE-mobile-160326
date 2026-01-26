@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { toast } from 'sonner';
 import { Ban, CheckCircle, Key, Plus, Edit, Users, Eye, Calendar, CreditCard, RefreshCw, Search, X, MapPin, Loader2, Building2, Trash2 } from 'lucide-react';
+import { formatDate, formatCurrency } from '../../utils/formatUtils';
 
 // Available specializations
 const SPECIALIZATION_OPTIONS = [
