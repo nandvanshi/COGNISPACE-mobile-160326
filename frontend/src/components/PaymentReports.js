@@ -201,33 +201,6 @@ const PaymentReports = () => {
     }
   };
 
-  // Simple bar chart component
-  const SimpleBarChart = ({ data, maxValue }) => {
-    if (!data || data.length === 0) return null;
-    const max = maxValue || Math.max(...data.map(d => d.paid));
-    
-    return (
-      <div className="flex items-end gap-2 h-40 mt-4">
-        {data.map((item, idx) => (
-          <div key={idx} className="flex-1 flex flex-col items-center">
-            <div className="w-full bg-gray-100 rounded-t-lg relative" style={{ height: '120px' }}>
-              <div 
-                className="absolute bottom-0 w-full bg-gradient-to-t from-primary to-primary/70 rounded-t-lg transition-all duration-500"
-                style={{ height: `${max > 0 ? (item.paid / max) * 100 : 0}%` }}
-              />
-            </div>
-            <span className="text-xs text-muted-foreground mt-2">
-              {item.month?.split('-')[1] || ''}
-            </span>
-            <span className="text-xs font-medium text-primary">
-              {formatCurrency(item.paid)}
-            </span>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
   if (loading && !summaryStats) {
     return (
       <div className="flex items-center justify-center py-20">
