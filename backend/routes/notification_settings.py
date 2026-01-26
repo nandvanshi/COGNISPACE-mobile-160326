@@ -54,10 +54,11 @@ NOTIFICATION_EVENTS = [
 
 async def get_subscription_channel_availability(therapist_id: str) -> ChannelAvailability:
     """Check which notification channels are allowed by subscription"""
-    # Check both collections for backward compatibility
+    # Check both collections for backward compatibility, get latest by end_date
     subscription = await db.subscriptions.find_one(
-        {"therapist_id": therapist_id},
-        {"_id": 0, "plan_id": 1, "end_date": 1, "status": 1}
+        {"therapist_id": therapist_id, "status": {"$in": ["active", "trial"]}},
+        {"_id": 0, "plan_id": 1, "end_date": 1, "status": 1},
+        sort=[("end_date", -1)]  # Get latest subscription
     )
     
     if not subscription:
