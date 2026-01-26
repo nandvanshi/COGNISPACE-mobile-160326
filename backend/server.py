@@ -40,6 +40,7 @@ from routes.therapist_profile import router as therapist_profile_router
 from routes.notifications import router as notifications_router
 from routes.notification_settings import router as notification_settings_router
 from routes.scheduler_admin import router as scheduler_admin_router
+from routes.ai_clinical import router as ai_clinical_router, setup_ai_clinical
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
