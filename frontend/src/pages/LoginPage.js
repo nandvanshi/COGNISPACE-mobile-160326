@@ -47,7 +47,7 @@ const LoginPage = () => {
         </div>
       </div>
 
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
+      <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-8 flex-1">
         <Card className="w-full max-w-md p-8 bg-white/70 backdrop-blur-xl border border-border/40 rounded-2xl shadow-xl">
           <div className="text-center mb-8">
             <img src="/logo-cognispace.png" alt="COGNISPACE" className="h-36 mx-auto mb-4 object-contain" />
