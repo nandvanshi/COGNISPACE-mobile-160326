@@ -49,18 +49,21 @@ class WhatsAppProviderRegistry:
     
     @classmethod
     async def _load_providers(cls):
-        """Load active providers from database"""
+        """Load active providers from database and environment"""
+        # First, check for environment-configured providers
+        await cls._load_env_providers()
+        
         if cls._db is None:
             return
         
-        # Get all active WhatsApp providers
+        # Get all active WhatsApp providers from database
         providers = await cls._db.whatsapp_providers.find(
             {"is_active": True}
         ).sort("priority", 1).to_list(100)
         
         for provider_doc in providers:
             code = provider_doc.get("code")
-            if code in PROVIDER_CLASSES:
+            if code in PROVIDER_CLASSES and code not in cls._providers:
                 try:
                     credentials = provider_doc.get("credentials", {})
                     if isinstance(credentials, str):
@@ -70,6 +73,28 @@ class WhatsAppProviderRegistry:
                     cls._providers[code] = provider_class(credentials)
                 except Exception as e:
                     print(f"Failed to initialize WhatsApp provider {code}: {e}")
+    
+    @classmethod
+    async def _load_env_providers(cls):
+        """Load providers configured via environment variables"""
+        # Check for Twilio configuration in environment
+        twilio_sid = os.environ.get('TWILIO_ACCOUNT_SID')
+        twilio_token = os.environ.get('TWILIO_AUTH_TOKEN')
+        twilio_from = os.environ.get('TWILIO_WHATSAPP_FROM')
+        
+        if twilio_sid and twilio_token and twilio_from:
+            try:
+                from .twilio_provider import TwilioWhatsAppProvider
+                provider = TwilioWhatsAppProvider({
+                    'account_sid': twilio_sid,
+                    'auth_token': twilio_token,
+                    'from_number': twilio_from
+                })
+                if provider.is_available:
+                    cls._providers['twilio'] = provider
+                    print("Twilio WhatsApp provider loaded from environment")
+            except Exception as e:
+                print(f"Failed to initialize Twilio from environment: {e}")
     
     @classmethod
     async def _load_templates(cls):
