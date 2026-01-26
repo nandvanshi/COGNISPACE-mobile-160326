@@ -342,7 +342,7 @@ export const PaymentReceiptView = ({ paymentId, isOpen, onClose }) => {
                 <User size={14} className="text-muted-foreground" />
                 <span className="font-medium">{receipt.client_name}</span>
               </div>
-              <p className="text-xs text-muted-foreground">ID: {receipt.client_id}</p>
+              <p className="text-xs text-muted-foreground">ID: {receipt.client_code}</p>
             </Card>
 
             {/* Date/Time Info */}
