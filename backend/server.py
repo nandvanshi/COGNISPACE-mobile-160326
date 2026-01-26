@@ -41,6 +41,8 @@ from routes.notifications import router as notifications_router
 from routes.notification_settings import router as notification_settings_router
 from routes.scheduler_admin import router as scheduler_admin_router
 from routes.ai_clinical import router as ai_clinical_router, setup_ai_clinical
+from routes.diagnostic_reports import router as diagnostic_reports_router, setup_diagnostic_reports
+from routes.resources import router as resources_router, setup_resources
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -72,8 +74,10 @@ JWT_SECRET = os.environ.get('JWT_SECRET', 'your-secret-key-change-in-production'
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_HOURS = 24 * 7  # 7 days
 
-# Setup AI Clinical module with dependencies
+# Setup route modules with dependencies
 setup_ai_clinical(db, EMERGENT_LLM_KEY, JWT_SECRET, JWT_ALGORITHM)
+setup_diagnostic_reports(db, JWT_SECRET, JWT_ALGORITHM)
+setup_resources(db, JWT_SECRET, JWT_ALGORITHM)
 
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
