@@ -23,7 +23,7 @@ class SubscriptionPlan(BaseModel):
     name: str
     price: float
     duration_days: int
-    features: List[str]
+    features: Union[List[str], dict]  # Support both list (legacy) and dict (new)
     max_clients: Optional[int] = None
     feature_toggles: Optional[dict] = None
     created_at: datetime
@@ -33,7 +33,7 @@ class SubscriptionPlanCreate(BaseModel):
     name: str
     price: float
     duration_days: int
-    features: List[str]
+    features: Union[List[str], dict] = []  # Support both formats
     max_clients: Optional[int] = None
     feature_toggles: Optional[dict] = None
 
