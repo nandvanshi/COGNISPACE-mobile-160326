@@ -45,6 +45,17 @@ Build a secure, therapist-first web application for practice management and clin
   - Changed layout structure: outer flex-col with inner flex-row for two-column layout
   - Footer now spans full width and stays centered at bottom on all screen sizes
 
+### New Pages Added (Jan 26, 2026)
+- ✅ **About Page** (`/about`) - Public-facing page with:
+  - Hero section with tagline
+  - "What is COGNISPACE?" section
+  - "Who is it for?" cards (Therapists, Clinics, Clients)
+  - Philosophy section with clinical disclaimer
+  - Privacy, Ethics & Safety points
+  - Compliance & Standards (IST, ₹, DD/MM/YYYY)
+  - CTA buttons for Registration & Support
+  - Footer with legal links
+
 ### Payment Reporting (NEW - P1 Complete)
 **Backend APIs:**
 - `GET /payments/stats/summary` - Basic stats
