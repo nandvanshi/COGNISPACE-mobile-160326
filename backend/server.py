@@ -2610,4 +2610,12 @@ async def startup_event():
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
+    # Stop notification scheduler
+    try:
+        from services.scheduler import NotificationScheduler
+        NotificationScheduler.stop()
+        logger.info("Notification scheduler stopped.")
+    except Exception as e:
+        logger.error(f"Error stopping notification scheduler: {e}")
+    
     client.close()
