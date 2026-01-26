@@ -225,6 +225,39 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
         });
       }
 
+      // Always add subscription info card
+      const subData = subscriptionRes.data;
+      if (subData) {
+        const daysRemaining = subData.days_remaining || 0;
+        const planName = subData.plan_name || 'Free Trial';
+        const status = subData.subscription_status || 'trial';
+        
+        let subMessage = '';
+        let subType = 'info';
+        
+        if (status === 'trial') {
+          subMessage = `📦 Plan: Free Trial • ${daysRemaining} days remaining`;
+          subType = 'info';
+        } else if (status === 'active') {
+          subMessage = `📦 Plan: ${planName} • ${daysRemaining} days remaining`;
+          subType = daysRemaining <= 7 ? 'warning' : 'success';
+        } else if (status === 'expired') {
+          subMessage = `📦 Plan: ${planName} • Expired`;
+          subType = 'error';
+        }
+        
+        if (subMessage) {
+          alertsList.push({
+            type: subType,
+            message: subMessage,
+            action: 'Manage Subscription',
+            actionNav: 'subscription',
+            icon: CreditCard,
+            isSubscription: true
+          });
+        }
+      }
+
       setStats({
         todayAppointments: todayAppts.length,
         unreadMessages: unreadCount,
