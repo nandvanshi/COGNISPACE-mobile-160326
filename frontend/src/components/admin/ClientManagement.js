@@ -708,6 +708,60 @@ const ClientManagement = ({ onViewTherapist }) => {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Link Client to Therapist Dialog */}
+      {showLinkDialog && selectedClient && (
+        <Dialog open={showLinkDialog} onOpenChange={setShowLinkDialog}>
+          <DialogContent className="max-w-md" data-testid="link-client-dialog">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Link2 size={20} /> Link Client to Therapist
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="p-4 bg-surface rounded-lg">
+                <p className="font-medium">{selectedClient.full_name}</p>
+                <p className="text-sm text-muted-foreground">{selectedClient.mobile}</p>
+              </div>
+              
+              <div>
+                <Label htmlFor="therapist-select">Select Therapist</Label>
+                <select
+                  id="therapist-select"
+                  value={selectedTherapistId}
+                  onChange={(e) => setSelectedTherapistId(e.target.value)}
+                  className="w-full mt-2 h-10 px-3 rounded-lg border border-border bg-white"
+                  data-testid="select-therapist-dropdown"
+                >
+                  <option value="">-- Select a therapist --</option>
+                  {therapists.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.full_name} ({t.mobile})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  onClick={confirmLinkClient}
+                  className="flex-1"
+                  disabled={!selectedTherapistId}
+                  data-testid="confirm-link-btn"
+                >
+                  Link Client
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowLinkDialog(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
