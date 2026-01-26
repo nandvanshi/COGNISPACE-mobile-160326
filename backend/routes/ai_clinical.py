@@ -373,11 +373,6 @@ Respond in valid JSON format only with this structure:
         user_message = UserMessage(text=f"Based on the following client information, suggest appropriate clinical assessments:\n\n{client_context}")
         response = await chat.send_message(user_message)
         
-        # Debug logging
-        import logging
-        logging.info(f"AI Response type: {type(response)}")
-        logging.info(f"AI Response: {str(response)[:500]}")
-        
         # Handle response - could be string or object
         if hasattr(response, 'content'):
             response_text = response.content
@@ -390,12 +385,34 @@ Respond in valid JSON format only with this structure:
         
         # Parse JSON response
         response_text = response_text.strip()
-        if response_text.startswith("```json"):
-            response_text = response_text[7:]
-        if response_text.startswith("```"):
-            response_text = response_text[3:]
-        if response_text.endswith("```"):
-            response_text = response_text[:-3]
+        
+        # Extract JSON from response - find the JSON block
+        import re
+        json_match = re.search(r'\{[\s\S]*\}', response_text)
+        if json_match:
+            response_text = json_match.group()
+        else:
+            # No JSON found - AI gave a text response, provide default suggestions
+            return AIAssessmentSuggestionResponse(
+                suggestions=[
+                    AIAssessmentSuggestion(
+                        assessment_name="Patient Health Questionnaire-9",
+                        assessment_type="PHQ-9",
+                        reason="Recommended as a baseline screening for depression - insufficient client data available for more specific recommendations",
+                        priority="medium",
+                        relevant_symptoms=["general screening"]
+                    ),
+                    AIAssessmentSuggestion(
+                        assessment_name="Generalized Anxiety Disorder-7",
+                        assessment_type="GAD-7",
+                        reason="Recommended as a baseline screening for anxiety - insufficient client data available for more specific recommendations",
+                        priority="medium",
+                        relevant_symptoms=["general screening"]
+                    )
+                ],
+                analysis_summary="Limited client data available. General baseline assessments recommended. Please add case history or clinical observations for more targeted suggestions.",
+                data_sources_used=data_sources
+            )
         
         result = json.loads(response_text.strip())
         
