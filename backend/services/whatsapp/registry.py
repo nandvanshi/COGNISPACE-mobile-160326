@@ -7,11 +7,12 @@ import os
 import json
 
 from .base import WhatsAppProviderBase, WhatsAppMessage, WhatsAppResult
+from .twilio_provider import TwilioWhatsAppProvider
 
 
 # Provider class mapping - Add providers here as they're implemented
 PROVIDER_CLASSES: Dict[str, Type[WhatsAppProviderBase]] = {
-    # "twilio": TwilioProvider,
+    "twilio": TwilioWhatsAppProvider,
     # "gupshup": GupshupProvider,
     # "meta": MetaProvider,
 }
