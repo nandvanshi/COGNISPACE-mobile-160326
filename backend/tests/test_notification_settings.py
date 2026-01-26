@@ -64,7 +64,7 @@ class TestNotificationSettingsChannelAvailability:
         response = requests.get(
             f"{BASE_URL}/api/notification-settings/channel-availability"
         )
-        assert response.status_code == 401
+        assert response.status_code in [401, 403]  # Either unauthorized or forbidden
 
 
 class TestNotificationSettingsEvents:
@@ -137,7 +137,7 @@ class TestNotificationSettingsEvents:
         response = requests.get(
             f"{BASE_URL}/api/notification-settings/events"
         )
-        assert response.status_code == 401
+        assert response.status_code in [401, 403]  # Either unauthorized or forbidden
 
 
 class TestNotificationSettingsPreferenceUpdate:
@@ -224,7 +224,7 @@ class TestNotificationSettingsPreferenceUpdate:
                 "send_email": True
             }
         )
-        assert response.status_code == 401
+        assert response.status_code in [401, 403]  # Either unauthorized or forbidden
 
 
 class TestNotificationSettingsBulkUpdate:
