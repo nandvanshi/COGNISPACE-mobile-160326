@@ -2552,6 +2552,15 @@ async def startup_event():
     except Exception as e:
         logger.error(f"Failed to initialize notification services: {e}")
     
+    # Initialize and start Notification Scheduler
+    try:
+        from services.scheduler import NotificationScheduler
+        await NotificationScheduler.initialize(db)
+        NotificationScheduler.start()
+        logger.info("Notification scheduler started.")
+    except Exception as e:
+        logger.error(f"Failed to start notification scheduler: {e}")
+    
     # Find all therapists without subscription_status or with null/empty subscription_status
     therapists_without_subscription = await db.users.find(
         {"role": "therapist", "$or": [
