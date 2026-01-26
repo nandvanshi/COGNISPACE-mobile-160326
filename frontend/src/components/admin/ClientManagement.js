@@ -218,56 +218,69 @@ const ClientManagement = ({ onViewTherapist }) => {
         <p className="text-muted-foreground">View and manage client accounts</p>
       </div>
 
-      {/* Search */}
-      <div className="mb-6">
-        <div className="relative">
-          <Search
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
-            size={20}
-          />
-          <Input
-            placeholder="Search clients by name, mobile, email, ID, or therapist..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-            data-testid="admin-client-search-input"
-          />
-        </div>
-      </div>
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+        <TabsList>
+          <TabsTrigger value="all" className="gap-2">
+            <Users size={16} /> All Clients ({clients.length})
+          </TabsTrigger>
+          <TabsTrigger value="orphaned" className="gap-2">
+            <UserX size={16} /> Orphaned ({orphanedClients.length})
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Clients Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filteredClients.map((client) => (
-          <Card
-            key={client.id}
-            className="p-6 bg-white/70 backdrop-blur-xl border border-border/40 rounded-xl"
-            data-testid={`admin-client-${client.id}`}
-          >
-            <div className="flex justify-between items-start">
-              <div className="flex items-start gap-3">
-                {/* Avatar */}
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden flex-shrink-0">
-                  {client.profile_photo ? (
-                    <img src={client.profile_photo} alt={client.full_name} className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-lg font-bold text-primary">{client.full_name?.charAt(0)}</span>
-                  )}
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h4 className="text-lg font-medium text-foreground">{client.full_name}</h4>
-                    {client.client_id && (
-                      <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full">
-                        {client.client_id}
-                      </span>
-                    )}
-                  </div>
-                  <div className="space-y-1 text-sm text-muted-foreground">
-                    <p className="flex items-center gap-2">
-                      <Phone size={14} /> {client.mobile || 'N/A'}
-                    </p>
-                    <p className="flex items-center gap-2">
-                      <Mail size={14} /> {client.email || 'N/A'}
+        {/* All Clients Tab */}
+        <TabsContent value="all">
+          {/* Search */}
+          <div className="mb-6">
+            <div className="relative">
+              <Search
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+                size={20}
+              />
+              <Input
+                placeholder="Search clients by name, mobile, email, ID, or therapist..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+                data-testid="admin-client-search-input"
+              />
+            </div>
+          </div>
+
+          {/* Clients Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {filteredClients.map((client) => (
+              <Card
+                key={client.id}
+                className="p-6 bg-white/70 backdrop-blur-xl border border-border/40 rounded-xl"
+                data-testid={`admin-client-${client.id}`}
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex items-start gap-3">
+                    {/* Avatar */}
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden flex-shrink-0">
+                      {client.profile_photo ? (
+                        <img src={client.profile_photo} alt={client.full_name} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-lg font-bold text-primary">{client.full_name?.charAt(0)}</span>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="text-lg font-medium text-foreground">{client.full_name}</h4>
+                        {client.client_id && (
+                          <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full">
+                            {client.client_id}
+                          </span>
+                        )}
+                      </div>
+                      <div className="space-y-1 text-sm text-muted-foreground">
+                        <p className="flex items-center gap-2">
+                          <Phone size={14} /> {client.mobile || 'N/A'}
+                        </p>
+                        <p className="flex items-center gap-2">
+                          <Mail size={14} /> {client.email || 'N/A'}
                     </p>
                     {client.age && (
                       <p className="flex items-center gap-2">
