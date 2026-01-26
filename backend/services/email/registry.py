@@ -50,7 +50,7 @@ class EmailProviderRegistry:
     @classmethod
     async def _load_providers(cls):
         """Load active providers from database"""
-        if not cls._db:
+        if cls._db is None:
             return
         
         # Get all active email providers

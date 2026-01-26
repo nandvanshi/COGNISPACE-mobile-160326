@@ -83,7 +83,7 @@ class EmailService:
         Returns:
             True if enabled, False otherwise
         """
-        if not cls._db:
+        if cls._db is None:
             return True  # Default to enabled
         
         preference = await cls._db.notification_preferences.find_one({
@@ -113,7 +113,7 @@ class EmailService:
         Returns:
             True if opted in, False otherwise
         """
-        if not cls._db:
+        if cls._db is None:
             return True
         
         user = await cls._db.users.find_one(
@@ -157,7 +157,7 @@ class EmailService:
         Returns:
             EmailResult
         """
-        if not cls._db:
+        if cls._db is None:
             return EmailResult(
                 success=False,
                 provider="none",
@@ -241,7 +241,7 @@ class EmailService:
     @classmethod
     async def _log_email_attempt(cls, user_id: str, event: str, result: EmailResult):
         """Log email send attempt to database"""
-        if not cls._db:
+        if cls._db is None:
             return
         
         log_entry = {
