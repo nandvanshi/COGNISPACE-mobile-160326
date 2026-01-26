@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Badge } from './ui/badge';
 import { toast } from 'sonner';
 import { Plus, ClipboardCheck, Lightbulb, Eye, Share2, Lock, Calendar, ChevronDown, ChevronUp, FileText } from 'lucide-react';
+import { formatDate } from '../utils/formatUtils';
 
 const Assessments = ({ isReadOnly = false }) => {
   const [assessments, setAssessments] = useState([]);
