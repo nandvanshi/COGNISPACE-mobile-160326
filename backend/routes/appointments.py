@@ -267,13 +267,19 @@ async def create_appointment(appt_data: AppointmentCreate, current_user: dict = 
         from services.email import EmailService
         # Calculate duration in minutes
         duration = int((appt_data.end_time - appt_data.start_time).total_seconds() / 60)
-        await EmailService.send_appointment_confirmation_email(
+        email_result = await EmailService.send_appointment_confirmation_email(
             client_id=appt_data.client_id,
             therapist_id=therapist_id,
             therapist_name=therapist_name,
             appointment_time=appointment_doc["start_time"],
             duration=duration
         )
+        # Mark confirmation email as sent to avoid duplicate from scheduler
+        if email_result.success:
+            await db.appointments.update_one(
+                {"id": appointment_id},
+                {"$set": {"confirmation_email_sent": True}}
+            )
     except Exception as e:
         print(f"Failed to send appointment confirmation email: {e}")
     
