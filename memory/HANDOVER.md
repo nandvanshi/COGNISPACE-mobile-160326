@@ -60,11 +60,25 @@
 │   └── src/
 │       ├── App.js             # Main app + routing
 │       ├── pages/             # Page components
-│       └── components/        # Reusable components
-│           └── ui/            # Shadcn components
+│       │   └── AboutPage.js   # NEW - Public about page
+│       └── components/
+│           ├── ui/            # Shadcn components
+│           ├── AIClinicalSupport.js  # Re-exports from ai-clinical/
+│           └── ai-clinical/   # NEW - Modular AI components
+│               ├── index.js           # Main wrapper
+│               ├── AssessmentsTab.js
+│               ├── DiagnosticTab.js
+│               ├── ProtocolsTab.js
+│               ├── HomeworkTab.js
+│               ├── ResourcesTab.js
+│               ├── hooks/useAIClinical.js
+│               └── dialogs/           # 5 dialog components
 │
 └── memory/
-    └── PRD.md                 # Product requirements
+    ├── PRD.md                 # Product requirements (static)
+    ├── CHANGELOG.md           # Implementation history
+    ├── ROADMAP.md             # Priorities & backlog
+    └── HANDOVER.md            # This document
 ```
 
 ---
