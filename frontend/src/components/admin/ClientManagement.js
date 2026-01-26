@@ -7,24 +7,32 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Textarea } from '../ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { toast } from 'sonner';
-import { Key, Search, Eye, User, Phone, Mail, Edit, AlertCircle } from 'lucide-react';
+import { Key, Search, Eye, User, Phone, Mail, Edit, AlertCircle, UserX, Link2, Users } from 'lucide-react';
 
 const ClientManagement = ({ onViewTherapist }) => {
   const [clients, setClients] = useState([]);
   const [filteredClients, setFilteredClients] = useState([]);
+  const [orphanedClients, setOrphanedClients] = useState([]);
+  const [therapists, setTherapists] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showLinkDialog, setShowLinkDialog] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
   const [clientDetail, setClientDetail] = useState(null);
   const [newPassword, setNewPassword] = useState('');
   const [editForm, setEditForm] = useState({});
+  const [selectedTherapistId, setSelectedTherapistId] = useState('');
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('all');
 
   useEffect(() => {
     fetchClients();
+    fetchOrphanedClients();
+    fetchTherapists();
   }, []);
 
   useEffect(() => {
