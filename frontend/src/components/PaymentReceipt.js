@@ -447,7 +447,7 @@ export const PaymentCard = ({ payment, showReceipt = true }) => {
               </span>
             </div>
             <p className="text-sm text-muted-foreground mt-1">
-              {payment.payment_method?.toUpperCase()} • {new Date(payment.created_at).toLocaleDateString('en-IN')}
+              {payment.payment_method?.toUpperCase()} • {formatDate(payment.created_at)}
             </p>
             {payment.bill_number && (
               <p className="text-xs text-muted-foreground">Bill #: {payment.bill_number}</p>
