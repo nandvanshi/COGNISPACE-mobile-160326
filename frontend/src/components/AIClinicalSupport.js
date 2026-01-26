@@ -987,7 +987,10 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
                       <div>
                         <p className="font-medium">{client?.full_name || 'Unknown Client'}</p>
                         <p className="text-xs text-muted-foreground">
-                          {new Date(report.created_at).toLocaleDateString('en-IN')} • 
+                          {(() => {
+                            const d = new Date(report.created_at);
+                            return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+                          })()} • 
                           <span className={`ml-1 px-2 py-0.5 rounded-full text-xs ${
                             report.status === 'shared' ? 'bg-green-100 text-green-700' :
                             report.status === 'approved' ? 'bg-blue-100 text-blue-700' :
