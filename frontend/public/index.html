@@ -34,6 +34,20 @@
         <link rel="manifest" href="/manifest.json" />
         
         <title>COGNISPACE - Precision Insights. Personal Growth.</title>
+        
+        <!-- Hide Emergent Badge -->
+        <style>
+            #emergent-badge,
+            [id*="emergent-badge"],
+            a[href*="emergent.sh"][style*="position: fixed"],
+            div[style*="Made with Emergent"] {
+                display: none !important;
+                visibility: hidden !important;
+                opacity: 0 !important;
+                pointer-events: none !important;
+            }
+        </style>
+        
         <script src="https://assets.emergent.sh/scripts/emergent-main.js"></script>
         
         <script>
