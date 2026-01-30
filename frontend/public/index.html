@@ -38,13 +38,20 @@
         <!-- Hide Emergent Badge -->
         <style>
             #emergent-badge,
-            [id*="emergent-badge"],
-            a[href*="emergent.sh"][style*="position: fixed"],
-            div[style*="Made with Emergent"] {
+            [id*="emergent"],
+            a[href*="emergent.sh"],
+            a[href*="emergent-badge"],
+            div:has(> img[src*="avatars.githubusercontent.com"]),
+            a:has(p:contains("Emergent")),
+            body > a[style*="position: fixed"][style*="bottom"],
+            body > a[style*="z-index: 9999"] {
                 display: none !important;
                 visibility: hidden !important;
                 opacity: 0 !important;
                 pointer-events: none !important;
+                width: 0 !important;
+                height: 0 !important;
+                overflow: hidden !important;
             }
         </style>
         
