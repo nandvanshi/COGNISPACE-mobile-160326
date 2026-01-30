@@ -121,6 +121,35 @@
             }
         </script>
 
+        <!-- Remove Emergent Badge after page load -->
+        <script>
+            function hideEmergentBadge() {
+                // Find and hide any emergent badges
+                var badges = document.querySelectorAll('a[href*="emergent"], #emergent-badge, [id*="emergent"]');
+                badges.forEach(function(el) {
+                    el.style.display = 'none';
+                    el.style.visibility = 'hidden';
+                    el.remove();
+                });
+                // Also check for elements with "Made with Emergent" text
+                document.querySelectorAll('a').forEach(function(el) {
+                    if (el.innerText && el.innerText.includes('Emergent')) {
+                        el.style.display = 'none';
+                        el.remove();
+                    }
+                });
+            }
+            // Run on DOMContentLoaded
+            document.addEventListener('DOMContentLoaded', function() {
+                hideEmergentBadge();
+                // Also run periodically for dynamically injected elements
+                setInterval(hideEmergentBadge, 500);
+                setTimeout(function() { clearInterval(); }, 5000);
+            });
+            // Also run on window load
+            window.addEventListener('load', hideEmergentBadge);
+        </script>
+
         <a
             id="emergent-badge"
             target="_blank"
