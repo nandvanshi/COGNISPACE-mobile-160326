@@ -78,6 +78,7 @@
     ├── PRD.md                 # Product requirements (static)
     ├── CHANGELOG.md           # Implementation history
     ├── ROADMAP.md             # Priorities & backlog
+    ├── DEPLOYMENT.md          # Deployment checklist & guide
     └── HANDOVER.md            # This document
 ```
 
