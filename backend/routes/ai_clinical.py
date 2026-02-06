@@ -682,18 +682,7 @@ Respond in valid JSON format only:
 
     try:
         chat = await get_ai_chat(f"homework-{therapist_id}-{uuid.uuid4()}", system_prompt)
-        user_message = UserMessage(text=f"Generate therapeutic homework based on:\n\n{context}")
-        response = await chat.send_message(user_message)
-        
-        # Handle response type
-        if hasattr(response, 'content'):
-            response_text = response.content
-        elif hasattr(response, 'text'):
-            response_text = response.text
-        elif isinstance(response, str):
-            response_text = response
-        else:
-            response_text = str(response)
+        response_text = await send_ai_message(chat, f"Generate therapeutic homework based on:\n\n{context}")
         
         response_text = response_text.strip()
         
