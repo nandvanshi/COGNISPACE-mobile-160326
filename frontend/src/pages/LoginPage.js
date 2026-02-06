@@ -146,6 +146,10 @@ const LoginPage = () => {
               Clinical Disclaimer
             </Link>
             <span className="text-border">•</span>
+            <Link to="/refund-policy" className="hover:text-primary transition-colors">
+              Refund Policy
+            </Link>
+            <span className="text-border">•</span>
             <Link to="/contact" className="hover:text-primary transition-colors">
               Contact / Support
             </Link>
