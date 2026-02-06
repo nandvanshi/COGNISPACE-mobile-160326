@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
@@ -7,7 +7,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card } from '../components/ui/card';
-import { ArrowLeft, MapPin, Loader2 } from 'lucide-react';
+import { ArrowLeft, MapPin, Loader2, Eye, EyeOff, X } from 'lucide-react';
 
 const SPECIALIZATION_OPTIONS = [
   'Anxiety Disorders',
@@ -29,16 +29,21 @@ const SPECIALIZATION_OPTIONS = [
   'Mindfulness-Based'
 ];
 
+const MAX_SPECIALIZATIONS = 5;
+
 const TherapistApplicationPage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [pincodeLoading, setPincodeLoading] = useState(false);
   const [showSpecDropdown, setShowSpecDropdown] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const dropdownRef = useRef(null);
   
   const [application, setApplication] = useState({
     mobile: '',
     email: '',
     full_name: '',
+    password: '',
     qualifications: '',
     specializations: [],
     years_of_experience: '',
@@ -52,24 +57,42 @@ const TherapistApplicationPage = () => {
     google_maps_link: ''
   });
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowSpecDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const handlePincodeChange = async (pincode) => {
-    setApplication({ ...application, pincode });
+    setApplication(prev => ({ ...prev, pincode }));
     
     if (pincode.length === 6) {
       setPincodeLoading(true);
       try {
-        const response = await axios.get(`https://api.postalpincode.in/pincode/${pincode}`);
-        if (response.data[0]?.Status === 'Success' && response.data[0]?.PostOffice?.length > 0) {
-          const postOffice = response.data[0].PostOffice[0];
+        const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+        const data = await response.json();
+        
+        if (data[0]?.Status === 'Success' && data[0]?.PostOffice?.length > 0) {
+          const postOffice = data[0].PostOffice[0];
           setApplication(prev => ({
             ...prev,
-            city: postOffice.Block || postOffice.Name,
-            district: postOffice.District,
-            state: postOffice.State
+            city: postOffice.Block || postOffice.Name || '',
+            district: postOffice.District || '',
+            state: postOffice.State || ''
           }));
+          toast.success('Address auto-filled from pincode');
+        } else {
+          toast.error('Invalid pincode');
         }
       } catch (error) {
         console.error('Pincode lookup failed:', error);
+        toast.error('Failed to fetch pincode details');
       } finally {
         setPincodeLoading(false);
       }
@@ -77,11 +100,34 @@ const TherapistApplicationPage = () => {
   };
 
   const toggleSpecialization = (spec) => {
+    setApplication(prev => {
+      const isSelected = prev.specializations.includes(spec);
+      
+      if (isSelected) {
+        // Remove if already selected
+        return {
+          ...prev,
+          specializations: prev.specializations.filter(s => s !== spec)
+        };
+      } else {
+        // Add only if under limit
+        if (prev.specializations.length >= MAX_SPECIALIZATIONS) {
+          toast.error(`Maximum ${MAX_SPECIALIZATIONS} specializations allowed`);
+          return prev;
+        }
+        return {
+          ...prev,
+          specializations: [...prev.specializations, spec]
+        };
+      }
+    });
+  };
+
+  const removeSpecialization = (spec, e) => {
+    e.stopPropagation();
     setApplication(prev => ({
       ...prev,
-      specializations: prev.specializations.includes(spec)
-        ? prev.specializations.filter(s => s !== spec)
-        : [...prev.specializations, spec]
+      specializations: prev.specializations.filter(s => s !== spec)
     }));
   };
 
@@ -95,6 +141,11 @@ const TherapistApplicationPage = () => {
 
     if (!application.qualifications.trim()) {
       toast.error('Please enter your qualifications/credentials');
+      return;
+    }
+
+    if (!application.password || application.password.length < 6) {
+      toast.error('Password must be at least 6 characters');
       return;
     }
 
@@ -188,6 +239,33 @@ const TherapistApplicationPage = () => {
                 />
               </div>
             </div>
+
+            {/* Password Field */}
+            <div>
+              <Label htmlFor="password">Password *</Label>
+              <div className="relative mt-1">
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  data-testid="application-password-input"
+                  value={application.password}
+                  onChange={(e) => setApplication({ ...application, password: e.target.value })}
+                  required
+                  placeholder="Minimum 6 characters"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                This will be your login password after approval
+              </p>
+            </div>
           </div>
 
           {/* Professional Info Section */}
@@ -237,19 +315,31 @@ const TherapistApplicationPage = () => {
             </div>
 
             {/* Specializations */}
-            <div>
-              <Label>Specializations</Label>
+            <div ref={dropdownRef}>
+              <Label className="flex items-center justify-between">
+                <span>Specializations</span>
+                <span className="text-xs text-muted-foreground">
+                  {application.specializations.length}/{MAX_SPECIALIZATIONS} selected
+                </span>
+              </Label>
               <div className="relative mt-1">
                 <div 
                   className="min-h-[42px] p-2 border rounded-md cursor-pointer bg-white flex flex-wrap gap-1"
                   onClick={() => setShowSpecDropdown(!showSpecDropdown)}
                 >
                   {application.specializations.length === 0 ? (
-                    <span className="text-muted-foreground text-sm">Select specializations...</span>
+                    <span className="text-muted-foreground text-sm">Select up to 5 specializations...</span>
                   ) : (
                     application.specializations.map(spec => (
-                      <span key={spec} className="px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full">
+                      <span 
+                        key={spec} 
+                        className="px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full flex items-center gap-1"
+                      >
                         {spec}
+                        <X 
+                          className="w-3 h-3 cursor-pointer hover:text-red-500" 
+                          onClick={(e) => removeSpecialization(spec, e)}
+                        />
                       </span>
                     ))
                   )}
@@ -257,23 +347,31 @@ const TherapistApplicationPage = () => {
                 
                 {showSpecDropdown && (
                   <div className="absolute z-50 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-y-auto">
-                    {SPECIALIZATION_OPTIONS.map(spec => (
-                      <div
-                        key={spec}
-                        className={`px-3 py-2 cursor-pointer hover:bg-slate-50 flex items-center gap-2 ${
-                          application.specializations.includes(spec) ? 'bg-primary/5' : ''
-                        }`}
-                        onClick={() => toggleSpecialization(spec)}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={application.specializations.includes(spec)}
-                          onChange={() => {}}
-                          className="rounded"
-                        />
-                        <span className="text-sm">{spec}</span>
-                      </div>
-                    ))}
+                    {SPECIALIZATION_OPTIONS.map(spec => {
+                      const isSelected = application.specializations.includes(spec);
+                      const isDisabled = !isSelected && application.specializations.length >= MAX_SPECIALIZATIONS;
+                      
+                      return (
+                        <div
+                          key={spec}
+                          className={`px-3 py-2 flex items-center gap-2 ${
+                            isDisabled 
+                              ? 'bg-slate-50 text-slate-400 cursor-not-allowed' 
+                              : 'cursor-pointer hover:bg-slate-50'
+                          } ${isSelected ? 'bg-primary/5' : ''}`}
+                          onClick={() => !isDisabled && toggleSpecialization(spec)}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            disabled={isDisabled}
+                            onChange={() => {}}
+                            className="rounded"
+                          />
+                          <span className="text-sm">{spec}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -319,7 +417,7 @@ const TherapistApplicationPage = () => {
                     maxLength={6}
                   />
                   {pincodeLoading && (
-                    <Loader2 className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-primary" />
+                    <Loader2 className="absolute right-2 top-1/2 -translate-y-1/2 mt-0.5 w-4 h-4 animate-spin text-primary" />
                   )}
                 </div>
               </div>
@@ -381,7 +479,7 @@ const TherapistApplicationPage = () => {
           <div className="p-4 bg-info/10 border border-info/20 rounded-lg">
             <p className="text-sm text-info">
               <strong>Note:</strong> Your application will be reviewed by our admin team. You will
-              receive login credentials via email once approved.
+              be able to login with your mobile number and password once approved.
             </p>
           </div>
 
