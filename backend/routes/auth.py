@@ -3,7 +3,7 @@ Authentication routes
 """
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, EmailStr
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime, timezone
 import uuid
 import os
