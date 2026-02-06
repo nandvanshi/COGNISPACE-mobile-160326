@@ -52,8 +52,8 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-# AI/LLM Configuration
-EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY')
+# AI/LLM Configuration - Using personal Anthropic API key
+ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY')
 
 # Default feature toggles for all subscription plans (all features enabled by default)
 DEFAULT_FEATURE_TOGGLES = {
