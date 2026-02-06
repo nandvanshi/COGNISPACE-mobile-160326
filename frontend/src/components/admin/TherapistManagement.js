@@ -13,13 +13,7 @@ import { Ban, CheckCircle, Key, Plus, Edit, Users, Eye, Calendar, CreditCard, Re
 import { formatDate, formatCurrency } from '../../utils/formatUtils';
 
 // Available specializations
-const SPECIALIZATION_OPTIONS = [
-  "Clinical Psychology", "Counseling Psychology", "Child & Adolescent Therapy",
-  "Marriage & Family Therapy", "CBT", "DBT", "Trauma & PTSD", "Anxiety Disorders",
-  "Depression", "Addiction & Substance Abuse", "Eating Disorders", "OCD",
-  "Grief Counseling", "Stress Management", "Anger Management", "Career Counseling",
-  "Relationship Issues", "Mindfulness", "Neuropsychology", "Art Therapy"
-];
+import { SPECIALIZATION_OPTIONS } from '../utils/constants';
 
 const TherapistManagement = ({ onViewClients }) => {
   const [therapists, setTherapists] = useState([]);
