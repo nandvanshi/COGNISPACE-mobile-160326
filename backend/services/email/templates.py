@@ -334,14 +334,153 @@ def template_subscription_expiry(data: Dict[str, Any]) -> Dict[str, str]:
     }
 
 
+def template_appointment_confirmation_therapist(data: Dict[str, Any]) -> Dict[str, str]:
+    """Template for appointment confirmation sent to therapist/assistant"""
+    content = f"""
+    <p class="greeting">New Appointment Scheduled</p>
+    <p class="message">
+        A new appointment has been booked.
+    </p>
+    
+    <div class="info-box">
+        <p><strong>👤 Client:</strong> {data.get('client_name', 'N/A')}</p>
+        <p><strong>📅 Date & Time:</strong> {format_ist_datetime(data.get('appointment_time', ''))}</p>
+        <p><strong>⏱️ Duration:</strong> {data.get('duration', '50')} minutes</p>
+        <p><strong>📝 Type:</strong> {data.get('appointment_type', 'Session')}</p>
+    </div>
+    
+    <a href="{data.get('dashboard_url', '#')}" class="button">View Schedule</a>
+    """
+    
+    return {
+        "subject": f"New Appointment: {data.get('client_name', 'Client')} - {format_ist_datetime(data.get('appointment_time', ''))}",
+        "html_body": get_base_template(content, "New Appointment"),
+        "text_body": f"New appointment with {data.get('client_name')} on {format_ist_datetime(data.get('appointment_time'))}."
+    }
+
+
+def template_daily_schedule_briefing(data: Dict[str, Any]) -> Dict[str, str]:
+    """Template for morning daily schedule briefing"""
+    appointments = data.get('appointments', [])
+    total_count = len(appointments)
+    
+    if total_count == 0:
+        schedule_html = """
+        <div class="info-box" style="background: #e8f5e9; border-color: #4caf50;">
+            <p style="color: #2e7d32; margin: 0;">✨ No appointments scheduled for today. Enjoy your day!</p>
+        </div>
+        """
+    else:
+        schedule_items = ""
+        for appt in appointments:
+            schedule_items += f"""
+            <div style="background: #fff; padding: 12px 15px; margin: 8px 0; border-radius: 6px; border-left: 4px solid #0d5c4d;">
+                <p style="margin: 0 0 5px 0;"><strong>{appt.get('time', 'N/A')}</strong> - {appt.get('client_name', 'N/A')}</p>
+                <p style="margin: 0; font-size: 13px; color: #666;">{appt.get('type', 'Session')} • {appt.get('duration', '50')} mins</p>
+            </div>
+            """
+        schedule_html = f"""
+        <div class="info-box">
+            <p><strong>📊 Total Appointments:</strong> {total_count}</p>
+        </div>
+        <div style="margin-top: 15px;">
+            <h3 style="color: #0d5c4d; margin: 0 0 10px 0;">Today's Schedule</h3>
+            {schedule_items}
+        </div>
+        """
+    
+    content = f"""
+    <p class="greeting">Good Morning! ☀️</p>
+    <p class="message">
+        Here's your schedule for <strong>{data.get('date', 'today')}</strong>:
+    </p>
+    
+    {schedule_html}
+    
+    <a href="{data.get('dashboard_url', '#')}" class="button">Open Dashboard</a>
+    """
+    
+    return {
+        "subject": f"📅 Daily Schedule - {data.get('date', 'Today')} ({total_count} appointments)",
+        "html_body": get_base_template(content, "Daily Schedule"),
+        "text_body": f"Good Morning! You have {total_count} appointments today ({data.get('date')}). Login to view details."
+    }
+
+
+def template_daily_payment_statement(data: Dict[str, Any]) -> Dict[str, str]:
+    """Template for end-of-day payment statement"""
+    payments = data.get('payments', [])
+    total_amount = data.get('total_amount', 0)
+    payment_count = len(payments)
+    
+    if payment_count == 0:
+        payments_html = """
+        <div class="info-box" style="background: #fff3e0; border-color: #ff9800;">
+            <p style="color: #e65100; margin: 0;">No payments recorded today.</p>
+        </div>
+        """
+    else:
+        payment_items = ""
+        for pmt in payments:
+            status_color = "#4caf50" if pmt.get('status') == 'paid' else "#ff9800"
+            payment_items += f"""
+            <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #eee;">{pmt.get('client_name', 'N/A')}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #eee;">₹{pmt.get('amount', 0):,.0f}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #eee;">{pmt.get('method', 'N/A')}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #eee;"><span style="color: {status_color};">{pmt.get('status', 'N/A').title()}</span></td>
+            </tr>
+            """
+        payments_html = f"""
+        <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+            <thead>
+                <tr style="background: #f5f5f5;">
+                    <th style="padding: 10px; text-align: left;">Client</th>
+                    <th style="padding: 10px; text-align: left;">Amount</th>
+                    <th style="padding: 10px; text-align: left;">Method</th>
+                    <th style="padding: 10px; text-align: left;">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {payment_items}
+            </tbody>
+        </table>
+        """
+    
+    content = f"""
+    <p class="greeting">Daily Payment Statement 💰</p>
+    <p class="message">
+        Here's your payment summary for <strong>{data.get('date', 'today')}</strong>:
+    </p>
+    
+    <div class="info-box" style="background: #e8f5e9; border-color: #4caf50;">
+        <p style="font-size: 24px; color: #2e7d32; margin: 0 0 5px 0;"><strong>₹{total_amount:,.0f}</strong></p>
+        <p style="margin: 0; color: #666;">Total from {payment_count} payment(s)</p>
+    </div>
+    
+    {payments_html}
+    
+    <a href="{data.get('reports_url', '#')}" class="button">View Full Report</a>
+    """
+    
+    return {
+        "subject": f"💰 Daily Payment Statement - {data.get('date', 'Today')} (₹{total_amount:,.0f})",
+        "html_body": get_base_template(content, "Daily Payment Statement"),
+        "text_body": f"Daily Payment Statement for {data.get('date')}: Total ₹{total_amount:,.0f} from {payment_count} payments."
+    }
+
+
 # Template registry
 EMAIL_TEMPLATES = {
     "welcome_credentials": template_welcome_credentials,
     "password_changed": template_password_changed,
     "appointment_confirmation": template_appointment_confirmation,
+    "appointment_confirmation_therapist": template_appointment_confirmation_therapist,
     "appointment_reminder": template_appointment_reminder,
     "payment_receipt": template_payment_receipt,
     "subscription_expiry": template_subscription_expiry,
+    "daily_schedule_briefing": template_daily_schedule_briefing,
+    "daily_payment_statement": template_daily_payment_statement,
 }
 
 
