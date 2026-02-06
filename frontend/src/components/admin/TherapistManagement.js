@@ -1272,6 +1272,16 @@ const TherapistManagement = ({ onViewClients }) => {
                       </p>
                     </div>
                   )}
+                  {therapistDetail.google_maps_link && (
+                    <a 
+                      href={therapistDetail.google_maps_link} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-sm text-primary hover:underline mt-2 inline-block"
+                    >
+                      View on Google Maps →
+                    </a>
+                  )}
                 </div>
               )}
               
