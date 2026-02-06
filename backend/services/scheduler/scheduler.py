@@ -50,7 +50,9 @@ class NotificationScheduler:
         from .jobs import (
             check_appointment_reminders,
             check_pending_session_notes,
-            check_subscription_expiry
+            check_subscription_expiry,
+            send_morning_schedule_briefing,
+            send_daily_payment_statement
         )
         
         # Job 1: Appointment Reminders - Run every 5 minutes
@@ -86,7 +88,29 @@ class NotificationScheduler:
             replace_existing=True
         )
         
-        logger.info("Registered 3 scheduled jobs: appointment_reminders (5min), pending_notes (15min), subscription_expiry (daily 9AM)")
+        # Job 4: Morning Schedule Briefing - Run daily at 7 AM IST
+        # Sends daily schedule to therapists and assistants
+        cls._scheduler.add_job(
+            send_morning_schedule_briefing,
+            trigger=CronTrigger(hour=7, minute=0),
+            id='morning_schedule_briefing',
+            name='Morning Schedule Briefing',
+            args=[cls._db],
+            replace_existing=True
+        )
+        
+        # Job 5: Daily Payment Statement - Run daily at 9 PM IST
+        # Sends end-of-day payment summary to therapists
+        cls._scheduler.add_job(
+            send_daily_payment_statement,
+            trigger=CronTrigger(hour=21, minute=0),
+            id='daily_payment_statement',
+            name='Daily Payment Statement',
+            args=[cls._db],
+            replace_existing=True
+        )
+        
+        logger.info("Registered 5 scheduled jobs: appointment_reminders (5min), pending_notes (15min), subscription_expiry (daily 9AM), morning_briefing (daily 7AM), payment_statement (daily 9PM)")
     
     @classmethod
     def start(cls):
