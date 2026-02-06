@@ -120,6 +120,7 @@ async def get_therapist_applications(current_user: dict = Depends(require_super_
             "email": app.get("email"),
             "full_name": app["full_name"],
             "credentials": app.get("qualifications", app.get("credentials", "")),
+            "specializations": app.get("specializations", []),
             "specialization": ", ".join(app.get("specializations", [])) if isinstance(app.get("specializations"), list) else app.get("specialization", ""),
             "years_of_experience": app.get("years_of_experience"),
             "status": app["status"],
@@ -128,9 +129,17 @@ async def get_therapist_applications(current_user: dict = Depends(require_super_
             "created_at": app["created_at"],
             "approved_at": app.get("approved_at"),
             "has_password": bool(app.get("password_hash")),
+            # Clinic Info
             "clinic_name": app.get("clinic_name"),
+            "fee_slots": app.get("fee_slots", []),
+            # Address
+            "address_line_1": app.get("address_line_1"),
+            "address_line_2": app.get("address_line_2"),
+            "pincode": app.get("pincode"),
             "city": app.get("city"),
-            "state": app.get("state")
+            "district": app.get("district"),
+            "state": app.get("state"),
+            "google_maps_link": app.get("google_maps_link")
         }
         result.append(app_data)
     return result
