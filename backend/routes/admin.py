@@ -546,7 +546,7 @@ async def get_therapist_detail(therapist_id: str, current_user: dict = Depends(r
         "subscription_end_date": subscription_end_date
     }
     
-    # Add profile data if exists
+    # Add profile data if exists, otherwise fallback to users collection
     if therapist_profile:
         result["specializations"] = therapist_profile.get("specializations", [])
         result["fee_slots"] = therapist_profile.get("fee_slots", [])
@@ -562,8 +562,14 @@ async def get_therapist_detail(therapist_id: str, current_user: dict = Depends(r
             result["qualifications"] = therapist_profile.get("qualifications")
         if therapist_profile.get("clinic_name"):
             result["clinic_name"] = therapist_profile.get("clinic_name")
+    else:
+        # Fallback to users collection data (for therapists approved from applications before profile was created)
+        result["specializations"] = therapist.get("specializations", [])
+        result["fee_slots"] = therapist.get("fee_slots", [])
     
-    # Also check if address data is in users collection (for therapists approved from applications)
+    # Also check if address/specializations data is in users collection (for therapists approved from applications)
+    if not result.get("specializations") and therapist.get("specializations"):
+        result["specializations"] = therapist.get("specializations")
     if not result.get("address_line_1") and therapist.get("address_line_1"):
         result["address_line_1"] = therapist.get("address_line_1")
         result["address_line_2"] = therapist.get("address_line_2")
