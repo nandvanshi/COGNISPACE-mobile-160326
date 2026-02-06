@@ -1191,6 +1191,15 @@ const TherapistManagement = ({ onViewClients }) => {
                       <Input value={editData.state} onChange={(e) => setEditData({ ...editData, state: e.target.value })} className="mt-1" />
                     </div>
                   </div>
+                  <div>
+                    <Label>Google Maps Link</Label>
+                    <Input 
+                      value={editData.google_maps_link} 
+                      onChange={(e) => setEditData({ ...editData, google_maps_link: e.target.value })} 
+                      className="mt-1" 
+                      placeholder="https://maps.google.com/..."
+                    />
+                  </div>
                 </div>
               </div>
               
