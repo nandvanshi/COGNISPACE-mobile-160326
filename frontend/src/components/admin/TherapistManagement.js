@@ -69,7 +69,8 @@ const TherapistManagement = ({ onViewClients }) => {
     pincode: '',
     city: '',
     state: '',
-    district: ''
+    district: '',
+    google_maps_link: ''
   });
   const [showEditSpecDropdown, setShowEditSpecDropdown] = useState(false);
   const [pincodeLoading, setPincodeLoading] = useState(false);
