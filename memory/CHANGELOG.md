@@ -4,34 +4,33 @@ All notable changes to this project are documented in this file.
 
 ---
 
-## [Feb 6, 2026] - Admin Therapist Management Fixes
+## [Feb 6, 2026] - Admin Fixes & Enhancements
 
 ### Bug Fixes
 - ✅ **Admin → Therapist Management → "View" Dialog** (P0 Fixed)
   - Added full profile data display: Specializations, Clinic Info, Fee Slots, Address
   - Backend now fetches from both `users` and `therapist_profiles` collections
-  - Added action buttons: "View Clients" and "Edit Profile"
 
 - ✅ **Admin → Therapist Management → "Edit" Dialog** (P0 Fixed)
   - Completely redesigned edit form with all profile fields
   - Now properly fetches full therapist data before opening edit dialog
-  - Added multi-select specializations dropdown (same as create form)
-  - Added clinic address fields (Address Line 1, 2, PIN Code, City, District, State)
-  - Fixed field name mismatch: `credentials` → `qualifications`, `specialization` → `specializations`
-  - Backend update endpoint now saves to both `users` and `therapist_profiles` collections
+
+### New Features
+- ✅ **Admin → Subscription Plans → Edit Functionality**
+  - Added Edit button to each subscription plan card
+  - New Edit dialog with all plan fields: Name, Price, Duration, Max Clients, Features
+  - Backend PUT endpoint `/api/admin/subscription-plans/{plan_id}` added
+  - Note shown that changes only affect new subscriptions
 
 ### Technical Changes
-- **Backend (`/app/backend/routes/admin.py`)**:
+- **Backend**:
   - Enhanced `GET /api/admin/therapists/{id}` to include profile data
+  - Added `PUT /api/admin/subscription-plans/{id}` endpoint
   - Updated `TherapistUpdate` model with new fields
-  - Enhanced `PUT /api/admin/therapists/{id}` to update profile collection with upsert
 
-- **Frontend (`/app/frontend/src/components/admin/TherapistManagement.js`)**:
-  - Added `showEditSpecDropdown` state for edit specializations
-  - Added `toggleEditSpecialization` and `removeEditSpecialization` functions
-  - Enhanced `handleEditClick` to fetch full data before opening dialog
-  - Redesigned View dialog with sections for Basic Info, Specializations, Clinic, Fee Slots, Subscription
-  - Redesigned Edit dialog with complete form matching Create Therapist form
+- **Frontend**:
+  - `TherapistManagement.js`: Redesigned View/Edit dialogs
+  - `SubscriptionManagement.js`: Added Edit functionality
 
 ---
 
