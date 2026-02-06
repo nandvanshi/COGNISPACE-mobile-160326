@@ -8,26 +8,7 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card } from '../components/ui/card';
 import { ArrowLeft, MapPin, Loader2, Eye, EyeOff, X } from 'lucide-react';
-
-const SPECIALIZATION_OPTIONS = [
-  'Anxiety Disorders',
-  'Depression',
-  'Trauma & PTSD',
-  'OCD',
-  'Relationship Issues',
-  'Family Therapy',
-  'Child & Adolescent',
-  'Addiction & Substance Abuse',
-  'Eating Disorders',
-  'Grief & Loss',
-  'Stress Management',
-  'Career Counseling',
-  'CBT',
-  'DBT',
-  'EMDR',
-  'Psychodynamic',
-  'Mindfulness-Based'
-];
+import { SPECIALIZATION_OPTIONS } from '../utils/constants';
 
 const MAX_SPECIALIZATIONS = 5;
 
