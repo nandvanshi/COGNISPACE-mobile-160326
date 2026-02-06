@@ -75,7 +75,7 @@ JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_HOURS = 24 * 7  # 7 days
 
 # Setup route modules with dependencies
-setup_ai_clinical(db, EMERGENT_LLM_KEY, JWT_SECRET, JWT_ALGORITHM)
+setup_ai_clinical(db, ANTHROPIC_API_KEY, JWT_SECRET, JWT_ALGORITHM)
 setup_diagnostic_reports(db, JWT_SECRET, JWT_ALGORITHM)
 setup_resources(db, JWT_SECRET, JWT_ALGORITHM)
 
