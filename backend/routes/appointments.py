@@ -306,6 +306,81 @@ async def create_appointment(appt_data: AppointmentCreate, current_user: dict = 
     except Exception as e:
         print(f"Failed to send appointment confirmation email: {e}")
     
+    # Send email confirmation to THERAPIST
+    try:
+        from services.email import EmailService
+        duration = int((appt_data.end_time - appt_data.start_time).total_seconds() / 60)
+        
+        # Check therapist's notification preferences
+        therapist_notif_pref = await db.notification_preferences.find_one(
+            {"user_id": therapist_id, "event": "appointment_confirmation"},
+            {"_id": 0}
+        )
+        send_therapist_email = therapist_notif_pref.get("send_email", True) if therapist_notif_pref else True
+        send_therapist_whatsapp = therapist_notif_pref.get("send_whatsapp", False) if therapist_notif_pref else False
+        
+        if send_therapist_email:
+            await EmailService.send_notification_email(
+                to_user_id=therapist_id,
+                event="appointment_confirmation_therapist",
+                data={
+                    "client_name": client["full_name"],
+                    "appointment_time": appointment_doc["start_time"],
+                    "duration": duration,
+                    "appointment_type": appt_data.notes or "Session",
+                    "dashboard_url": "/dashboard"
+                },
+                therapist_id=therapist_id,
+                force=False
+            )
+        
+        # Send WhatsApp to therapist if opted-in
+        if send_therapist_whatsapp:
+            from services.whatsapp import WhatsAppService
+            therapist_user = await db.users.find_one({"id": therapist_id}, {"_id": 0, "mobile": 1})
+            if therapist_user and therapist_user.get("mobile") and WhatsAppService.is_configured():
+                appt_date = appointment_doc["start_time"][:10]
+                appt_time = appointment_doc["start_time"][11:16]
+                await WhatsAppService.send_text_message(
+                    to_number=therapist_user.get("mobile"),
+                    message=f"New Appointment: {client['full_name']} on {appt_date} at {appt_time}"
+                )
+    except Exception as e:
+        print(f"Failed to send therapist appointment notification: {e}")
+    
+    # Send email confirmation to ASSISTANT (if exists)
+    try:
+        from services.email import EmailService
+        assistants = await db.users.find({
+            "role": "assistant",
+            "therapist_id": therapist_id,
+            "status": "active"
+        }, {"_id": 0, "id": 1, "email": 1, "mobile": 1}).to_list(10)
+        
+        for assistant in assistants:
+            asst_notif_pref = await db.notification_preferences.find_one(
+                {"user_id": assistant.get("id"), "event": "appointment_confirmation"},
+                {"_id": 0}
+            )
+            send_asst_email = asst_notif_pref.get("send_email", True) if asst_notif_pref else True
+            
+            if send_asst_email and assistant.get("email"):
+                await EmailService.send_notification_email(
+                    to_user_id=assistant.get("id"),
+                    event="appointment_confirmation_therapist",
+                    data={
+                        "client_name": client["full_name"],
+                        "appointment_time": appointment_doc["start_time"],
+                        "duration": duration,
+                        "appointment_type": appt_data.notes or "Session",
+                        "dashboard_url": "/dashboard"
+                    },
+                    therapist_id=therapist_id,
+                    force=False
+                )
+    except Exception as e:
+        print(f"Failed to send assistant appointment notification: {e}")
+    
     # Send WhatsApp confirmation to client (if configured and opted-in)
     try:
         from services.whatsapp import WhatsAppService
