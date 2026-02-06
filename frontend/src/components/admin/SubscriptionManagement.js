@@ -391,6 +391,86 @@ const SubscriptionManagement = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Edit Plan Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent data-testid="edit-plan-dialog">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-serif text-primary">Edit Subscription Plan</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEditPlan} className="space-y-4">
+            <div>
+              <Label htmlFor="edit-plan-name">Plan Name *</Label>
+              <Input
+                id="edit-plan-name"
+                data-testid="edit-plan-name-input"
+                value={editPlan.name}
+                onChange={(e) => setEditPlan({ ...editPlan, name: e.target.value })}
+                placeholder="e.g., Gold, Premium"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-plan-price">Price (₹) *</Label>
+                <Input
+                  id="edit-plan-price"
+                  type="number"
+                  data-testid="edit-plan-price-input"
+                  value={editPlan.price}
+                  onChange={(e) => setEditPlan({ ...editPlan, price: e.target.value })}
+                  placeholder="1999"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-plan-duration">Duration (days) *</Label>
+                <Input
+                  id="edit-plan-duration"
+                  type="number"
+                  data-testid="edit-plan-duration-input"
+                  value={editPlan.duration_days}
+                  onChange={(e) => setEditPlan({ ...editPlan, duration_days: e.target.value })}
+                  placeholder="30"
+                  required
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="edit-plan-max-clients">Max Clients (optional)</Label>
+              <Input
+                id="edit-plan-max-clients"
+                type="number"
+                data-testid="edit-plan-max-clients-input"
+                value={editPlan.max_clients}
+                onChange={(e) => setEditPlan({ ...editPlan, max_clients: e.target.value })}
+                placeholder="Leave blank for unlimited"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-plan-features">Feature Descriptions (comma-separated)</Label>
+              <Input
+                id="edit-plan-features"
+                data-testid="edit-plan-features-input"
+                value={editPlan.features}
+                onChange={(e) => setEditPlan({ ...editPlan, features: e.target.value })}
+                placeholder="Unlimited clients, Priority support, TheraGenie features"
+              />
+            </div>
+            <p className="text-sm text-info bg-info/10 p-3 rounded-lg">
+              Note: Changes to price and duration only affect new subscriptions. Existing therapist subscriptions remain unchanged.
+            </p>
+            <div className="flex gap-3 pt-2">
+              <Button type="submit" className="flex-1" data-testid="update-plan-btn">
+                Update Plan
+              </Button>
+              <Button type="button" variant="outline" onClick={() => setShowEditDialog(false)}>
+                Cancel
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       {/* Feature Toggles Dialog */}
       <Dialog open={showFeaturesDialog} onOpenChange={setShowFeaturesDialog}>
         <DialogContent className="max-w-lg max-h-[90vh] flex flex-col" data-testid="features-dialog">
