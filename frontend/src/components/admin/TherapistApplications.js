@@ -129,8 +129,15 @@ const TherapistApplications = () => {
               >
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <h4 className="text-lg font-medium text-foreground">{app.full_name}</h4>
-                    <p className="text-sm text-muted-foreground mt-1">Mobile: {app.mobile}</p>
+                    <div className="flex items-center gap-3 mb-2">
+                      <h4 className="text-lg font-medium text-foreground">{app.full_name}</h4>
+                      {app.has_password && (
+                        <Badge variant="outline" className="bg-success/10 text-success text-xs">
+                          Password Set
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground">Mobile: {app.mobile}</p>
                     <p className="text-sm text-muted-foreground">Email: {app.email}</p>
                     <p className="text-sm text-foreground mt-2">
                       <strong>Credentials:</strong> {app.credentials}
@@ -140,29 +147,45 @@ const TherapistApplications = () => {
                         <strong>Specialization:</strong> {app.specialization}
                       </p>
                     )}
-                    {app.years_of_experience && (
+                    {app.clinic_name && (
                       <p className="text-sm text-muted-foreground">
-                        <strong>Experience:</strong> {app.years_of_experience} years
+                        <strong>Clinic:</strong> {app.clinic_name}
+                        {app.city && `, ${app.city}`}
                       </p>
                     )}
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Applied: {formatDate(app.created_at)}
+                    </p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-col gap-2">
                     <Button
-                      onClick={() => handleApprove(app)}
-                      className="bg-success hover:bg-success/80"
-                      data-testid={`approve-${app.id}`}
+                      onClick={() => handleViewDetail(app)}
+                      variant="outline"
+                      data-testid={`view-${app.id}`}
                     >
-                      <Check size={20} className="mr-2" />
-                      Approve
+                      <Eye size={18} className="mr-2" />
+                      View Details
                     </Button>
-                    <Button
-                      onClick={() => handleReject(app.id)}
-                      variant="destructive"
-                      data-testid={`reject-${app.id}`}
-                    >
-                      <X size={20} className="mr-2" />
-                      Reject
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => handleApprove(app)}
+                        className="bg-success hover:bg-success/80"
+                        size="sm"
+                        data-testid={`approve-${app.id}`}
+                      >
+                        <Check size={16} className="mr-1" />
+                        Approve
+                      </Button>
+                      <Button
+                        onClick={() => handleReject(app.id)}
+                        variant="destructive"
+                        size="sm"
+                        data-testid={`reject-${app.id}`}
+                      >
+                        <X size={16} className="mr-1" />
+                        Reject
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </Card>
