@@ -56,13 +56,29 @@ const TherapistDashboard = () => {
   const [disputeReason, setDisputeReason] = useState('');
   const [processingSettlement, setProcessingSettlement] = useState(false);
 
-  // Handle navigation with optional context
+  // Sync currentView with URL hash for browser back button support
+  useEffect(() => {
+    const hash = location.hash.replace('#', '') || 'overview';
+    if (hash !== currentView && !isClientProfilePage) {
+      setCurrentView(hash);
+    }
+  }, [location.hash, isClientProfilePage]);
+
+  // Handle navigation with optional context - updates URL hash
   const handleNavigation = (view, context = {}) => {
     setNavContext({ 
       selectedClientId: context.clientId || null, 
       clientFilter: context.filter || null,
       filterData: context.inactiveClientIds || null
     });
+    // Update URL hash for browser history
+    navigate(`/therapist#${view}`, { replace: false });
+    setCurrentView(view);
+  };
+
+  // Simple view change (for sidebar clicks)
+  const changeView = (view) => {
+    navigate(`/therapist#${view}`, { replace: false });
     setCurrentView(view);
   };
 
