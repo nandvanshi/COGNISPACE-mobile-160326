@@ -38,9 +38,17 @@ class TherapistUpdate(BaseModel):
     full_name: Optional[str] = None
     email: Optional[str] = None
     mobile: Optional[str] = None
-    credentials: Optional[str] = None
-    specialization: Optional[str] = None
+    qualifications: Optional[str] = None
+    specializations: Optional[List[str]] = None
     years_of_experience: Optional[int] = None
+    profile_photo: Optional[str] = None
+    clinic_name: Optional[str] = None
+    address_line_1: Optional[str] = None
+    address_line_2: Optional[str] = None
+    pincode: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    district: Optional[str] = None
 
 
 class FeeSlotCreate(BaseModel):
