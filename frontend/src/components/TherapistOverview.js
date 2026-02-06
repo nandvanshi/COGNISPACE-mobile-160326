@@ -221,7 +221,9 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
         alertsList.push({
           type: 'info',
           message: 'You are on a free trial',
-          icon: Sparkles
+          icon: Sparkles,
+          action: 'View Details',
+          actionNav: 'subscription'
         });
       }
 
