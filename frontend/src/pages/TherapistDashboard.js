@@ -179,13 +179,13 @@ const TherapistDashboard = () => {
   };
 
   const handleNavClick = (viewId) => {
-    setCurrentView(viewId);
+    changeView(viewId);
     setMobileMenuOpen(false);
   };
 
   // Handle navigation from notifications and other components
   const handleNavigate = (viewId, context = {}) => {
-    setCurrentView(viewId);
+    changeView(viewId);
     setMobileMenuOpen(false);
     // Context can be used for filtering or highlighting specific items
     if (context.clientId) {
