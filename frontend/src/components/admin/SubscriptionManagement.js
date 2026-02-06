@@ -9,7 +9,7 @@ import { Badge } from '../ui/badge';
 import { Switch } from '../ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { toast } from 'sonner';
-import { Plus, Trash2, CreditCard, Settings, FileText, ClipboardCheck, Brain, BookOpen, MessageSquare, DollarSign, Users, BarChart, Mail, Phone } from 'lucide-react';
+import { Plus, Trash2, CreditCard, Settings, FileText, ClipboardCheck, Brain, BookOpen, MessageSquare, DollarSign, Users, BarChart, Mail, Phone, Edit } from 'lucide-react';
 
 // Feature toggle configuration with icons and labels
 const FEATURE_CONFIG = [
