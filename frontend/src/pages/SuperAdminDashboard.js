@@ -78,7 +78,7 @@ const SuperAdminDashboard = () => {
               <button
                 key={item.id}
                 data-testid={`admin-nav-${item.id}`}
-                onClick={() => setCurrentView(item.id)}
+                onClick={() => changeView(item.id)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   currentView === item.id
                     ? 'bg-primary text-white'
