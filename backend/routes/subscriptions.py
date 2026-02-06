@@ -361,6 +361,30 @@ async def get_subscription_plan(plan_id: str, current_user: dict = Depends(requi
     return plan
 
 
+@router.put("/admin/subscription-plans/{plan_id}")
+async def update_subscription_plan(plan_id: str, plan_data: SubscriptionPlanCreate, current_user: dict = Depends(require_super_admin)):
+    """Update subscription plan details (name, price, duration, features, max_clients)"""
+    plan = await db.subscription_plans.find_one({"id": plan_id}, {"_id": 0})
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plan not found")
+    
+    update_data = {
+        "name": plan_data.name,
+        "price": plan_data.price,
+        "duration_days": plan_data.duration_days,
+        "features": plan_data.features,
+        "max_clients": plan_data.max_clients,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.subscription_plans.update_one({"id": plan_id}, {"$set": update_data})
+    await log_audit(current_user["id"], current_user["role"], "update", "subscription_plan", plan_id)
+    
+    # Return updated plan
+    updated_plan = await db.subscription_plans.find_one({"id": plan_id}, {"_id": 0})
+    return updated_plan
+
+
 @router.post("/admin/therapists/{therapist_id}/assign-subscription")
 async def assign_subscription(
     therapist_id: str,
