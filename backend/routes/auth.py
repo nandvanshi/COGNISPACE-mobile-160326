@@ -105,15 +105,34 @@ async def apply_as_therapist(application: TherapistApplication):
     if existing_email:
         raise HTTPException(status_code=400, detail="Email already registered")
     
+    # Check for existing pending application
+    existing_application = await db.therapist_applications.find_one({
+        "$or": [
+            {"mobile": application.mobile},
+            {"email": application.email}
+        ],
+        "status": "pending_approval"
+    })
+    if existing_application:
+        raise HTTPException(status_code=400, detail="An application with this mobile/email is already pending approval")
+    
     application_id = str(uuid.uuid4())
     application_doc = {
         "id": application_id,
         "mobile": application.mobile,
         "email": application.email,
         "full_name": application.full_name,
-        "credentials": application.credentials,
-        "specialization": application.specialization,
+        "qualifications": application.qualifications,
+        "specializations": application.specializations or [],
         "years_of_experience": application.years_of_experience,
+        "clinic_name": application.clinic_name,
+        "address_line_1": application.address_line_1,
+        "address_line_2": application.address_line_2,
+        "pincode": application.pincode,
+        "city": application.city,
+        "state": application.state,
+        "district": application.district,
+        "google_maps_link": application.google_maps_link,
         "status": "pending_approval",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "approved_at": None
@@ -121,7 +140,7 @@ async def apply_as_therapist(application: TherapistApplication):
     
     await db.therapist_applications.insert_one(application_doc)
     
-    return {"message": "Application submitted successfully.", "application_id": application_id}
+    return {"message": "Application submitted successfully. You will be notified once approved.", "application_id": application_id}
 
 
 @router.post("/login", response_model=TokenResponse)
