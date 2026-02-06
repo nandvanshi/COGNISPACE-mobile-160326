@@ -445,6 +445,8 @@ async def update_therapist(therapist_id: str, data: TherapistUpdate, current_use
         profile_update["state"] = data.state
     if data.district is not None:
         profile_update["district"] = data.district
+    if data.google_maps_link is not None:
+        profile_update["google_maps_link"] = data.google_maps_link
     
     if profile_update:
         profile_update["updated_at"] = datetime.now(timezone.utc).isoformat()
