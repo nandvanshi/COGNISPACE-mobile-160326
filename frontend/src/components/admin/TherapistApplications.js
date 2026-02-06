@@ -296,6 +296,167 @@ const TherapistApplications = () => {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* View Application Details Dialog */}
+      {showDetailDialog && selectedApp && (
+        <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
+          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto" data-testid="application-detail-dialog">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-serif text-primary">Application Details</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              {/* Header */}
+              <div className="flex items-center gap-4 p-4 bg-surface rounded-lg">
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-2xl font-bold text-primary">{selectedApp.full_name?.charAt(0)}</span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-semibold">{selectedApp.full_name}</h3>
+                  <p className="text-muted-foreground">{selectedApp.credentials}</p>
+                  <div className="flex gap-2 mt-1">
+                    <Badge variant={selectedApp.status === 'pending_approval' ? 'outline' : 'secondary'} 
+                           className={selectedApp.status === 'pending_approval' ? 'bg-warning/10 text-warning' : ''}>
+                      {selectedApp.status === 'pending_approval' ? 'Pending Approval' : selectedApp.status}
+                    </Badge>
+                    {selectedApp.has_password && (
+                      <Badge variant="outline" className="bg-success/10 text-success">
+                        Password Set
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Contact Info */}
+              <div className="p-4 bg-surface rounded-lg">
+                <h4 className="font-semibold mb-3 text-sm text-primary flex items-center gap-2">
+                  <User size={14} /> Contact Information
+                </h4>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Phone size={14} className="text-muted-foreground" />
+                    <span>{selectedApp.mobile}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Mail size={14} className="text-muted-foreground" />
+                    <span>{selectedApp.email || 'N/A'}</span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Professional Info */}
+              <div className="p-4 bg-surface rounded-lg">
+                <h4 className="font-semibold mb-3 text-sm text-primary">Professional Information</h4>
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <strong>Qualifications:</strong> {selectedApp.credentials || 'N/A'}
+                  </div>
+                  <div>
+                    <strong>Experience:</strong> {selectedApp.years_of_experience ? `${selectedApp.years_of_experience} years` : 'N/A'}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Specializations */}
+              {selectedApp.specializations && selectedApp.specializations.length > 0 && (
+                <div className="p-4 bg-primary/5 rounded-lg">
+                  <h4 className="font-semibold mb-2 text-sm text-primary">Specializations</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedApp.specializations.map((spec, idx) => (
+                      <Badge key={idx} variant="secondary" className="bg-primary/10 text-primary">
+                        {spec}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Clinic Info */}
+              {(selectedApp.clinic_name || selectedApp.address_line_1) && (
+                <div className="p-4 bg-surface rounded-lg">
+                  <h4 className="font-semibold mb-3 text-sm text-primary flex items-center gap-2">
+                    <Building2 size={14} /> Clinic Information
+                  </h4>
+                  {selectedApp.clinic_name && (
+                    <p className="font-medium mb-2">{selectedApp.clinic_name}</p>
+                  )}
+                  {selectedApp.address_line_1 && (
+                    <div className="text-sm text-muted-foreground space-y-1">
+                      <div className="flex items-start gap-2">
+                        <MapPin size={14} className="mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p>{selectedApp.address_line_1}</p>
+                          {selectedApp.address_line_2 && <p>{selectedApp.address_line_2}</p>}
+                          <p>
+                            {[selectedApp.city, selectedApp.district, selectedApp.state].filter(Boolean).join(', ')}
+                            {selectedApp.pincode && ` - ${selectedApp.pincode}`}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {selectedApp.google_maps_link && (
+                    <a 
+                      href={selectedApp.google_maps_link} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-sm text-primary hover:underline mt-2 inline-block"
+                    >
+                      View on Google Maps →
+                    </a>
+                  )}
+                </div>
+              )}
+              
+              {/* Fee Slots */}
+              {selectedApp.fee_slots && selectedApp.fee_slots.length > 0 && (
+                <div className="p-4 bg-surface rounded-lg">
+                  <h4 className="font-semibold mb-3 text-sm text-primary flex items-center gap-2">
+                    <CreditCard size={14} /> Consultation Fees
+                  </h4>
+                  <div className="flex flex-wrap gap-3">
+                    {selectedApp.fee_slots.map((slot, idx) => (
+                      <div key={idx} className="px-3 py-2 bg-white border rounded-lg text-sm">
+                        <span className="font-medium text-primary">₹{slot.amount}</span>
+                        <span className="text-muted-foreground ml-1">/ {slot.duration_minutes} min</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Application Date */}
+              <div className="p-4 bg-info/10 rounded-lg">
+                <div className="flex items-center gap-2 text-sm">
+                  <Calendar size={14} className="text-info" />
+                  <span><strong>Applied on:</strong> {formatDate(selectedApp.created_at)}</span>
+                </div>
+              </div>
+              
+              {/* Action Buttons */}
+              {selectedApp.status === 'pending_approval' && (
+                <div className="flex gap-3 pt-2">
+                  <Button
+                    onClick={() => { setShowDetailDialog(false); handleApprove(selectedApp); }}
+                    className="flex-1 bg-success hover:bg-success/80"
+                  >
+                    <Check size={16} className="mr-2" />
+                    Approve Application
+                  </Button>
+                  <Button
+                    onClick={() => { setShowDetailDialog(false); handleReject(selectedApp.id); }}
+                    variant="destructive"
+                    className="flex-1"
+                  >
+                    <X size={16} className="mr-2" />
+                    Reject
+                  </Button>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
