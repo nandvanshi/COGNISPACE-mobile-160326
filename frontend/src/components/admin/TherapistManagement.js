@@ -60,11 +60,10 @@ const TherapistManagement = ({ onViewClients }) => {
     full_name: '',
     email: '',
     qualifications: '',
-    specialization: '',
+    specializations: [],
     years_of_experience: '',
     profile_photo: '',
     clinic_name: '',
-    consultation_fee: '',
     address_line_1: '',
     address_line_2: '',
     pincode: '',
@@ -72,6 +71,7 @@ const TherapistManagement = ({ onViewClients }) => {
     state: '',
     district: ''
   });
+  const [showEditSpecDropdown, setShowEditSpecDropdown] = useState(false);
   const [pincodeLoading, setPincodeLoading] = useState(false);
 
   useEffect(() => {
