@@ -42,20 +42,33 @@ const TherapistApplications = () => {
 
   const handleApprove = (app) => {
     setSelectedApp(app);
-    setGeneratedPassword(generatePassword());
+    // Only generate password if application doesn't have one
+    if (!app.has_password) {
+      setGeneratedPassword(generatePassword());
+    } else {
+      setGeneratedPassword('');
+    }
     setShowApproveDialog(true);
   };
 
   const confirmApproval = async () => {
     try {
-      await axios.post(
-        `${API}/admin/therapist-applications/${selectedApp.id}/approve?password=${generatedPassword}`
-      );
-      toast.success(`Therapist approved! Password: ${generatedPassword}`);
+      // Only send password if application doesn't have one
+      const url = selectedApp.has_password 
+        ? `${API}/admin/therapist-applications/${selectedApp.id}/approve`
+        : `${API}/admin/therapist-applications/${selectedApp.id}/approve?password=${generatedPassword}`;
+      
+      await axios.post(url);
+      
+      if (selectedApp.has_password) {
+        toast.success(`Therapist approved! They can login with their registered password.`);
+      } else {
+        toast.success(`Therapist approved! Password: ${generatedPassword}`);
+      }
       setShowApproveDialog(false);
       fetchApplications();
     } catch (error) {
-      toast.error('Failed to approve application');
+      toast.error(error.response?.data?.detail || 'Failed to approve application');
     }
   };
 
