@@ -29,12 +29,20 @@ const SubscriptionManagement = () => {
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const [showFeaturesDialog, setShowFeaturesDialog] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [newPlan, setNewPlan] = useState({
     name: '',
     price: '',
     duration_days: 30,
+    features: '',
+    max_clients: '',
+  });
+  const [editPlan, setEditPlan] = useState({
+    name: '',
+    price: '',
+    duration_days: '',
     features: '',
     max_clients: '',
   });
