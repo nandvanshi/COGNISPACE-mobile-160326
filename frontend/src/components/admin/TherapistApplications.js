@@ -5,13 +5,15 @@ import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
+import { Badge } from '../ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { toast } from 'sonner';
-import { Check, X } from 'lucide-react';
+import { Check, X, Eye, Building2, MapPin, CreditCard, Calendar, Mail, Phone, User } from 'lucide-react';
 
 const TherapistApplications = () => {
   const [applications, setApplications] = useState([]);
   const [showApproveDialog, setShowApproveDialog] = useState(false);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [selectedApp, setSelectedApp] = useState(null);
   const [generatedPassword, setGeneratedPassword] = useState('');
   const [loading, setLoading] = useState(true);
