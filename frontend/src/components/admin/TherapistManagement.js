@@ -13,7 +13,7 @@ import { Ban, CheckCircle, Key, Plus, Edit, Users, Eye, Calendar, CreditCard, Re
 import { formatDate, formatCurrency } from '../../utils/formatUtils';
 
 // Available specializations
-import { SPECIALIZATION_OPTIONS } from '../utils/constants';
+import { SPECIALIZATION_OPTIONS } from '../../utils/constants';
 
 const TherapistManagement = ({ onViewClients }) => {
   const [therapists, setTherapists] = useState([]);
