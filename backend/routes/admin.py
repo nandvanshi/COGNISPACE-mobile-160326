@@ -288,20 +288,36 @@ async def get_all_therapists(
             elif isinstance(end_date_str, datetime):
                 subscription_end_date = end_date_str
         
+        # Get therapist profile for additional details
+        therapist_profile = await db.therapist_profiles.find_one({"therapist_id": t["id"]}, {"_id": 0})
+        
+        # Merge specializations from profile or users collection
+        specializations = []
+        if therapist_profile and therapist_profile.get("specializations"):
+            specializations = therapist_profile.get("specializations", [])
+        elif t.get("specializations"):
+            specializations = t.get("specializations", [])
+        
         result.append(TherapistProfile(
             id=t["id"],
             mobile=t.get("mobile", ""),
             email=t.get("email"),
             full_name=t.get("full_name", "Unknown"),
-            credentials=t.get("credentials", ""),
-            specialization=t.get("specialization"),
+            credentials=t.get("credentials", t.get("qualifications", "")),
+            qualifications=t.get("qualifications", therapist_profile.get("qualifications") if therapist_profile else None),
+            specialization=", ".join(specializations) if specializations else t.get("specialization"),
+            specializations=specializations,
             years_of_experience=t.get("years_of_experience"),
             status=t.get("status"),
             subscription_status=t.get("subscription_status"),
             subscription_plan=t.get("subscription_plan"),
             subscription_end_date=subscription_end_date,
             created_at=datetime.fromisoformat(t["created_at"]) if t.get("created_at") else datetime.now(timezone.utc),
-            approved_at=datetime.fromisoformat(t["approved_at"]) if t.get("approved_at") else None
+            approved_at=datetime.fromisoformat(t["approved_at"]) if t.get("approved_at") else None,
+            clinic_name=therapist_profile.get("clinic_name") if therapist_profile else t.get("clinic_name"),
+            address_line_1=therapist_profile.get("address_line_1") if therapist_profile else t.get("address_line_1"),
+            city=therapist_profile.get("city") if therapist_profile else t.get("city"),
+            state=therapist_profile.get("state") if therapist_profile else t.get("state")
         ))
     return result
 
