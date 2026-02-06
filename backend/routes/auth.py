@@ -117,12 +117,20 @@ async def apply_as_therapist(application: TherapistApplication):
     if existing_application:
         raise HTTPException(status_code=400, detail="An application with this mobile/email is already pending approval")
     
+    # Validate password
+    if len(application.password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+    
+    # Hash password for storage
+    hashed_password = hash_password(application.password)
+    
     application_id = str(uuid.uuid4())
     application_doc = {
         "id": application_id,
         "mobile": application.mobile,
         "email": application.email,
         "full_name": application.full_name,
+        "password_hash": hashed_password,
         "qualifications": application.qualifications,
         "specializations": application.specializations or [],
         "years_of_experience": application.years_of_experience,
