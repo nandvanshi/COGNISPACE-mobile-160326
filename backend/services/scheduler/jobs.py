@@ -355,3 +355,213 @@ async def _send_subscription_expiry_warning(db, subscription: dict, days_remaini
     except Exception as e:
         logger.error(f"Error sending subscription expiry warning: {e}")
         return False
+
+
+async def send_morning_schedule_briefing(db):
+    """
+    Send morning schedule briefing to therapists and assistants.
+    Runs daily at 7:00 AM IST.
+    """
+    logger.info("Running morning schedule briefing...")
+    
+    try:
+        # Get today's date in IST
+        now_ist = datetime.now(IST)
+        today_start = now_ist.replace(hour=0, minute=0, second=0, microsecond=0)
+        today_end = today_start + timedelta(days=1)
+        
+        today_str = today_start.strftime("%d/%m/%Y")
+        
+        # Get all active therapists
+        therapists = await db.users.find({
+            "role": "therapist",
+            "status": {"$in": ["active", "approved"]}
+        }, {"_id": 0, "id": 1, "full_name": 1, "email": 1, "mobile": 1}).to_list(500)
+        
+        sent_count = 0
+        
+        for therapist in therapists:
+            therapist_id = therapist.get("id")
+            
+            # Get today's appointments for this therapist
+            appointments = await db.appointments.find({
+                "therapist_id": therapist_id,
+                "status": "scheduled",
+                "start_time": {
+                    "$gte": today_start.isoformat(),
+                    "$lt": today_end.isoformat()
+                }
+            }, {"_id": 0}).sort("start_time", 1).to_list(50)
+            
+            # Format appointments for template
+            formatted_appts = []
+            for appt in appointments:
+                client = await db.users.find_one({"id": appt.get("client_id")}, {"_id": 0, "full_name": 1})
+                appt_time = datetime.fromisoformat(appt.get("start_time", "").replace('Z', '+00:00'))
+                appt_time_ist = appt_time + timedelta(hours=5, minutes=30)
+                
+                formatted_appts.append({
+                    "time": appt_time_ist.strftime("%I:%M %p"),
+                    "client_name": client.get("full_name", "Unknown") if client else "Unknown",
+                    "type": appt.get("type", "Session"),
+                    "duration": appt.get("duration", 50)
+                })
+            
+            # Check notification preferences
+            notif_pref = await db.notification_preferences.find_one(
+                {"user_id": therapist_id, "event": "daily_briefing"},
+                {"_id": 0}
+            )
+            
+            send_email = notif_pref.get("send_email", True) if notif_pref else True
+            send_whatsapp = notif_pref.get("send_whatsapp", False) if notif_pref else False
+            
+            template_data = {
+                "date": today_str,
+                "appointments": formatted_appts,
+                "dashboard_url": "/dashboard"
+            }
+            
+            # Send email
+            if send_email and therapist.get("email"):
+                try:
+                    from services.email import EmailService
+                    await EmailService.send_notification_email(
+                        to_user_id=therapist_id,
+                        event="daily_schedule_briefing",
+                        data=template_data,
+                        therapist_id=therapist_id,
+                        force=True
+                    )
+                    sent_count += 1
+                except Exception as e:
+                    logger.warning(f"Failed to send morning briefing email to {therapist_id}: {e}")
+            
+            # Send WhatsApp (if opted in)
+            if send_whatsapp and therapist.get("mobile"):
+                try:
+                    from services.whatsapp import WhatsAppService
+                    appt_count = len(formatted_appts)
+                    message = f"Good Morning! 📅 You have {appt_count} appointment(s) today ({today_str}). Login to COGNISPACE to view details."
+                    await WhatsAppService.send_text_message(
+                        to_number=therapist.get("mobile"),
+                        message=message
+                    )
+                except Exception as e:
+                    logger.warning(f"Failed to send morning briefing WhatsApp to {therapist_id}: {e}")
+            
+            # Also send to assistants of this therapist
+            assistants = await db.users.find({
+                "role": "assistant",
+                "therapist_id": therapist_id,
+                "status": "active"
+            }, {"_id": 0, "id": 1, "email": 1, "mobile": 1}).to_list(10)
+            
+            for assistant in assistants:
+                assistant_pref = await db.notification_preferences.find_one(
+                    {"user_id": assistant.get("id"), "event": "daily_briefing"},
+                    {"_id": 0}
+                )
+                
+                if assistant_pref and assistant_pref.get("send_email", True) and assistant.get("email"):
+                    try:
+                        from services.email import EmailService
+                        await EmailService.send_notification_email(
+                            to_user_id=assistant.get("id"),
+                            event="daily_schedule_briefing",
+                            data=template_data,
+                            therapist_id=therapist_id,
+                            force=True
+                        )
+                    except Exception as e:
+                        logger.warning(f"Failed to send morning briefing to assistant: {e}")
+        
+        if sent_count > 0:
+            logger.info(f"Sent {sent_count} morning schedule briefings")
+        
+    except Exception as e:
+        logger.error(f"Error in morning schedule briefing job: {e}")
+
+
+async def send_daily_payment_statement(db):
+    """
+    Send end-of-day payment statement to therapists.
+    Runs daily at 9:00 PM IST.
+    """
+    logger.info("Running daily payment statement...")
+    
+    try:
+        # Get today's date in IST
+        now_ist = datetime.now(IST)
+        today_start = now_ist.replace(hour=0, minute=0, second=0, microsecond=0)
+        today_end = today_start + timedelta(days=1)
+        
+        today_str = today_start.strftime("%d/%m/%Y")
+        
+        # Get all active therapists
+        therapists = await db.users.find({
+            "role": "therapist",
+            "status": {"$in": ["active", "approved"]}
+        }, {"_id": 0, "id": 1, "full_name": 1, "email": 1}).to_list(500)
+        
+        sent_count = 0
+        
+        for therapist in therapists:
+            therapist_id = therapist.get("id")
+            
+            # Get today's payments for this therapist
+            payments = await db.payments.find({
+                "therapist_id": therapist_id,
+                "created_at": {
+                    "$gte": today_start.isoformat(),
+                    "$lt": today_end.isoformat()
+                }
+            }, {"_id": 0}).to_list(100)
+            
+            # Calculate totals
+            total_amount = sum(p.get("amount", 0) for p in payments if p.get("status") == "paid")
+            
+            # Format payments for template
+            formatted_payments = []
+            for pmt in payments:
+                client = await db.users.find_one({"id": pmt.get("client_id")}, {"_id": 0, "full_name": 1})
+                formatted_payments.append({
+                    "client_name": client.get("full_name", "Unknown") if client else "Unknown",
+                    "amount": pmt.get("amount", 0),
+                    "method": pmt.get("payment_method", "N/A"),
+                    "status": pmt.get("status", "pending")
+                })
+            
+            # Only send if there are payments or user wants daily summary
+            notif_pref = await db.notification_preferences.find_one(
+                {"user_id": therapist_id, "event": "daily_payment_statement"},
+                {"_id": 0}
+            )
+            
+            send_email = notif_pref.get("send_email", True) if notif_pref else True
+            
+            # Send email
+            if send_email and therapist.get("email"):
+                try:
+                    from services.email import EmailService
+                    await EmailService.send_notification_email(
+                        to_user_id=therapist_id,
+                        event="daily_payment_statement",
+                        data={
+                            "date": today_str,
+                            "payments": formatted_payments,
+                            "total_amount": total_amount,
+                            "reports_url": "/reports"
+                        },
+                        therapist_id=therapist_id,
+                        force=True
+                    )
+                    sent_count += 1
+                except Exception as e:
+                    logger.warning(f"Failed to send payment statement to {therapist_id}: {e}")
+        
+        if sent_count > 0:
+            logger.info(f"Sent {sent_count} daily payment statements")
+        
+    except Exception as e:
+        logger.error(f"Error in daily payment statement job: {e}")
