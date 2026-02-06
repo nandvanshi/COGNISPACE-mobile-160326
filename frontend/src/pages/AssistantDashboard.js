@@ -833,7 +833,7 @@ const AssistantDashboard = () => {
             <span className="font-serif text-lg text-primary">COGNISPACE</span>
           </div>
           <div className="flex items-center gap-2">
-            <NotificationBell onNavigate={(view) => setCurrentView(view)} />
+            <NotificationBell onNavigate={(view) => changeView(view)} />
             <Button
               onClick={handleLogout}
               variant="ghost"
