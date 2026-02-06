@@ -32,6 +32,7 @@ class TherapistApplication(BaseModel):
     mobile: str
     email: EmailStr
     full_name: str
+    password: str
     qualifications: str
     specializations: List[str] = []
     years_of_experience: Optional[int] = None
