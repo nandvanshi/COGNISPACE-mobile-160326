@@ -1021,11 +1021,12 @@ const TherapistManagement = ({ onViewClients }) => {
       {/* Therapist Detail Dialog */}
       {showDetailDialog && therapistDetail && (
         <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
-          <DialogContent className="max-w-lg" data-testid="therapist-detail-dialog">
+          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto" data-testid="therapist-detail-dialog">
             <DialogHeader>
               <DialogTitle className="text-2xl font-serif text-primary">Therapist Profile</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
+              {/* Header with photo and name */}
               <div className="flex items-center gap-4">
                 <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
                   {therapistDetail.profile_photo ? (
@@ -1036,21 +1037,82 @@ const TherapistManagement = ({ onViewClients }) => {
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold">{therapistDetail.full_name}</h3>
-                  <p className="text-muted-foreground">{therapistDetail.credentials}</p>
+                  <p className="text-muted-foreground">{therapistDetail.qualifications || therapistDetail.credentials || 'N/A'}</p>
+                  <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                    therapistDetail.status === 'approved' ? 'bg-success/10 text-success' : 'bg-error/10 text-error'
+                  }`}>
+                    {therapistDetail.status}
+                  </span>
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div><strong>Mobile:</strong> {therapistDetail.mobile}</div>
-                <div><strong>Email:</strong> {therapistDetail.email || 'N/A'}</div>
-                <div><strong>Specialization:</strong> {therapistDetail.specialization || 'N/A'}</div>
-                <div><strong>Experience:</strong> {therapistDetail.years_of_experience ? `${therapistDetail.years_of_experience} years` : 'N/A'}</div>
-                <div><strong>Status:</strong> {therapistDetail.status}</div>
-                <div><strong>Clients:</strong> {therapistDetail.client_count}</div>
+              {/* Basic Info */}
+              <div className="p-4 bg-surface rounded-lg">
+                <h4 className="font-semibold mb-3 text-sm text-primary">Basic Information</h4>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div><strong>Mobile:</strong> {therapistDetail.mobile}</div>
+                  <div><strong>Email:</strong> {therapistDetail.email || 'N/A'}</div>
+                  <div><strong>Experience:</strong> {therapistDetail.years_of_experience ? `${therapistDetail.years_of_experience} years` : 'N/A'}</div>
+                  <div><strong>Clients:</strong> {therapistDetail.client_count || 0}</div>
+                </div>
               </div>
               
+              {/* Specializations */}
+              {therapistDetail.specializations && therapistDetail.specializations.length > 0 && (
+                <div className="p-4 bg-primary/5 rounded-lg">
+                  <h4 className="font-semibold mb-2 text-sm text-primary">Specializations</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {therapistDetail.specializations.map((spec, idx) => (
+                      <Badge key={idx} variant="secondary" className="bg-primary/10 text-primary">
+                        {spec}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Clinic Info */}
+              {(therapistDetail.clinic_name || therapistDetail.address_line_1) && (
+                <div className="p-4 bg-surface rounded-lg">
+                  <h4 className="font-semibold mb-3 text-sm text-primary flex items-center gap-2">
+                    <Building2 size={14} /> Clinic Information
+                  </h4>
+                  {therapistDetail.clinic_name && (
+                    <p className="font-medium mb-2">{therapistDetail.clinic_name}</p>
+                  )}
+                  {therapistDetail.address_line_1 && (
+                    <div className="text-sm text-muted-foreground space-y-1">
+                      <p>{therapistDetail.address_line_1}</p>
+                      {therapistDetail.address_line_2 && <p>{therapistDetail.address_line_2}</p>}
+                      <p>
+                        {[therapistDetail.city, therapistDetail.district, therapistDetail.state].filter(Boolean).join(', ')}
+                        {therapistDetail.pincode && ` - ${therapistDetail.pincode}`}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {/* Fee Slots */}
+              {therapistDetail.fee_slots && therapistDetail.fee_slots.length > 0 && (
+                <div className="p-4 bg-surface rounded-lg">
+                  <h4 className="font-semibold mb-3 text-sm text-primary flex items-center gap-2">
+                    <CreditCard size={14} /> Consultation Fees
+                  </h4>
+                  <div className="flex flex-wrap gap-3">
+                    {therapistDetail.fee_slots.map((slot, idx) => (
+                      <div key={idx} className="px-3 py-2 bg-white border rounded-lg text-sm">
+                        <span className="font-medium text-primary">₹{slot.amount}</span>
+                        <span className="text-muted-foreground ml-1">/ {slot.duration_minutes} min</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Subscription Details */}
               <div className="p-4 bg-info/10 rounded-lg">
-                <h4 className="font-semibold mb-2">Subscription Details</h4>
+                <h4 className="font-semibold mb-2 text-sm text-primary">Subscription Details</h4>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div><strong>Plan:</strong> {therapistDetail.subscription_plan || 'None'}</div>
                   <div><strong>Status:</strong> {therapistDetail.subscription_status || 'None'}</div>
@@ -1065,9 +1127,19 @@ const TherapistManagement = ({ onViewClients }) => {
                 </div>
               </div>
               
-              <Button onClick={() => { setShowDetailDialog(false); handleViewClients(therapistDetail); }} className="w-full">
-                <Users size={16} className="mr-2" /> View Assigned Clients
-              </Button>
+              {/* Action Buttons */}
+              <div className="flex gap-2">
+                <Button onClick={() => { setShowDetailDialog(false); handleViewClients(therapistDetail); }} className="flex-1">
+                  <Users size={16} className="mr-2" /> View Clients
+                </Button>
+                <Button 
+                  onClick={() => { setShowDetailDialog(false); handleEditClick(therapistDetail); }} 
+                  variant="outline"
+                  className="flex-1"
+                >
+                  <Edit size={16} className="mr-2" /> Edit Profile
+                </Button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
