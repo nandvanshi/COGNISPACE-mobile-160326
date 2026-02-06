@@ -7,7 +7,7 @@ import { Badge } from './ui/badge';
 import { toast } from 'sonner';
 import { 
   CreditCard, Calendar, CheckCircle, AlertTriangle, 
-  Sparkles, Clock, Mail, Phone, ExternalLink
+  Sparkles, Clock, Mail, MessageCircle, ExternalLink
 } from 'lucide-react';
 import { formatDate } from '../utils/formatUtils';
 
@@ -21,7 +21,7 @@ const SubscriptionInfo = () => {
 
   const fetchSubscription = async () => {
     try {
-      const response = await axios.get(`${API}/therapist/subscription-status`);
+      const response = await axios.get(`${API}/auth/subscription-status`);
       setSubscription(response.data);
     } catch (error) {
       toast.error('Failed to load subscription details');
@@ -52,6 +52,15 @@ const SubscriptionInfo = () => {
     return <Badge variant="outline">Unknown</Badge>;
   };
 
+  const handleWhatsApp = () => {
+    const message = encodeURIComponent('Hi, I have a query about my COGNISPACE subscription.');
+    window.open(`https://wa.me/917348700555?text=${message}`, '_blank');
+  };
+
+  const handleEmail = () => {
+    window.open('mailto:care@cognispace.in?subject=Subscription Inquiry', '_blank');
+  };
+
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
       <div className="flex items-center gap-3 mb-6">
@@ -65,7 +74,7 @@ const SubscriptionInfo = () => {
           <div>
             <h2 className="text-lg font-semibold text-foreground">Current Plan</h2>
             <p className="text-2xl font-bold text-primary mt-1">
-              {subscription?.plan_name || 'Free Trial'}
+              {subscription?.subscription_plan || 'Free Trial'}
             </p>
           </div>
           {getStatusBadge()}
@@ -77,7 +86,7 @@ const SubscriptionInfo = () => {
             <div>
               <p className="text-xs text-muted-foreground">Valid Until</p>
               <p className="font-medium">
-                {subscription?.end_date ? formatDate(subscription.end_date) : 'N/A'}
+                {subscription?.subscription_end_date ? formatDate(subscription.subscription_end_date) : 'N/A'}
               </p>
             </div>
           </div>
@@ -162,21 +171,24 @@ const SubscriptionInfo = () => {
         </p>
         <div className="flex flex-col sm:flex-row gap-3">
           <Button 
-            onClick={() => window.open('mailto:care@cognispace.in?subject=Subscription Inquiry', '_blank')}
+            onClick={handleWhatsApp}
+            className="flex-1 bg-green-600 hover:bg-green-700"
+          >
+            <MessageCircle size={16} className="mr-2" />
+            WhatsApp Support
+          </Button>
+          <Button 
+            variant="outline"
+            onClick={handleEmail}
             className="flex-1"
           >
             <Mail size={16} className="mr-2" />
             Email Support
           </Button>
-          <Button 
-            variant="outline"
-            onClick={() => window.open('tel:+919876543210', '_blank')}
-            className="flex-1"
-          >
-            <Phone size={16} className="mr-2" />
-            Call Support
-          </Button>
         </div>
+        <p className="text-xs text-muted-foreground mt-3 text-center">
+          WhatsApp: +91 7348700555 • Email: care@cognispace.in
+        </p>
       </Card>
     </div>
   );
