@@ -327,11 +327,12 @@ async def delete_subscription_plan(plan_id: str, current_user: dict = Depends(re
 
 
 @router.put("/admin/subscription-plans/{plan_id}/feature-toggles")
-async def update_plan_feature_toggles(plan_id: str, feature_toggles: dict, current_user: dict = Depends(require_super_admin)):
+async def update_plan_feature_toggles(plan_id: str, data: FeatureTogglesUpdate, current_user: dict = Depends(require_super_admin)):
     plan = await db.subscription_plans.find_one({"id": plan_id}, {"_id": 0})
     if not plan:
         raise HTTPException(status_code=404, detail="Plan not found")
     
+    feature_toggles = data.feature_toggles
     merged_toggles = {**DEFAULT_FEATURE_TOGGLES, **plan.get("feature_toggles", {}), **feature_toggles}
     
     # Also update the features dict for notification settings
