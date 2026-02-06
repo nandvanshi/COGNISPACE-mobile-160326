@@ -570,6 +570,7 @@ const TherapistDashboard = () => {
           {currentView === 'payment-reports' && <PaymentReports />}
           {currentView === 'assistants' && <AssistantManagement isReadOnly={isReadOnly} />}
           {currentView === 'profile' && <TherapistProfileSettings isReadOnly={isReadOnly} />}
+          {currentView === 'subscription' && <SubscriptionInfo />}
           {currentView === 'support' && <SupportTickets />}
         </div>
       </main>
