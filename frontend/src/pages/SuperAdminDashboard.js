@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth, API } from '../App';
 import { Button } from '../components/ui/button';
@@ -18,8 +18,23 @@ import Settings from '../components/Settings';
 const SuperAdminDashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [currentView, setCurrentView] = useState('overview');
   const [showSettings, setShowSettings] = useState(false);
+
+  // Sync currentView with URL hash for browser back button support
+  useEffect(() => {
+    const hash = location.hash.replace('#', '') || 'overview';
+    if (hash !== currentView) {
+      setCurrentView(hash);
+    }
+  }, [location.hash]);
+
+  // Change view with URL hash update
+  const changeView = (view) => {
+    navigate(`/admin#${view}`, { replace: false });
+    setCurrentView(view);
+  };
 
   const navItems = [
     { id: 'overview', label: 'Dashboard', icon: Home },
