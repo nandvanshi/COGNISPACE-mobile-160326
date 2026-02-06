@@ -124,7 +124,7 @@ async def get_therapist_applications(current_user: dict = Depends(require_super_
 
 
 @router.post("/therapist-applications/{application_id}/approve")
-async def approve_therapist(application_id: str, password: str, current_user: dict = Depends(require_super_admin)):
+async def approve_therapist(application_id: str, password: Optional[str] = None, current_user: dict = Depends(require_super_admin)):
     application = await db.therapist_applications.find_one({"id": application_id}, {"_id": 0})
     if not application:
         raise HTTPException(status_code=404, detail="Application not found")
@@ -136,17 +136,33 @@ async def approve_therapist(application_id: str, password: str, current_user: di
     now = datetime.now(timezone.utc)
     trial_end = now + timedelta(days=14)
     
+    # Use password from application if provided during registration, otherwise use admin-provided password
+    if application.get("password_hash"):
+        password_hash = application["password_hash"]
+    elif password:
+        password_hash = hash_password(password)
+    else:
+        raise HTTPException(status_code=400, detail="Password required for approval")
+    
     therapist_doc = {
         "id": therapist_id,
         "mobile": application["mobile"],
         "email": application.get("email"),
         "full_name": application["full_name"],
-        "password_hash": hash_password(password),
+        "password_hash": password_hash,
         "role": "therapist",
         "status": "approved",
-        "credentials": application["credentials"],
-        "specialization": application.get("specialization"),
+        "qualifications": application.get("qualifications", application.get("credentials", "")),
+        "specializations": application.get("specializations", []),
         "years_of_experience": application.get("years_of_experience"),
+        "clinic_name": application.get("clinic_name"),
+        "address_line_1": application.get("address_line_1"),
+        "address_line_2": application.get("address_line_2"),
+        "pincode": application.get("pincode"),
+        "city": application.get("city"),
+        "state": application.get("state"),
+        "district": application.get("district"),
+        "google_maps_link": application.get("google_maps_link"),
         "subscription_status": "trial",
         "subscription_plan": "Trial",
         "created_at": now.isoformat(),
