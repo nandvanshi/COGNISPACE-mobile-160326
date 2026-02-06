@@ -1017,12 +1017,13 @@ const TherapistManagement = ({ onViewClients }) => {
 
       {/* Edit Therapist Dialog */}
       {showEditDialog && selectedTherapist && (
-        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-          <DialogContent className="max-w-lg" data-testid="edit-therapist-dialog">
+        <Dialog open={showEditDialog} onOpenChange={(open) => { setShowEditDialog(open); if (!open) setShowEditSpecDropdown(false); }}>
+          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto" data-testid="edit-therapist-dialog">
             <DialogHeader>
               <DialogTitle className="text-2xl font-serif text-primary">Edit Therapist</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleUpdateTherapist} className="space-y-4">
+              {/* Profile Photo Section */}
               <div className="flex items-center gap-4 p-4 bg-surface rounded-lg">
                 <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
                   {editData.profile_photo ? (
@@ -1036,31 +1037,163 @@ const TherapistManagement = ({ onViewClients }) => {
                   <Input value={editData.profile_photo} onChange={(e) => setEditData({ ...editData, profile_photo: e.target.value })} placeholder="https://example.com/photo.jpg" className="mt-1" />
                 </div>
               </div>
-              <div>
-                <Label>Full Name</Label>
-                <Input value={editData.full_name} onChange={(e) => setEditData({ ...editData, full_name: e.target.value })} className="mt-1" />
-              </div>
-              <div>
-                <Label>Email</Label>
-                <Input type="email" value={editData.email} onChange={(e) => setEditData({ ...editData, email: e.target.value })} className="mt-1" />
-              </div>
-              <div>
-                <Label>Credentials</Label>
-                <Input value={editData.credentials} onChange={(e) => setEditData({ ...editData, credentials: e.target.value })} className="mt-1" />
-              </div>
+              
+              {/* Basic Info */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Specialization</Label>
-                  <Input value={editData.specialization} onChange={(e) => setEditData({ ...editData, specialization: e.target.value })} className="mt-1" />
+                  <Label>Full Name *</Label>
+                  <Input value={editData.full_name} onChange={(e) => setEditData({ ...editData, full_name: e.target.value })} required className="mt-1" />
                 </div>
+                <div>
+                  <Label>Email</Label>
+                  <Input type="email" value={editData.email} onChange={(e) => setEditData({ ...editData, email: e.target.value })} className="mt-1" />
+                </div>
+              </div>
+              
+              <div>
+                <Label>Qualifications</Label>
+                <Input value={editData.qualifications} onChange={(e) => setEditData({ ...editData, qualifications: e.target.value })} className="mt-1" placeholder="M.Phil Clinical Psychology, RCI Licensed" />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Years of Experience</Label>
                   <Input type="number" value={editData.years_of_experience} onChange={(e) => setEditData({ ...editData, years_of_experience: e.target.value })} className="mt-1" />
                 </div>
+                <div>
+                  <Label>Clinic Name</Label>
+                  <Input value={editData.clinic_name} onChange={(e) => setEditData({ ...editData, clinic_name: e.target.value })} className="mt-1" />
+                </div>
               </div>
-              <div className="flex gap-3">
+              
+              {/* Specializations Multi-Select */}
+              <div className="border-t pt-4">
+                <Label>Specializations <span className="text-muted-foreground font-normal">(Select 1-5)</span></Label>
+                <div className="flex flex-wrap gap-2 mt-2 mb-3 min-h-[32px]">
+                  {(editData.specializations || []).map((spec, idx) => (
+                    <Badge key={idx} variant="secondary" className="px-3 py-1 bg-primary/10 text-primary">
+                      {spec}
+                      <button type="button" onClick={() => removeEditSpecialization(spec)} className="ml-2 hover:text-destructive">
+                        <X size={12} />
+                      </button>
+                    </Badge>
+                  ))}
+                  {(!editData.specializations || editData.specializations.length === 0) && (
+                    <span className="text-sm text-muted-foreground">No specializations selected</span>
+                  )}
+                </div>
+                <div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-between"
+                    onClick={() => setShowEditSpecDropdown(!showEditSpecDropdown)}
+                  >
+                    <span>Select ({(editData.specializations || []).length}/5)</span>
+                    <Plus size={14} />
+                  </Button>
+                  {showEditSpecDropdown && (
+                    <>
+                      <div 
+                        className="fixed inset-0 z-[9998]" 
+                        onClick={() => setShowEditSpecDropdown(false)}
+                      />
+                      <div 
+                        className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[9999] w-[380px] bg-white border-2 border-primary/20 rounded-xl shadow-2xl"
+                      >
+                        <div className="p-3 border-b bg-primary/5 rounded-t-xl flex justify-between items-center">
+                          <span className="font-medium text-primary text-sm">Select Specializations (max 5)</span>
+                          <button type="button" onClick={() => setShowEditSpecDropdown(false)} className="text-gray-500 hover:text-gray-700">
+                            <X size={16} />
+                          </button>
+                        </div>
+                        <div className="overflow-y-auto" style={{ maxHeight: '300px' }}>
+                          {SPECIALIZATION_OPTIONS.map((spec, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              className={`w-full text-left px-4 py-2.5 text-sm hover:bg-primary/5 flex items-center justify-between border-b border-gray-100 last:border-0 ${
+                                (editData.specializations || []).includes(spec) ? 'bg-primary/10 text-primary font-medium' : ''
+                              }`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleEditSpecialization(spec);
+                              }}
+                            >
+                              <span>{spec}</span>
+                              {(editData.specializations || []).includes(spec) && <CheckCircle size={16} className="flex-shrink-0" />}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="p-2 border-t bg-gray-50 rounded-b-xl">
+                          <Button 
+                            type="button" 
+                            size="sm" 
+                            onClick={() => setShowEditSpecDropdown(false)}
+                            className="w-full"
+                          >
+                            Done ({(editData.specializations || []).length} selected)
+                          </Button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+              
+              {/* Address Section */}
+              <div className="border-t pt-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <MapPin size={16} className="text-primary" />
+                  <span className="font-medium text-sm">Clinic Address</span>
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <Label>Address Line 1</Label>
+                    <Input value={editData.address_line_1} onChange={(e) => setEditData({ ...editData, address_line_1: e.target.value })} className="mt-1" placeholder="Building/House No., Street" />
+                  </div>
+                  <div>
+                    <Label>Address Line 2</Label>
+                    <Input value={editData.address_line_2} onChange={(e) => setEditData({ ...editData, address_line_2: e.target.value })} className="mt-1" placeholder="Locality, Area, Landmark" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>PIN Code</Label>
+                      <div className="relative mt-1">
+                        <Input 
+                          value={editData.pincode} 
+                          onChange={(e) => handlePincodeChange(e.target.value, true)} 
+                          maxLength={6} 
+                          placeholder="110001"
+                          className="pr-8"
+                        />
+                        {pincodeLoading && (
+                          <Loader2 size={14} className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-primary" />
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <Label>City</Label>
+                      <Input value={editData.city} onChange={(e) => setEditData({ ...editData, city: e.target.value })} className="mt-1" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>District</Label>
+                      <Input value={editData.district} onChange={(e) => setEditData({ ...editData, district: e.target.value })} className="mt-1" />
+                    </div>
+                    <div>
+                      <Label>State</Label>
+                      <Input value={editData.state} onChange={(e) => setEditData({ ...editData, state: e.target.value })} className="mt-1" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex gap-3 pt-2">
                 <Button type="submit" className="flex-1">Update Therapist</Button>
-                <Button type="button" variant="outline" onClick={() => setShowEditDialog(false)}>Cancel</Button>
+                <Button type="button" variant="outline" onClick={() => { setShowEditDialog(false); setShowEditSpecDropdown(false); }}>Cancel</Button>
               </div>
             </form>
           </DialogContent>
