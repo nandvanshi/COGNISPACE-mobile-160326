@@ -38,6 +38,10 @@ class SubscriptionPlanCreate(BaseModel):
     feature_toggles: Optional[dict] = None
 
 
+class FeatureTogglesUpdate(BaseModel):
+    feature_toggles: dict
+
+
 class TicketCreate(BaseModel):
     subject: str
     category: str
