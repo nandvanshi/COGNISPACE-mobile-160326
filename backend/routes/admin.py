@@ -194,6 +194,24 @@ async def approve_therapist(application_id: str, password: Optional[str] = None,
     
     await db.users.insert_one(therapist_doc)
     
+    # Also create therapist_profile with address and clinic details
+    profile_doc = {
+        "therapist_id": therapist_id,
+        "qualifications": application.get("qualifications", application.get("credentials", "")),
+        "specializations": application.get("specializations", []),
+        "clinic_name": application.get("clinic_name"),
+        "fee_slots": application.get("fee_slots", []),
+        "address_line_1": application.get("address_line_1"),
+        "address_line_2": application.get("address_line_2"),
+        "pincode": application.get("pincode"),
+        "city": application.get("city"),
+        "state": application.get("state"),
+        "district": application.get("district"),
+        "google_maps_link": application.get("google_maps_link"),
+        "created_at": now.isoformat()
+    }
+    await db.therapist_profiles.insert_one(profile_doc)
+    
     subscription_id = str(uuid.uuid4())
     subscription_doc = {
         "id": subscription_id,
