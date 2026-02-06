@@ -735,9 +735,23 @@ const AssistantDashboard = () => {
   const isClientProfilePage = !!clientProfileMatch;
   const clientIdFromUrl = clientProfileMatch ? clientProfileMatch[1] : null;
 
+  // Sync currentView with URL hash for browser back button support
+  useEffect(() => {
+    const hash = location.hash.replace('#', '') || 'overview';
+    if (hash !== currentView && !isClientProfilePage) {
+      setCurrentView(hash);
+    }
+  }, [location.hash, isClientProfilePage]);
+
   useEffect(() => {
     refreshStatus();
   }, []);
+
+  // Change view with URL hash update
+  const changeView = (view) => {
+    navigate(`/assistant#${view}`, { replace: false });
+    setCurrentView(view);
+  };
 
   const navItems = [
     { id: 'overview', label: 'Home', icon: Home },
@@ -748,14 +762,14 @@ const AssistantDashboard = () => {
 
   const handleLogout = () => {
     logout();
-    window.location.href = '/login';
+    navigate('/login');
   };
 
   const handleNavigate = (view) => {
     if (isClientProfilePage) {
       navigate('/assistant');
     }
-    setCurrentView(view);
+    changeView(view);
   };
 
   // If on client profile page, render full-page client profile
