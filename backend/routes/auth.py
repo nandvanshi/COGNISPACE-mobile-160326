@@ -32,10 +32,17 @@ class TherapistApplication(BaseModel):
     mobile: str
     email: EmailStr
     full_name: str
-    password: str
-    credentials: str
-    specialization: str
-    years_of_experience: int
+    qualifications: str
+    specializations: List[str] = []
+    years_of_experience: Optional[int] = None
+    clinic_name: Optional[str] = None
+    address_line_1: Optional[str] = None
+    address_line_2: Optional[str] = None
+    pincode: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    district: Optional[str] = None
+    google_maps_link: Optional[str] = None
 
 
 class SuperAdminLogin(BaseModel):
