@@ -399,7 +399,7 @@ const TherapistDashboard = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setCurrentView('profile')}
+              onClick={() => changeView('profile')}
               className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
             >
               <UserCircle size={20} />
