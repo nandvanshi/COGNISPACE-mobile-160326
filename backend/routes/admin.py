@@ -24,7 +24,9 @@ class TherapistProfile(BaseModel):
     email: Optional[str] = None
     full_name: str
     credentials: str
+    qualifications: Optional[str] = None
     specialization: Optional[str] = None
+    specializations: Optional[List[str]] = []
     years_of_experience: Optional[int] = None
     status: Optional[str] = None
     subscription_status: Optional[str] = None
@@ -32,6 +34,10 @@ class TherapistProfile(BaseModel):
     subscription_end_date: Optional[datetime] = None
     created_at: datetime
     approved_at: Optional[datetime] = None
+    clinic_name: Optional[str] = None
+    address_line_1: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
 
 
 class TherapistUpdate(BaseModel):
