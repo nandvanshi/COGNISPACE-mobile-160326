@@ -269,6 +269,16 @@ const SubscriptionManagement = () => {
               <Button
                 variant="outline"
                 size="sm"
+                onClick={() => openEditDialog(plan)}
+                className="flex-1"
+                data-testid={`edit-plan-${plan.id}`}
+              >
+                <Edit size={16} className="mr-1" />
+                Edit
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => openFeaturesDialog(plan)}
                 className="flex-1"
                 data-testid={`manage-features-${plan.id}`}
