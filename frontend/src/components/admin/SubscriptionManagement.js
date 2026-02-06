@@ -108,11 +108,19 @@ const SubscriptionManagement = () => {
 
   const openEditDialog = (plan) => {
     setSelectedPlan(plan);
+    // Handle features - can be array (legacy) or object (new format)
+    let featuresStr = '';
+    if (Array.isArray(plan.features)) {
+      featuresStr = plan.features.join(', ');
+    } else if (plan.features && typeof plan.features === 'object') {
+      // If it's an object, we don't show it in the text field (it's managed by toggles)
+      featuresStr = '';
+    }
     setEditPlan({
       name: plan.name || '',
       price: plan.price?.toString() || '',
       duration_days: plan.duration_days?.toString() || '30',
-      features: plan.features?.join(', ') || '',
+      features: featuresStr,
       max_clients: plan.max_clients?.toString() || '',
     });
     setShowEditDialog(true);
