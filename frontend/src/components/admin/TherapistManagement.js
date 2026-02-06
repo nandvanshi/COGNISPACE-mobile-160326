@@ -262,7 +262,8 @@ const TherapistManagement = ({ onViewClients }) => {
         pincode: editData.pincode,
         city: editData.city,
         state: editData.state,
-        district: editData.district
+        district: editData.district,
+        google_maps_link: editData.google_maps_link
       };
       await axios.put(`${API}/admin/therapists/${selectedTherapist.id}`, payload);
       toast.success('Therapist updated successfully');
