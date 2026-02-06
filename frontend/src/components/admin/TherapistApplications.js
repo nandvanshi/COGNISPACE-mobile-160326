@@ -200,27 +200,38 @@ const TherapistApplications = () => {
               <p className="text-foreground">
                 Approving: <strong>{selectedApp.full_name}</strong>
               </p>
-              <div>
-                <Label>Generated Password</Label>
-                <div className="flex gap-2 mt-1">
-                  <Input
-                    value={generatedPassword}
-                    onChange={(e) => setGeneratedPassword(e.target.value)}
-                    data-testid="generated-password-input"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setGeneratedPassword(generatePassword())}
-                    data-testid="regenerate-password-button"
-                  >
-                    Regenerate
-                  </Button>
+              
+              {/* Show password field only if application doesn't have password */}
+              {!selectedApp.has_password ? (
+                <div>
+                  <Label>Generated Password</Label>
+                  <div className="flex gap-2 mt-1">
+                    <Input
+                      value={generatedPassword}
+                      onChange={(e) => setGeneratedPassword(e.target.value)}
+                      data-testid="generated-password-input"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setGeneratedPassword(generatePassword())}
+                      data-testid="regenerate-password-button"
+                    >
+                      Regenerate
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Share this password with the therapist securely. They can change it later.
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Share this password with the therapist securely. They can change it later.
-                </p>
-              </div>
+              ) : (
+                <div className="p-4 bg-success/10 border border-success/20 rounded-lg">
+                  <p className="text-sm text-success">
+                    <strong>✓ Password Already Set:</strong> The therapist provided their password during registration. They can login with their registered credentials.
+                  </p>
+                </div>
+              )}
+              
               <div className="p-4 bg-warning/10 border border-warning/20 rounded-lg">
                 <p className="text-sm text-warning">
                   <strong>Important:</strong> Account will be created with a 30-day free trial.
