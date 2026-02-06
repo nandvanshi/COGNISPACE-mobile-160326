@@ -19,25 +19,26 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import jwt
 
-from emergentintegrations.llm.chat import LlmChat, UserMessage
+# Use Anthropic SDK directly
+from anthropic import Anthropic
 
 # Router setup
 router = APIRouter(tags=["AI Clinical Support"])
 
 # Module-level variables (set via setup_ai_clinical)
 _db = None
-_EMERGENT_LLM_KEY = None
+_ANTHROPIC_API_KEY = None
 _JWT_SECRET = None
 _JWT_ALGORITHM = "HS256"
 
 security = HTTPBearer()
 
 
-def setup_ai_clinical(database, llm_key, jwt_secret, jwt_algorithm="HS256"):
+def setup_ai_clinical(database, anthropic_key, jwt_secret, jwt_algorithm="HS256"):
     """Setup function to inject dependencies from server.py"""
-    global _db, _EMERGENT_LLM_KEY, _JWT_SECRET, _JWT_ALGORITHM
+    global _db, _ANTHROPIC_API_KEY, _JWT_SECRET, _JWT_ALGORITHM
     _db = database
-    _EMERGENT_LLM_KEY = llm_key
+    _ANTHROPIC_API_KEY = anthropic_key
     _JWT_SECRET = jwt_secret
     _JWT_ALGORITHM = jwt_algorithm
 
