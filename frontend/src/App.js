@@ -14,6 +14,7 @@ import AboutPage from './pages/AboutPage';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsConditions from './pages/TermsConditions';
 import ClinicalDisclaimer from './pages/ClinicalDisclaimer';
+import RefundPolicy from './pages/RefundPolicy';
 import ContactSupport from './pages/ContactSupport';
 import InstallPWA from './components/InstallPWA';
 import { applyTheme, getStoredTheme } from './config/themes';
