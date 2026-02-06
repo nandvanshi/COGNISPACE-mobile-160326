@@ -53,6 +53,20 @@ const TherapistApplications = () => {
     setShowApproveDialog(true);
   };
 
+  const handleViewDetail = (app) => {
+    setSelectedApp(app);
+    setShowDetailDialog(true);
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return 'N/A';
+    return new Date(dateStr).toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    });
+  };
+
   const confirmApproval = async () => {
     try {
       // Only send password if application doesn't have one
