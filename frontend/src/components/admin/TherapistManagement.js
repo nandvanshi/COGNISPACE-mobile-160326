@@ -237,7 +237,8 @@ const TherapistManagement = ({ onViewClients }) => {
         pincode: fullData.pincode || '',
         city: fullData.city || '',
         state: fullData.state || '',
-        district: fullData.district || ''
+        district: fullData.district || '',
+        google_maps_link: fullData.google_maps_link || ''
       });
       setShowEditDialog(true);
     } catch (error) {
