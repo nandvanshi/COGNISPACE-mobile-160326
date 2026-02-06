@@ -14,35 +14,7 @@ import {
   Clock, Plus, Trash2, Upload
 } from 'lucide-react';
 import { formatCurrency } from '../utils/formatUtils';
-
-// Available specializations for therapists
-const SPECIALIZATION_OPTIONS = [
-  "Clinical Psychology",
-  "Counseling Psychology", 
-  "Child & Adolescent Therapy",
-  "Marriage & Family Therapy",
-  "Cognitive Behavioral Therapy (CBT)",
-  "Dialectical Behavior Therapy (DBT)",
-  "Trauma & PTSD",
-  "Anxiety Disorders",
-  "Depression",
-  "Addiction & Substance Abuse",
-  "Eating Disorders",
-  "OCD & Related Disorders",
-  "Grief & Loss Counseling",
-  "Stress Management",
-  "Anger Management",
-  "Career Counseling",
-  "Relationship Issues",
-  "Self-Esteem & Confidence",
-  "Mindfulness & Meditation",
-  "Neuropsychology",
-  "Psychoanalysis",
-  "Art Therapy",
-  "Play Therapy",
-  "Group Therapy",
-  "EMDR Therapy"
-];
+import { SPECIALIZATION_OPTIONS } from '../utils/constants';
 
 const TherapistProfileSettings = ({ isReadOnly = false }) => {
   const [profile, setProfile] = useState(null);
