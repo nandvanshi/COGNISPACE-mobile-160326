@@ -387,18 +387,7 @@ Respond in valid JSON format only with this structure:
 
     try:
         chat = await get_ai_chat(f"assessment-{therapist_id}-{uuid.uuid4()}", system_prompt)
-        user_message = UserMessage(text=f"Based on the following client information, suggest appropriate clinical assessments:\n\n{client_context}")
-        response = await chat.send_message(user_message)
-        
-        # Handle response - could be string or object
-        if hasattr(response, 'content'):
-            response_text = response.content
-        elif hasattr(response, 'text'):
-            response_text = response.text
-        elif isinstance(response, str):
-            response_text = response
-        else:
-            response_text = str(response)
+        response_text = await send_ai_message(chat, f"Based on the following client information, suggest appropriate clinical assessments:\n\n{client_context}")
         
         # Parse JSON response
         response_text = response_text.strip()
