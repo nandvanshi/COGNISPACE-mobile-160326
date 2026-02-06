@@ -467,7 +467,7 @@ const TherapistDashboard = () => {
             </div>
             <Button 
               size="sm"
-              onClick={() => setCurrentView('availability')}
+              onClick={() => changeView('availability')}
               className="w-full sm:w-auto"
             >
               Set Availability
