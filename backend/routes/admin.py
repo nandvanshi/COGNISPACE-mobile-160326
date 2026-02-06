@@ -49,6 +49,7 @@ class TherapistUpdate(BaseModel):
     city: Optional[str] = None
     state: Optional[str] = None
     district: Optional[str] = None
+    google_maps_link: Optional[str] = None
 
 
 class FeeSlotCreate(BaseModel):
