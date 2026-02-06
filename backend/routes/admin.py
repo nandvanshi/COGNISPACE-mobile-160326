@@ -106,20 +106,25 @@ async def get_therapist_applications(current_user: dict = Depends(require_super_
     applications = await db.therapist_applications.find({}, {"_id": 0}).to_list(1000)
     result = []
     for app in applications:
-        result.append(TherapistProfile(
-            id=app["id"],
-            mobile=app["mobile"],
-            email=app.get("email"),
-            full_name=app["full_name"],
-            credentials=app.get("qualifications", app.get("credentials", "")),
-            specialization=", ".join(app.get("specializations", [])) if isinstance(app.get("specializations"), list) else app.get("specialization", ""),
-            years_of_experience=app.get("years_of_experience"),
-            status=app["status"],
-            subscription_status=None,
-            subscription_plan=None,
-            created_at=datetime.fromisoformat(app["created_at"]),
-            approved_at=datetime.fromisoformat(app["approved_at"]) if app.get("approved_at") else None
-        ))
+        app_data = {
+            "id": app["id"],
+            "mobile": app["mobile"],
+            "email": app.get("email"),
+            "full_name": app["full_name"],
+            "credentials": app.get("qualifications", app.get("credentials", "")),
+            "specialization": ", ".join(app.get("specializations", [])) if isinstance(app.get("specializations"), list) else app.get("specialization", ""),
+            "years_of_experience": app.get("years_of_experience"),
+            "status": app["status"],
+            "subscription_status": None,
+            "subscription_plan": None,
+            "created_at": app["created_at"],
+            "approved_at": app.get("approved_at"),
+            "has_password": bool(app.get("password_hash")),
+            "clinic_name": app.get("clinic_name"),
+            "city": app.get("city"),
+            "state": app.get("state")
+        }
+        result.append(app_data)
     return result
 
 
