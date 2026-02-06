@@ -513,11 +513,22 @@ async def get_therapist_detail(therapist_id: str, current_user: dict = Depends(r
         result["city"] = therapist_profile.get("city")
         result["state"] = therapist_profile.get("state")
         result["district"] = therapist_profile.get("district")
+        result["google_maps_link"] = therapist_profile.get("google_maps_link")
         # If qualifications is in profile, prefer that
         if therapist_profile.get("qualifications"):
             result["qualifications"] = therapist_profile.get("qualifications")
         if therapist_profile.get("clinic_name"):
             result["clinic_name"] = therapist_profile.get("clinic_name")
+    
+    # Also check if address data is in users collection (for therapists approved from applications)
+    if not result.get("address_line_1") and therapist.get("address_line_1"):
+        result["address_line_1"] = therapist.get("address_line_1")
+        result["address_line_2"] = therapist.get("address_line_2")
+        result["pincode"] = therapist.get("pincode")
+        result["city"] = therapist.get("city")
+        result["state"] = therapist.get("state")
+        result["district"] = therapist.get("district")
+        result["google_maps_link"] = therapist.get("google_maps_link")
     
     return result
 
