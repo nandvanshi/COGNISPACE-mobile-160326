@@ -106,6 +106,43 @@ const SubscriptionManagement = () => {
     }
   };
 
+  const openEditDialog = (plan) => {
+    setSelectedPlan(plan);
+    setEditPlan({
+      name: plan.name || '',
+      price: plan.price?.toString() || '',
+      duration_days: plan.duration_days?.toString() || '30',
+      features: plan.features?.join(', ') || '',
+      max_clients: plan.max_clients?.toString() || '',
+    });
+    setShowEditDialog(true);
+  };
+
+  const handleEditPlan = async (e) => {
+    e.preventDefault();
+    
+    if (!editPlan.name || !editPlan.price || !editPlan.duration_days) {
+      toast.error('Please fill all required fields');
+      return;
+    }
+
+    try {
+      await axios.put(`${API}/admin/subscription-plans/${selectedPlan.id}`, {
+        name: editPlan.name,
+        price: parseFloat(editPlan.price),
+        duration_days: parseInt(editPlan.duration_days),
+        features: editPlan.features.split(',').map(f => f.trim()).filter(f => f),
+        max_clients: editPlan.max_clients ? parseInt(editPlan.max_clients) : null,
+      });
+      
+      toast.success('Plan updated successfully');
+      setShowEditDialog(false);
+      fetchPlans();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to update plan');
+    }
+  };
+
   const openFeaturesDialog = (plan) => {
     setSelectedPlan(plan);
     // Initialize toggles from plan or defaults
