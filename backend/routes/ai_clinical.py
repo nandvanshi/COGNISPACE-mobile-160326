@@ -227,17 +227,32 @@ STANDARD_ASSESSMENTS = {
 }
 
 async def get_ai_chat(session_id: str, system_message: str):
-    """Initialize AI chat with Claude Sonnet 4"""
-    if not _EMERGENT_LLM_KEY:
-        raise HTTPException(status_code=500, detail="AI service not configured")
+    """Initialize AI chat with Claude Sonnet via direct Anthropic SDK"""
+    if not _ANTHROPIC_API_KEY:
+        raise HTTPException(status_code=500, detail="AI service not configured. Please add ANTHROPIC_API_KEY to .env")
     
-    chat = LlmChat(
-        api_key=_EMERGENT_LLM_KEY,
-        session_id=session_id,
-        system_message=system_message
-    ).with_model("anthropic", "claude-4-sonnet-20250514")
-    
-    return chat
+    return {
+        "client": Anthropic(api_key=_ANTHROPIC_API_KEY),
+        "system_message": system_message,
+        "session_id": session_id
+    }
+
+
+async def send_ai_message(chat_config: dict, user_message: str) -> str:
+    """Send message to Claude and get response"""
+    try:
+        client = chat_config["client"]
+        response = client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=4096,
+            system=chat_config["system_message"],
+            messages=[
+                {"role": "user", "content": user_message}
+            ]
+        )
+        return response.content[0].text
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI service error: {str(e)}")
 
 
 # ============= AI ENDPOINTS =============
