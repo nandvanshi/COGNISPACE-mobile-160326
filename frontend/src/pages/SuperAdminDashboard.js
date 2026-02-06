@@ -54,12 +54,12 @@ const SuperAdminDashboard = () => {
   // Navigation handler for Client -> Therapist navigation
   const handleViewTherapist = (therapistId, therapistName) => {
     toast.info(`Navigating to therapist: ${therapistName}`);
-    setCurrentView('therapists');
+    changeView('therapists');
   };
 
   // Navigation handler for Therapist -> Clients navigation
   const handleViewTherapistClients = (therapistId) => {
-    setCurrentView('clients');
+    changeView('clients');
   };
 
   return (
