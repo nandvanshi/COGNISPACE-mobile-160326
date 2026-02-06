@@ -393,25 +393,59 @@ async def update_therapist(therapist_id: str, data: TherapistUpdate, current_use
     if not therapist:
         raise HTTPException(status_code=404, detail="Therapist not found")
     
-    update_data = {}
+    # Update user document
+    user_update = {}
     if data.full_name:
-        update_data["full_name"] = data.full_name
+        user_update["full_name"] = data.full_name
     if data.email:
-        update_data["email"] = data.email
+        user_update["email"] = data.email
     if data.mobile:
         if not validate_mobile(data.mobile):
             raise HTTPException(status_code=400, detail="Mobile must be 10 digits")
-        update_data["mobile"] = data.mobile
-    if data.credentials:
-        update_data["credentials"] = data.credentials
-    if data.specialization:
-        update_data["specialization"] = data.specialization
+        user_update["mobile"] = data.mobile
+    if data.qualifications:
+        user_update["qualifications"] = data.qualifications
     if data.years_of_experience is not None:
-        update_data["years_of_experience"] = data.years_of_experience
+        user_update["years_of_experience"] = data.years_of_experience
+    if data.profile_photo is not None:
+        user_update["profile_photo"] = data.profile_photo
+    if data.clinic_name is not None:
+        user_update["clinic_name"] = data.clinic_name
     
-    if update_data:
-        await db.users.update_one({"id": therapist_id}, {"$set": update_data})
-        await log_audit(current_user["id"], "super_admin", "update", "therapist", therapist_id)
+    if user_update:
+        await db.users.update_one({"id": therapist_id}, {"$set": user_update})
+    
+    # Update therapist_profile document
+    profile_update = {}
+    if data.qualifications:
+        profile_update["qualifications"] = data.qualifications
+    if data.specializations is not None:
+        profile_update["specializations"] = data.specializations
+    if data.clinic_name is not None:
+        profile_update["clinic_name"] = data.clinic_name
+    if data.address_line_1 is not None:
+        profile_update["address_line_1"] = data.address_line_1
+    if data.address_line_2 is not None:
+        profile_update["address_line_2"] = data.address_line_2
+    if data.pincode is not None:
+        profile_update["pincode"] = data.pincode
+    if data.city is not None:
+        profile_update["city"] = data.city
+    if data.state is not None:
+        profile_update["state"] = data.state
+    if data.district is not None:
+        profile_update["district"] = data.district
+    
+    if profile_update:
+        profile_update["updated_at"] = datetime.now(timezone.utc).isoformat()
+        # Use upsert to create profile if it doesn't exist
+        await db.therapist_profiles.update_one(
+            {"therapist_id": therapist_id},
+            {"$set": profile_update},
+            upsert=True
+        )
+    
+    await log_audit(current_user["id"], "super_admin", "update", "therapist", therapist_id)
     
     return {"message": "Therapist updated"}
 
