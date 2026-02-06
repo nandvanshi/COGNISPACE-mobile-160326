@@ -216,17 +216,32 @@ const TherapistManagement = ({ onViewClients }) => {
     }
   };
 
-  const handleEditClick = (therapist) => {
-    setSelectedTherapist(therapist);
-    setEditData({
-      full_name: therapist.full_name || '',
-      email: therapist.email || '',
-      credentials: therapist.credentials || '',
-      specialization: therapist.specialization || '',
-      years_of_experience: therapist.years_of_experience || '',
-      profile_photo: therapist.profile_photo || ''
-    });
-    setShowEditDialog(true);
+  const handleEditClick = async (therapist) => {
+    try {
+      // Fetch full therapist details to get all profile data
+      const response = await axios.get(`${API}/admin/therapists/${therapist.id}`);
+      const fullData = response.data;
+      
+      setSelectedTherapist(therapist);
+      setEditData({
+        full_name: fullData.full_name || '',
+        email: fullData.email || '',
+        qualifications: fullData.qualifications || '',
+        specializations: fullData.specializations || [],
+        years_of_experience: fullData.years_of_experience || '',
+        profile_photo: fullData.profile_photo || '',
+        clinic_name: fullData.clinic_name || '',
+        address_line_1: fullData.address_line_1 || '',
+        address_line_2: fullData.address_line_2 || '',
+        pincode: fullData.pincode || '',
+        city: fullData.city || '',
+        state: fullData.state || '',
+        district: fullData.district || ''
+      });
+      setShowEditDialog(true);
+    } catch (error) {
+      toast.error('Failed to load therapist details for editing');
+    }
   };
 
   const handleUpdateTherapist = async (e) => {
