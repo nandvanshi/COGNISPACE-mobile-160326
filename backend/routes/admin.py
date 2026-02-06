@@ -426,6 +426,9 @@ async def get_therapist_detail(therapist_id: str, current_user: dict = Depends(r
     if not therapist:
         raise HTTPException(status_code=404, detail="Therapist not found")
     
+    # Fetch therapist profile for additional details (specializations, address, fee_slots)
+    therapist_profile = await db.therapist_profiles.find_one({"therapist_id": therapist_id}, {"_id": 0})
+    
     clients_count = await db.client_profiles.count_documents({"therapist_id": therapist_id})
     appointments_count = await db.appointments.count_documents({"therapist_id": therapist_id})
     
@@ -440,13 +443,32 @@ async def get_therapist_detail(therapist_id: str, current_user: dict = Depends(r
     if subscription:
         subscription_end_date = subscription.get("end_date")
     
-    return {
+    # Merge therapist user data with profile data
+    result = {
         **therapist,
-        "clients_count": clients_count,
+        "client_count": clients_count,
         "appointments_count": appointments_count,
         "current_subscription": subscription,
         "subscription_end_date": subscription_end_date
     }
+    
+    # Add profile data if exists
+    if therapist_profile:
+        result["specializations"] = therapist_profile.get("specializations", [])
+        result["fee_slots"] = therapist_profile.get("fee_slots", [])
+        result["address_line_1"] = therapist_profile.get("address_line_1")
+        result["address_line_2"] = therapist_profile.get("address_line_2")
+        result["pincode"] = therapist_profile.get("pincode")
+        result["city"] = therapist_profile.get("city")
+        result["state"] = therapist_profile.get("state")
+        result["district"] = therapist_profile.get("district")
+        # If qualifications is in profile, prefer that
+        if therapist_profile.get("qualifications"):
+            result["qualifications"] = therapist_profile.get("qualifications")
+        if therapist_profile.get("clinic_name"):
+            result["clinic_name"] = therapist_profile.get("clinic_name")
+    
+    return result
 
 
 @router.get("/therapists/{therapist_id}/clients")
