@@ -101,7 +101,7 @@ async def require_super_admin(current_user: dict = Depends(get_current_user)):
 
 # ============= THERAPIST APPLICATION ENDPOINTS =============
 
-@router.get("/therapist-applications", response_model=List[TherapistProfile])
+@router.get("/therapist-applications")
 async def get_therapist_applications(current_user: dict = Depends(require_super_admin)):
     applications = await db.therapist_applications.find({}, {"_id": 0}).to_list(1000)
     result = []
