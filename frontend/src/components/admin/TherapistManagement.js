@@ -248,16 +248,50 @@ const TherapistManagement = ({ onViewClients }) => {
     e.preventDefault();
     try {
       const payload = {
-        ...editData,
-        years_of_experience: editData.years_of_experience ? parseInt(editData.years_of_experience) : null
+        full_name: editData.full_name,
+        email: editData.email,
+        qualifications: editData.qualifications,
+        specializations: editData.specializations,
+        years_of_experience: editData.years_of_experience ? parseInt(editData.years_of_experience) : null,
+        profile_photo: editData.profile_photo,
+        clinic_name: editData.clinic_name,
+        address_line_1: editData.address_line_1,
+        address_line_2: editData.address_line_2,
+        pincode: editData.pincode,
+        city: editData.city,
+        state: editData.state,
+        district: editData.district
       };
       await axios.put(`${API}/admin/therapists/${selectedTherapist.id}`, payload);
       toast.success('Therapist updated successfully');
       setShowEditDialog(false);
+      setShowEditSpecDropdown(false);
       fetchTherapists();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to update therapist');
     }
+  };
+  
+  // Edit specialization handlers
+  const toggleEditSpecialization = (spec) => {
+    setEditData(prev => {
+      const current = prev.specializations || [];
+      if (current.includes(spec)) {
+        return { ...prev, specializations: current.filter(s => s !== spec) };
+      } else if (current.length < 5) {
+        return { ...prev, specializations: [...current, spec] };
+      } else {
+        toast.error('Maximum 5 specializations allowed');
+        return prev;
+      }
+    });
+  };
+
+  const removeEditSpecialization = (spec) => {
+    setEditData(prev => ({
+      ...prev,
+      specializations: (prev.specializations || []).filter(s => s !== spec)
+    }));
   };
 
   const handleViewDetail = async (therapist) => {
