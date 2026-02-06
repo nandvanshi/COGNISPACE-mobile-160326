@@ -165,6 +165,7 @@ function App() {
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-conditions" element={<TermsConditions />} />
               <Route path="/clinical-disclaimer" element={<ClinicalDisclaimer />} />
+              <Route path="/refund-policy" element={<RefundPolicy />} />
               <Route path="/contact" element={<ContactSupport />} />
               <Route path="/about" element={<AboutPage />} />
               <Route
