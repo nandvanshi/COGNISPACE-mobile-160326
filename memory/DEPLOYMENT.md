@@ -1,7 +1,33 @@
 # COGNISPACE - Deployment Checklist & Guide
 
-**Last Updated**: January 26, 2026  
+**Last Updated**: February 6, 2026  
 **Python Version**: 3.11.x (Recommended)
+**Production Domain**: cognispace.in
+
+---
+
+## 🌐 Domain Configuration for cognispace.in
+
+### Step 1: Update Frontend Environment
+```bash
+# /app/frontend/.env
+REACT_APP_BACKEND_URL=https://cognispace.in
+```
+
+### Step 2: Update Backend CORS
+```bash
+# /app/backend/.env
+CORS_ORIGINS=https://cognispace.in,https://www.cognispace.in
+```
+
+### Step 3: DNS Configuration
+Point your domain's A/CNAME records to Emergent's deployment IP.
+
+### Important Notes:
+- All internal links use relative paths (e.g., `/about`, `/login`)
+- Client registration links use `window.location.origin` (auto-detects domain)
+- No hardcoded Emergent URLs in the codebase
+- Email sender already configured: `noreply@cognispace.in`
 
 ---
 
