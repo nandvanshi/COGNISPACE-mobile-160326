@@ -207,6 +207,54 @@ class WhatsAppService:
         
         await cls._db.notification_logs.insert_one(log_entry)
     
+    @classmethod
+    async def send_direct_message(
+        cls,
+        to_mobile: str,
+        message: str
+    ) -> WhatsAppResult:
+        """
+        Send a direct WhatsApp message without opt-in checks.
+        Use ONLY for critical account messages like welcome/approval.
+        """
+        if cls._db is None:
+            return WhatsAppResult(
+                success=False,
+                provider="none",
+                error="WhatsApp service not initialized"
+            )
+        
+        if not WhatsAppProviderRegistry.is_configured():
+            return WhatsAppResult(
+                success=False,
+                provider="none",
+                error="No WhatsApp provider configured"
+            )
+        
+        provider = WhatsAppProviderRegistry.get_provider()
+        if not provider:
+            return WhatsAppResult(
+                success=False,
+                provider="none",
+                error="No available WhatsApp provider"
+            )
+        
+        # Format mobile number
+        mobile = to_mobile
+        if not mobile.startswith('+'):
+            mobile = '+91' + mobile if len(mobile) == 10 else '+' + mobile
+        
+        # Send direct message via Twilio
+        try:
+            result = await provider.send_direct(mobile, message)
+            return result
+        except Exception as e:
+            return WhatsAppResult(
+                success=False,
+                provider=provider.provider_name,
+                error=str(e)
+            )
+
     # ============= CONVENIENCE METHODS FOR SPECIFIC EVENTS =============
     
     @classmethod
