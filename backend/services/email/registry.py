@@ -84,7 +84,7 @@ class EmailProviderRegistry:
         if api_key:
             cls._providers["resend"] = ResendProvider({
                 "api_key": api_key,
-                "default_from_email": "noreply@cognispace.in",
+                "default_from_email": "noreply@notifications.cognispace.in",
                 "default_from_name": "COGNISPACE"
             })
             
