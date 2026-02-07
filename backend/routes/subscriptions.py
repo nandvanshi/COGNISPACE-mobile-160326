@@ -445,10 +445,14 @@ async def assign_subscription(
     return {"message": "Subscription assigned", "subscription_id": subscription_id, "end_date": end_date.isoformat()}
 
 
+class ExtendSubscriptionRequest(BaseModel):
+    additional_days: int
+
+
 @router.post("/admin/therapists/{therapist_id}/extend-subscription")
 async def extend_subscription(
     therapist_id: str,
-    days: int,
+    request: ExtendSubscriptionRequest,
     current_user: dict = Depends(require_super_admin)
 ):
     """Extend a therapist's current subscription"""
@@ -462,7 +466,7 @@ async def extend_subscription(
         raise HTTPException(status_code=404, detail="No subscription found")
     
     current_end = datetime.fromisoformat(subscription["end_date"].replace('Z', '+00:00'))
-    new_end = current_end + timedelta(days=days)
+    new_end = current_end + timedelta(days=request.additional_days)
     
     await db.subscriptions.update_one(
         {"id": subscription["id"]},
@@ -475,9 +479,9 @@ async def extend_subscription(
     )
     
     await log_audit(current_user["id"], "super_admin", "extend_subscription", "therapist", therapist_id,
-                   {"days": days, "new_end_date": new_end.isoformat()})
+                   {"days": request.additional_days, "new_end_date": new_end.isoformat()})
     
-    return {"message": f"Subscription extended by {days} days", "new_end_date": new_end.isoformat()}
+    return {"message": f"Subscription extended by {request.additional_days} days", "new_end_date": new_end.isoformat()}
 
 
 @router.post("/admin/therapists/{therapist_id}/assign-trial")
