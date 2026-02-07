@@ -187,3 +187,50 @@ class TwilioWhatsAppProvider(WhatsAppProviderBase):
             "status": "approved" if template_name in local_templates else "unknown",
             "provider": self.provider_name
         }
+    
+    async def send_direct(self, to_mobile: str, message: str) -> WhatsAppResult:
+        """
+        Send a direct text message via WhatsApp (for account notifications).
+        """
+        if not self.is_available:
+            return WhatsAppResult(
+                success=False,
+                provider=self.provider_name,
+                error="Twilio WhatsApp provider not properly configured"
+            )
+        
+        try:
+            to_number = self.normalize_phone(to_mobile)
+            if not to_number.startswith("whatsapp:"):
+                to_number = f"whatsapp:{to_number}"
+            
+            from_number = self.from_number
+            if not from_number.startswith("whatsapp:"):
+                from_number = f"whatsapp:{from_number}"
+            
+            twilio_message = await asyncio.to_thread(
+                self._send_message,
+                from_number=from_number,
+                to_number=to_number,
+                body=message
+            )
+            
+            return WhatsAppResult(
+                success=True,
+                provider=self.provider_name,
+                message_id=twilio_message.sid
+            )
+        except TwilioRestException as e:
+            logger.error(f"Twilio API error: {e.msg}")
+            return WhatsAppResult(
+                success=False,
+                provider=self.provider_name,
+                error=f"Twilio error: {e.msg}"
+            )
+        except Exception as e:
+            logger.error(f"Error sending direct WhatsApp: {e}")
+            return WhatsAppResult(
+                success=False,
+                provider=self.provider_name,
+                error=str(e)
+            )
