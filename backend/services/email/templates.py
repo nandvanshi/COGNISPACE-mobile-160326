@@ -198,6 +198,72 @@ def template_welcome_credentials(data: Dict[str, Any]) -> Dict[str, str]:
     }
 
 
+def template_therapist_welcome(data: Dict[str, Any]) -> Dict[str, str]:
+    """Template for therapist account approval with login credentials"""
+    # Show password only if it was auto-generated (not set by therapist during registration)
+    password_section = ""
+    if data.get('password'):
+        password_section = f"""
+        <div class="credential-item">
+            <strong>Password:</strong> {data.get('password')}
+        </div>
+        <p class="message" style="color: #d32f2f; font-size: 14px;">
+            <strong>⚠️ Important:</strong> Please change your password after your first login for security.
+        </p>
+        """
+    else:
+        password_section = """
+        <p class="message" style="color: #0d5c4d; font-size: 14px;">
+            <strong>✓</strong> You set your password during registration. Use that to login.
+        </p>
+        """
+    
+    content = f"""
+    <p class="greeting">🎉 Congratulations, Dr. {data.get('therapist_name', '')}!</p>
+    <p class="message">
+        Your COGNISPACE therapist account has been <strong>approved</strong>. You now have access to our comprehensive practice management platform.
+    </p>
+    
+    <div class="credentials-box">
+        <h3>🔐 Your Login Credentials</h3>
+        <div class="credential-item">
+            <strong>Login ID (Mobile):</strong> {data.get('mobile', 'N/A')}
+        </div>
+        {password_section}
+    </div>
+    
+    <div class="info-box">
+        <h4>📅 Your Free Trial</h4>
+        <p><strong>Trial Period:</strong> 14 Days</p>
+        <p><strong>Trial Ends:</strong> {data.get('trial_end_date', 'N/A')}</p>
+        <p>Explore all features during your trial. Contact us to upgrade anytime.</p>
+    </div>
+    
+    <div class="info-box">
+        <h4>✨ What You Can Do</h4>
+        <ul style="margin: 10px 0; padding-left: 20px;">
+            <li>Manage your clients and appointments</li>
+            <li>Create session notes and assessments</li>
+            <li>Use TheraGenie AI for clinical support</li>
+            <li>Generate diagnostic reports with CogniVision</li>
+            <li>Track payments and manage your practice</li>
+        </ul>
+    </div>
+    
+    <a href="{data.get('login_url', 'https://cognispace.in/login')}" class="button">Login to COGNISPACE</a>
+    
+    <p class="message" style="margin-top: 20px; font-size: 14px;">
+        Need help? Contact us at <a href="mailto:care@cognispace.in">care@cognispace.in</a> or WhatsApp us at <a href="https://wa.me/917348700555">+91 7348700555</a>
+    </p>
+    """
+    
+    return {
+        "subject": "🎉 Welcome to COGNISPACE - Your Account is Approved!",
+        "html_body": get_base_template(content, "Welcome to COGNISPACE"),
+        "text_body": f"Congratulations Dr. {data.get('therapist_name')}! Your COGNISPACE account is approved. Login ID: {data.get('mobile')}. Trial Period: 14 days. Login at {data.get('login_url', 'https://cognispace.in/login')}"
+    }
+
+
 def template_password_changed(data: Dict[str, Any]) -> Dict[str, str]:
     """Template for password change notification"""
     content = f"""
