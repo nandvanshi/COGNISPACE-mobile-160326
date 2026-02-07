@@ -390,12 +390,16 @@ async def update_subscription_plan(plan_id: str, plan_data: SubscriptionPlanCrea
     return updated_plan
 
 
+class AssignSubscriptionRequest(BaseModel):
+    plan_id: str
+    payment_amount: float = 0
+    payment_method: str = "admin_assigned"
+
+
 @router.post("/admin/therapists/{therapist_id}/assign-subscription")
 async def assign_subscription(
     therapist_id: str,
-    plan_id: str,
-    payment_amount: float = 0,
-    payment_method: str = "admin_assigned",
+    request: AssignSubscriptionRequest,
     current_user: dict = Depends(require_super_admin)
 ):
     """Assign a subscription plan to a therapist"""
@@ -403,7 +407,7 @@ async def assign_subscription(
     if not therapist:
         raise HTTPException(status_code=404, detail="Therapist not found")
     
-    plan = await db.subscription_plans.find_one({"id": plan_id}, {"_id": 0})
+    plan = await db.subscription_plans.find_one({"id": request.plan_id}, {"_id": 0})
     if not plan:
         raise HTTPException(status_code=404, detail="Plan not found")
     
@@ -414,13 +418,13 @@ async def assign_subscription(
     subscription_doc = {
         "id": subscription_id,
         "therapist_id": therapist_id,
-        "plan_id": plan_id,
+        "plan_id": request.plan_id,
         "plan_name": plan["name"],
         "start_date": now.isoformat(),
         "end_date": end_date.isoformat(),
         "status": "active",
-        "payment_amount": payment_amount,
-        "payment_method": payment_method,
+        "payment_amount": request.payment_amount,
+        "payment_method": request.payment_method,
         "created_at": now.isoformat(),
         "assigned_by": current_user["id"]
     }
@@ -436,7 +440,7 @@ async def assign_subscription(
     )
     
     await log_audit(current_user["id"], "super_admin", "assign_subscription", "therapist", therapist_id,
-                   {"plan_id": plan_id, "subscription_id": subscription_id})
+                   {"plan_id": request.plan_id, "subscription_id": subscription_id})
     
     return {"message": "Subscription assigned", "subscription_id": subscription_id, "end_date": end_date.isoformat()}
 
