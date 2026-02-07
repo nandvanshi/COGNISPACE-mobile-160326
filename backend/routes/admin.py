@@ -1,17 +1,23 @@
 """
 Super Admin routes - Therapist and Client management
 """
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends, Query, BackgroundTasks
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 from datetime import datetime, timezone, timedelta
 import uuid
+import logging
 
 from database import db
 from dependencies import (
     get_current_user, hash_password, log_audit, validate_mobile,
     DEFAULT_FEATURE_TOGGLES
 )
+from services.email.service import EmailService
+from services.email.templates import template_therapist_welcome
+from services.whatsapp.service import WhatsAppService
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
