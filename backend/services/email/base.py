@@ -107,6 +107,6 @@ class EmailProviderBase(ABC):
             Tuple of (email, name)
         """
         return (
-            self.config.get('default_from_email', 'noreply@cognispace.in'),
+            self.config.get('default_from_email', 'noreply@notifications.cognispace.in'),
             self.config.get('default_from_name', 'COGNISPACE')
         )
