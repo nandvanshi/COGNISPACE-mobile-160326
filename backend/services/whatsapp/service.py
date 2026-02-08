@@ -43,7 +43,7 @@ class WhatsAppService:
                 end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
                 if end_dt < datetime.now(timezone.utc):
                     return False
-            except:
+            except (ValueError, TypeError):
                 pass
         
         # Check if plan allows WhatsApp
