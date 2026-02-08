@@ -191,6 +191,8 @@ class TwilioWhatsAppProvider(WhatsAppProviderBase):
     async def send_direct(self, to_mobile: str, message: str) -> WhatsAppResult:
         """
         Send a direct text message via WhatsApp (for account notifications).
+        Note: This uses freeform text which only works in Twilio Sandbox.
+        For production, use send_template_message instead.
         """
         if not self.is_available:
             return WhatsAppResult(
@@ -234,3 +236,82 @@ class TwilioWhatsAppProvider(WhatsAppProviderBase):
                 provider=self.provider_name,
                 error=str(e)
             )
+
+    async def send_template_message(
+        self, 
+        to_mobile: str, 
+        content_sid: str, 
+        content_variables: dict
+    ) -> WhatsAppResult:
+        """
+        Send WhatsApp message using approved Content Template.
+        This is the production-ready method that uses pre-approved templates.
+        
+        Args:
+            to_mobile: Recipient phone number
+            content_sid: Twilio Content Template SID (e.g., HXxxxxxxxxx)
+            content_variables: Dict of template variables (e.g., {"1": "John Doe"})
+        """
+        if not self.is_available:
+            return WhatsAppResult(
+                success=False,
+                provider=self.provider_name,
+                error="Twilio WhatsApp provider not properly configured"
+            )
+        
+        try:
+            to_number = self.normalize_phone(to_mobile)
+            if not to_number.startswith("whatsapp:"):
+                to_number = f"whatsapp:{to_number}"
+            
+            from_number = self.from_number
+            if not from_number.startswith("whatsapp:"):
+                from_number = f"whatsapp:{from_number}"
+            
+            # Convert content_variables dict to JSON string
+            import json
+            content_vars_json = json.dumps(content_variables)
+            
+            # Send using Content Template
+            twilio_message = await asyncio.to_thread(
+                self._send_template_message,
+                from_number=from_number,
+                to_number=to_number,
+                content_sid=content_sid,
+                content_variables=content_vars_json
+            )
+            
+            return WhatsAppResult(
+                success=True,
+                provider=self.provider_name,
+                message_id=twilio_message.sid
+            )
+        except TwilioRestException as e:
+            logger.error(f"Twilio Template API error: {e.msg}")
+            return WhatsAppResult(
+                success=False,
+                provider=self.provider_name,
+                error=f"Twilio error: {e.msg}"
+            )
+        except Exception as e:
+            logger.error(f"Error sending template WhatsApp: {e}")
+            return WhatsAppResult(
+                success=False,
+                provider=self.provider_name,
+                error=str(e)
+            )
+    
+    def _send_template_message(
+        self, 
+        from_number: str, 
+        to_number: str, 
+        content_sid: str,
+        content_variables: str
+    ):
+        """Synchronous template message send (called via asyncio.to_thread)"""
+        return self._client.messages.create(
+            from_=from_number,
+            to=to_number,
+            content_sid=content_sid,
+            content_variables=content_variables
+        )
