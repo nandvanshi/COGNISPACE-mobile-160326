@@ -294,36 +294,26 @@ async def send_therapist_welcome_notifications(
         except Exception as e:
             logger.error(f"Failed to send welcome email: {e}")
     
-    # Send WhatsApp
+    # Send WhatsApp using approved template
+    # Template: cogni_1st (HXc374601a165b80488fdc52a01a140d2b)
+    # Message: "Hi {{1}}, Your CogniSpace account has been approved. 
+    #          Please check your registered email for login details and next steps."
     try:
-        if password:
-            whatsapp_message = (
-                f"🎉 *Welcome to COGNISPACE, Dr. {therapist_name}!*\n\n"
-                f"Your therapist account has been approved.\n\n"
-                f"*Login Credentials:*\n"
-                f"📱 Mobile: {mobile}\n"
-                f"🔑 Password: {password}\n\n"
-                f"⚠️ Please change your password after first login.\n\n"
-                f"📅 Free Trial: 14 days (until {trial_end_date})\n\n"
-                f"🔗 Login: {login_url}\n\n"
-                f"Need help? Contact care@cognispace.in\n\n"
-                f"_COGNISPACE - Your Practice, Elevated_"
-            )
-        else:
-            whatsapp_message = (
-                f"🎉 *Welcome to COGNISPACE, Dr. {therapist_name}!*\n\n"
-                f"Your therapist account has been approved.\n\n"
-                f"📱 Login with: {mobile}\n"
-                f"🔑 Use the password you set during registration.\n\n"
-                f"📅 Free Trial: 14 days (until {trial_end_date})\n\n"
-                f"🔗 Login: {login_url}\n\n"
-                f"Need help? Contact care@cognispace.in\n\n"
-                f"_COGNISPACE - Your Practice, Elevated_"
-            )
+        COGNISPACE_WELCOME_TEMPLATE_SID = "HXc374601a165b80488fdc52a01a140d2b"
         
-        result = await WhatsAppService.send_direct_message(mobile, whatsapp_message)
+        # Template variable: {{1}} = therapist full name
+        content_variables = {
+            "1": f"Dr. {therapist_name}"
+        }
+        
+        result = await WhatsAppService.send_template_message(
+            to_mobile=mobile,
+            content_sid=COGNISPACE_WELCOME_TEMPLATE_SID,
+            content_variables=content_variables
+        )
+        
         if result.success:
-            logger.info(f"Welcome WhatsApp sent to {mobile}")
+            logger.info(f"Welcome WhatsApp sent to {mobile} using template cogni_1st")
         else:
             logger.warning(f"WhatsApp send failed: {result.error}")
     except Exception as e:
