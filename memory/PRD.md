@@ -1,154 +1,104 @@
 # COGNISPACE - Product Requirements Document
 
 ## Original Problem Statement
-Build a secure, therapist-first web application for practice management and clinical decision support with AI-powered diagnostic tools.
-
----
-
-## Product Vision
-COGNISPACE is a therapist-first clinical platform designed to help mental health professionals manage clients, sessions, documentation, and practice operations — all in one secure place.
-
----
-
-## Target Users
-
-### 1. Therapists
-- Private practitioners
-- Clinical psychologists
-- Counselors
-- Psychiatrists
-
-### 2. Clinics & Teams
-- Multi-practitioner clinics
-- Mental health centers
-- Assistants handling non-clinical tasks
-
-### 3. Clients
-- Individuals seeking therapy
-- Patients of registered therapists
-
----
+Build a secure, therapist-first web application named **COGNISPACE** for practice management and clinical decision support.
 
 ## Core Features
+- **Authentication**: Secure JWT-based authentication for Therapists, Clients, Super Admins, and Assistants
+- **Client Management**: Full client lifecycle management
+- **Appointments**: Scheduling and management
+- **Session Notes**: Clinical documentation
+- **Messaging**: In-app communication
+- **Payment Tracking**: Financial management
+- **TheraGenie & CogniVision**: AI module for clinical intelligence, editable/exportable psychodiagnostic reports (PDF)
+- **Client Self-Registration**: Unique, permanent therapist links for client self-onboarding
+- **Client-Facing Reports**: Clients can view shared diagnostic reports
+- **In-App Notifications**: Role-aware, real-time notifications including morning briefings and daily payment summaries
+- **Admin Features**: Therapist management, deletion with orphan client handling
+- **Payment Reporting**: Comprehensive revenue analysis dashboard
+- **Legal Pages**: About, Privacy Policy, Terms, Clinical Disclaimer, Refund Policy, Contact/Support
 
-### Authentication & Access Control
-- JWT-based authentication
-- 4 roles: Super Admin, Therapist, Assistant, Client
-- Role-based access control (RBAC)
-
-### Client Management
-- Client profiles with demographics
-- Self-registration via unique therapist links
-- Case history documentation
-- Intake notes
-
-### Appointments
-- Create, reschedule, cancel
-- Recurring appointments (weekly/biweekly)
-- 60/30 minute reminders
-
-### Session Notes
-- SOAP format documentation
-- Linked to appointments
-- PDF export
-
-### Assessments
-- Assessment library (30+ standardized tools)
-- Online administration
-- Auto-scoring
-- Progress tracking
-
-### TheraGenie AI (Clinical Intelligence)
-- Assessment suggestions based on client data
-- Treatment protocol generation
-- Homework/exercise generation
-- **CogniVision**: AI-powered psychodiagnostic reports
-
-### Payments
-- Payment tracking
-- Receipt generation
-- Comprehensive analytics dashboard
-
-### Notifications
-- In-app notifications (bell icon)
-- Email (Resend)
-- WhatsApp (Twilio) - opt-in required
-
-### Admin Features
-- Therapist approval/rejection
-- Subscription management
-- Therapist deletion with client re-linking
-- System-wide settings
-
----
+## User's Preferred Language
+Hindi (User communicates in Hindi/Hinglish)
 
 ## Tech Stack
+- **Frontend**: React with Shadcn/UI components
+- **Backend**: FastAPI (Python)
+- **Database**: MongoDB Atlas
+- **AI**: Anthropic Claude (User API Key)
+- **Email**: Resend (User API Key)
+- **SMS/WhatsApp**: Twilio (User API Key)
+- **PDF Generation**: jsPDF & html2canvas
 
-| Component | Technology |
-|-----------|------------|
-| Frontend | React 18, Tailwind CSS, Shadcn/UI |
-| Backend | FastAPI (Python), Motor (async MongoDB) |
-| Database | MongoDB |
-| AI | Claude Sonnet 4 via Emergent LLM Key |
-| Email | Resend |
-| WhatsApp | Twilio |
-| Scheduler | APScheduler |
-| PDF | jsPDF + html2canvas |
-
----
-
-## API Structure
-
+## Architecture
 ```
-/api/
-├── auth/           # Authentication
-├── admin/          # Super admin operations
-├── clients/        # Client management
-├── appointments/   # Scheduling
-├── sessions/       # Session notes
-├── assessments/    # Assessment management
-├── payments/       # Payment tracking + reports
-├── ai/             # TheraGenie AI features
-├── diagnostic-reports/  # CogniVision reports
-├── notifications/  # In-app notifications
-├── resources/      # Resource library
-└── protocols/      # Treatment protocols
+/app/
+├── backend/
+│   ├── routes/
+│   │   ├── admin.py
+│   │   ├── subscriptions.py
+│   │   └── ai_clinical.py
+│   ├── services/
+│   │   ├── email/
+│   │   └── whatsapp/
+└── frontend/
+    └── src/
+        ├── components/
+        │   ├── admin/
+        │   │   ├── TherapistApplications.js
+        │   │   ├── SubscriptionManagement.js
+        │   │   └── TherapistManagement.js
+        ├── pages/
+        │   ├── SuperAdminDashboard.js (hash-based routing)
+        │   ├── TherapistDashboard.js
+        │   └── AssistantDashboard.js
+        └── utils/
+            └── constants.js (centralized)
 ```
 
----
+## What's Implemented ✅
+- [x] JWT-based authentication for all roles
+- [x] Admin dashboard with hash-based SPA routing
+- [x] Therapist Management (View, Edit, Delete, Suspend)
+- [x] Subscription Management (Assign, Extend, Trial)
+- [x] Therapist Applications approval workflow
+- [x] Welcome email notifications on approval
+- [x] Centralized specialization options
+- [x] Browser back button support (hash routing)
+- [x] Client management
+- [x] Basic AI clinical features
+
+## Current Session (Feb 7, 2026)
+### Verified Working:
+- ✅ Admin -> Therapist Management -> Subscription assignment
+  - Dialog opens correctly
+  - Plans load in dropdown
+  - Assignment succeeds with toast notification
+
+## Known Issues
+1. **WhatsApp Messages** (P2) - Twilio Error 63016, needs pre-approved Message Template
+   - **Status**: BLOCKED - Awaiting user decision on template creation approach
+2. **Korean text in AI content** (P2) - May appear in AI-generated content
+   - **Status**: NOT STARTED
+
+## Pending/Upcoming Tasks
+- [ ] Profile photo upload (Therapist & Client) - **MOCKED**
+- [ ] Forgot Password functionality
+- [ ] AI-powered SOAP/DAP note generation
+- [ ] Usage tracking/rate limiting for AI features
+- [ ] Therapist note templates sharing
+- [ ] Coupon code management backend logic
+- [ ] `/api/clients` N+1 query optimization
 
 ## Test Credentials
-
-| Role | Login | Password | URL |
-|------|-------|----------|-----|
+| Role | Login ID | Password | URL |
+|------|----------|----------|-----|
 | Super Admin | admin | admin123 | /admin-login |
-| Therapist 1 | 9807306444 | Abcd@1234 | /login |
-| Therapist 2 | 7275005007 | newpassword | /login |
-| Assistant | support@mindlabs.co.in | Abcd@1234 | /login |
-| Client | 8299683186 | Abcd@1234 | /login |
+
+## Deployment
+- Target domain: `cognispace.in`
+- No hardcoded URLs in codebase
+- See `/app/memory/DEPLOYMENT.md` for setup guide
 
 ---
-
-## Compliance & Standards
-
-- India Standard Time (IST)
-- DD/MM/YYYY date format
-- Indian Rupee (₹)
-- HIPAA-minded security practices
-- Consent-driven data handling
-- No clinical data via WhatsApp
-
----
-
-## Legal Pages
-- Privacy Policy (`/privacy-policy`)
-- Terms & Conditions (`/terms-conditions`)
-- Clinical Disclaimer (`/clinical-disclaimer`)
-- Contact/Support (`/contact`)
-- About Page (`/about`)
-
----
-
-## Brand
-**COGNISPACE** by Vedic Wellness Solutions
-*Precision Insights. Personal Growth.*
+Last Updated: February 7, 2026
