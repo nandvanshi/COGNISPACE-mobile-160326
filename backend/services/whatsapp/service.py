@@ -216,6 +216,7 @@ class WhatsAppService:
         """
         Send a direct WhatsApp message without opt-in checks.
         Use ONLY for critical account messages like welcome/approval.
+        Note: This uses freeform text - only works in Twilio Sandbox.
         """
         if cls._db is None:
             return WhatsAppResult(
@@ -247,6 +248,59 @@ class WhatsAppService:
         # Send direct message via Twilio
         try:
             result = await provider.send_direct(mobile, message)
+            return result
+        except Exception as e:
+            return WhatsAppResult(
+                success=False,
+                provider=provider.provider_name,
+                error=str(e)
+            )
+    
+    @classmethod
+    async def send_template_message(
+        cls,
+        to_mobile: str,
+        content_sid: str,
+        content_variables: dict
+    ) -> WhatsAppResult:
+        """
+        Send WhatsApp message using approved Content Template.
+        This is the production-ready method for sending WhatsApp messages.
+        
+        Args:
+            to_mobile: Recipient phone number
+            content_sid: Twilio Content Template SID (e.g., HXxxxxxxxxx)
+            content_variables: Dict of template variables (e.g., {"1": "John Doe"})
+        """
+        if cls._db is None:
+            return WhatsAppResult(
+                success=False,
+                provider="none",
+                error="WhatsApp service not initialized"
+            )
+        
+        if not WhatsAppProviderRegistry.is_configured():
+            return WhatsAppResult(
+                success=False,
+                provider="none",
+                error="No WhatsApp provider configured"
+            )
+        
+        provider = WhatsAppProviderRegistry.get_provider()
+        if not provider:
+            return WhatsAppResult(
+                success=False,
+                provider="none",
+                error="No available WhatsApp provider"
+            )
+        
+        # Format mobile number
+        mobile = to_mobile
+        if not mobile.startswith('+'):
+            mobile = '+91' + mobile if len(mobile) == 10 else '+' + mobile
+        
+        try:
+            result = await provider.send_template_message(mobile, content_sid, content_variables)
             return result
         except Exception as e:
             return WhatsAppResult(
