@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { API, useAuth } from '../App';
 import { Card } from './ui/card';
@@ -9,8 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Switch } from './ui/switch';
 import { Label } from './ui/label';
 import { toast } from 'sonner';
-import { Send, MessageCircle, Plus, User, Settings, Shield, AlertTriangle } from 'lucide-react';
-import { formatDate, formatTime, formatDateTime, toIST } from '../utils/formatUtils';
+import { 
+  Send, MessageCircle, Plus, User, Settings, Shield, AlertTriangle, 
+  Trash2, MoreVertical, Check, CheckCheck, ArrowLeft, Search, X 
+} from 'lucide-react';
+import { formatDateTime } from '../utils/formatUtils';
 
 const Messaging = ({ isReadOnly = false }) => {
   const { user } = useAuth();
@@ -25,15 +28,24 @@ const Messaging = ({ isReadOnly = false }) => {
   const [clientMessagingSettings, setClientMessagingSettings] = useState({});
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [mobileShowMessages, setMobileShowMessages] = useState(false); // Mobile: show messages panel
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showDeleteMenu, setShowDeleteMenu] = useState(null);
+  const [deletingMessage, setDeletingMessage] = useState(null);
   const messagesEndRef = useRef(null);
+  const messageContainerRef = useRef(null);
   
   const isClient = user?.role === 'client';
 
+  // Auto-scroll to bottom
+  const scrollToBottom = useCallback(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, []);
+
   useEffect(() => {
     fetchData();
-    // Poll for new messages every 10 seconds
-    const interval = setInterval(fetchConversations, 10000);
+    const interval = setInterval(fetchConversations, 5000); // Poll every 5 seconds
     return () => clearInterval(interval);
   }, []);
 
@@ -45,11 +57,14 @@ const Messaging = ({ isReadOnly = false }) => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, scrollToBottom]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  // Close delete menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => setShowDeleteMenu(null);
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
 
   const fetchData = async () => {
     try {
@@ -60,12 +75,10 @@ const Messaging = ({ isReadOnly = false }) => {
       setConversations(convsRes.data);
       setContacts(contactsRes.data);
       
-      // Auto-select conversation for client (they usually have only one therapist)
       if (user?.role === 'client' && convsRes.data.length > 0 && !selectedConversation) {
         setSelectedConversation(convsRes.data[0]);
       }
       
-      // If therapist, load messaging settings for all clients
       if (user?.role === 'therapist') {
         const clients = contactsRes.data.filter(c => c.type === 'client');
         const settings = {};
@@ -74,13 +87,13 @@ const Messaging = ({ isReadOnly = false }) => {
             const res = await axios.get(`${API}/clients/${client.id}/messaging-status`);
             settings[client.id] = res.data.messaging_enabled;
           } catch (e) {
-            settings[client.id] = true; // Default to enabled
+            settings[client.id] = true;
           }
         }
         setClientMessagingSettings(settings);
       }
     } catch (error) {
-      toast.error('Failed to load messaging data');
+      toast.error('Messages load करने में error');
     } finally {
       setLoading(false);
     }
@@ -91,7 +104,7 @@ const Messaging = ({ isReadOnly = false }) => {
       const response = await axios.get(`${API}/messages/conversations`);
       setConversations(response.data);
     } catch (error) {
-      // Silent fail for polling
+      // Silent fail
     }
   };
 
@@ -100,7 +113,7 @@ const Messaging = ({ isReadOnly = false }) => {
       const response = await axios.get(`${API}/messages/${userId}`);
       setMessages(response.data);
     } catch (error) {
-      toast.error('Failed to load messages');
+      toast.error('Messages load करने में error');
     }
   };
 
@@ -118,15 +131,34 @@ const Messaging = ({ isReadOnly = false }) => {
       await fetchMessages(selectedConversation.user_id);
       await fetchConversations();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to send message');
+      toast.error(error.response?.data?.detail || 'Message भेजने में error');
     } finally {
       setSending(false);
     }
   };
 
+  const handleDeleteMessage = async (messageId, permanent = false) => {
+    setDeletingMessage(messageId);
+    try {
+      const endpoint = permanent 
+        ? `${API}/messages/${messageId}/permanent`
+        : `${API}/messages/${messageId}`;
+      
+      await axios.delete(endpoint);
+      toast.success('Message delete हो गया');
+      await fetchMessages(selectedConversation.user_id);
+      await fetchConversations();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Delete करने में error');
+    } finally {
+      setDeletingMessage(null);
+      setShowDeleteMenu(null);
+    }
+  };
+
   const handleStartNewConversation = async () => {
     if (!selectedContact) {
-      toast.error('Please select a contact');
+      toast.error('Contact select करें');
       return;
     }
 
@@ -146,116 +178,169 @@ const Messaging = ({ isReadOnly = false }) => {
       await axios.put(`${API}/clients/${clientId}/messaging`, {
         messaging_enabled: enabled,
       });
-      setClientMessagingSettings(prev => ({
-        ...prev,
-        [clientId]: enabled,
-      }));
+      setClientMessagingSettings(prev => ({ ...prev, [clientId]: enabled }));
       toast.success(`Messaging ${enabled ? 'enabled' : 'disabled'}`);
-      // Refresh contacts list to reflect the change
       const contactsRes = await axios.get(`${API}/messaging-contacts`);
       setContacts(contactsRes.data);
     } catch (error) {
-      toast.error('Failed to update messaging settings');
+      toast.error('Settings update करने में error');
     }
   };
 
-  const getUnreadTotal = () => {
-    return conversations.reduce((sum, conv) => sum + (conv.unread_count || 0), 0);
-  };
+  const getUnreadTotal = () => conversations.reduce((sum, conv) => sum + (conv.unread_count || 0), 0);
 
   const getContactsNotInConversations = () => {
     const conversationUserIds = conversations.map(c => c.user_id);
     return contacts.filter(c => !conversationUserIds.includes(c.id));
   };
 
+  const filteredConversations = conversations.filter(conv => 
+    conv.user_name?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   if (loading) {
-    return <div className="text-center py-12">Loading messages...</div>;
+    return (
+      <div className="h-[calc(100vh-120px)] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
-  // Client Mobile View - Full Screen Messages
+  // Message Bubble Component
+  const MessageBubble = ({ msg, isSender }) => {
+    const isDeleting = deletingMessage === msg.id;
+    
+    return (
+      <div
+        className={`group flex ${isSender ? 'justify-end' : 'justify-start'} mb-2`}
+        data-testid={`message-${msg.id}`}
+      >
+        <div className="relative max-w-[75%]">
+          {/* Delete Menu */}
+          {isSender && !isReadOnly && (
+            <div className={`absolute ${isSender ? '-left-8' : '-right-8'} top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity`}>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowDeleteMenu(showDeleteMenu === msg.id ? null : msg.id);
+                }}
+                className="p-1.5 rounded-full hover:bg-gray-200 text-gray-500"
+                data-testid={`delete-menu-${msg.id}`}
+              >
+                <MoreVertical size={16} />
+              </button>
+              
+              {showDeleteMenu === msg.id && (
+                <div className="absolute right-0 top-8 bg-white rounded-lg shadow-xl border z-50 py-1 min-w-[140px]">
+                  <button
+                    onClick={() => handleDeleteMessage(msg.id, false)}
+                    disabled={isDeleting}
+                    className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2 text-red-600"
+                    data-testid={`delete-btn-${msg.id}`}
+                  >
+                    <Trash2 size={14} />
+                    Delete
+                  </button>
+                  {user?.role === 'therapist' && (
+                    <button
+                      onClick={() => handleDeleteMessage(msg.id, true)}
+                      disabled={isDeleting}
+                      className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2 text-red-700"
+                      data-testid={`permanent-delete-btn-${msg.id}`}
+                    >
+                      <Trash2 size={14} />
+                      Permanently Delete
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Message Content */}
+          <div
+            className={`px-4 py-2.5 rounded-2xl ${
+              isSender
+                ? 'bg-primary text-white rounded-br-md'
+                : 'bg-gray-100 text-gray-900 rounded-bl-md'
+            } ${isDeleting ? 'opacity-50' : ''}`}
+          >
+            <p className="text-[15px] whitespace-pre-wrap break-words">{msg.content}</p>
+            <div className={`flex items-center gap-1 mt-1 ${isSender ? 'justify-end' : 'justify-start'}`}>
+              <span className={`text-[11px] ${isSender ? 'text-white/70' : 'text-gray-500'}`}>
+                {formatDateTime(msg.created_at)}
+              </span>
+              {isSender && (
+                <span className={`${isSender ? 'text-white/70' : 'text-gray-500'}`}>
+                  {msg.is_read ? <CheckCheck size={14} /> : <Check size={14} />}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Client View - Full Screen Messenger
   if (isClient) {
     const therapistContact = contacts[0];
     const therapistName = conversations[0]?.user_name || therapistContact?.name || 'Your Therapist';
-    
-    // Auto-set selected conversation for client if they have a therapist contact
     const effectiveConversation = selectedConversation || (therapistContact ? {
       user_id: therapistContact.id,
       user_name: therapistContact.name
     } : null);
-    
+
     return (
       <div data-testid="messaging" className="h-[calc(100vh-120px)] flex flex-col">
-        {/* Header - Compact for mobile */}
-        <div className="mb-4 flex items-center justify-between px-2">
-          <div>
-            <h2 className="text-2xl md:text-4xl font-serif text-primary">Messages</h2>
-            <p className="text-sm text-muted-foreground">Chat with your therapist</p>
-          </div>
-        </div>
-
         {contacts.length === 0 ? (
-          <Card className="flex-1 flex items-center justify-center bg-white/70 backdrop-blur-xl border border-border/40">
+          <Card className="flex-1 flex items-center justify-center bg-white/70">
             <div className="text-center p-8">
-              <MessageCircle size={48} className="mx-auto text-muted-foreground/30 mb-4" />
-              <p className="text-muted-foreground">You are not assigned to a therapist yet.</p>
+              <MessageCircle size={48} className="mx-auto text-gray-300 mb-4" />
+              <p className="text-gray-500">अभी कोई therapist assign नहीं है</p>
             </div>
           </Card>
         ) : (
-          <Card className="flex-1 flex flex-col bg-white/70 backdrop-blur-xl border border-border/40 rounded-xl overflow-hidden">
-            {/* Therapist Header - Always show if contacts exist */}
-            <div className="border-b border-border p-4 bg-primary/5">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <User size={24} className="text-primary" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-primary">{therapistName}</h3>
-                  <p className="text-xs text-muted-foreground">Therapist</p>
-                </div>
+          <Card className="flex-1 flex flex-col bg-white rounded-2xl overflow-hidden shadow-lg">
+            {/* Header */}
+            <div className="px-4 py-3 bg-primary text-white flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                <User size={20} />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold">{therapistName}</h3>
+                <p className="text-xs text-white/70">Therapist</p>
               </div>
             </div>
 
-            {/* Messages Area - Full Height */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3" data-testid="messages-container">
+            {/* Messages */}
+            <div 
+              ref={messageContainerRef}
+              className="flex-1 overflow-y-auto p-4 bg-[#f0f2f5]"
+              data-testid="messages-container"
+            >
               {messages.length === 0 ? (
                 <div className="flex items-center justify-center h-full">
-                  <div className="text-center">
-                    <MessageCircle size={40} className="mx-auto text-muted-foreground/30 mb-3" />
-                    <p className="text-muted-foreground">No messages yet. Start the conversation!</p>
+                  <div className="text-center bg-white/80 rounded-xl px-6 py-4">
+                    <MessageCircle size={32} className="mx-auto text-gray-400 mb-2" />
+                    <p className="text-gray-500 text-sm">बातचीत शुरू करें!</p>
                   </div>
                 </div>
               ) : (
-                messages.map((msg) => {
-                  const isSender = msg.sender_id === user?.id;
-                  return (
-                    <div
-                      key={msg.id}
-                      className={`flex ${isSender ? 'justify-end' : 'justify-start'}`}
-                      data-testid={`message-${msg.id}`}
-                    >
-                      <div
-                        className={`max-w-[80%] p-3 rounded-2xl ${
-                          isSender
-                            ? 'bg-primary text-white rounded-br-sm'
-                            : 'bg-gray-100 text-foreground rounded-bl-sm'
-                        }`}
-                      >
-                        <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                        <p className={`text-xs mt-1 ${isSender ? 'text-white/70' : 'text-muted-foreground'}`}>
-                          {formatDateTime(msg.created_at)}
-                          {msg.read && isSender && ' ✓'}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })
+                messages.map((msg) => (
+                  <MessageBubble 
+                    key={msg.id} 
+                    msg={msg} 
+                    isSender={msg.sender_id === user?.id} 
+                  />
+                ))
               )}
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Message Input - Fixed at Bottom */}
+            {/* Input */}
             {!isReadOnly && therapistContact?.messaging_enabled !== false ? (
-              <div className="border-t border-border p-3 bg-white">
+              <div className="p-3 bg-white border-t">
                 <form onSubmit={async (e) => {
                   e.preventDefault();
                   if (!newMessage.trim() || sending || !effectiveConversation) return;
@@ -269,26 +354,23 @@ const Messaging = ({ isReadOnly = false }) => {
                     await fetchMessages(effectiveConversation.user_id);
                     await fetchConversations();
                   } catch (error) {
-                    const errMsg = typeof error.response?.data?.detail === 'string' 
-                      ? error.response.data.detail 
-                      : 'Failed to send message';
-                    toast.error(errMsg);
+                    toast.error(error.response?.data?.detail || 'Message भेजने में error');
                   } finally {
                     setSending(false);
                   }
-                }} className="flex gap-2">
+                }} className="flex gap-2 items-center">
                   <Input
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder="Type your message..."
-                    className="flex-1 rounded-full px-4"
-                    disabled={sending || !effectiveConversation}
+                    placeholder="Message लिखें..."
+                    className="flex-1 rounded-full bg-gray-100 border-0 px-4"
+                    disabled={sending}
                     data-testid="message-input"
                   />
                   <Button
                     type="submit"
-                    disabled={!newMessage.trim() || sending || !effectiveConversation}
-                    className="rounded-full w-12 h-10 p-0 bg-primary hover:bg-primary-700"
+                    disabled={!newMessage.trim() || sending}
+                    className="rounded-full w-10 h-10 p-0 bg-primary hover:bg-primary/90"
                     data-testid="send-message-button"
                   >
                     <Send size={18} />
@@ -296,8 +378,8 @@ const Messaging = ({ isReadOnly = false }) => {
                 </form>
               </div>
             ) : (
-              <div className="border-t border-border p-3 bg-warning/10">
-                <p className="text-sm text-center text-warning">Messaging disabled - Contact your therapist</p>
+              <div className="p-3 bg-amber-50 border-t border-amber-200">
+                <p className="text-sm text-center text-amber-700">Messaging disabled</p>
               </div>
             )}
           </Card>
@@ -306,253 +388,249 @@ const Messaging = ({ isReadOnly = false }) => {
     );
   }
 
-  // Therapist View - Original Layout
+  // Therapist View - Split Panel Messenger
   return (
-    <div data-testid="messaging">
+    <div data-testid="messaging" className="h-[calc(100vh-120px)] flex flex-col">
       {/* Header */}
-      <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
+      <div className="mb-4 flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h2 className="text-4xl font-serif text-primary mb-2">Messages</h2>
-          <p className="text-muted-foreground">Secure communication with your {user?.role === 'therapist' ? 'clients' : 'therapist'}</p>
+          <h2 className="text-3xl font-serif text-primary">Messages</h2>
+          <p className="text-sm text-gray-500">Secure messaging with clients</p>
         </div>
         <div className="flex gap-2">
-          {user?.role === 'therapist' && !isReadOnly && (
+          {!isReadOnly && (
             <Button
               variant="outline"
+              size="sm"
               onClick={() => setShowSettingsDialog(true)}
               data-testid="messaging-settings-button"
             >
               <Settings size={16} className="mr-2" />
-              Client Settings
+              Settings
             </Button>
           )}
           {!isReadOnly && contacts.length > 0 && (
             <Button
               onClick={() => setShowNewConversationDialog(true)}
-              className="bg-primary hover:bg-primary-700 rounded-full"
+              size="sm"
+              className="bg-primary rounded-full"
               data-testid="new-conversation-button"
             >
-              <Plus size={20} className="mr-2" />
-              New Message
+              <Plus size={16} className="mr-2" />
+              New Chat
             </Button>
           )}
         </div>
       </div>
 
-      {/* Read-only warning */}
       {isReadOnly && (
-        <Card className="p-4 mb-6 bg-warning/10 border-warning/30">
-          <div className="flex items-center gap-3">
-            <AlertTriangle size={20} className="text-warning" />
-            <p className="text-sm">
-              <strong>Read-only mode:</strong> Your subscription has expired. You can view messages but cannot send new ones.
-            </p>
+        <Card className="p-3 mb-4 bg-amber-50 border-amber-200">
+          <div className="flex items-center gap-2">
+            <AlertTriangle size={18} className="text-amber-600" />
+            <p className="text-sm text-amber-700">Read-only mode: Subscription expired</p>
           </div>
         </Card>
       )}
 
-      {/* No contacts message */}
-      {contacts.length === 0 && (
-        <Card className="p-8 text-center bg-white/70 backdrop-blur-xl border border-border/40">
-          <MessageCircle size={48} className="mx-auto text-muted-foreground/30 mb-4" />
-          <p className="text-muted-foreground">
-            {user?.role === 'therapist' 
-              ? 'You have no assigned clients to message yet.'
-              : 'You are not assigned to a therapist yet.'}
-          </p>
+      {contacts.length === 0 ? (
+        <Card className="flex-1 flex items-center justify-center bg-white/70">
+          <div className="text-center">
+            <MessageCircle size={48} className="mx-auto text-gray-300 mb-4" />
+            <p className="text-gray-500">कोई client assign नहीं है</p>
+          </div>
         </Card>
-      )}
-
-      {contacts.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[600px]">
+      ) : (
+        <div className="flex-1 flex gap-4 min-h-0">
           {/* Conversations List */}
-          <Card className="lg:col-span-1 p-4 bg-white/70 backdrop-blur-xl border border-border/40 rounded-xl overflow-y-auto" data-testid="conversations-list">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-serif text-primary">Conversations</h3>
-              {getUnreadTotal() > 0 && (
-                <span className="bg-error text-white text-xs rounded-full px-2 py-0.5">
-                  {getUnreadTotal()} unread
-                </span>
-              )}
-            </div>
-            
-            {conversations.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-sm text-muted-foreground mb-4">No conversations yet</p>
-                {!isReadOnly && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowNewConversationDialog(true)}
+          <Card className="w-80 flex flex-col bg-white rounded-xl overflow-hidden" data-testid="conversations-list">
+            {/* Search */}
+            <div className="p-3 border-b">
+              <div className="relative">
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search..."
+                  className="pl-9 pr-8 rounded-full bg-gray-100 border-0"
+                />
+                {searchQuery && (
+                  <button 
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
-                    Start a conversation
-                  </Button>
+                    <X size={14} />
+                  </button>
                 )}
               </div>
-            ) : (
-              <div className="space-y-2">
-                {conversations.map((conv) => (
+            </div>
+
+            {/* List */}
+            <div className="flex-1 overflow-y-auto">
+              {filteredConversations.length === 0 ? (
+                <div className="text-center py-8 px-4">
+                  <p className="text-sm text-gray-500">
+                    {searchQuery ? 'कोई result नहीं' : 'कोई conversation नहीं'}
+                  </p>
+                  {!searchQuery && !isReadOnly && (
+                    <Button
+                      variant="link"
+                      size="sm"
+                      onClick={() => setShowNewConversationDialog(true)}
+                      className="mt-2"
+                    >
+                      Start a chat
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                filteredConversations.map((conv) => (
                   <div
                     key={conv.user_id}
                     onClick={() => setSelectedConversation(conv)}
-                    className={`p-4 rounded-lg cursor-pointer transition-all ${
+                    className={`px-4 py-3 cursor-pointer border-b border-gray-50 transition-colors ${
                       selectedConversation?.user_id === conv.user_id
-                        ? 'bg-primary text-white shadow-md'
-                        : 'bg-surface hover:bg-surface/80'
+                        ? 'bg-primary/10'
+                        : 'hover:bg-gray-50'
                     }`}
                     data-testid={`conversation-${conv.user_id}`}
                   >
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                          selectedConversation?.user_id === conv.user_id
-                            ? 'bg-white/20'
-                            : 'bg-primary/10'
-                        }`}>
-                          <User size={14} className={
-                            selectedConversation?.user_id === conv.user_id
-                              ? 'text-white'
-                              : 'text-primary'
-                          } />
-                        </div>
-                        <p className="font-medium truncate">{conv.user_name}</p>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                        selectedConversation?.user_id === conv.user_id
+                          ? 'bg-primary text-white'
+                          : 'bg-gray-100 text-gray-600'
+                      }`}>
+                        <User size={20} />
                       </div>
-                      {conv.unread_count > 0 && (
-                        <span className={`text-xs rounded-full w-5 h-5 flex items-center justify-center ${
-                          selectedConversation?.user_id === conv.user_id
-                            ? 'bg-white text-primary'
-                            : 'bg-error text-white'
-                        }`}>
-                          {conv.unread_count}
-                        </span>
-                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <p className="font-medium text-gray-900 truncate">{conv.user_name}</p>
+                          {conv.unread_count > 0 && (
+                            <span className="bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                              {conv.unread_count}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-500 truncate">{conv.last_message}</p>
+                      </div>
                     </div>
-                    <p className="text-sm opacity-80 truncate pl-10">{conv.last_message}</p>
                   </div>
-                ))}
-              </div>
-            )}
+                ))
+              )}
+            </div>
           </Card>
 
           {/* Messages Panel */}
-          <Card className="lg:col-span-2 p-6 bg-white/70 backdrop-blur-xl border border-border/40 rounded-xl flex flex-col h-[600px]" data-testid="messages-panel">
+          <Card className="flex-1 flex flex-col bg-white rounded-xl overflow-hidden" data-testid="messages-panel">
             {selectedConversation ? (
               <>
-                <div className="border-b border-border pb-4 mb-4 flex items-center gap-3">
+                {/* Chat Header */}
+                <div className="px-4 py-3 border-b flex items-center gap-3 bg-gray-50">
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                     <User size={18} className="text-primary" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-serif text-primary">{selectedConversation.user_name}</h3>
-                    <p className="text-xs text-muted-foreground">
-                      {user?.role === 'therapist' ? 'Client' : 'Your Therapist'}
-                    </p>
+                    <h3 className="font-semibold text-gray-900">{selectedConversation.user_name}</h3>
+                    <p className="text-xs text-gray-500">Client</p>
                   </div>
                 </div>
 
                 {/* Messages */}
-                <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2 max-h-[400px]" data-testid="messages-container">
+                <div 
+                  ref={messageContainerRef}
+                  className="flex-1 overflow-y-auto p-4 bg-[#f0f2f5]"
+                  data-testid="messages-container"
+                >
                   {messages.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <p>No messages yet. Start the conversation!</p>
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-center bg-white/80 rounded-xl px-6 py-4">
+                        <MessageCircle size={32} className="mx-auto text-gray-400 mb-2" />
+                        <p className="text-gray-500 text-sm">बातचीत शुरू करें!</p>
+                      </div>
                     </div>
                   ) : (
-                    messages.map((msg) => {
-                      const isSender = msg.sender_id !== selectedConversation.user_id;
-                      return (
-                        <div
-                          key={msg.id}
-                          className={`flex ${isSender ? 'justify-end' : 'justify-start'}`}
-                          data-testid={`message-${msg.id}`}
-                        >
-                          <div
-                            className={`max-w-[70%] p-3 rounded-2xl ${
-                              isSender
-                                ? 'bg-primary text-white rounded-br-md'
-                                : 'bg-surface text-foreground rounded-bl-md'
-                            }`}
-                          >
-                            <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                            <p className={`text-xs mt-1 ${isSender ? 'text-white/70' : 'text-muted-foreground'}`}>
-                              {formatDateTime(msg.created_at)}
-                              {msg.read && isSender && ' • Read'}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })
+                    messages.map((msg) => (
+                      <MessageBubble 
+                        key={msg.id} 
+                        msg={msg} 
+                        isSender={msg.sender_id !== selectedConversation.user_id}
+                      />
+                    ))
                   )}
                   <div ref={messagesEndRef} />
                 </div>
 
-                {/* Send Message */}
+                {/* Input */}
                 {!isReadOnly ? (
-                  <form onSubmit={handleSendMessage} className="flex gap-2">
-                    <Input
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      placeholder="Type your message..."
-                      className="flex-1"
-                      disabled={sending}
-                      data-testid="message-input"
-                    />
-                    <Button 
-                      type="submit" 
-                      disabled={!newMessage.trim() || sending}
-                      data-testid="send-message-button"
-                    >
-                      <Send size={20} />
-                    </Button>
-                  </form>
+                  <div className="p-3 bg-white border-t">
+                    <form onSubmit={handleSendMessage} className="flex gap-2 items-center">
+                      <Input
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        placeholder="Message लिखें..."
+                        className="flex-1 rounded-full bg-gray-100 border-0 px-4"
+                        disabled={sending}
+                        data-testid="message-input"
+                      />
+                      <Button
+                        type="submit"
+                        disabled={!newMessage.trim() || sending}
+                        className="rounded-full w-10 h-10 p-0 bg-primary hover:bg-primary/90"
+                        data-testid="send-message-button"
+                      >
+                        <Send size={18} />
+                      </Button>
+                    </form>
+                  </div>
                 ) : (
-                  <div className="p-3 bg-muted rounded-lg text-center">
-                    <p className="text-sm text-muted-foreground">Messaging disabled in read-only mode</p>
+                  <div className="p-3 bg-gray-100 border-t">
+                    <p className="text-sm text-center text-gray-500">Read-only mode</p>
                   </div>
                 )}
               </>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-center">
-                <MessageCircle size={48} className="text-muted-foreground/30 mb-4" />
-                <p className="text-muted-foreground mb-4">Select a conversation to start messaging</p>
-                {!isReadOnly && getContactsNotInConversations().length > 0 && (
-                  <Button 
-                    variant="outline"
-                    onClick={() => setShowNewConversationDialog(true)}
-                  >
-                    <Plus size={16} className="mr-2" />
-                    Start New Conversation
-                  </Button>
-                )}
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+                    <MessageCircle size={40} className="text-gray-400" />
+                  </div>
+                  <p className="text-gray-500 mb-4">Chat select करें</p>
+                  {!isReadOnly && getContactsNotInConversations().length > 0 && (
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowNewConversationDialog(true)}
+                    >
+                      <Plus size={16} className="mr-2" />
+                      New Chat
+                    </Button>
+                  )}
+                </div>
               </div>
             )}
           </Card>
         </div>
       )}
 
-      {/* HIPAA Notice */}
-      <div className="mt-6 p-4 bg-info/10 border border-info/20 rounded-xl flex items-start gap-3">
-        <Shield size={20} className="text-info shrink-0 mt-0.5" />
-        <div>
-          <p className="text-sm text-info font-medium">Secure In-App Messaging</p>
-          <p className="text-xs text-info/80 mt-1">
-            All messages are encrypted and stored securely. Messages are only between you and your {user?.role === 'therapist' ? 'assigned clients' : 'assigned therapist'}. 
-            This is not for emergency communications - if you are in crisis, please call emergency services.
-          </p>
-        </div>
+      {/* Security Notice */}
+      <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-xl flex items-start gap-2">
+        <Shield size={18} className="text-blue-600 shrink-0 mt-0.5" />
+        <p className="text-xs text-blue-700">
+          Encrypted & secure messaging. Emergency के लिए इस platform का use न करें।
+        </p>
       </div>
 
       {/* New Conversation Dialog */}
       <Dialog open={showNewConversationDialog} onOpenChange={setShowNewConversationDialog}>
         <DialogContent data-testid="new-conversation-dialog">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-serif text-primary">New Message</DialogTitle>
+            <DialogTitle className="text-xl font-serif text-primary">New Message</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>Select {user?.role === 'therapist' ? 'Client' : 'Contact'}</Label>
+              <Label>Client Select करें</Label>
               <Select value={selectedContact} onValueChange={setSelectedContact}>
                 <SelectTrigger className="mt-1" data-testid="contact-select">
-                  <SelectValue placeholder="Choose a contact" />
+                  <SelectValue placeholder="Contact चुनें" />
                 </SelectTrigger>
                 <SelectContent>
                   {contacts.map((contact) => (
@@ -564,20 +642,10 @@ const Messaging = ({ isReadOnly = false }) => {
               </Select>
             </div>
             <div className="flex gap-3">
-              <Button 
-                onClick={handleStartNewConversation} 
-                className="flex-1"
-                data-testid="start-conversation-button"
-              >
-                Start Conversation
+              <Button onClick={handleStartNewConversation} className="flex-1" data-testid="start-conversation-button">
+                Start Chat
               </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowNewConversationDialog(false);
-                  setSelectedContact('');
-                }}
-              >
+              <Button variant="outline" onClick={() => { setShowNewConversationDialog(false); setSelectedContact(''); }}>
                 Cancel
               </Button>
             </div>
@@ -585,20 +653,20 @@ const Messaging = ({ isReadOnly = false }) => {
         </DialogContent>
       </Dialog>
 
-      {/* Client Messaging Settings Dialog (Therapist only) */}
+      {/* Settings Dialog */}
       <Dialog open={showSettingsDialog} onOpenChange={setShowSettingsDialog}>
         <DialogContent className="max-w-md" data-testid="messaging-settings-dialog">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-serif text-primary">Client Messaging Settings</DialogTitle>
+            <DialogTitle className="text-xl font-serif text-primary">Messaging Settings</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-muted-foreground mb-4">
-            Control which clients can send you messages. Disabled clients will not be able to message you.
+          <p className="text-sm text-gray-500 mb-4">
+            Client के messaging को enable/disable करें
           </p>
-          <div className="space-y-3 max-h-64 overflow-y-auto">
+          <div className="space-y-2 max-h-64 overflow-y-auto">
             {contacts.filter(c => c.type === 'client').map((client) => (
               <div
                 key={client.id}
-                className="flex items-center justify-between p-3 bg-surface rounded-lg"
+                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
                 data-testid={`client-setting-${client.id}`}
               >
                 <div className="flex items-center gap-3">
@@ -607,9 +675,7 @@ const Messaging = ({ isReadOnly = false }) => {
                   </div>
                   <div>
                     <p className="font-medium text-sm">{client.name}</p>
-                    {client.display_id && (
-                      <p className="text-xs text-muted-foreground">{client.display_id}</p>
-                    )}
+                    {client.display_id && <p className="text-xs text-gray-500">{client.display_id}</p>}
                   </div>
                 </div>
                 <Switch
@@ -620,9 +686,7 @@ const Messaging = ({ isReadOnly = false }) => {
               </div>
             ))}
             {contacts.filter(c => c.type === 'client').length === 0 && (
-              <p className="text-center text-muted-foreground py-4">
-                No clients assigned yet
-              </p>
+              <p className="text-center text-gray-500 py-4">कोई client नहीं</p>
             )}
           </div>
         </DialogContent>
