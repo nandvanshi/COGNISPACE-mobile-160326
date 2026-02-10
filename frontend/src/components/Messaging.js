@@ -518,9 +518,9 @@ const Messaging = ({ isReadOnly = false }) => {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input */}
+            {/* Input - Fixed at bottom */}
             {!isReadOnly && therapistContact?.messaging_enabled !== false ? (
-              <div className="p-3 bg-white border-t">
+              <div className="p-3 bg-white border-t shrink-0">
                 <form onSubmit={async (e) => {
                   e.preventDefault();
                   if (!newMessage.trim() || sending || !effectiveConversation) return;
