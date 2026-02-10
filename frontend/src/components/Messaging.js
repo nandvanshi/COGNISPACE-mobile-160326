@@ -31,6 +31,7 @@ const Messaging = ({ isReadOnly = false }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showDeleteMenu, setShowDeleteMenu] = useState(null);
   const [deletingMessage, setDeletingMessage] = useState(null);
+  const [mobileView, setMobileView] = useState('list'); // 'list' or 'chat'
   const messagesEndRef = useRef(null);
   const messageContainerRef = useRef(null);
   
@@ -45,13 +46,14 @@ const Messaging = ({ isReadOnly = false }) => {
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchConversations, 5000); // Poll every 5 seconds
+    const interval = setInterval(fetchConversations, 5000);
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
     if (selectedConversation) {
       fetchMessages(selectedConversation.user_id);
+      setMobileView('chat'); // Switch to chat view on mobile when conversation selected
     }
   }, [selectedConversation]);
 
@@ -59,7 +61,6 @@ const Messaging = ({ isReadOnly = false }) => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
-  // Close delete menu when clicking outside
   useEffect(() => {
     const handleClickOutside = () => setShowDeleteMenu(null);
     document.addEventListener('click', handleClickOutside);
@@ -103,9 +104,7 @@ const Messaging = ({ isReadOnly = false }) => {
     try {
       const response = await axios.get(`${API}/messages/conversations`);
       setConversations(response.data);
-    } catch (error) {
-      // Silent fail
-    }
+    } catch (error) {}
   };
 
   const fetchMessages = async (userId) => {
@@ -187,6 +186,11 @@ const Messaging = ({ isReadOnly = false }) => {
     }
   };
 
+  const handleBackToList = () => {
+    setMobileView('list');
+    setSelectedConversation(null);
+  };
+
   const getUnreadTotal = () => conversations.reduce((sum, conv) => sum + (conv.unread_count || 0), 0);
 
   const getContactsNotInConversations = () => {
@@ -216,9 +220,8 @@ const Messaging = ({ isReadOnly = false }) => {
         data-testid={`message-${msg.id}`}
       >
         <div className="relative max-w-[75%]">
-          {/* Delete Menu */}
           {isSender && !isReadOnly && (
-            <div className={`absolute ${isSender ? '-left-8' : '-right-8'} top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity`}>
+            <div className={`absolute -left-8 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity`}>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -236,7 +239,6 @@ const Messaging = ({ isReadOnly = false }) => {
                     onClick={() => handleDeleteMessage(msg.id, false)}
                     disabled={isDeleting}
                     className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2 text-red-600"
-                    data-testid={`delete-btn-${msg.id}`}
                   >
                     <Trash2 size={14} />
                     Delete
@@ -246,7 +248,6 @@ const Messaging = ({ isReadOnly = false }) => {
                       onClick={() => handleDeleteMessage(msg.id, true)}
                       disabled={isDeleting}
                       className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2 text-red-700"
-                      data-testid={`permanent-delete-btn-${msg.id}`}
                     >
                       <Trash2 size={14} />
                       Permanently Delete
@@ -257,7 +258,6 @@ const Messaging = ({ isReadOnly = false }) => {
             </div>
           )}
           
-          {/* Message Content */}
           <div
             className={`px-4 py-2.5 rounded-2xl ${
               isSender
@@ -281,6 +281,186 @@ const Messaging = ({ isReadOnly = false }) => {
       </div>
     );
   };
+
+  // Conversations List Component
+  const ConversationsList = ({ fullWidth = false }) => (
+    <Card className={`${fullWidth ? 'w-full' : 'w-80 hidden md:flex'} flex-col bg-white rounded-xl overflow-hidden`} data-testid="conversations-list">
+      {/* Search */}
+      <div className="p-3 border-b">
+        <div className="relative">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search..."
+            className="pl-9 pr-8 rounded-full bg-gray-100 border-0"
+          />
+          {searchQuery && (
+            <button 
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* List */}
+      <div className="flex-1 overflow-y-auto">
+        {filteredConversations.length === 0 ? (
+          <div className="text-center py-8 px-4">
+            <p className="text-sm text-gray-500">
+              {searchQuery ? 'कोई result नहीं' : 'कोई conversation नहीं'}
+            </p>
+            {!searchQuery && !isReadOnly && (
+              <Button
+                variant="link"
+                size="sm"
+                onClick={() => setShowNewConversationDialog(true)}
+                className="mt-2"
+              >
+                Start a chat
+              </Button>
+            )}
+          </div>
+        ) : (
+          filteredConversations.map((conv) => (
+            <div
+              key={conv.user_id}
+              onClick={() => setSelectedConversation(conv)}
+              className={`px-4 py-3 cursor-pointer border-b border-gray-50 transition-colors ${
+                selectedConversation?.user_id === conv.user_id
+                  ? 'bg-primary/10'
+                  : 'hover:bg-gray-50 active:bg-gray-100'
+              }`}
+              data-testid={`conversation-${conv.user_id}`}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${
+                  selectedConversation?.user_id === conv.user_id
+                    ? 'bg-primary text-white'
+                    : 'bg-gray-100 text-gray-600'
+                }`}>
+                  <User size={20} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-medium text-gray-900 truncate">{conv.user_name}</p>
+                    {conv.unread_count > 0 && (
+                      <span className="bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center shrink-0">
+                        {conv.unread_count}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-500 truncate">{conv.last_message}</p>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </Card>
+  );
+
+  // Chat Panel Component
+  const ChatPanel = ({ fullWidth = false, showBack = false }) => (
+    <Card className={`${fullWidth ? 'w-full' : 'flex-1 hidden md:flex'} flex-col bg-white rounded-xl overflow-hidden`} data-testid="messages-panel">
+      {selectedConversation ? (
+        <>
+          {/* Chat Header */}
+          <div className="px-4 py-3 border-b flex items-center gap-3 bg-gray-50">
+            {showBack && (
+              <button 
+                onClick={handleBackToList}
+                className="p-2 -ml-2 rounded-full hover:bg-gray-200 active:bg-gray-300"
+              >
+                <ArrowLeft size={20} className="text-gray-600" />
+              </button>
+            )}
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <User size={18} className="text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-gray-900 truncate">{selectedConversation.user_name}</h3>
+              <p className="text-xs text-gray-500">Client</p>
+            </div>
+          </div>
+
+          {/* Messages */}
+          <div 
+            ref={messageContainerRef}
+            className="flex-1 overflow-y-auto p-4 bg-[#f0f2f5]"
+            data-testid="messages-container"
+          >
+            {messages.length === 0 ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center bg-white/80 rounded-xl px-6 py-4">
+                  <MessageCircle size={32} className="mx-auto text-gray-400 mb-2" />
+                  <p className="text-gray-500 text-sm">बातचीत शुरू करें!</p>
+                </div>
+              </div>
+            ) : (
+              messages.map((msg) => (
+                <MessageBubble 
+                  key={msg.id} 
+                  msg={msg} 
+                  isSender={msg.sender_id !== selectedConversation.user_id}
+                />
+              ))
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Input */}
+          {!isReadOnly ? (
+            <div className="p-3 bg-white border-t">
+              <form onSubmit={handleSendMessage} className="flex gap-2 items-center">
+                <Input
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  placeholder="Message लिखें..."
+                  className="flex-1 rounded-full bg-gray-100 border-0 px-4"
+                  disabled={sending}
+                  data-testid="message-input"
+                />
+                <Button
+                  type="submit"
+                  disabled={!newMessage.trim() || sending}
+                  className="rounded-full w-10 h-10 p-0 bg-primary hover:bg-primary/90 shrink-0"
+                  data-testid="send-message-button"
+                >
+                  <Send size={18} />
+                </Button>
+              </form>
+            </div>
+          ) : (
+            <div className="p-3 bg-gray-100 border-t">
+              <p className="text-sm text-center text-gray-500">Read-only mode</p>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+              <MessageCircle size={40} className="text-gray-400" />
+            </div>
+            <p className="text-gray-500 mb-4">Chat select करें</p>
+            {!isReadOnly && getContactsNotInConversations().length > 0 && (
+              <Button
+                variant="outline"
+                onClick={() => setShowNewConversationDialog(true)}
+              >
+                <Plus size={16} className="mr-2" />
+                New Chat
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+    </Card>
+  );
 
   // Client View - Full Screen Messenger
   if (isClient) {
@@ -370,7 +550,7 @@ const Messaging = ({ isReadOnly = false }) => {
                   <Button
                     type="submit"
                     disabled={!newMessage.trim() || sending}
-                    className="rounded-full w-10 h-10 p-0 bg-primary hover:bg-primary/90"
+                    className="rounded-full w-10 h-10 p-0 bg-primary hover:bg-primary/90 shrink-0"
                     data-testid="send-message-button"
                   >
                     <Send size={18} />
@@ -388,14 +568,14 @@ const Messaging = ({ isReadOnly = false }) => {
     );
   }
 
-  // Therapist View - Split Panel Messenger
+  // Therapist View - Responsive Layout
   return (
     <div data-testid="messaging" className="h-[calc(100vh-120px)] flex flex-col">
       {/* Header */}
-      <div className="mb-4 flex items-center justify-between flex-wrap gap-4">
+      <div className="mb-4 flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h2 className="text-3xl font-serif text-primary">Messages</h2>
-          <p className="text-sm text-gray-500">Secure messaging with clients</p>
+          <h2 className="text-2xl md:text-3xl font-serif text-primary">Messages</h2>
+          <p className="text-xs md:text-sm text-gray-500">Secure messaging with clients</p>
         </div>
         <div className="flex gap-2">
           {!isReadOnly && (
@@ -404,20 +584,21 @@ const Messaging = ({ isReadOnly = false }) => {
               size="sm"
               onClick={() => setShowSettingsDialog(true)}
               data-testid="messaging-settings-button"
+              className="text-xs md:text-sm"
             >
-              <Settings size={16} className="mr-2" />
-              Settings
+              <Settings size={16} className="mr-1 md:mr-2" />
+              <span className="hidden sm:inline">Settings</span>
             </Button>
           )}
           {!isReadOnly && contacts.length > 0 && (
             <Button
               onClick={() => setShowNewConversationDialog(true)}
               size="sm"
-              className="bg-primary rounded-full"
+              className="bg-primary rounded-full text-xs md:text-sm"
               data-testid="new-conversation-button"
             >
-              <Plus size={16} className="mr-2" />
-              New Chat
+              <Plus size={16} className="mr-1 md:mr-2" />
+              <span className="hidden sm:inline">New Chat</span>
             </Button>
           )}
         </div>
@@ -440,188 +621,35 @@ const Messaging = ({ isReadOnly = false }) => {
           </div>
         </Card>
       ) : (
-        <div className="flex-1 flex gap-4 min-h-0">
-          {/* Conversations List */}
-          <Card className="w-80 flex flex-col bg-white rounded-xl overflow-hidden" data-testid="conversations-list">
-            {/* Search */}
-            <div className="p-3 border-b">
-              <div className="relative">
-                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search..."
-                  className="pl-9 pr-8 rounded-full bg-gray-100 border-0"
-                />
-                {searchQuery && (
-                  <button 
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    <X size={14} />
-                  </button>
-                )}
-              </div>
-            </div>
+        <>
+          {/* Desktop View - Side by Side */}
+          <div className="hidden md:flex flex-1 gap-4 min-h-0">
+            <ConversationsList />
+            <ChatPanel />
+          </div>
 
-            {/* List */}
-            <div className="flex-1 overflow-y-auto">
-              {filteredConversations.length === 0 ? (
-                <div className="text-center py-8 px-4">
-                  <p className="text-sm text-gray-500">
-                    {searchQuery ? 'कोई result नहीं' : 'कोई conversation नहीं'}
-                  </p>
-                  {!searchQuery && !isReadOnly && (
-                    <Button
-                      variant="link"
-                      size="sm"
-                      onClick={() => setShowNewConversationDialog(true)}
-                      className="mt-2"
-                    >
-                      Start a chat
-                    </Button>
-                  )}
-                </div>
-              ) : (
-                filteredConversations.map((conv) => (
-                  <div
-                    key={conv.user_id}
-                    onClick={() => setSelectedConversation(conv)}
-                    className={`px-4 py-3 cursor-pointer border-b border-gray-50 transition-colors ${
-                      selectedConversation?.user_id === conv.user_id
-                        ? 'bg-primary/10'
-                        : 'hover:bg-gray-50'
-                    }`}
-                    data-testid={`conversation-${conv.user_id}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                        selectedConversation?.user_id === conv.user_id
-                          ? 'bg-primary text-white'
-                          : 'bg-gray-100 text-gray-600'
-                      }`}>
-                        <User size={20} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <p className="font-medium text-gray-900 truncate">{conv.user_name}</p>
-                          {conv.unread_count > 0 && (
-                            <span className="bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                              {conv.unread_count}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-sm text-gray-500 truncate">{conv.last_message}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </Card>
-
-          {/* Messages Panel */}
-          <Card className="flex-1 flex flex-col bg-white rounded-xl overflow-hidden" data-testid="messages-panel">
-            {selectedConversation ? (
-              <>
-                {/* Chat Header */}
-                <div className="px-4 py-3 border-b flex items-center gap-3 bg-gray-50">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <User size={18} className="text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">{selectedConversation.user_name}</h3>
-                    <p className="text-xs text-gray-500">Client</p>
-                  </div>
-                </div>
-
-                {/* Messages */}
-                <div 
-                  ref={messageContainerRef}
-                  className="flex-1 overflow-y-auto p-4 bg-[#f0f2f5]"
-                  data-testid="messages-container"
-                >
-                  {messages.length === 0 ? (
-                    <div className="flex items-center justify-center h-full">
-                      <div className="text-center bg-white/80 rounded-xl px-6 py-4">
-                        <MessageCircle size={32} className="mx-auto text-gray-400 mb-2" />
-                        <p className="text-gray-500 text-sm">बातचीत शुरू करें!</p>
-                      </div>
-                    </div>
-                  ) : (
-                    messages.map((msg) => (
-                      <MessageBubble 
-                        key={msg.id} 
-                        msg={msg} 
-                        isSender={msg.sender_id !== selectedConversation.user_id}
-                      />
-                    ))
-                  )}
-                  <div ref={messagesEndRef} />
-                </div>
-
-                {/* Input */}
-                {!isReadOnly ? (
-                  <div className="p-3 bg-white border-t">
-                    <form onSubmit={handleSendMessage} className="flex gap-2 items-center">
-                      <Input
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        placeholder="Message लिखें..."
-                        className="flex-1 rounded-full bg-gray-100 border-0 px-4"
-                        disabled={sending}
-                        data-testid="message-input"
-                      />
-                      <Button
-                        type="submit"
-                        disabled={!newMessage.trim() || sending}
-                        className="rounded-full w-10 h-10 p-0 bg-primary hover:bg-primary/90"
-                        data-testid="send-message-button"
-                      >
-                        <Send size={18} />
-                      </Button>
-                    </form>
-                  </div>
-                ) : (
-                  <div className="p-3 bg-gray-100 border-t">
-                    <p className="text-sm text-center text-gray-500">Read-only mode</p>
-                  </div>
-                )}
-              </>
+          {/* Mobile View - One at a time */}
+          <div className="flex md:hidden flex-1 min-h-0">
+            {mobileView === 'list' ? (
+              <ConversationsList fullWidth />
             ) : (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
-                    <MessageCircle size={40} className="text-gray-400" />
-                  </div>
-                  <p className="text-gray-500 mb-4">Chat select करें</p>
-                  {!isReadOnly && getContactsNotInConversations().length > 0 && (
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowNewConversationDialog(true)}
-                    >
-                      <Plus size={16} className="mr-2" />
-                      New Chat
-                    </Button>
-                  )}
-                </div>
-              </div>
+              <ChatPanel fullWidth showBack />
             )}
-          </Card>
-        </div>
+          </div>
+        </>
       )}
 
-      {/* Security Notice */}
-      <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-xl flex items-start gap-2">
-        <Shield size={18} className="text-blue-600 shrink-0 mt-0.5" />
-        <p className="text-xs text-blue-700">
+      {/* Security Notice - Hidden on small mobile */}
+      <div className="mt-4 p-2 md:p-3 bg-blue-50 border border-blue-100 rounded-xl flex items-start gap-2">
+        <Shield size={16} className="text-blue-600 shrink-0 mt-0.5" />
+        <p className="text-[10px] md:text-xs text-blue-700">
           Encrypted & secure messaging. Emergency के लिए इस platform का use न करें।
         </p>
       </div>
 
       {/* New Conversation Dialog */}
       <Dialog open={showNewConversationDialog} onOpenChange={setShowNewConversationDialog}>
-        <DialogContent data-testid="new-conversation-dialog">
+        <DialogContent data-testid="new-conversation-dialog" className="mx-4 max-w-sm">
           <DialogHeader>
             <DialogTitle className="text-xl font-serif text-primary">New Message</DialogTitle>
           </DialogHeader>
@@ -655,7 +683,7 @@ const Messaging = ({ isReadOnly = false }) => {
 
       {/* Settings Dialog */}
       <Dialog open={showSettingsDialog} onOpenChange={setShowSettingsDialog}>
-        <DialogContent className="max-w-md" data-testid="messaging-settings-dialog">
+        <DialogContent className="mx-4 max-w-md" data-testid="messaging-settings-dialog">
           <DialogHeader>
             <DialogTitle className="text-xl font-serif text-primary">Messaging Settings</DialogTitle>
           </DialogHeader>
@@ -669,13 +697,13 @@ const Messaging = ({ isReadOnly = false }) => {
                 className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
                 data-testid={`client-setting-${client.id}`}
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                     <User size={14} className="text-primary" />
                   </div>
-                  <div>
-                    <p className="font-medium text-sm">{client.name}</p>
-                    {client.display_id && <p className="text-xs text-gray-500">{client.display_id}</p>}
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm truncate">{client.name}</p>
+                    {client.display_id && <p className="text-xs text-gray-500 truncate">{client.display_id}</p>}
                   </div>
                 </div>
                 <Switch
