@@ -558,7 +558,7 @@ const Messaging = ({ isReadOnly = false }) => {
                 </form>
               </div>
             ) : (
-              <div className="p-3 bg-amber-50 border-t border-amber-200">
+              <div className="p-3 bg-amber-50 border-t border-amber-200 shrink-0">
                 <p className="text-sm text-center text-amber-700">Messaging disabled</p>
               </div>
             )}
