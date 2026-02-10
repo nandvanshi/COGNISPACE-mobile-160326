@@ -412,9 +412,9 @@ const Messaging = ({ isReadOnly = false }) => {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input */}
+          {/* Input - Fixed at bottom */}
           {!isReadOnly ? (
-            <div className="p-3 bg-white border-t">
+            <div className="p-3 bg-white border-t shrink-0">
               <form onSubmit={handleSendMessage} className="flex gap-2 items-center">
                 <Input
                   value={newMessage}
@@ -435,7 +435,7 @@ const Messaging = ({ isReadOnly = false }) => {
               </form>
             </div>
           ) : (
-            <div className="p-3 bg-gray-100 border-t">
+            <div className="p-3 bg-gray-100 border-t shrink-0">
               <p className="text-sm text-center text-gray-500">Read-only mode</p>
             </div>
           )}
