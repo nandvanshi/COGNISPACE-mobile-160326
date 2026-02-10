@@ -416,3 +416,62 @@ async def get_unread_count(current_user: dict = Depends(get_current_user)):
     """Get count of unread messages"""
     count = await db.messages.count_documents({"recipient_id": current_user["id"], "is_read": False})
     return {"unread_count": count}
+
+
+
+@router.delete("/messages/{message_id}")
+async def delete_message(message_id: str, current_user: dict = Depends(get_current_user)):
+    """
+    Delete a message. Users can only delete messages they sent.
+    Soft delete - marks as deleted but keeps for audit.
+    """
+    # Find the message
+    message = await db.messages.find_one({"id": message_id}, {"_id": 0})
+    
+    if not message:
+        raise HTTPException(status_code=404, detail="Message not found")
+    
+    # Check if user is the sender
+    if message["sender_id"] != current_user["id"]:
+        raise HTTPException(status_code=403, detail="You can only delete messages you sent")
+    
+    # Soft delete - update with deleted flag
+    await db.messages.update_one(
+        {"id": message_id},
+        {"$set": {
+            "is_deleted": True,
+            "deleted_at": datetime.now(timezone.utc).isoformat(),
+            "content": "[Message deleted]"  # Replace content for privacy
+        }}
+    )
+    
+    await log_audit(current_user["id"], current_user["role"], "delete", "message", message_id)
+    
+    return {"message": "Message deleted successfully"}
+
+
+@router.delete("/messages/{message_id}/permanent")
+async def permanent_delete_message(message_id: str, current_user: dict = Depends(get_current_user)):
+    """
+    Permanently delete a message. Only for therapists.
+    For compliance, this requires therapist role.
+    """
+    if current_user["role"] not in ["therapist", "super_admin"]:
+        raise HTTPException(status_code=403, detail="Only therapists can permanently delete messages")
+    
+    # Find the message
+    message = await db.messages.find_one({"id": message_id}, {"_id": 0})
+    
+    if not message:
+        raise HTTPException(status_code=404, detail="Message not found")
+    
+    # Check if user is involved in this conversation
+    if current_user["id"] not in [message["sender_id"], message["recipient_id"]]:
+        raise HTTPException(status_code=403, detail="You can only delete messages from your conversations")
+    
+    # Permanent delete
+    await db.messages.delete_one({"id": message_id})
+    
+    await log_audit(current_user["id"], current_user["role"], "permanent_delete", "message", message_id)
+    
+    return {"message": "Message permanently deleted"}
