@@ -372,8 +372,12 @@ async def update_client(client_id: str, data: ClientUpdate, current_user: dict =
     )
 
 
+class PasswordResetRequest(BaseModel):
+    new_password: str
+
+
 @router.post("/{client_id}/reset-password")
-async def reset_client_password(client_id: str, new_password: str, current_user: dict = Depends(require_active_therapist_or_assistant)):
+async def reset_client_password(client_id: str, request: PasswordResetRequest, current_user: dict = Depends(require_active_therapist_or_assistant)):
     """Reset client password"""
     therapist_id = get_effective_therapist_id(current_user)
     
@@ -383,7 +387,7 @@ async def reset_client_password(client_id: str, new_password: str, current_user:
     
     await db.users.update_one(
         {"id": client_id},
-        {"$set": {"password_hash": hash_password(new_password)}}
+        {"$set": {"password_hash": hash_password(request.new_password)}}
     )
     
     await log_audit(current_user["id"], current_user["role"], "reset_password", "client", client_id)
