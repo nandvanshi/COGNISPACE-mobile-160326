@@ -284,7 +284,7 @@ const Messaging = ({ isReadOnly = false }) => {
 
   // Conversations List Component
   const ConversationsList = ({ fullWidth = false }) => (
-    <Card className={`${fullWidth ? 'w-full' : 'w-80 hidden md:flex'} flex-col bg-white rounded-xl overflow-hidden`} data-testid="conversations-list">
+    <Card className={`${fullWidth ? 'w-full h-full' : 'w-80 hidden md:flex'} flex flex-col bg-white rounded-xl overflow-hidden`} data-testid="conversations-list">
       {/* Search */}
       <div className="p-3 border-b">
         <div className="relative">
