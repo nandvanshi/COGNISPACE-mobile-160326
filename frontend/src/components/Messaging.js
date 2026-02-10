@@ -365,11 +365,11 @@ const Messaging = ({ isReadOnly = false }) => {
 
   // Chat Panel Component
   const ChatPanel = ({ fullWidth = false, showBack = false }) => (
-    <Card className={`${fullWidth ? 'w-full' : 'flex-1 hidden md:flex'} flex-col bg-white rounded-xl overflow-hidden`} data-testid="messages-panel">
+    <Card className={`${fullWidth ? 'w-full h-full' : 'flex-1 hidden md:flex'} flex flex-col bg-white rounded-xl overflow-hidden`} data-testid="messages-panel">
       {selectedConversation ? (
         <>
-          {/* Chat Header */}
-          <div className="px-4 py-3 border-b flex items-center gap-3 bg-gray-50">
+          {/* Chat Header - Fixed */}
+          <div className="px-4 py-3 border-b flex items-center gap-3 bg-gray-50 shrink-0">
             {showBack && (
               <button 
                 onClick={handleBackToList}
@@ -387,10 +387,10 @@ const Messaging = ({ isReadOnly = false }) => {
             </div>
           </div>
 
-          {/* Messages */}
+          {/* Messages - Scrollable */}
           <div 
             ref={messageContainerRef}
-            className="flex-1 overflow-y-auto p-4 bg-[#f0f2f5]"
+            className="flex-1 overflow-y-auto p-4 bg-[#f0f2f5] min-h-0"
             data-testid="messages-container"
           >
             {messages.length === 0 ? (
