@@ -360,10 +360,15 @@ async def get_conversations(current_user: dict = Depends(get_current_user)):
 async def get_messages_with_user(user_id: str, current_user: dict = Depends(get_current_user)):
     """Get all messages with a specific user"""
     messages = await db.messages.find(
-        {"$or": [
-            {"sender_id": current_user["id"], "recipient_id": user_id},
-            {"sender_id": user_id, "recipient_id": current_user["id"]}
-        ]},
+        {
+            "$and": [
+                {"$or": [
+                    {"sender_id": current_user["id"], "recipient_id": user_id},
+                    {"sender_id": user_id, "recipient_id": current_user["id"]}
+                ]},
+                {"is_deleted": {"$ne": True}}  # Exclude soft-deleted messages
+            ]
+        },
         {"_id": 0}
     ).sort("created_at", 1).to_list(500)  # Sort ascending for chat order
     
