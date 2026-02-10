@@ -481,9 +481,9 @@ const Messaging = ({ isReadOnly = false }) => {
             </div>
           </Card>
         ) : (
-          <Card className="flex-1 flex flex-col bg-white rounded-2xl overflow-hidden shadow-lg">
-            {/* Header */}
-            <div className="px-4 py-3 bg-primary text-white flex items-center gap-3">
+          <Card className="flex-1 flex flex-col bg-white rounded-2xl overflow-hidden shadow-lg min-h-0">
+            {/* Header - Fixed */}
+            <div className="px-4 py-3 bg-primary text-white flex items-center gap-3 shrink-0">
               <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
                 <User size={20} />
               </div>
@@ -493,10 +493,10 @@ const Messaging = ({ isReadOnly = false }) => {
               </div>
             </div>
 
-            {/* Messages */}
+            {/* Messages - Scrollable */}
             <div 
               ref={messageContainerRef}
-              className="flex-1 overflow-y-auto p-4 bg-[#f0f2f5]"
+              className="flex-1 overflow-y-auto p-4 bg-[#f0f2f5] min-h-0"
               data-testid="messages-container"
             >
               {messages.length === 0 ? (
