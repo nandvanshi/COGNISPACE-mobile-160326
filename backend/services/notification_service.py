@@ -201,6 +201,7 @@ class NotificationService:
                 template_data = {
                     "appointment_time": appointment_datetime,
                     "therapist_name": therapist_name,
+                    "client_name": client_name,
                     "duration": duration,
                     "dashboard_url": dashboard_url,
                 }
