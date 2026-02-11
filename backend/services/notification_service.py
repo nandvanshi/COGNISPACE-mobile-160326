@@ -79,24 +79,29 @@ class NotificationService:
             logger.error(f"WhatsApp error for therapist {mobile}: {e}")
         
         # Send Email - detailed welcome with guide
-        try:
-            template_data = {
-                "therapist_name": name,
-                "mobile": mobile,
-                "password": password,
-                "trial_end_date": trial_end_date,
-                "login_url": login_url,
-            }
-            email_content = get_email_template("therapist_welcome", template_data)
-            await EmailService.send_email(
-                to_email=email,
-                subject=email_content["subject"],
-                html_body=email_content["html_body"],
-                text_body=email_content["text_body"]
-            )
-            logger.info(f"Welcome email sent to therapist {email}")
-        except Exception as e:
-            logger.error(f"Email error for therapist {email}: {e}")
+        if email:
+            try:
+                template_data = {
+                    "therapist_name": name,
+                    "mobile": mobile,
+                    "password": password,
+                    "trial_end_date": trial_end_date,
+                    "login_url": login_url,
+                }
+                email_content = get_email_template("therapist_welcome", template_data)
+                message = EmailMessage(
+                    to_email=email,
+                    subject=email_content["subject"],
+                    html_body=email_content["html_body"],
+                    text_body=email_content["text_body"]
+                )
+                result = await EmailProviderRegistry.send_email(message)
+                if result.success:
+                    logger.info(f"Welcome email sent to therapist {email}")
+                else:
+                    logger.warning(f"Email failed for therapist {email}: {result.error}")
+            except Exception as e:
+                logger.error(f"Email error for therapist {email}: {e}")
     
     @staticmethod
     async def send_client_welcome(
