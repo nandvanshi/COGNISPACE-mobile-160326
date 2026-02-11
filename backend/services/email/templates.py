@@ -199,8 +199,7 @@ def template_welcome_credentials(data: Dict[str, Any]) -> Dict[str, str]:
 
 
 def template_therapist_welcome(data: Dict[str, Any]) -> Dict[str, str]:
-    """Template for therapist account approval with login credentials"""
-    # Show password only if it was auto-generated (not set by therapist during registration)
+    """Template for therapist account approval with login credentials and platform guide"""
     password_section = ""
     if data.get('password'):
         password_section = f"""
@@ -219,9 +218,9 @@ def template_therapist_welcome(data: Dict[str, Any]) -> Dict[str, str]:
         """
     
     content = f"""
-    <p class="greeting">🎉 Congratulations, Dr. {data.get('therapist_name', '')}!</p>
+    <p class="greeting">🎉 Welcome to COGNISPACE, {data.get('therapist_name', '')}!</p>
     <p class="message">
-        Your COGNISPACE therapist account has been <strong>approved</strong>. You now have access to our comprehensive practice management platform.
+        Your COGNISPACE therapist account has been <strong>approved</strong>. You now have access to our comprehensive practice management platform designed specifically for mental health professionals.
     </p>
     
     <div class="credentials-box">
@@ -236,31 +235,151 @@ def template_therapist_welcome(data: Dict[str, Any]) -> Dict[str, str]:
         <h4>📅 Your Free Trial</h4>
         <p><strong>Trial Period:</strong> 14 Days</p>
         <p><strong>Trial Ends:</strong> {data.get('trial_end_date', 'N/A')}</p>
-        <p>Explore all features during your trial. Contact us to upgrade anytime.</p>
+        <p>Explore all premium features during your trial period.</p>
     </div>
     
-    <div class="info-box">
-        <h4>✨ What You Can Do</h4>
-        <ul style="margin: 10px 0; padding-left: 20px;">
-            <li>Manage your clients and appointments</li>
-            <li>Create session notes and assessments</li>
-            <li>Use TheraGenie AI for clinical support</li>
-            <li>Generate diagnostic reports with CogniVision</li>
-            <li>Track payments and manage your practice</li>
+    <div class="divider"></div>
+    
+    <h3 style="color: #0d5c4d;">📖 Quick Start Guide</h3>
+    
+    <div class="info-box" style="background: #e3f2fd; border-color: #2196f3;">
+        <h4 style="color: #1565c0;">1️⃣ Client Management</h4>
+        <ul style="margin: 10px 0; padding-left: 20px; color: #333;">
+            <li>Add clients manually or share your unique registration link</li>
+            <li>Maintain complete client profiles with case history</li>
+            <li>Track progress and manage treatment plans</li>
         </ul>
     </div>
     
-    <a href="{data.get('login_url', 'https://cognispace.in/login')}" class="button">Login to COGNISPACE</a>
+    <div class="info-box" style="background: #f3e5f5; border-color: #9c27b0;">
+        <h4 style="color: #7b1fa2;">2️⃣ Appointments & Sessions</h4>
+        <ul style="margin: 10px 0; padding-left: 20px; color: #333;">
+            <li>Schedule appointments with automated reminders</li>
+            <li>Create detailed session notes (SOAP format supported)</li>
+            <li>Use quick session templates for efficiency</li>
+        </ul>
+    </div>
     
-    <p class="message" style="margin-top: 20px; font-size: 14px;">
-        Need help? Contact us at <a href="mailto:care@cognispace.in">care@cognispace.in</a> or WhatsApp us at <a href="https://wa.me/917348700555">+91 7348700555</a>
-    </p>
+    <div class="info-box" style="background: #fff3e0; border-color: #ff9800;">
+        <h4 style="color: #ef6c00;">3️⃣ TheraGenie AI Assistant</h4>
+        <ul style="margin: 10px 0; padding-left: 20px; color: #333;">
+            <li>Get AI-powered clinical insights and suggestions</li>
+            <li>Generate comprehensive psychodiagnostic reports</li>
+            <li>Use CogniVision for symptom analysis</li>
+        </ul>
+    </div>
+    
+    <div class="info-box" style="background: #e8f5e9; border-color: #4caf50;">
+        <h4 style="color: #2e7d32;">4️⃣ Payments & Reports</h4>
+        <ul style="margin: 10px 0; padding-left: 20px; color: #333;">
+            <li>Track session payments and generate receipts</li>
+            <li>View revenue reports and analytics</li>
+            <li>Export data for accounting purposes</li>
+        </ul>
+    </div>
+    
+    <div class="info-box" style="background: #fce4ec; border-color: #e91e63;">
+        <h4 style="color: #c2185b;">5️⃣ Secure Messaging</h4>
+        <ul style="margin: 10px 0; padding-left: 20px; color: #333;">
+            <li>Communicate securely with clients</li>
+            <li>Enable/disable messaging per client</li>
+            <li>All messages are encrypted</li>
+        </ul>
+    </div>
+    
+    <div class="divider"></div>
+    
+    <a href="{data.get('login_url', 'https://cognispace.in/login')}" class="button" style="display: block; text-align: center;">🚀 Login to COGNISPACE</a>
+    
+    <div class="divider"></div>
+    
+    <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin-top: 20px;">
+        <h4 style="margin: 0 0 10px 0; color: #0d5c4d;">Need Help?</h4>
+        <p style="margin: 5px 0; font-size: 14px;">📧 Email: <a href="mailto:care@cognispace.in">care@cognispace.in</a></p>
+        <p style="margin: 5px 0; font-size: 14px;">📱 WhatsApp: <a href="https://wa.me/917348700555">+91 7348700555</a></p>
+        <p style="margin: 5px 0; font-size: 14px; color: #666;">We're here to help you get started!</p>
+    </div>
     """
     
     return {
         "subject": "🎉 Welcome to COGNISPACE - Your Account is Approved!",
         "html_body": get_base_template(content, "Welcome to COGNISPACE"),
-        "text_body": f"Congratulations Dr. {data.get('therapist_name')}! Your COGNISPACE account is approved. Login ID: {data.get('mobile')}. Trial Period: 14 days. Login at {data.get('login_url', 'https://cognispace.in/login')}"
+        "text_body": f"Welcome {data.get('therapist_name')}! Your COGNISPACE account is approved. Login ID: {data.get('mobile')}. Trial Period: 14 days. Login at {data.get('login_url', 'https://cognispace.in/login')}"
+    }
+
+
+def template_client_welcome(data: Dict[str, Any]) -> Dict[str, str]:
+    """Template for client account creation with login credentials and platform guide"""
+    content = f"""
+    <p class="greeting">🌟 Welcome to COGNISPACE, {data.get('client_name', '')}!</p>
+    <p class="message">
+        Your COGNISPACE client account has been created by <strong>{data.get('therapist_name', 'your therapist')}</strong>. You now have access to a secure platform to connect with your therapist and manage your therapy journey.
+    </p>
+    
+    <div class="credentials-box">
+        <h3>🔐 Your Login Credentials</h3>
+        <div class="credential-item">
+            <strong>Username:</strong> {data.get('username', data.get('mobile', 'N/A'))}
+        </div>
+        <div class="credential-item">
+            <strong>Password:</strong> {data.get('password', 'N/A')}
+        </div>
+    </div>
+    
+    <p class="message" style="color: #d32f2f; font-size: 14px;">
+        <strong>⚠️ Important:</strong> Please change your password after your first login for security.
+    </p>
+    
+    <div class="info-box">
+        <h4>👤 Your Therapist</h4>
+        <p><strong>Name:</strong> {data.get('therapist_name', 'N/A')}</p>
+    </div>
+    
+    <div class="divider"></div>
+    
+    <h3 style="color: #0d5c4d;">📱 How to Use the Portal</h3>
+    
+    <div class="info-box" style="background: #e3f2fd; border-color: #2196f3;">
+        <h4 style="color: #1565c0;">📅 View Appointments</h4>
+        <p style="margin: 5px 0; color: #333;">See your scheduled sessions and upcoming appointments on your dashboard.</p>
+    </div>
+    
+    <div class="info-box" style="background: #f3e5f5; border-color: #9c27b0;">
+        <h4 style="color: #7b1fa2;">💬 Message Your Therapist</h4>
+        <p style="margin: 5px 0; color: #333;">Use secure in-app messaging to communicate with your therapist between sessions.</p>
+    </div>
+    
+    <div class="info-box" style="background: #e8f5e9; border-color: #4caf50;">
+        <h4 style="color: #2e7d32;">📊 Track Your Progress</h4>
+        <p style="margin: 5px 0; color: #333;">View your session history and any shared reports or assessments.</p>
+    </div>
+    
+    <div class="info-box" style="background: #fff3e0; border-color: #ff9800;">
+        <h4 style="color: #ef6c00;">💳 View Payments</h4>
+        <p style="margin: 5px 0; color: #333;">Track your payment history and view receipts for sessions.</p>
+    </div>
+    
+    <div class="divider"></div>
+    
+    <a href="{data.get('login_url', 'https://cognispace.in/login')}" class="button" style="display: block; text-align: center;">🚀 Login to Your Account</a>
+    
+    <div class="divider"></div>
+    
+    <div style="background: #fce4ec; padding: 15px; border-radius: 8px; margin-top: 20px;">
+        <p style="margin: 0; font-size: 14px; color: #c2185b;">
+            <strong>🔒 Privacy First:</strong> All your information is secure and confidential. Only you and your therapist can access your data.
+        </p>
+    </div>
+    
+    <p class="message" style="margin-top: 20px; font-size: 14px;">
+        For any questions, please contact your therapist directly through the portal.
+    </p>
+    """
+    
+    return {
+        "subject": f"🌟 Welcome to COGNISPACE - Your Client Account",
+        "html_body": get_base_template(content, "Welcome to COGNISPACE"),
+        "text_body": f"Welcome {data.get('client_name')}! Your COGNISPACE account has been created by {data.get('therapist_name')}. Username: {data.get('username', data.get('mobile'))}. Password: {data.get('password')}. Login at {data.get('login_url', 'https://cognispace.in/login')}"
     }
 
 
