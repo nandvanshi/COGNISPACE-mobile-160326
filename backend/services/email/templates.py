@@ -658,6 +658,8 @@ def template_daily_payment_statement(data: Dict[str, Any]) -> Dict[str, str]:
 # Template registry
 EMAIL_TEMPLATES = {
     "welcome_credentials": template_welcome_credentials,
+    "therapist_welcome": template_therapist_welcome,
+    "client_welcome": template_client_welcome,
     "password_changed": template_password_changed,
     "appointment_confirmation": template_appointment_confirmation,
     "appointment_confirmation_therapist": template_appointment_confirmation_therapist,
