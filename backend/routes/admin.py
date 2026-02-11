@@ -272,50 +272,15 @@ async def send_therapist_welcome_notifications(
     login_url = "https://cognispace.in/login"
     
     # Send Email
-    if email:
-        try:
-            template_data = {
-                "therapist_name": therapist_name,
-                "mobile": mobile,
-                "password": password,  # Will be None if therapist set their own
-                "trial_end_date": trial_end_date,
-                "login_url": login_url
-            }
-            email_content = template_therapist_welcome(template_data)
-            await EmailService.send_email(
-                to_email=email,
-                subject=email_content["subject"],
-                html_body=email_content["html_body"],
-                text_body=email_content["text_body"]
-            )
-            logger.info(f"Welcome email sent to {email}")
-        except Exception as e:
-            logger.error(f"Failed to send welcome email: {e}")
-    
-    # Send WhatsApp using approved template
-    # Template: cogni_1st (HXc374601a165b80488fdc52a01a140d2b)
-    # Message: "Hi {{1}}, Your CogniSpace account has been approved. 
-    #          Please check your registered email for login details and next steps."
-    try:
-        COGNISPACE_WELCOME_TEMPLATE_SID = "HXc374601a165b80488fdc52a01a140d2b"
-        
-        # Template variable: {{1}} = therapist full name
-        content_variables = {
-            "1": f"Dr. {therapist_name}"
-        }
-        
-        result = await WhatsAppService.send_template_message(
-            to_mobile=mobile,
-            content_sid=COGNISPACE_WELCOME_TEMPLATE_SID,
-            content_variables=content_variables
-        )
-        
-        if result.success:
-            logger.info(f"Welcome WhatsApp sent to {mobile} using template cogni_1st")
-        else:
-            logger.warning(f"WhatsApp send failed: {result.error}")
-    except Exception as e:
-        logger.error(f"Failed to send welcome WhatsApp: {e}")
+    # Send welcome notifications (WhatsApp + Email)
+    await NotificationService.send_therapist_welcome(
+        name=therapist_name,
+        mobile=mobile,
+        email=email,
+        password=password,
+        trial_end_date=trial_end_date,
+        login_url=login_url
+    )
 
 
 @router.post("/therapist-applications/{application_id}/reject")
