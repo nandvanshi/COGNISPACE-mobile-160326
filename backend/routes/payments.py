@@ -133,6 +133,7 @@ async def record_payment(payment_data: PaymentCreate, current_user: dict = Depen
         raise HTTPException(status_code=403, detail="Access denied - client not assigned to you")
     
     therapist = await db.users.find_one({"id": therapist_id}, {"_id": 0})
+    therapist_name = therapist.get("full_name") if therapist else "Your Therapist"
     
     bill_number = await generate_bill_number()
     payment_id = str(uuid.uuid4())
@@ -141,7 +142,7 @@ async def record_payment(payment_data: PaymentCreate, current_user: dict = Depen
         "id": payment_id,
         "bill_number": bill_number,
         "therapist_id": therapist_id,
-        "therapist_name": therapist.get("full_name") if therapist else None,
+        "therapist_name": therapist_name,
         "client_id": payment_data.client_id,
         "client_name": client["full_name"],
         "client_code": client.get("client_id"),
@@ -157,7 +158,7 @@ async def record_payment(payment_data: PaymentCreate, current_user: dict = Depen
     await db.payments.insert_one(payment_doc)
     await log_audit(current_user["id"], current_user["role"], "create", "payment", payment_id)
     
-    # Send notification to client about payment receipt
+    # Send notification to client about payment receipt (in-app)
     try:
         from routes.notifications import notify_client_payment_receipt
         await notify_client_payment_receipt(
@@ -166,7 +167,23 @@ async def record_payment(payment_data: PaymentCreate, current_user: dict = Depen
             payment_id
         )
     except Exception as e:
-        print(f"Failed to send payment notification: {e}")
+        print(f"Failed to send in-app payment notification: {e}")
+    
+    # Send WhatsApp and Email notification to client about payment
+    if payment_data.payment_status == "paid":
+        try:
+            await NotificationService.send_payment_received(
+                client_name=client["full_name"],
+                client_mobile=client.get("mobile"),
+                client_email=client.get("email"),
+                therapist_name=therapist_name,
+                amount=payment_data.amount,
+                payment_date=payment_doc["created_at"],
+                receipt_number=bill_number,
+                payment_method=payment_data.payment_method
+            )
+        except Exception as e:
+            print(f"Failed to send payment WhatsApp/Email: {e}")
     
     return Payment(
         id=payment_id,
