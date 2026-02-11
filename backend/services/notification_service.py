@@ -90,7 +90,7 @@ class NotificationService:
                 }
                 email_content = get_email_template("therapist_welcome", template_data)
                 message = EmailMessage(
-                    to_email=email,
+                    to=email,
                     subject=email_content["subject"],
                     html_body=email_content["html_body"],
                     text_body=email_content["text_body"]
@@ -145,7 +145,7 @@ class NotificationService:
                 }
                 email_content = get_email_template("client_welcome", template_data)
                 message = EmailMessage(
-                    to_email=email,
+                    to=email,
                     subject=email_content["subject"],
                     html_body=email_content["html_body"],
                     text_body=email_content["text_body"]
@@ -206,7 +206,7 @@ class NotificationService:
                 }
                 email_content = get_email_template("appointment_confirmation", template_data)
                 message = EmailMessage(
-                    to_email=client_email,
+                    to=client_email,
                     subject=email_content["subject"],
                     html_body=email_content["html_body"],
                     text_body=email_content["text_body"]
@@ -264,7 +264,7 @@ class NotificationService:
                 }
                 email_content = get_email_template("appointment_reminder", template_data)
                 message = EmailMessage(
-                    to_email=client_email,
+                    to=client_email,
                     subject=email_content["subject"],
                     html_body=email_content["html_body"],
                     text_body=email_content["text_body"]
@@ -327,7 +327,7 @@ class NotificationService:
                 }
                 email_content = get_email_template("payment_receipt", template_data)
                 message = EmailMessage(
-                    to_email=client_email,
+                    to=client_email,
                     subject=email_content["subject"],
                     html_body=email_content["html_body"],
                     text_body=email_content["text_body"]
