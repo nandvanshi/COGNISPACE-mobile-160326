@@ -144,13 +144,17 @@ class NotificationService:
                     "login_url": login_url,
                 }
                 email_content = get_email_template("client_welcome", template_data)
-                await EmailService.send_email(
+                message = EmailMessage(
                     to_email=email,
                     subject=email_content["subject"],
                     html_body=email_content["html_body"],
                     text_body=email_content["text_body"]
                 )
-                logger.info(f"Welcome email sent to client {email}")
+                result = await EmailProviderRegistry.send_email(message)
+                if result.success:
+                    logger.info(f"Welcome email sent to client {email}")
+                else:
+                    logger.warning(f"Email failed for client {email}: {result.error}")
             except Exception as e:
                 logger.error(f"Email error for client {email}: {e}")
     
