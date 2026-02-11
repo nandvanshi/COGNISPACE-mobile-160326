@@ -328,13 +328,15 @@ class NotificationService:
                     "receipt_number": receipt_number or "N/A",
                     "payment_method": payment_method,
                     "therapist_name": therapist_name,
+                    "client_name": client_name,
                 }
                 email_content = get_email_template("payment_receipt", template_data)
                 message = EmailMessage(
                     to=client_email,
                     subject=email_content["subject"],
                     html_body=email_content["html_body"],
-                    text_body=email_content["text_body"]
+                    text_body=email_content["text_body"],
+                    from_name=therapist_name  # Sender name = Therapist name
                 )
                 result = await EmailProviderRegistry.send_email(message)
                 if result.success:
