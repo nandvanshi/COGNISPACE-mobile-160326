@@ -7,7 +7,7 @@ WhatsApp Templates - Twilio Content Template SIDs and helper functions
 # 1. Welcome Message - For new therapist/client approval
 TEMPLATE_WELCOME = {
     "name": "cogni_1st",
-    "sid": "HXc374601a165b80488fdc52a01a140d",
+    "sid": "HXc374601a165b80488fdc52a01a140d2b",
     "variables": ["name"],  # {{1}} -> Full name (without auto Dr. prefix)
 }
 
