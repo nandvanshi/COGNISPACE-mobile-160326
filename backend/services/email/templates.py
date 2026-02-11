@@ -409,30 +409,66 @@ def template_password_changed(data: Dict[str, Any]) -> Dict[str, str]:
 
 
 def template_appointment_confirmation(data: Dict[str, Any]) -> Dict[str, str]:
-    """Template for appointment confirmation"""
+    """Template for appointment confirmation - Client receives this"""
+    # Parse date and time for display
+    appt_time = data.get('appointment_time', '')
+    therapist_name = data.get('therapist_name', 'Your Therapist')
+    client_name = data.get('client_name', 'Dear Client')
+    date_display = format_ist_datetime(appt_time).split(' ')[0] if appt_time else 'N/A'
+    time_display = format_ist_datetime(appt_time).split(' ')[1] if appt_time and len(format_ist_datetime(appt_time).split(' ')) > 1 else 'N/A'
+    
     content = f"""
-    <p class="greeting">Appointment Confirmed!</p>
+    <p class="greeting">Dear {client_name},</p>
+    
     <p class="message">
-        Your appointment has been successfully scheduled.
+        We are pleased to confirm your appointment with <strong>{therapist_name}</strong> on:
     </p>
     
-    <div class="info-box">
-        <p><strong>📅 Date & Time:</strong> {format_ist_datetime(data.get('appointment_time', ''))}</p>
-        <p><strong>👤 With:</strong> {data.get('therapist_name', 'Your Therapist')}</p>
-        <p><strong>⏱️ Duration:</strong> {data.get('duration', '50')} minutes</p>
+    <div class="info-box" style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 20px; margin: 20px 0;">
+        <p style="margin: 10px 0; font-size: 16px;"><strong>📅 Date:</strong> {date_display}</p>
+        <p style="margin: 10px 0; font-size: 16px;"><strong>⏰ Time:</strong> {time_display}</p>
+        <p style="margin: 10px 0; font-size: 16px;"><strong>⏱️ Duration:</strong> {data.get('duration', '50')} minutes</p>
     </div>
     
     <p class="message">
-        Please arrive 5-10 minutes before your scheduled time.
+        We look forward to supporting you during this session. Your commitment to your well-being is important, and we are here to ensure a smooth and meaningful experience.
     </p>
     
-    <a href="{data.get('dashboard_url', '#')}" class="button">View Appointment</a>
+    <div class="info-box" style="background: #e3f2fd; border-left: 4px solid #2196f3; padding: 15px; margin: 20px 0;">
+        <p style="margin: 0; font-size: 14px; color: #1565c0;">
+            <strong>💡 For online sessions:</strong> We recommend joining a few minutes early and ensuring a stable internet connection for an uninterrupted experience.
+        </p>
+    </div>
+    
+    <p class="message">
+        You may review your appointment details anytime through your client portal:
+    </p>
+    
+    <a href="{data.get('dashboard_url', 'https://cognispace.in/login')}" class="button" style="display: block; text-align: center; margin: 20px 0;">View Appointment</a>
+    
+    <p class="message" style="font-size: 14px; color: #666;">
+        If you need to make any changes or have questions regarding your session, please contact your therapist directly.
+    </p>
+    
+    <div class="divider" style="border-top: 1px solid #eee; margin: 20px 0;"></div>
+    
+    <p class="message">
+        We look forward to connecting with you.
+    </p>
+    
+    <p class="message" style="margin-top: 20px;">
+        <strong>Warm regards,</strong><br>
+        Team CogniSpace
+    </p>
     """
     
+    # Subject format: Appointment {{therapist name}} Confirmed - DD/MM/YYYY HH:MM
+    subject_date = format_ist_datetime(appt_time) if appt_time else ''
+    
     return {
-        "subject": f"Appointment Confirmed - {format_ist_datetime(data.get('appointment_time', ''))}",
+        "subject": f"Appointment {therapist_name} Confirmed - {subject_date}",
         "html_body": get_base_template(content, "Appointment Confirmed"),
-        "text_body": f"Your appointment with {data.get('therapist_name')} is confirmed for {format_ist_datetime(data.get('appointment_time'))}."
+        "text_body": f"Dear {client_name}, Your appointment with {therapist_name} is confirmed for {format_ist_datetime(appt_time)}. We look forward to connecting with you. - Team CogniSpace"
     }
 
 
