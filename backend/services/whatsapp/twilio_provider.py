@@ -309,6 +309,8 @@ class TwilioWhatsAppProvider(WhatsAppProviderBase):
         content_variables: str
     ):
         """Synchronous template message send (called via asyncio.to_thread)"""
+        logger.info(f"Sending template message: content_sid={content_sid}, variables={content_variables}")
+        logger.info(f"From: {from_number}, To: {to_number}")
         return self._client.messages.create(
             from_=from_number,
             to=to_number,
