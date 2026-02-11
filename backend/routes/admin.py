@@ -13,9 +13,7 @@ from dependencies import (
     get_current_user, hash_password, log_audit, validate_mobile,
     DEFAULT_FEATURE_TOGGLES
 )
-from services.email.service import EmailService
-from services.email.templates import template_therapist_welcome
-from services.whatsapp.service import WhatsAppService
+from services.notification_service import NotificationService
 
 logger = logging.getLogger(__name__)
 
