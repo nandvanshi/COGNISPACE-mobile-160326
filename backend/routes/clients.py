@@ -11,6 +11,7 @@ from database import db
 from dependencies import (
     get_current_user, hash_password, log_audit, validate_mobile, generate_client_id
 )
+from services.notification_service import NotificationService
 
 router = APIRouter(prefix="/clients", tags=["clients"])
 
