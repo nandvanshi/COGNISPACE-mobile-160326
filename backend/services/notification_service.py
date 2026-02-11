@@ -16,7 +16,8 @@ from services.whatsapp.templates import (
     get_appointment_reminder_variables,
     get_payment_received_variables,
 )
-from services.email.service import EmailService
+from services.email.registry import EmailProviderRegistry
+from services.email.base import EmailMessage
 from services.email.templates import get_email_template
 
 logger = logging.getLogger(__name__)
