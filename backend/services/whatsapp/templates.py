@@ -14,7 +14,7 @@ TEMPLATE_WELCOME = {
 # 2. Appointment Confirmation - When appointment is fixed
 TEMPLATE_APPOINTMENT_CONFIRMED = {
     "name": "cogni_appointment",
-    "sid": "HX6d3de8806ccd2116c7a5b32fe79f825",
+    "sid": "HX6d3de8806ccd2116c7a5b32fe79f8252",
     "variables": ["client_name", "therapist_name", "date", "time"],
 }
 
