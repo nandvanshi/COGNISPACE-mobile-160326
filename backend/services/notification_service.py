@@ -326,12 +326,16 @@ class NotificationService:
                     "therapist_name": therapist_name,
                 }
                 email_content = get_email_template("payment_receipt", template_data)
-                await EmailService.send_email(
+                message = EmailMessage(
                     to_email=client_email,
                     subject=email_content["subject"],
                     html_body=email_content["html_body"],
                     text_body=email_content["text_body"]
                 )
-                logger.info(f"Payment email sent to {client_email}")
+                result = await EmailProviderRegistry.send_email(message)
+                if result.success:
+                    logger.info(f"Payment email sent to {client_email}")
+                else:
+                    logger.warning(f"Email failed for {client_email}: {result.error}")
             except Exception as e:
                 logger.error(f"Email error for {client_email}: {e}")
