@@ -462,11 +462,11 @@ def template_appointment_confirmation(data: Dict[str, Any]) -> Dict[str, str]:
     </p>
     """
     
-    # Subject format: Appointment {{therapist name}} Confirmed - DD/MM/YYYY HH:MM
+    # Subject format: Appointment Confirmed - DD/MM/YYYY HH:MM
     subject_date = format_ist_datetime(appt_time) if appt_time else ''
     
     return {
-        "subject": f"Appointment {therapist_name} Confirmed - {subject_date}",
+        "subject": f"Appointment Confirmed - {subject_date}",
         "html_body": get_base_template(content, "Appointment Confirmed"),
         "text_body": f"Dear {client_name}, Your appointment with {therapist_name} is confirmed for {format_ist_datetime(appt_time)}. We look forward to connecting with you. - Team CogniSpace"
     }
