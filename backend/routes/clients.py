@@ -154,6 +154,20 @@ async def create_client(client_data: ClientCreate, current_user: dict = Depends(
     await db.client_profiles.insert_one(profile_doc)
     await log_audit(current_user["id"], current_user["role"], "create", "client", client_id)
     
+    # Get therapist name for notifications
+    therapist = await db.users.find_one({"id": therapist_id}, {"_id": 0, "full_name": 1})
+    therapist_name = therapist.get("full_name", "Your Therapist") if therapist else "Your Therapist"
+    
+    # Send welcome notifications (WhatsApp + Email)
+    await NotificationService.send_client_welcome(
+        client_name=client_data.full_name,
+        mobile=client_data.mobile,
+        email=client_data.email,
+        username=client_data.mobile,
+        password=client_data.password,
+        therapist_name=therapist_name
+    )
+    
     return ClientProfile(
         id=client_id,
         client_id=unique_client_id,
