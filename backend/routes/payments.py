@@ -9,6 +9,7 @@ import uuid
 
 from database import db
 from dependencies import get_current_user, log_audit, check_feature_enabled
+from services.notification_service import NotificationService
 
 router = APIRouter(prefix="/payments", tags=["payments"])
 
