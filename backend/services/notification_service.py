@@ -262,6 +262,7 @@ class NotificationService:
                 template_data = {
                     "appointment_time": appointment_datetime,
                     "therapist_name": therapist_name,
+                    "client_name": client_name,
                     "time_until": "1 hour",
                 }
                 email_content = get_email_template("appointment_reminder", template_data)
@@ -269,7 +270,8 @@ class NotificationService:
                     to=client_email,
                     subject=email_content["subject"],
                     html_body=email_content["html_body"],
-                    text_body=email_content["text_body"]
+                    text_body=email_content["text_body"],
+                    from_name=therapist_name  # Sender name = Therapist name
                 )
                 result = await EmailProviderRegistry.send_email(message)
                 if result.success:
