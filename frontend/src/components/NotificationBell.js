@@ -137,7 +137,12 @@ const NotificationBell = ({ onNavigate }) => {
       setNotifications(prev => 
         prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
       );
-      setUnreadCount(prev => Math.max(0, prev - 1));
+      const newCount = Math.max(0, unreadCount - 1);
+      setUnreadCount(newCount);
+      prevUnreadCountRef.current = newCount;
+      
+      // Update app badge
+      notificationService.setUnreadCount(newCount);
       
       // Navigate if link provided
       if (link && onNavigate) {
@@ -155,6 +160,11 @@ const NotificationBell = ({ onNavigate }) => {
       await axios.patch(`${API}/notifications/mark-all-read`);
       setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
       setUnreadCount(0);
+      prevUnreadCountRef.current = 0;
+      
+      // Clear app badge
+      notificationService.clearBadge();
+      
       toast.success('All notifications marked as read');
     } catch (error) {
       toast.error('Failed to mark all as read');
@@ -167,6 +177,11 @@ const NotificationBell = ({ onNavigate }) => {
       await axios.delete(`${API}/notifications/clear-all`);
       setNotifications([]);
       setUnreadCount(0);
+      prevUnreadCountRef.current = 0;
+      
+      // Clear app badge
+      notificationService.clearBadge();
+      
       toast.success('All notifications cleared');
     } catch (error) {
       toast.error('Failed to clear notifications');
