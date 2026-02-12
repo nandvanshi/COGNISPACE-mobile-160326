@@ -168,6 +168,7 @@ const Payments = ({ isReadOnly = false }) => {
               <tr>
                 <th className="px-6 py-4 text-left text-sm font-medium text-foreground">Date</th>
                 <th className="px-6 py-4 text-left text-sm font-medium text-foreground">Client</th>
+                <th className="px-6 py-4 text-left text-sm font-medium text-foreground">Type</th>
                 <th className="px-6 py-4 text-left text-sm font-medium text-foreground">Amount</th>
                 <th className="px-6 py-4 text-left text-sm font-medium text-foreground">Method</th>
                 <th className="px-6 py-4 text-left text-sm font-medium text-foreground">Notes</th>
@@ -182,8 +183,19 @@ const Payments = ({ isReadOnly = false }) => {
                   <td className="px-6 py-4 text-sm text-foreground font-medium">
                     {payment.client_name}
                   </td>
-                  <td className="px-6 py-4 text-sm text-foreground font-medium">
-                    {formatCurrency(payment.amount)}
+                  <td className="px-6 py-4">
+                    {payment.transaction_type === 'debit' ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                        <ArrowDownCircle size={12} /> Debit
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                        <ArrowUpCircle size={12} /> Credit
+                      </span>
+                    )}
+                  </td>
+                  <td className={`px-6 py-4 text-sm font-medium ${payment.transaction_type === 'debit' ? 'text-red-600' : 'text-foreground'}`}>
+                    {payment.transaction_type === 'debit' ? '-' : ''}{formatCurrency(payment.amount)}
                   </td>
                   <td className="px-6 py-4 text-sm text-muted-foreground capitalize">
                     {payment.payment_method === 'bank_transfer' ? 'Bank Transfer' : 
