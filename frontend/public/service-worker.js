@@ -184,18 +184,43 @@ self.addEventListener('push', (event) => {
 
   const data = event.data.json();
   const options = {
-    body: data.body || 'New notification from TheraGenie',
+    body: data.body || 'New notification from COGNISPACE',
     icon: '/icons/icon-192x192.png',
     badge: '/icons/icon-72x72.png',
-    vibrate: [100, 50, 100],
+    vibrate: [200, 100, 200],
+    tag: data.tag || 'cognispace-notification',
+    renotify: true,
+    requireInteraction: data.requireInteraction || false,
+    silent: data.silent || false,
     data: {
-      url: data.url || '/'
+      url: data.url || '/',
+      playSound: data.playSound !== false,
+      notificationId: data.notificationId
     },
     actions: data.actions || []
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title || 'TheraGenie', options)
+    self.registration.showNotification(data.title || 'COGNISPACE', options)
+      .then(() => {
+        // Update badge count
+        if (data.badgeCount !== undefined && navigator.setAppBadge) {
+          navigator.setAppBadge(data.badgeCount);
+        }
+        
+        // Notify all clients to play sound if enabled
+        if (data.playSound !== false) {
+          self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+            .then((windowClients) => {
+              windowClients.forEach((client) => {
+                client.postMessage({
+                  type: 'PLAY_NOTIFICATION_SOUND',
+                  notificationId: data.notificationId
+                });
+              });
+            });
+        }
+      })
   );
 });
 
