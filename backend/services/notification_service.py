@@ -496,11 +496,11 @@ class NotificationService:
         signature_method: str,
         therapist_email: Optional[str],
         assistant_email: Optional[str],
+        client_email: Optional[str] = None,
         dashboard_url: str = "https://cognispace.in/login"
     ):
         """
-        Notify therapist and assistant when client accepts consent form.
-        Only via email.
+        Notify therapist, assistant, and client when consent form is signed.
         """
         template_data = {
             "client_name": client_name,
@@ -510,6 +510,8 @@ class NotificationService:
             "consent_summary": "Informed Consent for Psychological Services",
             "dashboard_url": dashboard_url
         }
+        
+        # Send to therapist and assistant
         email_content = get_email_template("consent_accepted", template_data)
         
         recipients = []
@@ -533,6 +535,25 @@ class NotificationService:
                     logger.warning(f"Email failed for {role} {email}: {result.error}")
             except Exception as e:
                 logger.error(f"Email error for {role} {email}: {e}")
+        
+        # Send confirmation to client
+        if client_email:
+            try:
+                client_email_content = get_email_template("consent_confirmation_client", template_data)
+                message = EmailMessage(
+                    to=client_email,
+                    subject=client_email_content["subject"],
+                    html_body=client_email_content["html_body"],
+                    text_body=client_email_content["text_body"],
+                    from_name=therapist_name  # Send from therapist's name
+                )
+                result = await EmailProviderRegistry.send_email(message)
+                if result.success:
+                    logger.info(f"Consent confirmation email sent to client: {client_email}")
+                else:
+                    logger.warning(f"Client email failed for {client_email}: {result.error}")
+            except Exception as e:
+                logger.error(f"Client email error for {client_email}: {e}")
 
     @staticmethod
     async def send_daily_summary(
