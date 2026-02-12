@@ -8,10 +8,11 @@ Build a secure, therapist-first web application named **COGNISPACE** for practic
 - **Client Management**: Full client lifecycle management
 - **Appointments**: Scheduling and management with automated notifications
 - **Session Notes**: Clinical documentation
-- **Messaging**: In-app communication (messenger-style)
+- **Messaging**: In-app communication (messenger-style with soft delete)
 - **Payment Tracking**: Financial management with receipts
 - **TheraGenie & CogniVision**: AI module for clinical intelligence
 - **Notifications**: WhatsApp + Email notifications using Twilio templates
+- **PWA Sound & Badge**: Notification sounds and app icon badge count
 
 ## User's Preferred Language
 Hindi (User communicates in Hindi/Hinglish)
@@ -49,14 +50,22 @@ Hindi (User communicates in Hindi/Hinglish)
 
 ## What's Implemented ✅
 
+### Feb 12, 2026 - PWA Sound & Badge Notifications
+- [x] Backend API for user notification preferences (GET/PUT /api/notifications/preferences)
+- [x] Sound toggle in Settings - users can enable/disable notification sounds
+- [x] Badge toggle in Settings - users can enable/disable app icon badge count
+- [x] NotificationBell component plays sound on new notifications
+- [x] NotificationBell updates app badge count (PWA mode)
+- [x] notificationService.js manages sound/badge with localStorage fallback
+- [x] Fixed linting errors (E722 bare except) in payments.py and scheduler/jobs.py
+
 ### Feb 11, 2026 - Notification System Complete
 - [x] Centralized NotificationService for WhatsApp + Email
-- [x] Therapist welcome (WhatsApp template + detailed email with guide)
-- [x] Client welcome (WhatsApp template + detailed email with guide)
-- [x] Appointment confirmation (WhatsApp + Email to client)
-- [x] Appointment reminder 1 hour before (WhatsApp + Email)
-- [x] Payment received notification (WhatsApp + Email)
-- [x] Mobile-responsive messaging UI
+- [x] Forgot Password functionality with email reset link
+- [x] PWA login persistence (users stay logged in)
+- [x] Messaging UI overhaul (mobile-responsive, soft delete)
+- [x] Dynamic email sender names (therapist name for client emails)
+- [x] Client self-registration email notifications
 
 ### Previous Sessions
 - [x] JWT-based authentication for all roles
@@ -70,31 +79,43 @@ Hindi (User communicates in Hindi/Hinglish)
 ```
 /app/backend/
 ├── services/
-│   ├── notification_service.py    # NEW - Centralized notifications
+│   ├── notification_service.py    # Centralized notifications
 │   ├── whatsapp/
-│   │   ├── templates.py           # NEW - WhatsApp template definitions
-│   │   ├── service.py             # Updated
-│   │   └── twilio_provider.py     # Updated with template support
+│   │   ├── templates.py           # WhatsApp template definitions
+│   │   ├── service.py             # WhatsApp service
+│   │   └── twilio_provider.py     # Twilio integration
 │   ├── email/
-│   │   └── templates.py           # Updated with client_welcome
+│   │   └── templates.py           # Email templates
 │   └── scheduler/
-│       └── jobs.py                # Updated for 1-hour reminder
+│       └── jobs.py                # Scheduled jobs
 ├── routes/
-│   ├── admin.py                   # Updated - uses NotificationService
-│   ├── clients.py                 # Updated - sends welcome notifications
-│   ├── appointments.py            # Updated - sends appointment notifications
-│   └── payments.py                # Updated - sends payment notifications
+│   ├── notifications.py           # Notification API + User preferences
+│   ├── auth.py                    # Auth + Forgot Password
+│   ├── clients.py                 # Client management
+│   ├── appointments.py            # Appointment management
+│   └── payments.py                # Payment management
+
+/app/frontend/src/
+├── services/
+│   └── notificationService.js     # PWA sound & badge service
+├── components/
+│   ├── NotificationBell.js        # Notification bell with badge
+│   ├── NotificationSettings.js    # Sound/Badge settings UI
+│   └── Settings.js                # Main settings dialog
+└── public/
+    └── notification-sound.mp3     # Notification sound file
 ```
 
 ## Notification Flow
 
-| Event | WhatsApp | Email |
-|-------|----------|-------|
-| Therapist Approved | ✅ cogni_1st | ✅ Detailed welcome + guide |
-| Client Created | ✅ cogni_1st | ✅ Detailed welcome + guide |
-| Appointment Fixed | ✅ cogni_appointment | ✅ Confirmation |
-| 1 Hour Before | ✅ cogni_rem | ✅ Reminder |
-| Payment Received | ✅ cogni_pay | ✅ Receipt |
+| Event | WhatsApp | Email | PWA |
+|-------|----------|-------|-----|
+| Therapist Approved | ✅ cogni_1st | ✅ Detailed welcome | - |
+| Client Created | ✅ cogni_1st | ✅ Detailed welcome | - |
+| Appointment Fixed | ✅ cogni_appointment | ✅ Confirmation | 🔔 Sound + Badge |
+| 1 Hour Before | ✅ cogni_rem | ✅ Reminder | 🔔 Sound + Badge |
+| Payment Received | ✅ cogni_pay | ✅ Receipt | 🔔 Sound + Badge |
+| New Message | - | - | 🔔 Sound + Badge |
 
 ## Test Credentials
 | Role | Login ID | Password | URL |
@@ -104,10 +125,17 @@ Hindi (User communicates in Hindi/Hinglish)
 ## Known Issues
 - None currently
 
-## Pending Tasks
+## Pending Tasks (P1)
 - [ ] Profile photo upload (Therapist & Client)
-- [ ] Forgot Password functionality
 - [ ] AI-powered SOAP/DAP note generation
+- [ ] Client-facing diagnostic reports sharing
+
+## Future Tasks (P2)
+- [ ] Usage tracking/rate limiting for AI features
+- [ ] Note templates sharing feature
+- [ ] Coupon code management backend
+- [ ] N+1 query optimization in /api/clients
+- [ ] WhatsApp "Daily Morning Briefing" notification
 
 ---
-Last Updated: February 11, 2026
+Last Updated: February 12, 2026
