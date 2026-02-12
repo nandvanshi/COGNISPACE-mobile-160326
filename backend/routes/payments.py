@@ -762,7 +762,7 @@ async def export_payment_report(
             try:
                 dt = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
                 date_str = dt.strftime("%d/%m/%Y %I:%M %p")
-            except:
+            except (ValueError, AttributeError):
                 date_str = created_at[:10]
         
         export_data.append({
