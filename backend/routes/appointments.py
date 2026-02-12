@@ -525,17 +525,64 @@ async def update_appointment(appointment_id: str, data: AppointmentUpdate, curre
 
 
 @router.delete("/{appointment_id}")
-async def cancel_appointment(appointment_id: str, current_user: dict = Depends(require_active_therapist_or_assistant)):
-    """Cancel appointment"""
+async def cancel_appointment(
+    appointment_id: str, 
+    reason: str = "",
+    current_user: dict = Depends(require_active_therapist_or_assistant)
+):
+    """Cancel appointment and send notifications"""
     therapist_id = get_effective_therapist_id(current_user)
     
+    # Get appointment details before cancelling
+    appointment = await db.appointments.find_one(
+        {"id": appointment_id, "therapist_id": therapist_id},
+        {"_id": 0}
+    )
+    
+    if not appointment:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+    
+    # Cancel appointment
     result = await db.appointments.update_one(
         {"id": appointment_id, "therapist_id": therapist_id},
-        {"$set": {"status": "cancelled"}}
+        {"$set": {
+            "status": "cancelled",
+            "cancelled_by": current_user["id"],
+            "cancellation_reason": reason,
+            "cancelled_at": datetime.now(timezone.utc).isoformat()
+        }}
     )
     
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="Appointment not found")
+    
+    # Get client, therapist, and assistant details for notifications
+    client = await db.users.find_one({"id": appointment["client_id"]}, {"_id": 0})
+    therapist = await db.users.find_one({"id": therapist_id}, {"_id": 0})
+    
+    # Get assistant email if exists
+    assistant_email = None
+    assistant = await db.users.find_one(
+        {"therapist_id": therapist_id, "role": "assistant"},
+        {"_id": 0, "email": 1}
+    )
+    if assistant:
+        assistant_email = assistant.get("email")
+    
+    # Send cancellation notifications
+    try:
+        await NotificationService.send_appointment_cancellation(
+            client_name=client.get("full_name", "Client") if client else "Client",
+            client_email=client.get("email") if client else None,
+            therapist_name=therapist.get("full_name", "Therapist") if therapist else "Therapist",
+            therapist_email=therapist.get("email") if therapist else None,
+            assistant_email=assistant_email,
+            appointment_datetime=appointment.get("start_time", ""),
+            cancelled_by=current_user.get("full_name", current_user["role"]),
+            cancellation_reason=reason
+        )
+    except Exception as e:
+        print(f"Failed to send cancellation notifications: {e}")
     
     await log_audit(current_user["id"], current_user["role"], "cancel", "appointment", appointment_id)
     return {"message": "Appointment cancelled"}
