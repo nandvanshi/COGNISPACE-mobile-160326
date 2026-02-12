@@ -101,6 +101,7 @@ const AuthProvider = ({ children }) => {
 
   const login = (token, userData) => {
     localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(userData));
     setToken(token);
     setUser(userData);
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -119,6 +120,7 @@ const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     localStorage.removeItem('user-theme');
     setToken(null);
     setUser(null);
