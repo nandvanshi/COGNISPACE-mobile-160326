@@ -84,6 +84,18 @@ const LoginPage = () => {
                   className="mt-1"
                 />
               </div>
+              
+              <div className="flex justify-end mb-4">
+                <button
+                  type="button"
+                  onClick={() => navigate('/forgot-password')}
+                  className="text-sm text-primary hover:text-primary/80 hover:underline"
+                  data-testid="forgot-password-link"
+                >
+                  Forgot Password?
+                </button>
+              </div>
+              
               <Button
                 type="submit"
                 className="w-full bg-primary hover:bg-primary-700 text-white rounded-full h-12 text-base font-medium"
