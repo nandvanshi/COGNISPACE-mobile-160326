@@ -108,15 +108,35 @@ const Payments = ({ isReadOnly = false }) => {
 
       {/* Summary Card */}
       <Card className="mb-6 p-6 bg-white/70 backdrop-blur-xl border border-border/40 rounded-xl" data-testid="payment-summary">
-        <div className="flex items-center gap-4">
-          <div className="p-4 bg-success/10 rounded-lg">
-            <IndianRupee className="text-success" size={32} />
+        <div className="flex flex-wrap items-center gap-6">
+          <div className="flex items-center gap-4">
+            <div className="p-4 bg-success/10 rounded-lg">
+              <IndianRupee className="text-success" size={32} />
+            </div>
+            <div>
+              <p className="text-3xl font-bold text-primary">{formatCurrency(netTotal)}</p>
+              <p className="text-sm text-muted-foreground">
+                {filterClient ? 'Net Balance' : 'Net Revenue'}
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="text-3xl font-bold text-primary">{formatCurrency(totalRevenue)}</p>
-            <p className="text-sm text-muted-foreground">
-              {filterClient ? 'Client Total' : 'Total Revenue'}
-            </p>
+          
+          {/* Credit/Debit breakdown */}
+          <div className="flex gap-6 ml-auto">
+            <div className="flex items-center gap-2">
+              <ArrowUpCircle className="text-green-600" size={20} />
+              <div>
+                <p className="text-lg font-semibold text-green-600">{formatCurrency(creditTotal)}</p>
+                <p className="text-xs text-muted-foreground">Credit</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <ArrowDownCircle className="text-red-500" size={20} />
+              <div>
+                <p className="text-lg font-semibold text-red-500">{formatCurrency(debitTotal)}</p>
+                <p className="text-xs text-muted-foreground">Debit/Refund</p>
+              </div>
+            </div>
           </div>
         </div>
       </Card>
