@@ -1007,9 +1007,11 @@ EMAIL_TEMPLATES = {
     "client_self_registration": template_client_self_registration,
     "payment_receipt": template_payment_receipt,
     "payment_received_therapist": template_payment_received_therapist,
+    "consent_accepted": template_consent_accepted,
     "subscription_expiry": template_subscription_expiry,
     "daily_schedule_briefing": template_daily_schedule_briefing,
     "daily_payment_statement": template_daily_payment_statement,
+    "daily_summary": template_daily_summary,
 }
 
 
