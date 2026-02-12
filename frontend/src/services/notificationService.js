@@ -7,7 +7,9 @@ class NotificationService {
   constructor() {
     this.audio = null;
     this.soundEnabled = this.getSoundPreference();
-    this.permission = Notification.permission;
+    this.badgeEnabled = this.getBadgePreference();
+    this.permission = typeof Notification !== 'undefined' ? Notification.permission : 'denied';
+    this.unreadCount = 0;
     this.setupServiceWorkerListener();
   }
 
@@ -21,6 +23,21 @@ class NotificationService {
   setSoundPreference(enabled) {
     this.soundEnabled = enabled;
     localStorage.setItem('notification-sound-enabled', String(enabled));
+  }
+
+  // Get badge preference from localStorage
+  getBadgePreference() {
+    const pref = localStorage.getItem('notification-badge-enabled');
+    return pref === null ? true : pref === 'true';
+  }
+
+  // Set badge preference
+  setBadgePreference(enabled) {
+    this.badgeEnabled = enabled;
+    localStorage.setItem('notification-badge-enabled', String(enabled));
+    if (!enabled) {
+      this.clearBadge();
+    }
   }
 
   // Initialize audio element
@@ -48,7 +65,7 @@ class NotificationService {
 
   // Request notification permission
   async requestPermission() {
-    if (!('Notification' in window)) {
+    if (typeof Notification === 'undefined') {
       console.warn('Notifications not supported');
       return false;
     }
@@ -80,12 +97,25 @@ class NotificationService {
             window.location.href = event.data.url;
           }
         }
+        if (event.data?.type === 'UPDATE_UNREAD_COUNT') {
+          this.setUnreadCount(event.data.count);
+        }
       });
+    }
+  }
+
+  // Set unread count and update badge
+  setUnreadCount(count) {
+    this.unreadCount = count;
+    if (this.badgeEnabled) {
+      this.updateBadge(count);
     }
   }
 
   // Update app badge count
   async updateBadge(count) {
+    if (!this.badgeEnabled && count > 0) return;
+    
     // Try using Badging API directly
     if ('setAppBadge' in navigator) {
       try {
@@ -110,7 +140,23 @@ class NotificationService {
 
   // Clear badge
   async clearBadge() {
-    await this.updateBadge(0);
+    this.unreadCount = 0;
+    
+    if ('clearAppBadge' in navigator) {
+      try {
+        await navigator.clearAppBadge();
+      } catch (error) {
+        console.warn('Badge clear error:', error);
+      }
+    }
+    
+    // Also notify service worker
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        type: 'UPDATE_BADGE',
+        count: 0
+      });
+    }
   }
 
   // Show in-app notification (browser notification)
@@ -120,7 +166,7 @@ class NotificationService {
     if (!hasPermission) {
       console.warn('Notification permission not granted');
       // Still play sound if enabled
-      if (options.playSound !== false) {
+      if (options.playSound !== false && this.soundEnabled) {
         this.playSound();
       }
       return false;
@@ -156,6 +202,16 @@ class NotificationService {
     } catch (error) {
       console.error('Error showing notification:', error);
       return false;
+    }
+  }
+
+  // Notify about new notification received - play sound and update badge
+  onNewNotification(unreadCount) {
+    if (this.soundEnabled) {
+      this.playSound();
+    }
+    if (this.badgeEnabled) {
+      this.updateBadge(unreadCount);
     }
   }
 
