@@ -77,8 +77,9 @@ Hindi (User communicates in Hindi/Hinglish)
 | Appointment Cancelled | Client, Therapist, Assistant | appointment_cancellation |
 | Payment Received | Client | payment_receipt |
 | Payment Received | Therapist, Assistant | payment_received_therapist |
-| Consent Signed | Therapist, Assistant | **consent_accepted** (NEW) |
-| Daily Summary (7 AM) | Therapist, Assistant | **daily_summary** (NEW) |
+| Consent Signed | Therapist, Assistant | consent_accepted |
+| **Consent Signed** | **Client** | **consent_confirmation_client** (NEW) |
+| Daily Summary (7 AM) | Therapist, Assistant | daily_summary |
 | Client Self-Registration | Therapist, Assistant | client_self_registration |
 
 ### WhatsApp Templates (Twilio Approved)
