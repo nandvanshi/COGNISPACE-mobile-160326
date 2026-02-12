@@ -57,11 +57,13 @@ const Payments = ({ isReadOnly = false }) => {
         client_id: newPayment.client_id,
         amount: parseFloat(newPayment.amount),
         payment_method: newPayment.payment_method,
+        transaction_type: newPayment.transaction_type,
         notes: newPayment.notes,
       });
-      toast.success('Payment recorded');
+      const actionText = newPayment.transaction_type === 'debit' ? 'Refund recorded' : 'Payment recorded';
+      toast.success(actionText);
       setShowDialog(false);
-      setNewPayment({ client_id: '', amount: '', payment_method: 'cash', notes: '' });
+      setNewPayment({ client_id: '', amount: '', payment_method: 'cash', transaction_type: 'credit', notes: '' });
       fetchData();
     } catch (error) {
       toast.error('Failed to record payment');
