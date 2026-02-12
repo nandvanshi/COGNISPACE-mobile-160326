@@ -43,17 +43,17 @@ class TestPaymentDebitFeature:
         therapist = therapists_response.json()[0]
         therapist_mobile = therapist.get("mobile")
         
-        # Login as therapist
+        # Login as therapist (uses identifier field, not mobile)
         login_response = requests.post(
             f"{BASE_URL}/api/auth/login",
-            json={"mobile": therapist_mobile, "password": "Test@123"}
+            json={"identifier": therapist_mobile, "password": "Test@123"}
         )
         
         if login_response.status_code != 200:
             # Try default password
             login_response = requests.post(
                 f"{BASE_URL}/api/auth/login",
-                json={"mobile": therapist_mobile, "password": "password123"}
+                json={"identifier": therapist_mobile, "password": "password123"}
             )
         
         if login_response.status_code != 200:
@@ -364,13 +364,13 @@ class TestPaymentReportsWithTransactionType:
         
         login_response = requests.post(
             f"{BASE_URL}/api/auth/login",
-            json={"mobile": therapist_mobile, "password": "Test@123"}
+            json={"identifier": therapist_mobile, "password": "Test@123"}
         )
         
         if login_response.status_code != 200:
             login_response = requests.post(
                 f"{BASE_URL}/api/auth/login",
-                json={"mobile": therapist_mobile, "password": "password123"}
+                json={"identifier": therapist_mobile, "password": "password123"}
             )
         
         if login_response.status_code != 200:
