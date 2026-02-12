@@ -534,3 +534,143 @@ async def client_self_register(code: str, client_data: ClientSelfRegister):
         "client_id": unique_client_id,
         "therapist_name": therapist["full_name"]
     }
+
+
+# ============= FORGOT PASSWORD ENDPOINTS =============
+
+import secrets
+from datetime import timedelta
+from services.email.registry import EmailProviderRegistry
+from services.email.base import EmailMessage
+from services.email.templates import get_email_template
+
+
+@router.post("/forgot-password")
+async def forgot_password(request: ForgotPasswordRequest):
+    """
+    Send password reset link to user's email.
+    Works for therapists and clients.
+    """
+    identifier = request.identifier.strip()
+    
+    # Find user by email or mobile
+    user = await db.users.find_one(
+        {"$or": [{"email": identifier}, {"mobile": identifier}]},
+        {"_id": 0}
+    )
+    
+    if not user:
+        # Don't reveal if user exists - security best practice
+        return {"message": "If an account exists with this email/mobile, you will receive a password reset link."}
+    
+    if not user.get("email"):
+        raise HTTPException(
+            status_code=400, 
+            detail="No email associated with this account. Please contact support."
+        )
+    
+    # Generate secure reset token
+    reset_token = secrets.token_urlsafe(32)
+    token_expiry = datetime.now(timezone.utc) + timedelta(hours=1)
+    
+    # Store reset token in database
+    await db.password_reset_tokens.delete_many({"user_id": user["id"]})  # Remove old tokens
+    await db.password_reset_tokens.insert_one({
+        "user_id": user["id"],
+        "token": reset_token,
+        "email": user["email"],
+        "expires_at": token_expiry.isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "used": False
+    })
+    
+    # Get frontend URL from environment
+    frontend_url = os.environ.get("FRONTEND_URL", "https://cognispace.in")
+    reset_link = f"{frontend_url}/reset-password?token={reset_token}"
+    
+    # Send email
+    try:
+        email_content = get_email_template("password_reset", {
+            "user_name": user.get("full_name", "User"),
+            "reset_link": reset_link,
+            "expiry_hours": 1
+        })
+        
+        message = EmailMessage(
+            to=user["email"],
+            subject=email_content["subject"],
+            html_body=email_content["html_body"],
+            text_body=email_content["text_body"]
+        )
+        
+        result = await EmailProviderRegistry.send_email(message)
+        if not result.success:
+            raise Exception(result.error)
+            
+    except Exception as e:
+        print(f"Failed to send reset email: {e}")
+        raise HTTPException(status_code=500, detail="Failed to send reset email. Please try again.")
+    
+    await log_audit(user["id"], user["role"], "request_password_reset", "user", user["id"])
+    
+    return {"message": "If an account exists with this email/mobile, you will receive a password reset link."}
+
+
+@router.post("/verify-reset-token")
+async def verify_reset_token(request: VerifyResetTokenRequest):
+    """Verify if reset token is valid"""
+    token_doc = await db.password_reset_tokens.find_one(
+        {"token": request.token, "used": False},
+        {"_id": 0}
+    )
+    
+    if not token_doc:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset link")
+    
+    # Check expiry
+    expiry = datetime.fromisoformat(token_doc["expires_at"].replace('Z', '+00:00'))
+    if datetime.now(timezone.utc) > expiry:
+        raise HTTPException(status_code=400, detail="Reset link has expired. Please request a new one.")
+    
+    return {"valid": True, "email": token_doc["email"]}
+
+
+@router.post("/reset-password")
+async def reset_password(request: ResetPasswordRequest):
+    """Reset password using token"""
+    # Find and validate token
+    token_doc = await db.password_reset_tokens.find_one(
+        {"token": request.token, "used": False},
+        {"_id": 0}
+    )
+    
+    if not token_doc:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset link")
+    
+    # Check expiry
+    expiry = datetime.fromisoformat(token_doc["expires_at"].replace('Z', '+00:00'))
+    if datetime.now(timezone.utc) > expiry:
+        raise HTTPException(status_code=400, detail="Reset link has expired. Please request a new one.")
+    
+    # Validate new password
+    if len(request.new_password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+    
+    # Update password
+    await db.users.update_one(
+        {"id": token_doc["user_id"]},
+        {"$set": {"password_hash": hash_password(request.new_password)}}
+    )
+    
+    # Mark token as used
+    await db.password_reset_tokens.update_one(
+        {"token": request.token},
+        {"$set": {"used": True, "used_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    # Get user for logging
+    user = await db.users.find_one({"id": token_doc["user_id"]}, {"_id": 0, "role": 1})
+    await log_audit(token_doc["user_id"], user.get("role", "unknown"), "reset_password", "user", token_doc["user_id"])
+    
+    return {"message": "Password reset successful! You can now login with your new password."}
+
