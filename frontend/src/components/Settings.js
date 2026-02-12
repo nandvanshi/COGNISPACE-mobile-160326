@@ -5,10 +5,11 @@ import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { toast } from 'sonner';
-import { Settings as SettingsIcon, Palette, Loader2, Bell, Mail, MessageCircle, AlertTriangle } from 'lucide-react';
+import { Settings as SettingsIcon, Palette, Loader2, Bell, Mail, MessageCircle, AlertTriangle, Volume2, Smartphone } from 'lucide-react';
 import ThemePicker from './ThemePicker';
 import { applyTheme, getStoredTheme, DEFAULT_THEME } from '../config/themes';
 import { Switch } from './ui/switch';
+import notificationService from '../services/notificationService';
 
 const Settings = ({ isOpen, onClose }) => {
   const { user } = useAuth();
