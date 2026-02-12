@@ -394,6 +394,7 @@ async def update_payment(payment_id: str, data: PaymentUpdate, current_user: dic
         amount=updated["amount"],
         payment_method=updated.get("payment_method", "cash"),
         payment_status=updated.get("payment_status", "paid"),
+        transaction_type=updated.get("transaction_type", "credit"),
         appointment_id=updated.get("appointment_id"),
         session_note_id=updated.get("session_note_id"),
         notes=updated.get("notes"),
