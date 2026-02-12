@@ -98,7 +98,7 @@ async def _send_appointment_reminder(db, appointment: dict, time_until: str) -> 
                     if minutes_since_creation < 60:
                         logger.info(f"Skipping 60-min reminder for appointment {appointment.get('id')} - confirmation sent recently")
                         return False
-                except:
+                except (ValueError, TypeError, AttributeError):
                     pass
         
         # Get client and therapist info
