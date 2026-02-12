@@ -76,6 +76,7 @@ const NotificationBell = ({ onNavigate }) => {
   const [loading, setLoading] = useState(false);
   const dropdownRef = useRef(null);
   const pollIntervalRef = useRef(null);
+  const prevUnreadCountRef = useRef(0);
 
   // Fetch notifications
   const fetchNotifications = async () => {
@@ -85,7 +86,19 @@ const NotificationBell = ({ onNavigate }) => {
         axios.get(`${API}/notifications/unread-count`)
       ]);
       setNotifications(notifRes.data || []);
-      setUnreadCount(countRes.data?.count || 0);
+      const newUnreadCount = countRes.data?.count || 0;
+      
+      // Check if there are new notifications (count increased)
+      if (newUnreadCount > prevUnreadCountRef.current && prevUnreadCountRef.current >= 0) {
+        // New notification arrived - play sound and update badge
+        notificationService.onNewNotification(newUnreadCount);
+      }
+      
+      prevUnreadCountRef.current = newUnreadCount;
+      setUnreadCount(newUnreadCount);
+      
+      // Update app badge
+      notificationService.setUnreadCount(newUnreadCount);
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
     }
