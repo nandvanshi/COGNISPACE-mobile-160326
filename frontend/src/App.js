@@ -33,7 +33,10 @@ export const useAuth = () => {
 };
 
 const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    const storedUser = localStorage.getItem('user');
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
 
@@ -45,17 +48,36 @@ const AuthProvider = ({ children }) => {
   useEffect(() => {
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      fetchUser();
+      // If we have stored user, don't show loading
+      if (user) {
+        setLoading(false);
+        // Still verify token in background
+        verifyToken();
+      } else {
+        fetchUser();
+      }
     } else {
       setLoading(false);
     }
   }, [token]);
 
+  const verifyToken = async () => {
+    try {
+      const response = await axios.get(`${API}/auth/me`);
+      setUser(response.data);
+      localStorage.setItem('user', JSON.stringify(response.data));
+      loadUserTheme();
+    } catch (error) {
+      console.error('Token expired or invalid:', error);
+      logout();
+    }
+  };
+
   const fetchUser = async () => {
     try {
       const response = await axios.get(`${API}/auth/me`);
       setUser(response.data);
-      // Load user's theme preference
+      localStorage.setItem('user', JSON.stringify(response.data));
       loadUserTheme();
     } catch (error) {
       console.error('Failed to fetch user:', error);
