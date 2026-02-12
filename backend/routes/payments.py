@@ -375,6 +375,8 @@ async def update_payment(payment_id: str, data: PaymentUpdate, current_user: dic
         update_data["payment_method"] = data.payment_method
     if data.payment_status is not None:
         update_data["payment_status"] = data.payment_status
+    if data.transaction_type is not None:
+        update_data["transaction_type"] = data.transaction_type
     if data.notes is not None:
         update_data["notes"] = data.notes
     
