@@ -208,6 +208,53 @@ const Settings = ({ isOpen, onClose }) => {
             />
           </Card>
 
+          {/* PWA Sound & Badge Settings - For All Users */}
+          <Card className="p-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Bell size={18} className="text-primary" />
+              <h3 className="font-medium">Sound & Badge Notifications</h3>
+              {loadingPWAPrefs && <Loader2 size={14} className="animate-spin text-muted-foreground" />}
+            </div>
+            
+            <p className="text-sm text-muted-foreground mb-4">
+              Control notification sounds and app icon badges
+            </p>
+
+            <div className="space-y-4">
+              {/* Sound Toggle */}
+              <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50">
+                <div className="flex items-center gap-3">
+                  <Volume2 size={18} className={soundEnabled ? "text-primary" : "text-gray-400"} />
+                  <div>
+                    <p className="text-sm font-medium">Notification Sound</p>
+                    <p className="text-xs text-muted-foreground">Play sound when notification arrives</p>
+                  </div>
+                </div>
+                <Switch
+                  checked={soundEnabled}
+                  onCheckedChange={handleSoundToggle}
+                  data-testid="settings-sound-toggle"
+                />
+              </div>
+
+              {/* Badge Toggle */}
+              <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50">
+                <div className="flex items-center gap-3">
+                  <Smartphone size={18} className={badgeEnabled ? "text-primary" : "text-gray-400"} />
+                  <div>
+                    <p className="text-sm font-medium">App Badge Count</p>
+                    <p className="text-xs text-muted-foreground">Show unread count on app icon (PWA)</p>
+                  </div>
+                </div>
+                <Switch
+                  checked={badgeEnabled}
+                  onCheckedChange={handleBadgeToggle}
+                  data-testid="settings-badge-toggle"
+                />
+              </div>
+            </div>
+          </Card>
+
           {/* Notification Settings Section - Only for Therapists */}
           {user?.role === 'therapist' && (
             <Card className="p-4">
