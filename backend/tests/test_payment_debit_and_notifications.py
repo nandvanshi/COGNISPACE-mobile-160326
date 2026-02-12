@@ -47,7 +47,7 @@ class TestPaymentDebitFeature:
         if not active_therapists:
             pytest.skip("No active therapists found")
         
-        therapist = therapists_response.json()[0]
+        therapist = active_therapists[0]
         therapist_mobile = therapist.get("mobile")
         
         # Login as therapist (uses identifier field, not mobile)
@@ -366,7 +366,7 @@ class TestPaymentReportsWithTransactionType:
         if therapists_response.status_code != 200 or not therapists_response.json():
             pytest.skip("No active therapists found")
         
-        therapist = therapists_response.json()[0]
+        therapist = active_therapists[0]
         therapist_mobile = therapist.get("mobile")
         
         login_response = requests.post(
