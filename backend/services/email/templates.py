@@ -691,12 +691,56 @@ def template_daily_payment_statement(data: Dict[str, Any]) -> Dict[str, str]:
     }
 
 
+def template_password_reset(data: Dict[str, Any]) -> Dict[str, str]:
+    """Template for password reset email"""
+    content = f"""
+    <p class="greeting">Password Reset Request</p>
+    <p class="message">
+        Hi {data.get('user_name', 'User')},
+    </p>
+    <p class="message">
+        We received a request to reset your COGNISPACE account password. Click the button below to set a new password:
+    </p>
+    
+    <a href="{data.get('reset_link', '#')}" class="button" style="display: block; text-align: center; margin: 30px 0;">Reset My Password</a>
+    
+    <div class="info-box" style="background: #fff3e0; border-left: 4px solid #ff9800; padding: 15px; margin: 20px 0;">
+        <p style="margin: 0; font-size: 14px; color: #e65100;">
+            <strong>⏰ This link will expire in {data.get('expiry_hours', 1)} hour(s).</strong>
+        </p>
+    </div>
+    
+    <p class="message" style="font-size: 14px; color: #666;">
+        If you didn't request this password reset, you can safely ignore this email. Your password will remain unchanged.
+    </p>
+    
+    <div class="divider" style="border-top: 1px solid #eee; margin: 20px 0;"></div>
+    
+    <p class="message" style="font-size: 12px; color: #999;">
+        If the button above doesn't work, copy and paste this link into your browser:<br>
+        <span style="word-break: break-all; color: #0d5c4d;">{data.get('reset_link', '#')}</span>
+    </p>
+    
+    <p class="message" style="margin-top: 20px;">
+        <strong>Warm regards,</strong><br>
+        Team CogniSpace
+    </p>
+    """
+    
+    return {
+        "subject": "Reset Your COGNISPACE Password",
+        "html_body": get_base_template(content, "Password Reset"),
+        "text_body": f"Hi {data.get('user_name')}, Click this link to reset your password: {data.get('reset_link')}. This link expires in {data.get('expiry_hours', 1)} hour(s)."
+    }
+
+
 # Template registry
 EMAIL_TEMPLATES = {
     "welcome_credentials": template_welcome_credentials,
     "therapist_welcome": template_therapist_welcome,
     "client_welcome": template_client_welcome,
     "password_changed": template_password_changed,
+    "password_reset": template_password_reset,
     "appointment_confirmation": template_appointment_confirmation,
     "appointment_confirmation_therapist": template_appointment_confirmation_therapist,
     "appointment_reminder": template_appointment_reminder,
