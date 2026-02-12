@@ -293,6 +293,7 @@ async def get_payment(payment_id: str, current_user: dict = Depends(get_current_
         amount=payment["amount"],
         payment_method=payment.get("payment_method", "cash"),
         payment_status=payment.get("payment_status", "paid"),
+        transaction_type=payment.get("transaction_type", "credit"),
         appointment_id=payment.get("appointment_id"),
         session_note_id=payment.get("session_note_id"),
         notes=payment.get("notes"),
