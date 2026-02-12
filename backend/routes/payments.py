@@ -21,6 +21,7 @@ class PaymentCreate(BaseModel):
     amount: float
     payment_method: str = "cash"
     payment_status: Optional[str] = "paid"
+    transaction_type: Optional[str] = "credit"  # credit (payment) or debit (refund)
     appointment_id: Optional[str] = None
     session_note_id: Optional[str] = None
     notes: Optional[str] = None
@@ -30,6 +31,7 @@ class PaymentUpdate(BaseModel):
     amount: Optional[float] = None
     payment_method: Optional[str] = None
     payment_status: Optional[str] = None
+    transaction_type: Optional[str] = None
     notes: Optional[str] = None
 
 
@@ -45,6 +47,7 @@ class Payment(BaseModel):
     amount: float
     payment_method: str
     payment_status: str
+    transaction_type: Optional[str] = "credit"  # credit or debit
     appointment_id: Optional[str] = None
     session_note_id: Optional[str] = None
     notes: Optional[str] = None
