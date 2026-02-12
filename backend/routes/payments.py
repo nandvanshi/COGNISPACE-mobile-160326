@@ -325,7 +325,7 @@ async def get_payment_receipt(payment_id: str, current_user: dict = Depends(get_
             dt = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
             formatted_date = dt.strftime("%d/%m/%Y")
             formatted_time = dt.strftime("%I:%M %p")
-        except:
+        except (ValueError, AttributeError):
             formatted_date = created_at[:10]
             formatted_time = ""
     else:
