@@ -463,14 +463,50 @@ async def sign_therapy_consent(client_id: str, signature_method: str = "digital"
     if not consent:
         raise HTTPException(status_code=404, detail="Consent not found")
     
+    signature_date = datetime.now(timezone.utc).isoformat()
+    
     await db.therapy_consents.update_one(
         {"client_id": client_id},
         {"$set": {
             "is_signed": True,
-            "signature_date": datetime.now(timezone.utc).isoformat(),
+            "signature_date": signature_date,
             "signature_method": signature_method
         }}
     )
+    
+    # Send email notification to therapist and assistant
+    try:
+        # Get client info
+        client = await db.users.find_one({"id": client_id}, {"_id": 0, "full_name": 1})
+        client_name = client.get("full_name", "Client") if client else "Client"
+        
+        # Get therapist info
+        therapist_id = consent.get("therapist_id")
+        therapist = await db.users.find_one({"id": therapist_id}, {"_id": 0, "full_name": 1, "email": 1})
+        therapist_name = consent.get("therapist_name") or (therapist.get("full_name") if therapist else "Therapist")
+        therapist_email = therapist.get("email") if therapist else None
+        
+        # Get assistant email if exists
+        assistant_email = None
+        assistant = await db.users.find_one(
+            {"therapist_id": therapist_id, "role": "assistant"},
+            {"_id": 0, "email": 1}
+        )
+        if assistant:
+            assistant_email = assistant.get("email")
+        
+        # Send consent acceptance notification
+        from services.notification_service import NotificationService
+        await NotificationService.send_consent_accepted_notification(
+            client_name=client_name,
+            therapist_name=therapist_name,
+            signature_date=signature_date,
+            signature_method=signature_method,
+            therapist_email=therapist_email,
+            assistant_email=assistant_email
+        )
+    except Exception as e:
+        print(f"Failed to send consent acceptance notification: {e}")
     
     return {"message": "Consent signed successfully"}
 
