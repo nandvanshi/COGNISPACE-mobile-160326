@@ -831,6 +831,168 @@ def template_payment_received_therapist(data: Dict[str, Any]) -> Dict[str, str]:
     }
 
 
+def template_consent_accepted(data: Dict[str, Any]) -> Dict[str, str]:
+    """Template for notifying therapist/assistant when client accepts consent"""
+    content = f"""
+    <p class="greeting">✅ Consent Form Accepted!</p>
+    <p class="message">
+        A client has signed and accepted their therapy consent form.
+    </p>
+    
+    <div class="info-box" style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 20px; margin: 20px 0;">
+        <p style="margin: 10px 0; font-size: 16px;"><strong>👤 Client:</strong> {data.get('client_name', 'N/A')}</p>
+        <p style="margin: 10px 0; font-size: 16px;"><strong>👨‍⚕️ Therapist:</strong> {data.get('therapist_name', 'N/A')}</p>
+        <p style="margin: 10px 0; font-size: 16px;"><strong>📅 Signed On:</strong> {format_ist_datetime(data.get('signature_date', ''))}</p>
+        <p style="margin: 10px 0; font-size: 16px;"><strong>✍️ Method:</strong> {data.get('signature_method', 'Digital').title()}</p>
+    </div>
+    
+    <div class="info-box" style="background: #f5f5f5; border-left: 4px solid #0d5c4d; padding: 15px; margin: 20px 0;">
+        <p style="margin: 0; font-size: 14px; color: #333;">
+            <strong>📋 Consent Summary:</strong><br>
+            {data.get('consent_summary', 'Informed Consent for Psychological Services')}
+        </p>
+    </div>
+    
+    <p class="message">
+        You can now proceed with scheduling sessions and creating session notes for this client.
+    </p>
+    
+    <a href="{data.get('dashboard_url', 'https://cognispace.in/login')}" class="button" style="display: block; text-align: center; margin: 20px 0;">View Client Profile</a>
+    
+    <p class="message" style="margin-top: 20px;">
+        <strong>Warm regards,</strong><br>
+        Team CogniSpace
+    </p>
+    """
+    
+    return {
+        "subject": f"✅ Consent Accepted - {data.get('client_name', 'Client')}",
+        "html_body": get_base_template(content, "Consent Accepted"),
+        "text_body": f"Client {data.get('client_name')} has signed the therapy consent form on {format_ist_datetime(data.get('signature_date'))}."
+    }
+
+
+def template_daily_summary(data: Dict[str, Any]) -> Dict[str, str]:
+    """Enhanced daily summary template with appointments, pending payments, and pending notes"""
+    appointments = data.get('appointments', [])
+    pending_payments = data.get('pending_payments', [])
+    pending_notes = data.get('pending_notes', [])
+    is_assistant = data.get('is_assistant', False)
+    
+    total_appointments = len(appointments)
+    total_pending_amount = sum(p.get('amount', 0) for p in pending_payments)
+    total_pending_notes = len(pending_notes)
+    
+    # Appointments section
+    if total_appointments == 0:
+        appointments_html = """
+        <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 10px 0;">
+            <p style="color: #2e7d32; margin: 0;">✨ No appointments scheduled for today.</p>
+        </div>
+        """
+    else:
+        appt_items = ""
+        for appt in appointments:
+            appt_items += f"""
+            <div style="background: #fff; padding: 12px 15px; margin: 8px 0; border-radius: 6px; border-left: 4px solid #0d5c4d;">
+                <p style="margin: 0 0 5px 0;"><strong>{appt.get('time', 'N/A')}</strong> - {appt.get('client_name', 'N/A')}</p>
+                <p style="margin: 0; font-size: 13px; color: #666;">{appt.get('type', 'Session')} • {appt.get('duration', '50')} mins</p>
+            </div>
+            """
+        appointments_html = f"""
+        <div style="margin-bottom: 20px;">
+            <h4 style="color: #0d5c4d; margin: 0 0 10px 0;">📅 Today's Appointments ({total_appointments})</h4>
+            {appt_items}
+        </div>
+        """
+    
+    # Pending Payments section
+    if len(pending_payments) == 0:
+        payments_html = """
+        <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 10px 0;">
+            <p style="color: #2e7d32; margin: 0;">✨ No pending payments.</p>
+        </div>
+        """
+    else:
+        payment_items = ""
+        for pmt in pending_payments[:5]:  # Show max 5
+            payment_items += f"""
+            <div style="background: #fff; padding: 10px 15px; margin: 6px 0; border-radius: 6px; border-left: 4px solid #ff9800;">
+                <p style="margin: 0;"><strong>{pmt.get('client_name', 'N/A')}</strong> - ₹{pmt.get('amount', 0):,.0f}</p>
+            </div>
+            """
+        more_text = f"<p style='font-size: 12px; color: #666;'>...and {len(pending_payments) - 5} more</p>" if len(pending_payments) > 5 else ""
+        payments_html = f"""
+        <div style="margin-bottom: 20px;">
+            <h4 style="color: #ff9800; margin: 0 0 10px 0;">💰 Pending Payments (₹{total_pending_amount:,.0f})</h4>
+            {payment_items}
+            {more_text}
+        </div>
+        """
+    
+    # Pending Notes section (only for therapists)
+    notes_html = ""
+    if not is_assistant and total_pending_notes > 0:
+        note_items = ""
+        for note in pending_notes[:5]:  # Show max 5
+            note_items += f"""
+            <div style="background: #fff; padding: 10px 15px; margin: 6px 0; border-radius: 6px; border-left: 4px solid #9c27b0;">
+                <p style="margin: 0;"><strong>{note.get('client_name', 'N/A')}</strong> - {note.get('session_date', 'N/A')}</p>
+            </div>
+            """
+        more_text = f"<p style='font-size: 12px; color: #666;'>...and {len(pending_notes) - 5} more</p>" if len(pending_notes) > 5 else ""
+        notes_html = f"""
+        <div style="margin-bottom: 20px;">
+            <h4 style="color: #9c27b0; margin: 0 0 10px 0;">📝 Pending Session Notes ({total_pending_notes})</h4>
+            {note_items}
+            {more_text}
+        </div>
+        """
+    elif not is_assistant:
+        notes_html = """
+        <div style="margin-bottom: 20px;">
+            <h4 style="color: #9c27b0; margin: 0 0 10px 0;">📝 Pending Session Notes</h4>
+            <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                <p style="color: #2e7d32; margin: 0;">✨ All session notes are up to date!</p>
+            </div>
+        </div>
+        """
+    
+    content = f"""
+    <p class="greeting">Good Morning! ☀️</p>
+    <p class="message">
+        Here's your daily summary for <strong>{data.get('date', 'today')}</strong>:
+    </p>
+    
+    <div class="info-box" style="background: #f0f9f7; border-color: #0d5c4d; padding: 20px;">
+        <div style="display: flex; justify-content: space-around; text-align: center;">
+            <div>
+                <p style="font-size: 28px; color: #0d5c4d; margin: 0;"><strong>{total_appointments}</strong></p>
+                <p style="font-size: 12px; color: #666; margin: 5px 0 0 0;">Appointments</p>
+            </div>
+            <div>
+                <p style="font-size: 28px; color: #ff9800; margin: 0;"><strong>₹{total_pending_amount:,.0f}</strong></p>
+                <p style="font-size: 12px; color: #666; margin: 5px 0 0 0;">Pending</p>
+            </div>
+            {f'<div><p style="font-size: 28px; color: #9c27b0; margin: 0;"><strong>{total_pending_notes}</strong></p><p style="font-size: 12px; color: #666; margin: 5px 0 0 0;">Notes Due</p></div>' if not is_assistant else ''}
+        </div>
+    </div>
+    
+    {appointments_html}
+    {payments_html}
+    {notes_html}
+    
+    <a href="{data.get('dashboard_url', '#')}" class="button" style="display: block; text-align: center;">Open Dashboard</a>
+    """
+    
+    role_text = "Assistant" if is_assistant else "Therapist"
+    return {
+        "subject": f"📅 Daily Summary - {data.get('date', 'Today')} | {total_appointments} Appointments, ₹{total_pending_amount:,.0f} Pending",
+        "html_body": get_base_template(content, f"Daily Summary - {role_text}"),
+        "text_body": f"Good Morning! Today ({data.get('date')}): {total_appointments} appointments, ₹{total_pending_amount:,.0f} pending payments{f', {total_pending_notes} notes due' if not is_assistant else ''}."
+    }
+
+
 # Template registry
 EMAIL_TEMPLATES = {
     "welcome_credentials": template_welcome_credentials,
