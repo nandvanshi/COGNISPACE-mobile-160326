@@ -243,7 +243,7 @@ async def _send_pending_note_reminder(db, appointment: dict) -> bool:
                 dt = datetime.fromisoformat(appt_time.replace('Z', '+00:00'))
                 ist_dt = dt.astimezone(IST)
                 appt_time = ist_dt.strftime("%d/%m/%Y %H:%M")
-            except:
+            except (ValueError, AttributeError):
                 pass
         
         await create_notification(
