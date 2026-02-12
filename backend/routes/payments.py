@@ -174,7 +174,8 @@ async def record_payment(payment_data: PaymentCreate, current_user: dict = Depen
         print(f"Failed to send in-app payment notification: {e}")
     
     # Send WhatsApp and Email notification to client about payment
-    if payment_data.payment_status == "paid":
+    # Only for CREDIT transactions (not for refunds/debits)
+    if payment_data.payment_status == "paid" and payment_data.transaction_type != "debit":
         try:
             await NotificationService.send_payment_received(
                 client_name=client["full_name"],
@@ -190,27 +191,29 @@ async def record_payment(payment_data: PaymentCreate, current_user: dict = Depen
             print(f"Failed to send payment WhatsApp/Email: {e}")
     
     # Send email notification to therapist and assistant
-    try:
-        # Get assistant email if exists
-        assistant_email = None
-        assistant = await db.users.find_one(
-            {"therapist_id": therapist_id, "role": "assistant"},
-            {"_id": 0, "email": 1}
-        )
-        if assistant:
-            assistant_email = assistant.get("email")
-        
-        await NotificationService.send_payment_notification_to_therapist(
-            client_name=client["full_name"],
-            amount=payment_data.amount,
-            payment_method=payment_data.payment_method,
-            receipt_number=bill_number,
-            payment_date=payment_doc["created_at"],
-            therapist_email=therapist.get("email") if therapist else None,
-            assistant_email=assistant_email
-        )
-    except Exception as e:
-        print(f"Failed to send payment notification to therapist/assistant: {e}")
+    # Only for CREDIT transactions (not for refunds/debits)
+    if payment_data.transaction_type != "debit":
+        try:
+            # Get assistant email if exists
+            assistant_email = None
+            assistant = await db.users.find_one(
+                {"therapist_id": therapist_id, "role": "assistant"},
+                {"_id": 0, "email": 1}
+            )
+            if assistant:
+                assistant_email = assistant.get("email")
+            
+            await NotificationService.send_payment_notification_to_therapist(
+                client_name=client["full_name"],
+                amount=payment_data.amount,
+                payment_method=payment_data.payment_method,
+                receipt_number=bill_number,
+                payment_date=payment_doc["created_at"],
+                therapist_email=therapist.get("email") if therapist else None,
+                assistant_email=assistant_email
+            )
+        except Exception as e:
+            print(f"Failed to send payment notification to therapist/assistant: {e}")
     
     return Payment(
         id=payment_id,
