@@ -872,6 +872,54 @@ def template_consent_accepted(data: Dict[str, Any]) -> Dict[str, str]:
     }
 
 
+def template_consent_confirmation_client(data: Dict[str, Any]) -> Dict[str, str]:
+    """Template for confirming consent signing to the client"""
+    content = f"""
+    <p class="greeting">Consent Form Signed Successfully! ✅</p>
+    <p class="message">
+        Dear <strong>{data.get('client_name', 'Client')}</strong>,
+    </p>
+    <p class="message">
+        Thank you for signing the Informed Consent for Psychological Services. Your consent has been recorded successfully.
+    </p>
+    
+    <div class="info-box" style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 20px; margin: 20px 0;">
+        <p style="margin: 10px 0; font-size: 16px;"><strong>📋 Document:</strong> Informed Consent for Psychological Services</p>
+        <p style="margin: 10px 0; font-size: 16px;"><strong>👨‍⚕️ Therapist:</strong> {data.get('therapist_name', 'Your Therapist')}</p>
+        <p style="margin: 10px 0; font-size: 16px;"><strong>📅 Signed On:</strong> {format_ist_datetime(data.get('signature_date', ''))}</p>
+        <p style="margin: 10px 0; font-size: 16px;"><strong>✍️ Method:</strong> {data.get('signature_method', 'Digital').title()} Signature</p>
+    </div>
+    
+    <div class="info-box" style="background: #f5f5f5; border-left: 4px solid #0d5c4d; padding: 15px; margin: 20px 0;">
+        <p style="margin: 0 0 10px 0; font-size: 14px; color: #333;">
+            <strong>What's Next?</strong>
+        </p>
+        <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: #555;">
+            <li>Your therapist can now schedule sessions with you</li>
+            <li>You can view your appointments in your dashboard</li>
+            <li>All your session records will be maintained securely</li>
+        </ul>
+    </div>
+    
+    <a href="{data.get('dashboard_url', 'https://cognispace.in/login')}" class="button" style="display: block; text-align: center; margin: 20px 0;">Go to My Dashboard</a>
+    
+    <p class="message" style="margin-top: 20px; font-size: 14px; color: #666;">
+        If you have any questions about the consent or your therapy sessions, please reach out to your therapist directly.
+    </p>
+    
+    <p class="message" style="margin-top: 20px;">
+        <strong>Warm regards,</strong><br>
+        Team CogniSpace
+    </p>
+    """
+    
+    return {
+        "subject": f"✅ Your Consent Has Been Recorded - {data.get('therapist_name', 'CogniSpace')}",
+        "html_body": get_base_template(content, "Consent Confirmation"),
+        "text_body": f"Dear {data.get('client_name')}, your consent form has been signed successfully on {format_ist_datetime(data.get('signature_date'))}. You can now proceed with therapy sessions with {data.get('therapist_name')}."
+    }
+
+
 def template_daily_summary(data: Dict[str, Any]) -> Dict[str, str]:
     """Enhanced daily summary template with appointments, pending payments, and pending notes"""
     appointments = data.get('appointments', [])
