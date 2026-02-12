@@ -515,19 +515,43 @@ async def client_self_register(code: str, client_data: ClientSelfRegister):
     from routes.notifications import notify_therapist_new_client
     await notify_therapist_new_client(therapist_id, client_data.full_name, client_id)
     
+    # Get assistant email if exists
+    assistant_email = None
+    assistant = await db.users.find_one(
+        {"therapist_id": therapist_id, "role": "assistant"},
+        {"_id": 0, "email": 1}
+    )
+    if assistant:
+        assistant_email = assistant.get("email")
+    
+    # Send email notification to therapist and assistant about new client registration
+    try:
+        from services.notification_service import NotificationService
+        await NotificationService.send_client_self_registration_notification(
+            client_name=client_data.full_name,
+            client_mobile=client_data.mobile,
+            client_email=client_data.email,
+            therapist_email=therapist.get("email"),
+            assistant_email=assistant_email,
+            registration_time=datetime.now(timezone.utc).isoformat()
+        )
+    except Exception as e:
+        print(f"Failed to send registration notification: {e}")
+    
     # Send welcome email to client (if email provided)
     if client_data.email:
         try:
-            from services.email import EmailService
-            await EmailService.send_welcome_email(
-                user_id=client_id,
-                login_id=client_data.mobile,
-                password=client_data.password,  # Original password before hashing
+            from services.notification_service import NotificationService
+            await NotificationService.send_client_welcome(
+                client_name=client_data.full_name,
+                mobile=client_data.mobile,
+                email=client_data.email,
+                username=client_data.mobile,
+                password=client_data.password,
                 therapist_name=therapist["full_name"]
             )
         except Exception as e:
-            # Log but don't fail registration if email fails
-            print(f"Failed to send welcome email: {e}")
+            print(f"Failed to send welcome notification: {e}")
     
     return {
         "message": "Registration successful! You can now login.",
