@@ -79,6 +79,19 @@ class UserPreferences(BaseModel):
     theme: Optional[str] = "calm-professional"
 
 
+class ForgotPasswordRequest(BaseModel):
+    identifier: str  # email or mobile
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+
+class VerifyResetTokenRequest(BaseModel):
+    token: str
+
+
 VALID_THEMES = ["calm-professional", "soft-reassuring", "warm-approachable", "clean-saas", "dark-calm"]
 
 
