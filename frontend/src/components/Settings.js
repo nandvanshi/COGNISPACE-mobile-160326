@@ -25,10 +25,16 @@ const Settings = ({ isOpen, onClose }) => {
   });
   const [loadingNotifications, setLoadingNotifications] = useState(false);
   const [savingNotification, setSavingNotification] = useState(null);
+  
+  // PWA Sound & Badge preferences
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [badgeEnabled, setBadgeEnabled] = useState(true);
+  const [loadingPWAPrefs, setLoadingPWAPrefs] = useState(false);
 
   useEffect(() => {
     if (isOpen && user) {
       fetchUserTheme();
+      fetchPWAPreferences();
       if (user.role === 'therapist') {
         fetchNotificationSettings();
       }
@@ -44,6 +50,66 @@ const Settings = ({ isOpen, onClose }) => {
     } catch (error) {
       const stored = getStoredTheme();
       setCurrentTheme(stored);
+    }
+  };
+
+  const fetchPWAPreferences = async () => {
+    setLoadingPWAPrefs(true);
+    try {
+      const response = await axios.get(`${API}/notifications/preferences`);
+      const { sound_enabled, badge_enabled } = response.data;
+      setSoundEnabled(sound_enabled);
+      setBadgeEnabled(badge_enabled);
+      notificationService.setSoundPreference(sound_enabled);
+      notificationService.setBadgePreference(badge_enabled);
+    } catch (error) {
+      console.error('Failed to fetch PWA preferences:', error);
+      setSoundEnabled(notificationService.getSoundPreference());
+      setBadgeEnabled(notificationService.getBadgePreference());
+    } finally {
+      setLoadingPWAPrefs(false);
+    }
+  };
+
+  const handleSoundToggle = async (enabled) => {
+    setSoundEnabled(enabled);
+    notificationService.setSoundPreference(enabled);
+    
+    if (enabled) {
+      notificationService.playSound();
+      toast.success('Notification sound enabled');
+    } else {
+      toast.info('Notification sound disabled');
+    }
+    
+    try {
+      await axios.put(`${API}/notifications/preferences`, {
+        sound_enabled: enabled,
+        badge_enabled: badgeEnabled
+      });
+    } catch (error) {
+      console.error('Failed to save sound preference:', error);
+    }
+  };
+
+  const handleBadgeToggle = async (enabled) => {
+    setBadgeEnabled(enabled);
+    notificationService.setBadgePreference(enabled);
+    
+    if (!enabled) {
+      notificationService.clearBadge();
+      toast.info('Badge notifications disabled');
+    } else {
+      toast.success('Badge notifications enabled');
+    }
+    
+    try {
+      await axios.put(`${API}/notifications/preferences`, {
+        sound_enabled: soundEnabled,
+        badge_enabled: enabled
+      });
+    } catch (error) {
+      console.error('Failed to save badge preference:', error);
     }
   };
 
