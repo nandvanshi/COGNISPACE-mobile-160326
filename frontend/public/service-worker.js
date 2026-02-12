@@ -161,6 +161,17 @@ async function networkFirst(request) {
 
 // Listen for messages from the app
 self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'UPDATE_BADGE') {
+    const count = event.data.count || 0;
+    if (navigator.setAppBadge) {
+      if (count > 0) {
+        navigator.setAppBadge(count);
+      } else {
+        navigator.clearAppBadge();
+      }
+    }
+  }
+  
   if (event.data && event.data.type === 'SKIP_WAITING') {
     console.log('[ServiceWorker] Skip waiting requested');
     self.skipWaiting();
