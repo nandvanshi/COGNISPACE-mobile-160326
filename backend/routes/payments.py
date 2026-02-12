@@ -571,7 +571,7 @@ async def get_monthly_payment_trend(
             else:
                 dt = created_at
             month_key = dt.strftime("%Y-%m")
-        except:
+        except (ValueError, AttributeError):
             continue
         
         if month_key not in monthly_data:
