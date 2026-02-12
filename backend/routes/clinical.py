@@ -474,11 +474,12 @@ async def sign_therapy_consent(client_id: str, signature_method: str = "digital"
         }}
     )
     
-    # Send email notification to therapist and assistant
+    # Send email notification to therapist, assistant, and client
     try:
         # Get client info
-        client = await db.users.find_one({"id": client_id}, {"_id": 0, "full_name": 1})
+        client = await db.users.find_one({"id": client_id}, {"_id": 0, "full_name": 1, "email": 1})
         client_name = client.get("full_name", "Client") if client else "Client"
+        client_email = client.get("email") if client else None
         
         # Get therapist info
         therapist_id = consent.get("therapist_id")
@@ -495,7 +496,7 @@ async def sign_therapy_consent(client_id: str, signature_method: str = "digital"
         if assistant:
             assistant_email = assistant.get("email")
         
-        # Send consent acceptance notification
+        # Send consent acceptance notification to all
         from services.notification_service import NotificationService
         await NotificationService.send_consent_accepted_notification(
             client_name=client_name,
@@ -503,7 +504,8 @@ async def sign_therapy_consent(client_id: str, signature_method: str = "digital"
             signature_date=signature_date,
             signature_method=signature_method,
             therapist_email=therapist_email,
-            assistant_email=assistant_email
+            assistant_email=assistant_email,
+            client_email=client_email
         )
     except Exception as e:
         print(f"Failed to send consent acceptance notification: {e}")
