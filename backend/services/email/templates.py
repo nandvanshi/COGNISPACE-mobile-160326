@@ -734,6 +734,103 @@ def template_password_reset(data: Dict[str, Any]) -> Dict[str, str]:
     }
 
 
+def template_appointment_cancellation(data: Dict[str, Any]) -> Dict[str, str]:
+    """Template for appointment cancellation notification"""
+    content = f"""
+    <p class="greeting">Appointment Cancelled</p>
+    <p class="message">
+        The following appointment has been cancelled:
+    </p>
+    
+    <div class="info-box" style="background: #ffebee; border-left: 4px solid #f44336; padding: 20px; margin: 20px 0;">
+        <p style="margin: 10px 0; font-size: 16px;"><strong>👤 Client:</strong> {data.get('client_name', 'N/A')}</p>
+        <p style="margin: 10px 0; font-size: 16px;"><strong>👨‍⚕️ Therapist:</strong> {data.get('therapist_name', 'N/A')}</p>
+        <p style="margin: 10px 0; font-size: 16px;"><strong>📅 Date:</strong> {format_ist_datetime(data.get('appointment_time', ''))}</p>
+    </div>
+    
+    <p class="message" style="font-size: 14px; color: #666;">
+        <strong>Cancelled by:</strong> {data.get('cancelled_by', 'N/A')}<br>
+        <strong>Reason:</strong> {data.get('cancellation_reason', 'No reason provided')}
+    </p>
+    
+    <p class="message" style="margin-top: 20px;">
+        <strong>Warm regards,</strong><br>
+        Team CogniSpace
+    </p>
+    """
+    
+    return {
+        "subject": f"Appointment Cancelled - {data.get('client_name', 'Client')} ({format_ist_datetime(data.get('appointment_time', ''))})",
+        "html_body": get_base_template(content, "Appointment Cancelled"),
+        "text_body": f"Appointment cancelled for {data.get('client_name')} on {format_ist_datetime(data.get('appointment_time'))}. Cancelled by: {data.get('cancelled_by')}."
+    }
+
+
+def template_client_self_registration(data: Dict[str, Any]) -> Dict[str, str]:
+    """Template for notifying therapist/assistant when client self-registers"""
+    content = f"""
+    <p class="greeting">🎉 New Client Registration!</p>
+    <p class="message">
+        A new client has registered through your referral link.
+    </p>
+    
+    <div class="info-box" style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 20px; margin: 20px 0;">
+        <p style="margin: 10px 0; font-size: 16px;"><strong>👤 Name:</strong> {data.get('client_name', 'N/A')}</p>
+        <p style="margin: 10px 0; font-size: 16px;"><strong>📱 Mobile:</strong> {data.get('client_mobile', 'N/A')}</p>
+        <p style="margin: 10px 0; font-size: 16px;"><strong>📧 Email:</strong> {data.get('client_email', 'N/A')}</p>
+        <p style="margin: 10px 0; font-size: 16px;"><strong>📅 Registered:</strong> {format_ist_datetime(data.get('registration_time', ''))}</p>
+    </div>
+    
+    <p class="message">
+        You can now view this client in your dashboard and schedule their first appointment.
+    </p>
+    
+    <a href="{data.get('dashboard_url', 'https://cognispace.in/login')}" class="button" style="display: block; text-align: center; margin: 20px 0;">View Client</a>
+    
+    <p class="message" style="margin-top: 20px;">
+        <strong>Warm regards,</strong><br>
+        Team CogniSpace
+    </p>
+    """
+    
+    return {
+        "subject": f"New Client Registration - {data.get('client_name', 'New Client')}",
+        "html_body": get_base_template(content, "New Client Registration"),
+        "text_body": f"New client {data.get('client_name')} ({data.get('client_mobile')}) has registered through your referral link."
+    }
+
+
+def template_payment_received_therapist(data: Dict[str, Any]) -> Dict[str, str]:
+    """Template for notifying therapist/assistant when payment is received"""
+    content = f"""
+    <p class="greeting">💰 Payment Received!</p>
+    <p class="message">
+        A payment has been recorded for one of your clients.
+    </p>
+    
+    <div class="info-box" style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 20px; margin: 20px 0;">
+        <p style="margin: 10px 0; font-size: 16px;"><strong>👤 Client:</strong> {data.get('client_name', 'N/A')}</p>
+        <p style="margin: 10px 0; font-size: 16px;"><strong>💵 Amount:</strong> ₹{data.get('amount', 0):,.0f}</p>
+        <p style="margin: 10px 0; font-size: 16px;"><strong>💳 Method:</strong> {data.get('payment_method', 'N/A')}</p>
+        <p style="margin: 10px 0; font-size: 16px;"><strong>🧾 Receipt:</strong> {data.get('receipt_number', 'N/A')}</p>
+        <p style="margin: 10px 0; font-size: 16px;"><strong>📅 Date:</strong> {format_ist_datetime(data.get('payment_date', ''))}</p>
+    </div>
+    
+    <a href="{data.get('dashboard_url', 'https://cognispace.in/login')}" class="button" style="display: block; text-align: center; margin: 20px 0;">View Payment Details</a>
+    
+    <p class="message" style="margin-top: 20px;">
+        <strong>Warm regards,</strong><br>
+        Team CogniSpace
+    </p>
+    """
+    
+    return {
+        "subject": f"Payment Received - ₹{data.get('amount', 0):,.0f} from {data.get('client_name', 'Client')}",
+        "html_body": get_base_template(content, "Payment Received"),
+        "text_body": f"Payment of ₹{data.get('amount', 0):,.0f} received from {data.get('client_name')} via {data.get('payment_method')}."
+    }
+
+
 # Template registry
 EMAIL_TEMPLATES = {
     "welcome_credentials": template_welcome_credentials,
@@ -744,7 +841,10 @@ EMAIL_TEMPLATES = {
     "appointment_confirmation": template_appointment_confirmation,
     "appointment_confirmation_therapist": template_appointment_confirmation_therapist,
     "appointment_reminder": template_appointment_reminder,
+    "appointment_cancellation": template_appointment_cancellation,
+    "client_self_registration": template_client_self_registration,
     "payment_receipt": template_payment_receipt,
+    "payment_received_therapist": template_payment_received_therapist,
     "subscription_expiry": template_subscription_expiry,
     "daily_schedule_briefing": template_daily_schedule_briefing,
     "daily_payment_statement": template_daily_payment_statement,
