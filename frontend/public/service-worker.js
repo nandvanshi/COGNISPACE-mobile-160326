@@ -262,13 +262,4 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// Background sync for offline actions
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'sync-appointments') {
-    event.waitUntil(syncAppointments());
-  }
-});
-
-async function syncAppointments() {
-  console.log('[ServiceWorker] Syncing appointments...');
-}
+// Badge management and notification handling complete
