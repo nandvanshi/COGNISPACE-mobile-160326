@@ -9,7 +9,7 @@ Build a secure, therapist-first web application named **COGNISPACE** for practic
 - **Appointments**: Scheduling and management with automated notifications
 - **Session Notes**: Clinical documentation
 - **Messaging**: In-app communication (messenger-style with soft delete)
-- **Payment Tracking**: Financial management with receipts
+- **Payment Tracking**: Financial management with Credit/Debit support and receipts
 - **TheraGenie & CogniVision**: AI module for clinical intelligence
 - **Notifications**: WhatsApp + Email notifications using Twilio templates
 - **PWA Sound & Badge**: Notification sounds and app icon badge count
@@ -26,29 +26,21 @@ Hindi (User communicates in Hindi/Hinglish)
 - **SMS/WhatsApp**: Twilio (User API Key)
 - **PDF Generation**: jsPDF & html2canvas
 
-## WhatsApp Templates (Twilio Approved)
-
-### 1. Welcome Message (cogni_1st)
-- **SID**: HXc374601a165b80488fdc52a01a140d2b
-- **Used for**: Therapist/Client approval
-- **Variables**: {{1}} = Full name
-
-### 2. Appointment Confirmation (cogni_appointment)
-- **SID**: HX6d3de8806ccd2116c7a5b32fe79f825f
-- **Used for**: When appointment is fixed
-- **Variables**: {{1}}=Client, {{2}}=Therapist, {{3}}=Date, {{4}}=Time
-
-### 3. Appointment Reminder (cogni_rem)
-- **SID**: HX25894886d0be2d48c89f2e24ac9fff8e
-- **Used for**: 1 hour before appointment
-- **Variables**: {{1}}=Client, {{2}}=Therapist, {{3}}=Date, {{4}}=Time
-
-### 4. Payment Received (cogni_pay)
-- **SID**: HX34fc7c7cc70b9036ccd1c350ac8acb6f
-- **Used for**: When payment is recorded
-- **Variables**: {{1}}=Client, {{2}}=Amount, {{3}}=Therapist, {{4}}=Date
-
 ## What's Implemented ✅
+
+### Feb 12, 2026 - Daily Summary, Consent Notification & Payment Debit
+- [x] **Daily Summary Email (7 AM IST)**: Morning email to therapists/assistants with:
+  - Today's appointments list
+  - Pending payments summary
+  - Pending session notes (therapist only)
+- [x] **Consent Accept Notification**: Email to therapist/assistant when client signs consent form
+  - Includes: client name, therapist name, consent details, signature date/time
+- [x] **Payment Debit/Refund Feature**:
+  - transaction_type field: "credit" (payment) or "debit" (refund)
+  - Credit/Debit toggle buttons in payment form
+  - Type column in payment table with colored badges
+  - Summary card shows: Net Revenue, Credit total, Debit total
+  - Debit amounts shown in red with minus sign
 
 ### Feb 12, 2026 - PWA Sound & Badge Notifications
 - [x] Backend API for user notification preferences (GET/PUT /api/notifications/preferences)
@@ -56,8 +48,6 @@ Hindi (User communicates in Hindi/Hinglish)
 - [x] Badge toggle in Settings - users can enable/disable app icon badge count
 - [x] NotificationBell component plays sound on new notifications
 - [x] NotificationBell updates app badge count (PWA mode)
-- [x] notificationService.js manages sound/badge with localStorage fallback
-- [x] Fixed linting errors (E722 bare except) in payments.py and scheduler/jobs.py
 
 ### Feb 11, 2026 - Notification System Complete
 - [x] Centralized NotificationService for WhatsApp + Email
@@ -75,52 +65,83 @@ Hindi (User communicates in Hindi/Hinglish)
 - [x] Client password reset fix
 - [x] Messaging UI improvements
 
+## Notification System
+
+### Email Notifications
+| Event | Recipients | Template |
+|-------|------------|----------|
+| Therapist Approved | Therapist | therapist_welcome |
+| Client Created | Client | client_welcome |
+| Appointment Fixed | Client, Therapist, Assistant | appointment_confirmation |
+| Appointment Reminder (1hr) | Client, Therapist, Assistant | appointment_reminder |
+| Appointment Cancelled | Client, Therapist, Assistant | appointment_cancellation |
+| Payment Received | Client | payment_receipt |
+| Payment Received | Therapist, Assistant | payment_received_therapist |
+| Consent Signed | Therapist, Assistant | **consent_accepted** (NEW) |
+| Daily Summary (7 AM) | Therapist, Assistant | **daily_summary** (NEW) |
+| Client Self-Registration | Therapist, Assistant | client_self_registration |
+
+### WhatsApp Templates (Twilio Approved)
+| Template | SID | Usage |
+|----------|-----|-------|
+| cogni_1st | HXc374... | Welcome message |
+| cogni_appointment | HX6d3de... | Appointment confirmation |
+| cogni_rem | HX2589... | Appointment reminder |
+| cogni_pay | HX34fc7... | Payment received |
+
 ## Architecture
 ```
 /app/backend/
 ├── services/
 │   ├── notification_service.py    # Centralized notifications
-│   ├── whatsapp/
-│   │   ├── templates.py           # WhatsApp template definitions
-│   │   ├── service.py             # WhatsApp service
-│   │   └── twilio_provider.py     # Twilio integration
+│   │   ├── send_consent_accepted_notification()  # NEW
+│   │   └── send_daily_summary()                  # NEW
 │   ├── email/
-│   │   └── templates.py           # Email templates
+│   │   └── templates.py
+│   │       ├── template_consent_accepted()       # NEW
+│   │       └── template_daily_summary()          # NEW
 │   └── scheduler/
-│       └── jobs.py                # Scheduled jobs
+│       └── jobs.py
+│           └── send_morning_schedule_briefing()  # Enhanced
 ├── routes/
-│   ├── notifications.py           # Notification API + User preferences
-│   ├── auth.py                    # Auth + Forgot Password
-│   ├── clients.py                 # Client management
-│   ├── appointments.py            # Appointment management
-│   └── payments.py                # Payment management
+│   ├── payments.py                # Credit/Debit support
+│   └── clinical.py                # Consent notification trigger
 
 /app/frontend/src/
-├── services/
-│   └── notificationService.js     # PWA sound & badge service
 ├── components/
-│   ├── NotificationBell.js        # Notification bell with badge
-│   ├── NotificationSettings.js    # Sound/Badge settings UI
-│   └── Settings.js                # Main settings dialog
-└── public/
-    └── notification-sound.mp3     # Notification sound file
+│   └── Payments.js                # Credit/Debit UI
+└── services/
+    └── notificationService.js     # PWA sound & badge
 ```
 
-## Notification Flow
+## Payment System
 
-| Event | WhatsApp | Email | PWA |
-|-------|----------|-------|-----|
-| Therapist Approved | ✅ cogni_1st | ✅ Detailed welcome | - |
-| Client Created | ✅ cogni_1st | ✅ Detailed welcome | - |
-| Appointment Fixed | ✅ cogni_appointment | ✅ Confirmation | 🔔 Sound + Badge |
-| 1 Hour Before | ✅ cogni_rem | ✅ Reminder | 🔔 Sound + Badge |
-| Payment Received | ✅ cogni_pay | ✅ Receipt | 🔔 Sound + Badge |
-| New Message | - | - | 🔔 Sound + Badge |
+### Transaction Types
+| Type | Description | Display |
+|------|-------------|---------|
+| credit | Payment received | Green badge, positive amount |
+| debit | Refund/cancellation | Red badge, negative amount |
+
+### Payment Statistics API
+```json
+{
+  "summary": {
+    "total_transactions": 10,
+    "total_amount": 50000,
+    "paid_amount": 45000,
+    "pending_amount": 5000,
+    "credit_amount": 47000,
+    "debit_amount": 2000,
+    "net_amount": 45000
+  }
+}
+```
 
 ## Test Credentials
 | Role | Login ID | Password | URL |
 |------|----------|----------|-----|
 | Super Admin | admin | admin123 | /admin-login |
+| Test Therapist | 7275005007 | Test@123 | /login |
 
 ## Known Issues
 - None currently
