@@ -345,3 +345,145 @@ class NotificationService:
                     logger.warning(f"Email failed for {client_email}: {result.error}")
             except Exception as e:
                 logger.error(f"Email error for {client_email}: {e}")
+
+
+    @staticmethod
+    async def send_appointment_cancellation(
+        client_name: str,
+        client_email: Optional[str],
+        therapist_name: str,
+        therapist_email: Optional[str],
+        assistant_email: Optional[str],
+        appointment_datetime: str,
+        cancelled_by: str,
+        cancellation_reason: str = ""
+    ):
+        """
+        Send appointment cancellation notification to client, therapist, and assistant.
+        Only via email.
+        """
+        template_data = {
+            "client_name": client_name,
+            "therapist_name": therapist_name,
+            "appointment_time": appointment_datetime,
+            "cancelled_by": cancelled_by,
+            "cancellation_reason": cancellation_reason or "No reason provided"
+        }
+        email_content = get_email_template("appointment_cancellation", template_data)
+        
+        # Send to all recipients
+        recipients = []
+        if client_email:
+            recipients.append(("client", client_email))
+        if therapist_email:
+            recipients.append(("therapist", therapist_email))
+        if assistant_email:
+            recipients.append(("assistant", assistant_email))
+        
+        for role, email in recipients:
+            try:
+                message = EmailMessage(
+                    to=email,
+                    subject=email_content["subject"],
+                    html_body=email_content["html_body"],
+                    text_body=email_content["text_body"]
+                )
+                result = await EmailProviderRegistry.send_email(message)
+                if result.success:
+                    logger.info(f"Cancellation email sent to {role}: {email}")
+                else:
+                    logger.warning(f"Email failed for {role} {email}: {result.error}")
+            except Exception as e:
+                logger.error(f"Email error for {role} {email}: {e}")
+
+    @staticmethod
+    async def send_client_self_registration_notification(
+        client_name: str,
+        client_mobile: str,
+        client_email: Optional[str],
+        therapist_email: Optional[str],
+        assistant_email: Optional[str],
+        registration_time: str,
+        dashboard_url: str = "https://cognispace.in/login"
+    ):
+        """
+        Notify therapist and assistant when a client self-registers.
+        Only via email.
+        """
+        template_data = {
+            "client_name": client_name,
+            "client_mobile": client_mobile,
+            "client_email": client_email or "Not provided",
+            "registration_time": registration_time,
+            "dashboard_url": dashboard_url
+        }
+        email_content = get_email_template("client_self_registration", template_data)
+        
+        recipients = []
+        if therapist_email:
+            recipients.append(("therapist", therapist_email))
+        if assistant_email:
+            recipients.append(("assistant", assistant_email))
+        
+        for role, email in recipients:
+            try:
+                message = EmailMessage(
+                    to=email,
+                    subject=email_content["subject"],
+                    html_body=email_content["html_body"],
+                    text_body=email_content["text_body"]
+                )
+                result = await EmailProviderRegistry.send_email(message)
+                if result.success:
+                    logger.info(f"Client registration email sent to {role}: {email}")
+                else:
+                    logger.warning(f"Email failed for {role} {email}: {result.error}")
+            except Exception as e:
+                logger.error(f"Email error for {role} {email}: {e}")
+
+    @staticmethod
+    async def send_payment_notification_to_therapist(
+        client_name: str,
+        amount: float,
+        payment_method: str,
+        receipt_number: str,
+        payment_date: str,
+        therapist_email: Optional[str],
+        assistant_email: Optional[str],
+        dashboard_url: str = "https://cognispace.in/login"
+    ):
+        """
+        Notify therapist and assistant when payment is received.
+        Only via email.
+        """
+        template_data = {
+            "client_name": client_name,
+            "amount": amount,
+            "payment_method": payment_method,
+            "receipt_number": receipt_number,
+            "payment_date": payment_date,
+            "dashboard_url": dashboard_url
+        }
+        email_content = get_email_template("payment_received_therapist", template_data)
+        
+        recipients = []
+        if therapist_email:
+            recipients.append(("therapist", therapist_email))
+        if assistant_email:
+            recipients.append(("assistant", assistant_email))
+        
+        for role, email in recipients:
+            try:
+                message = EmailMessage(
+                    to=email,
+                    subject=email_content["subject"],
+                    html_body=email_content["html_body"],
+                    text_body=email_content["text_body"]
+                )
+                result = await EmailProviderRegistry.send_email(message)
+                if result.success:
+                    logger.info(f"Payment notification email sent to {role}: {email}")
+                else:
+                    logger.warning(f"Email failed for {role} {email}: {result.error}")
+            except Exception as e:
+                logger.error(f"Email error for {role} {email}: {e}")
