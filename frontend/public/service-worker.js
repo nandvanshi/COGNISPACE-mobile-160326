@@ -230,11 +230,17 @@ self.addEventListener('notificationclick', (event) => {
 
   const url = event.notification.data?.url || '/';
   
+  // Clear badge on click
+  if (navigator.clearAppBadge) {
+    navigator.clearAppBadge();
+  }
+  
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })
       .then((windowClients) => {
         for (const client of windowClients) {
-          if (client.url === url && 'focus' in client) {
+          if (client.url.includes(self.location.origin) && 'focus' in client) {
+            client.postMessage({ type: 'NOTIFICATION_CLICKED', url });
             return client.focus();
           }
         }
