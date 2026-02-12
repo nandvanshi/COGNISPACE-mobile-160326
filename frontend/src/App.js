@@ -4,6 +4,7 @@ import axios from 'axios';
 import { Toaster } from 'sonner';
 import LoginPage from './pages/LoginPage';
 import AdminLoginPage from './pages/AdminLoginPage';
+import ForgotPassword from './pages/ForgotPassword';
 import TherapistApplicationPage from './pages/TherapistApplicationPage';
 import TherapistDashboard from './pages/TherapistDashboard';
 import ClientDashboard from './pages/ClientDashboard';
