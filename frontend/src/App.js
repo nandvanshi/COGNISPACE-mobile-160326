@@ -160,6 +160,8 @@ function App() {
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/admin-login" element={<AdminLoginPage />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ForgotPassword />} />
               <Route path="/therapist-application" element={<TherapistApplicationPage />} />
               <Route path="/register/client/:therapistCode" element={<ClientRegisterPage />} />
               {/* Legal & Compliance Pages */}
