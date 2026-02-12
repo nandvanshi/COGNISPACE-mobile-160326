@@ -223,9 +223,38 @@ const Payments = ({ isReadOnly = false }) => {
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent data-testid="payment-dialog">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-serif text-primary">Record Payment</DialogTitle>
+            <DialogTitle className="text-2xl font-serif text-primary">
+              {newPayment.transaction_type === 'debit' ? 'Record Refund/Debit' : 'Record Payment'}
+            </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleRecordPayment} className="space-y-4">
+            {/* Transaction Type Toggle */}
+            <div>
+              <Label>Transaction Type</Label>
+              <div className="flex gap-2 mt-2">
+                <Button
+                  type="button"
+                  variant={newPayment.transaction_type === 'credit' ? 'default' : 'outline'}
+                  onClick={() => setNewPayment({ ...newPayment, transaction_type: 'credit' })}
+                  className={`flex-1 ${newPayment.transaction_type === 'credit' ? 'bg-green-600 hover:bg-green-700' : ''}`}
+                  data-testid="credit-type-btn"
+                >
+                  <ArrowUpCircle size={16} className="mr-2" />
+                  Credit (Payment)
+                </Button>
+                <Button
+                  type="button"
+                  variant={newPayment.transaction_type === 'debit' ? 'default' : 'outline'}
+                  onClick={() => setNewPayment({ ...newPayment, transaction_type: 'debit' })}
+                  className={`flex-1 ${newPayment.transaction_type === 'debit' ? 'bg-red-600 hover:bg-red-700' : ''}`}
+                  data-testid="debit-type-btn"
+                >
+                  <ArrowDownCircle size={16} className="mr-2" />
+                  Debit (Refund)
+                </Button>
+              </div>
+            </div>
+
             <div>
               <Label htmlFor="payment-client">Client</Label>
               <select
@@ -245,17 +274,20 @@ const Payments = ({ isReadOnly = false }) => {
               </select>
             </div>
             <div>
-              <Label htmlFor="amount">Amount (₹)</Label>
+              <Label htmlFor="amount">
+                Amount (₹) {newPayment.transaction_type === 'debit' && <span className="text-red-500">- Refund</span>}
+              </Label>
               <Input
                 id="amount"
                 type="number"
                 step="0.01"
+                min="0"
                 data-testid="amount-input"
                 value={newPayment.amount}
                 onChange={(e) => setNewPayment({ ...newPayment, amount: e.target.value })}
                 required
-                className="mt-1"
-                placeholder="Enter amount in rupees"
+                className={`mt-1 ${newPayment.transaction_type === 'debit' ? 'border-red-300 focus:ring-red-500' : ''}`}
+                placeholder={newPayment.transaction_type === 'debit' ? 'Enter refund amount' : 'Enter amount in rupees'}
               />
             </div>
             <div>
@@ -283,13 +315,17 @@ const Payments = ({ isReadOnly = false }) => {
                 value={newPayment.notes}
                 onChange={(e) => setNewPayment({ ...newPayment, notes: e.target.value })}
                 rows={3}
-                placeholder="Session number, invoice reference, etc."
+                placeholder={newPayment.transaction_type === 'debit' ? 'Reason for refund, cancellation details...' : 'Session number, invoice reference, etc.'}
                 className="mt-1"
               />
             </div>
             <div className="flex gap-3">
-              <Button type="submit" className="flex-1" data-testid="save-payment-button">
-                Record
+              <Button 
+                type="submit" 
+                className={`flex-1 ${newPayment.transaction_type === 'debit' ? 'bg-red-600 hover:bg-red-700' : ''}`}
+                data-testid="save-payment-button"
+              >
+                {newPayment.transaction_type === 'debit' ? 'Record Refund' : 'Record Payment'}
               </Button>
               <Button
                 type="button"
