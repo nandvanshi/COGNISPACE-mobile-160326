@@ -74,7 +74,14 @@ const Payments = ({ isReadOnly = false }) => {
     ? payments.filter((p) => p.client_id === filterClient)
     : payments;
 
-  const totalRevenue = filteredPayments.reduce((sum, p) => sum + p.amount, 0);
+  // Calculate totals considering transaction_type
+  const creditTotal = filteredPayments
+    .filter(p => p.transaction_type !== 'debit')
+    .reduce((sum, p) => sum + p.amount, 0);
+  const debitTotal = filteredPayments
+    .filter(p => p.transaction_type === 'debit')
+    .reduce((sum, p) => sum + p.amount, 0);
+  const netTotal = creditTotal - debitTotal;
 
   if (loading) {
     return <div className="text-center py-12">Loading payments...</div>;
