@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 const CACHE_NAME = `cognispace-${CACHE_VERSION}`;
 const STATIC_CACHE = `cognispace-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `cognispace-dynamic-${CACHE_VERSION}`;
@@ -8,7 +8,8 @@ const STATIC_ASSETS = [
   '/manifest.json',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png',
-  '/offline.html'
+  '/offline.html',
+  '/notification-sound.mp3'
 ];
 
 // API routes that should use network-first strategy
