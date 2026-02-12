@@ -343,3 +343,61 @@ async def clear_all_notifications(current_user: dict = Depends(get_current_user)
     """Clear all notifications for current user"""
     result = await db.notifications.delete_many({"user_id": current_user["id"]})
     return {"deleted": result.deleted_count}
+
+
+# ============= USER NOTIFICATION PREFERENCES (Sound & Badge) =============
+
+class UserNotificationPreferences(BaseModel):
+    sound_enabled: Optional[bool] = True
+    badge_enabled: Optional[bool] = True
+
+
+@router.get("/preferences")
+async def get_notification_preferences(current_user: dict = Depends(get_current_user)):
+    """Get user's notification preferences (sound, badge)"""
+    prefs = await db.user_notification_preferences.find_one(
+        {"user_id": current_user["id"]},
+        {"_id": 0}
+    )
+    
+    # Return defaults if no preferences exist
+    if not prefs:
+        return {
+            "sound_enabled": True,
+            "badge_enabled": True
+        }
+    
+    return {
+        "sound_enabled": prefs.get("sound_enabled", True),
+        "badge_enabled": prefs.get("badge_enabled", True)
+    }
+
+
+@router.put("/preferences")
+async def update_notification_preferences(
+    prefs: UserNotificationPreferences,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update user's notification preferences (sound, badge)"""
+    update_doc = {
+        "user_id": current_user["id"],
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    if prefs.sound_enabled is not None:
+        update_doc["sound_enabled"] = prefs.sound_enabled
+    
+    if prefs.badge_enabled is not None:
+        update_doc["badge_enabled"] = prefs.badge_enabled
+    
+    await db.user_notification_preferences.update_one(
+        {"user_id": current_user["id"]},
+        {"$set": update_doc},
+        upsert=True
+    )
+    
+    return {
+        "message": "Preferences updated successfully",
+        "sound_enabled": prefs.sound_enabled,
+        "badge_enabled": prefs.badge_enabled
+    }
