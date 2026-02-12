@@ -487,3 +487,89 @@ class NotificationService:
                     logger.warning(f"Email failed for {role} {email}: {result.error}")
             except Exception as e:
                 logger.error(f"Email error for {role} {email}: {e}")
+
+    @staticmethod
+    async def send_consent_accepted_notification(
+        client_name: str,
+        therapist_name: str,
+        signature_date: str,
+        signature_method: str,
+        therapist_email: Optional[str],
+        assistant_email: Optional[str],
+        dashboard_url: str = "https://cognispace.in/login"
+    ):
+        """
+        Notify therapist and assistant when client accepts consent form.
+        Only via email.
+        """
+        template_data = {
+            "client_name": client_name,
+            "therapist_name": therapist_name,
+            "signature_date": signature_date,
+            "signature_method": signature_method,
+            "consent_summary": "Informed Consent for Psychological Services",
+            "dashboard_url": dashboard_url
+        }
+        email_content = get_email_template("consent_accepted", template_data)
+        
+        recipients = []
+        if therapist_email:
+            recipients.append(("therapist", therapist_email))
+        if assistant_email:
+            recipients.append(("assistant", assistant_email))
+        
+        for role, email in recipients:
+            try:
+                message = EmailMessage(
+                    to=email,
+                    subject=email_content["subject"],
+                    html_body=email_content["html_body"],
+                    text_body=email_content["text_body"]
+                )
+                result = await EmailProviderRegistry.send_email(message)
+                if result.success:
+                    logger.info(f"Consent accepted email sent to {role}: {email}")
+                else:
+                    logger.warning(f"Email failed for {role} {email}: {result.error}")
+            except Exception as e:
+                logger.error(f"Email error for {role} {email}: {e}")
+
+    @staticmethod
+    async def send_daily_summary(
+        recipient_email: str,
+        recipient_name: str,
+        date: str,
+        appointments: list,
+        pending_payments: list,
+        pending_notes: list,
+        is_assistant: bool = False,
+        dashboard_url: str = "https://cognispace.in/login"
+    ):
+        """
+        Send daily summary email to therapist or assistant.
+        Includes: today's appointments, pending payments, pending session notes
+        """
+        template_data = {
+            "date": date,
+            "appointments": appointments,
+            "pending_payments": pending_payments,
+            "pending_notes": pending_notes,
+            "is_assistant": is_assistant,
+            "dashboard_url": dashboard_url
+        }
+        email_content = get_email_template("daily_summary", template_data)
+        
+        try:
+            message = EmailMessage(
+                to=recipient_email,
+                subject=email_content["subject"],
+                html_body=email_content["html_body"],
+                text_body=email_content["text_body"]
+            )
+            result = await EmailProviderRegistry.send_email(message)
+            if result.success:
+                logger.info(f"Daily summary email sent to {recipient_email}")
+            else:
+                logger.warning(f"Daily summary email failed for {recipient_email}: {result.error}")
+        except Exception as e:
+            logger.error(f"Daily summary email error for {recipient_email}: {e}")
