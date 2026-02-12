@@ -489,14 +489,25 @@ async def get_detailed_payment_report(
     paid_amount = sum(p.get("amount", 0) for p in payments if p.get("payment_status") == "paid")
     pending_amount = sum(p.get("amount", 0) for p in payments if p.get("payment_status") == "pending")
     
+    # Calculate net amounts considering transaction_type (credit/debit)
+    credit_amount = sum(p.get("amount", 0) for p in payments if p.get("transaction_type", "credit") == "credit" and p.get("payment_status") == "paid")
+    debit_amount = sum(p.get("amount", 0) for p in payments if p.get("transaction_type") == "debit")
+    net_amount = credit_amount - debit_amount
+    
     # Group by payment method
     by_method = {}
     for p in payments:
         method = p.get("payment_method", "unknown")
         if method not in by_method:
-            by_method[method] = {"count": 0, "total": 0}
+            by_method[method] = {"count": 0, "total": 0, "credit": 0, "debit": 0}
         by_method[method]["count"] += 1
-        by_method[method]["total"] += p.get("amount", 0)
+        amount = p.get("amount", 0)
+        if p.get("transaction_type") == "debit":
+            by_method[method]["debit"] += amount
+            by_method[method]["total"] -= amount
+        else:
+            by_method[method]["credit"] += amount
+            by_method[method]["total"] += amount
     
     # Group by client
     by_client = {}
@@ -504,13 +515,19 @@ async def get_detailed_payment_report(
         client_name = p.get("client_name", "Unknown")
         client_id_key = p.get("client_id", "unknown")
         if client_id_key not in by_client:
-            by_client[client_id_key] = {"name": client_name, "count": 0, "total": 0, "paid": 0, "pending": 0}
+            by_client[client_id_key] = {"name": client_name, "count": 0, "total": 0, "paid": 0, "pending": 0, "debit": 0}
         by_client[client_id_key]["count"] += 1
-        by_client[client_id_key]["total"] += p.get("amount", 0)
-        if p.get("payment_status") == "paid":
-            by_client[client_id_key]["paid"] += p.get("amount", 0)
+        amount = p.get("amount", 0)
+        
+        if p.get("transaction_type") == "debit":
+            by_client[client_id_key]["debit"] += amount
+            by_client[client_id_key]["total"] -= amount
         else:
-            by_client[client_id_key]["pending"] += p.get("amount", 0)
+            by_client[client_id_key]["total"] += amount
+            if p.get("payment_status") == "paid":
+                by_client[client_id_key]["paid"] += amount
+            else:
+                by_client[client_id_key]["pending"] += amount
     
     # Format payments for response
     formatted_payments = []
@@ -523,6 +540,7 @@ async def get_detailed_payment_report(
             "amount": p.get("amount", 0),
             "payment_method": p.get("payment_method", "cash"),
             "payment_status": p.get("payment_status", "paid"),
+            "transaction_type": p.get("transaction_type", "credit"),
             "notes": p.get("notes", ""),
             "created_at": p.get("created_at", "")
         })
@@ -533,6 +551,9 @@ async def get_detailed_payment_report(
             "total_amount": total_amount,
             "paid_amount": paid_amount,
             "pending_amount": pending_amount,
+            "credit_amount": credit_amount,
+            "debit_amount": debit_amount,
+            "net_amount": net_amount,
             "collection_rate": round((paid_amount / total_amount * 100), 2) if total_amount > 0 else 0
         },
         "by_payment_method": by_method,
