@@ -9,6 +9,7 @@ import {
   ChevronRight, Loader2, BellOff
 } from 'lucide-react';
 import { toast } from 'sonner';
+import notificationService from '../services/notificationService';
 
 // Format date to IST DD/MM/YYYY HH:mm
 const formatNotificationTime = (dateStr) => {
