@@ -103,7 +103,7 @@ async def generate_bill_number():
         try:
             last_num = int(last_bill["bill_number"].split("-")[-1])
             new_num = last_num + 1
-        except:
+        except (ValueError, IndexError, KeyError):
             new_num = 1
     else:
         new_num = 1
