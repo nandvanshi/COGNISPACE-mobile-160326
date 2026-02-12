@@ -362,10 +362,11 @@ async def _send_subscription_expiry_warning(db, subscription: dict, days_remaini
 
 async def send_morning_schedule_briefing(db):
     """
-    Send morning schedule briefing to therapists and assistants.
+    Send morning daily summary briefing to therapists and assistants.
+    Includes: today's appointments, pending payments, pending session notes.
     Runs daily at 7:00 AM IST.
     """
-    logger.info("Running morning schedule briefing...")
+    logger.info("Running morning daily summary briefing...")
     
     try:
         # Get today's date in IST
@@ -385,6 +386,7 @@ async def send_morning_schedule_briefing(db):
         
         for therapist in therapists:
             therapist_id = therapist.get("id")
+            therapist_email = therapist.get("email")
             
             # Get today's appointments for this therapist
             appointments = await db.appointments.find({
@@ -410,80 +412,90 @@ async def send_morning_schedule_briefing(db):
                     "duration": appt.get("duration", 50)
                 })
             
-            # Check notification preferences
-            notif_pref = await db.notification_preferences.find_one(
-                {"user_id": therapist_id, "event": "daily_briefing"},
-                {"_id": 0}
-            )
+            # Get pending payments for this therapist
+            pending_payments_raw = await db.payments.find({
+                "therapist_id": therapist_id,
+                "payment_status": "pending"
+            }, {"_id": 0, "client_name": 1, "amount": 1}).to_list(100)
             
-            send_email = notif_pref.get("send_email", True) if notif_pref else True
-            send_whatsapp = notif_pref.get("send_whatsapp", False) if notif_pref else False
+            pending_payments = [
+                {"client_name": p.get("client_name", "Unknown"), "amount": p.get("amount", 0)}
+                for p in pending_payments_raw
+            ]
             
-            template_data = {
-                "date": today_str,
-                "appointments": formatted_appts,
-                "dashboard_url": "/dashboard"
-            }
+            # Get pending session notes (completed appointments without notes in last 7 days)
+            seven_days_ago = now_ist - timedelta(days=7)
+            completed_appts = await db.appointments.find({
+                "therapist_id": therapist_id,
+                "status": "completed",
+                "end_time": {"$gte": seven_days_ago.isoformat()},
+                "note_created": {"$ne": True}
+            }, {"_id": 0, "client_id": 1, "start_time": 1}).to_list(50)
             
-            # Send email
-            if send_email and therapist.get("email"):
+            pending_notes = []
+            for appt in completed_appts:
+                # Check if note exists
+                note_exists = await db.session_notes.find_one({"appointment_id": appt.get("id")}, {"_id": 0, "id": 1})
+                if not note_exists:
+                    client = await db.users.find_one({"id": appt.get("client_id")}, {"_id": 0, "full_name": 1})
+                    appt_time = appt.get("start_time", "")
+                    try:
+                        dt = datetime.fromisoformat(appt_time.replace('Z', '+00:00'))
+                        session_date = (dt + timedelta(hours=5, minutes=30)).strftime("%d/%m %I:%M %p")
+                    except (ValueError, AttributeError):
+                        session_date = appt_time[:10] if appt_time else "N/A"
+                    
+                    pending_notes.append({
+                        "client_name": client.get("full_name", "Unknown") if client else "Unknown",
+                        "session_date": session_date
+                    })
+            
+            # Send email to therapist
+            if therapist_email:
                 try:
-                    from services.email import EmailService
-                    await EmailService.send_notification_email(
-                        to_user_id=therapist_id,
-                        event="daily_schedule_briefing",
-                        data=template_data,
-                        therapist_id=therapist_id,
-                        force=True
+                    from services.notification_service import NotificationService
+                    await NotificationService.send_daily_summary(
+                        recipient_email=therapist_email,
+                        recipient_name=therapist.get("full_name", "Therapist"),
+                        date=today_str,
+                        appointments=formatted_appts,
+                        pending_payments=pending_payments,
+                        pending_notes=pending_notes,
+                        is_assistant=False
                     )
                     sent_count += 1
                 except Exception as e:
-                    logger.warning(f"Failed to send morning briefing email to {therapist_id}: {e}")
-            
-            # Send WhatsApp (if opted in)
-            if send_whatsapp and therapist.get("mobile"):
-                try:
-                    from services.whatsapp import WhatsAppService
-                    appt_count = len(formatted_appts)
-                    message = f"Good Morning! 📅 You have {appt_count} appointment(s) today ({today_str}). Login to COGNISPACE to view details."
-                    await WhatsAppService.send_text_message(
-                        to_number=therapist.get("mobile"),
-                        message=message
-                    )
-                except Exception as e:
-                    logger.warning(f"Failed to send morning briefing WhatsApp to {therapist_id}: {e}")
+                    logger.warning(f"Failed to send daily summary to therapist {therapist_id}: {e}")
             
             # Also send to assistants of this therapist
             assistants = await db.users.find({
                 "role": "assistant",
                 "therapist_id": therapist_id,
                 "status": "active"
-            }, {"_id": 0, "id": 1, "email": 1, "mobile": 1}).to_list(10)
+            }, {"_id": 0, "id": 1, "full_name": 1, "email": 1}).to_list(10)
             
             for assistant in assistants:
-                assistant_pref = await db.notification_preferences.find_one(
-                    {"user_id": assistant.get("id"), "event": "daily_briefing"},
-                    {"_id": 0}
-                )
-                
-                if assistant_pref and assistant_pref.get("send_email", True) and assistant.get("email"):
+                if assistant.get("email"):
                     try:
-                        from services.email import EmailService
-                        await EmailService.send_notification_email(
-                            to_user_id=assistant.get("id"),
-                            event="daily_schedule_briefing",
-                            data=template_data,
-                            therapist_id=therapist_id,
-                            force=True
+                        from services.notification_service import NotificationService
+                        await NotificationService.send_daily_summary(
+                            recipient_email=assistant.get("email"),
+                            recipient_name=assistant.get("full_name", "Assistant"),
+                            date=today_str,
+                            appointments=formatted_appts,
+                            pending_payments=pending_payments,
+                            pending_notes=[],  # Assistants don't see pending notes
+                            is_assistant=True
                         )
+                        sent_count += 1
                     except Exception as e:
-                        logger.warning(f"Failed to send morning briefing to assistant: {e}")
+                        logger.warning(f"Failed to send daily summary to assistant: {e}")
         
         if sent_count > 0:
-            logger.info(f"Sent {sent_count} morning schedule briefings")
+            logger.info(f"Sent {sent_count} daily summary briefings")
         
     except Exception as e:
-        logger.error(f"Error in morning schedule briefing job: {e}")
+        logger.error(f"Error in morning daily summary briefing job: {e}")
 
 
 async def send_daily_payment_statement(db):
