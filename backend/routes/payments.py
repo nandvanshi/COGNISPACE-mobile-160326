@@ -152,6 +152,7 @@ async def record_payment(payment_data: PaymentCreate, current_user: dict = Depen
         "amount": payment_data.amount,
         "payment_method": payment_data.payment_method,
         "payment_status": payment_data.payment_status or "paid",
+        "transaction_type": payment_data.transaction_type or "credit",
         "appointment_id": payment_data.appointment_id,
         "session_note_id": payment_data.session_note_id,
         "notes": payment_data.notes,
