@@ -8,7 +8,7 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { toast } from 'sonner';
-import { Plus, IndianRupee } from 'lucide-react';
+import { Plus, IndianRupee, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
 import { formatCurrency, formatDate } from '../utils/formatUtils';
 
 const Payments = ({ isReadOnly = false }) => {
@@ -19,6 +19,7 @@ const Payments = ({ isReadOnly = false }) => {
     client_id: '',
     amount: '',
     payment_method: 'cash',
+    transaction_type: 'credit',
     notes: '',
   });
   const [loading, setLoading] = useState(true);
