@@ -358,12 +358,20 @@ class TestPaymentReportsWithTransactionType:
         
         admin_token = admin_response.json()["token"]
         
+        # Get therapists (approved status, not active)
         therapists_response = requests.get(
-            f"{BASE_URL}/api/admin/therapists?status=active",
+            f"{BASE_URL}/api/admin/therapists",
             headers={"Authorization": f"Bearer {admin_token}"}
         )
         
-        if therapists_response.status_code != 200 or not therapists_response.json():
+        if therapists_response.status_code != 200:
+            pytest.skip("Failed to get therapists")
+        
+        therapists = therapists_response.json()
+        # Filter for approved therapists with active subscription
+        active_therapists = [t for t in therapists if t.get("status") == "approved" and t.get("subscription_status") == "active"]
+        
+        if not active_therapists:
             pytest.skip("No active therapists found")
         
         therapist = active_therapists[0]
