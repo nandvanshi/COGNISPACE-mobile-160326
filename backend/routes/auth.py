@@ -608,8 +608,10 @@ async def forgot_password(request: ForgotPasswordRequest):
         "used": False
     })
     
-    # Get frontend URL from environment
-    frontend_url = os.environ.get("FRONTEND_URL", "https://cognispace.in")
+    # Get frontend URL from environment (required for password reset links)
+    frontend_url = os.environ.get("FRONTEND_URL") or os.environ.get("REACT_APP_BACKEND_URL", "").replace("/api", "").rstrip("/")
+    if not frontend_url:
+        frontend_url = "https://cognispace.in"  # Production fallback
     reset_link = f"{frontend_url}/reset-password?token={reset_token}"
     
     # Send email
