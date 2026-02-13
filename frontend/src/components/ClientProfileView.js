@@ -269,7 +269,7 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
     setLoadingSlots(true);
     try {
       // Get therapist ID from client's assigned therapist
-      const response = await axios.get(`${API}/available-slots/${client.therapist_id}?date=${date}`);
+      const response = await axios.get(`${API}/available-slots?therapist_id=${client.therapist_id}&date=${date}`);
       // API returns array directly, transform to {start, end} format
       const slots = Array.isArray(response.data) ? response.data.map(s => ({
         start: s.start_time,
@@ -277,6 +277,7 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
       })) : [];
       setAvailableSlots(slots);
     } catch (error) {
+      console.error('Failed to load slots:', error.response?.data || error);
       toast.error('Failed to load available slots');
       setAvailableSlots([]);
     } finally {
