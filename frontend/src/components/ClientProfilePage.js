@@ -132,13 +132,14 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
     }
     setLoadingSlots(true);
     try {
-      const response = await axios.get(`${API}/available-slots/${client.therapist_id}?date=${date}`);
+      const response = await axios.get(`${API}/available-slots?therapist_id=${client.therapist_id}&date=${date}`);
       const slots = Array.isArray(response.data) ? response.data.map(s => ({
         start: s.start_time,
         end: s.end_time
       })) : [];
       setAvailableSlots(slots);
     } catch (error) {
+      console.error('Failed to load slots:', error.response?.data || error);
       toast.error('Failed to load available slots');
       setAvailableSlots([]);
     } finally {
