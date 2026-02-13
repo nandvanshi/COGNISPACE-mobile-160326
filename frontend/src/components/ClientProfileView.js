@@ -270,10 +270,10 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
     try {
       // Get therapist ID from client's assigned therapist
       const response = await axios.get(`${API}/available-slots?therapist_id=${client.therapist_id}&date=${date}`);
-      // API returns array directly, transform to {start, end} format
+      // API returns {start, end} as ISO datetime strings
       const slots = Array.isArray(response.data) ? response.data.map(s => ({
-        start: s.start_time,
-        end: s.end_time
+        start: s.start,
+        end: s.end
       })) : [];
       setAvailableSlots(slots);
     } catch (error) {
