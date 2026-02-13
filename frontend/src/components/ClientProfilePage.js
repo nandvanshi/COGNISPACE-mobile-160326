@@ -133,9 +133,10 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
     setLoadingSlots(true);
     try {
       const response = await axios.get(`${API}/available-slots?therapist_id=${client.therapist_id}&date=${date}`);
+      // API returns {start, end} as ISO datetime strings
       const slots = Array.isArray(response.data) ? response.data.map(s => ({
-        start: s.start_time,
-        end: s.end_time
+        start: s.start,
+        end: s.end
       })) : [];
       setAvailableSlots(slots);
     } catch (error) {
