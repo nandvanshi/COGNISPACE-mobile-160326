@@ -151,16 +151,25 @@ const TherapistSchedule = ({ isReadOnly = false, isAssistant = false }) => {
       days.push(null);
     }
     
+    // Helper function to get local date string (YYYY-MM-DD)
+    const getLocalDateStr = (d) => {
+      const yr = d.getFullYear();
+      const mn = String(d.getMonth() + 1).padStart(2, '0');
+      const dy = String(d.getDate()).padStart(2, '0');
+      return `${yr}-${mn}-${dy}`;
+    };
+    
     for (let d = 1; d <= lastDay.getDate(); d++) {
       const date = new Date(year, month, d);
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = getLocalDateStr(date);
       
       const dayAppts = (appointments || []).filter(appt => {
         if (!appt?.start_time) return false;
         try {
           const apptDate = new Date(appt.start_time);
           if (isNaN(apptDate.getTime())) return false;
-          return apptDate.toISOString().split('T')[0] === dateStr && appt.status !== 'cancelled';
+          // Compare using local date for the appointment
+          return getLocalDateStr(apptDate) === dateStr && appt.status !== 'cancelled';
         } catch (e) {
           return false;
         }
@@ -168,8 +177,8 @@ const TherapistSchedule = ({ isReadOnly = false, isAssistant = false }) => {
       
       const todayIST = nowIST();
       const todayStr = todayIST instanceof Date && !isNaN(todayIST.getTime()) 
-        ? todayIST.toISOString().split('T')[0] 
-        : new Date().toISOString().split('T')[0];
+        ? getLocalDateStr(todayIST)
+        : getLocalDateStr(new Date());
       
       days.push({
         date,
