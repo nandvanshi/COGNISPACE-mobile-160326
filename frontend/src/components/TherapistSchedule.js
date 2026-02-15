@@ -95,6 +95,7 @@ const TherapistSchedule = ({ isReadOnly = false, isAssistant = false }) => {
   const [showAddAvailabilityDialog, setShowAddAvailabilityDialog] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [selectedSlot, setSelectedSlot] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false); // Prevent double submission
   
   // Form states
   const [newAppt, setNewAppt] = useState({
