@@ -13,6 +13,7 @@ import { Plus, FileText, Edit, Trash2, Calendar, Clock, Link, User, Zap, Bookmar
 import { formatDate, formatTime, formatDateLong } from '../utils/formatUtils';
 import CaseHistoryWizard from './CaseHistoryWizard';
 import TherapyConsent from './TherapyConsent';
+import ClientSelect from './ClientSelect';
 
 // Helper to safely extract error message from API response
 const getErrorMessage = (error, fallback = 'An error occurred') => {
