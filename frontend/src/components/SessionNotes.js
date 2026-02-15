@@ -580,21 +580,14 @@ const SessionNotes = ({ isReadOnly = false }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label>Client *</Label>
-                <Select
-                  value={newNote.client_id || undefined}
-                  onValueChange={(value) => handleClientSelect(value)}
-                >
-                  <SelectTrigger className="mt-1" data-testid="note-client-select">
-                    <SelectValue placeholder="Select a client" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {clients.map((client) => (
-                      <SelectItem key={client.id} value={client.id}>
-                        {client.full_name} ({client.client_id})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="mt-1">
+                  <ClientSelect
+                    clients={clients}
+                    value={newNote.client_id}
+                    onValueChange={(value) => handleClientSelect(value)}
+                    placeholder="Search or select client..."
+                  />
+                </div>
               </div>
 
               <div>
