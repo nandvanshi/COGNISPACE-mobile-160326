@@ -114,10 +114,18 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
     fetchClientData();
   }, [fetchClientData]);
   
+  // Helper function to get local date string (YYYY-MM-DD)
+  const getLocalDateStr = (d) => {
+    const yr = d.getFullYear();
+    const mn = String(d.getMonth() + 1).padStart(2, '0');
+    const dy = String(d.getDate()).padStart(2, '0');
+    return `${yr}-${mn}-${dy}`;
+  };
+  
   // ========== Book Appointment Functions ==========
   const handleOpenBookAppointment = () => {
     const today = new Date();
-    const dateStr = today.toISOString().split('T')[0];
+    const dateStr = getLocalDateStr(today);
     setSelectedDate(dateStr);
     setSelectedSlot(null);
     setAppointmentNotes('');
