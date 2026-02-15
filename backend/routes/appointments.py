@@ -352,8 +352,7 @@ async def create_appointment(appt_data: AppointmentCreate, current_user: dict = 
             from services.whatsapp import WhatsAppService
             therapist_user = await db.users.find_one({"id": therapist_id}, {"_id": 0, "mobile": 1})
             if therapist_user and therapist_user.get("mobile") and WhatsAppService.is_configured():
-                appt_date = appointment_doc["start_time"][:10]
-                appt_time = appointment_doc["start_time"][11:16]
+                appt_date, appt_time = format_datetime_ist(appointment_doc["start_time"])
                 await WhatsAppService.send_text_message(
                     to_number=therapist_user.get("mobile"),
                     message=f"New Appointment: {client['full_name']} on {appt_date} at {appt_time}"
