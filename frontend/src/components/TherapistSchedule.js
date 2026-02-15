@@ -444,7 +444,11 @@ const TherapistSchedule = ({ isReadOnly = false, isAssistant = false }) => {
     }
 
     try {
-      const dateStr = selectedDate.toISOString().split('T')[0];
+      // Use local date string to avoid timezone issues
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(selectedDate.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
       let startDatetime, endDatetime;
 
       if (newBlock.is_all_day) {
