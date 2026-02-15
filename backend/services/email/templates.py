@@ -2,7 +2,7 @@
 Email Templates - HTML templates for different notification events
 """
 from typing import Dict, Any
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 
 def format_ist_datetime(dt_str: str) -> str:
@@ -11,11 +11,16 @@ def format_ist_datetime(dt_str: str) -> str:
         return "N/A"
     try:
         dt = datetime.fromisoformat(dt_str.replace('Z', '+00:00'))
-        # Add 5:30 hours for IST
-        from datetime import timedelta
-        ist_dt = dt + timedelta(hours=5, minutes=30)
+        # Check if already has timezone info
+        if dt.tzinfo is not None:
+            # Convert to IST timezone properly
+            ist_tz = timezone(timedelta(hours=5, minutes=30))
+            ist_dt = dt.astimezone(ist_tz)
+        else:
+            # Assume UTC and add IST offset
+            ist_dt = dt + timedelta(hours=5, minutes=30)
         return ist_dt.strftime("%d/%m/%Y %H:%M")
-    except:
+    except Exception:
         return dt_str
 
 
