@@ -77,24 +77,32 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
         axios.get(`${API}/clients/new-registrations`).catch(() => ({ data: [] })),
       ]);
 
-      const today = nowIST();
-      today.setHours(0, 0, 0, 0);
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
+      // Get current IST time
       const now = nowIST();
+      
+      // Today's date in IST (midnight)
+      const todayIST = nowIST();
+      todayIST.setHours(0, 0, 0, 0);
+      
+      // Tomorrow's date in IST (midnight)
+      const tomorrowIST = new Date(todayIST);
+      tomorrowIST.setDate(tomorrowIST.getDate() + 1);
 
-      // Calculate week range
-      const weekStart = new Date(today);
+      // Calculate week range in IST
+      const weekStart = new Date(todayIST);
       weekStart.setDate(weekStart.getDate() - weekStart.getDay()); // Start of week (Sunday)
-      const weekEnd = new Date(today);
+      const weekEnd = new Date(todayIST);
       weekEnd.setDate(weekEnd.getDate() + 7);
 
       const allAppts = apptsRes.data;
       
-      // Today's appointments
+      // Today's appointments - compare IST dates properly
       const todayAppts = allAppts.filter((appt) => {
         const apptDate = toIST(appt.start_time);
-        return apptDate >= today && apptDate < tomorrow && appt.status !== 'cancelled';
+        // Compare only date part (year, month, day) in IST
+        const apptDateOnly = new Date(apptDate);
+        apptDateOnly.setHours(0, 0, 0, 0);
+        return apptDateOnly.getTime() === todayIST.getTime() && appt.status !== 'cancelled';
       }).sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
 
       // This week's appointments (for stats)
