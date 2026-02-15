@@ -71,17 +71,23 @@ async def get_assistant_dashboard(current_user: dict = Depends(require_assistant
     
     therapist = await db.users.find_one({"id": therapist_id}, {"_id": 0, "full_name": 1, "email": 1, "mobile": 1})
     
+    # Get current time in IST
     now_utc = datetime.now(timezone.utc)
     now_ist = now_utc.astimezone(IST)
+    
+    # Today's date range in IST (midnight to midnight)
     today_start_ist = now_ist.replace(hour=0, minute=0, second=0, microsecond=0)
     today_end_ist = now_ist.replace(hour=23, minute=59, second=59, microsecond=999999)
-    today_start_utc = today_start_ist.astimezone(timezone.utc)
-    today_end_utc = today_end_ist.astimezone(timezone.utc)
+    
+    # Convert to ISO string format for comparison
+    # Note: Database stores appointments in ISO format, comparison should work with strings
+    today_start_str = today_start_ist.isoformat()
+    today_end_str = today_end_ist.isoformat()
     
     todays_appointments = await db.appointments.find({
         "therapist_id": therapist_id,
-        "start_time": {"$gte": today_start_utc.isoformat(), "$lte": today_end_utc.isoformat()},
-        "status": {"$in": ["scheduled", "in_progress"]}
+        "start_time": {"$gte": today_start_str, "$lte": today_end_str},
+        "status": {"$in": ["scheduled", "in_progress", "completed"]}
     }, {"_id": 0}).sort("start_time", 1).to_list(50)
     
     call_reminders = await db.call_reminders.find({
