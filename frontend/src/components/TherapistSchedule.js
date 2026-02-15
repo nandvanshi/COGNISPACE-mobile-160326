@@ -373,6 +373,10 @@ const TherapistSchedule = ({ isReadOnly = false, isAssistant = false }) => {
   // Schedule new appointment
   const handleScheduleAppointment = async (e) => {
     e.preventDefault();
+    
+    // Prevent double submission
+    if (isSubmitting) return;
+    
     if (!newAppt.client_id || !selectedSlot) {
       toast.error('Please select a client');
       return;
@@ -386,6 +390,7 @@ const TherapistSchedule = ({ isReadOnly = false, isAssistant = false }) => {
       return;
     }
 
+    setIsSubmitting(true);
     try {
       await axios.post(`${API}/appointments`, {
         client_id: newAppt.client_id,
@@ -401,6 +406,8 @@ const TherapistSchedule = ({ isReadOnly = false, isAssistant = false }) => {
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to schedule appointment');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
