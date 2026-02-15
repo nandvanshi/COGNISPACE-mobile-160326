@@ -283,21 +283,14 @@ const RecurringAppointments = ({ isReadOnly = false }) => {
           <form onSubmit={handleCreatePattern} className="space-y-4">
             <div>
               <Label>Client *</Label>
-              <Select
-                value={newPattern.client_id}
-                onValueChange={(value) => setNewPattern({ ...newPattern, client_id: value })}
-              >
-                <SelectTrigger className="mt-1" data-testid="pattern-client-select">
-                  <SelectValue placeholder="Select a client" />
-                </SelectTrigger>
-                <SelectContent>
-                  {clients.map((client) => (
-                    <SelectItem key={client.id} value={client.id}>
-                      {client.full_name} ({client.client_id})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="mt-1">
+                <ClientSelect
+                  clients={clients}
+                  value={newPattern.client_id}
+                  onValueChange={(value) => setNewPattern({ ...newPattern, client_id: value })}
+                  placeholder="Search or select client..."
+                />
+              </div>
             </div>
 
             <div>
