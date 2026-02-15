@@ -287,8 +287,9 @@ async def create_appointment(appt_data: AppointmentCreate, current_user: dict = 
     # Send in-app notification to client about appointment confirmation
     try:
         from routes.notifications import notify_client_appointment_confirmed
-        # Format time nicely
-        formatted_time = f"{appointment_doc['start_time'][:10]} {appointment_doc['start_time'][11:16]}"
+        # Format time in IST
+        appt_date_ist, appt_time_ist = format_datetime_ist(appointment_doc['start_time'])
+        formatted_time = f"{appt_date_ist} {appt_time_ist}"
         await notify_client_appointment_confirmed(
             appointment_doc["client_id"],
             therapist_name,
