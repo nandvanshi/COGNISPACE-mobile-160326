@@ -1000,21 +1000,14 @@ const TherapistSchedule = ({ isReadOnly = false, isAssistant = false }) => {
 
             <div>
               <Label htmlFor="client">Client *</Label>
-              <Select
-                value={newAppt.client_id}
-                onValueChange={(v) => setNewAppt({ ...newAppt, client_id: v })}
-              >
-                <SelectTrigger id="client" className="mt-1">
-                  <SelectValue placeholder="Select client" />
-                </SelectTrigger>
-                <SelectContent>
-                  {clients.map(client => (
-                    <SelectItem key={client.id} value={client.id}>
-                      {client.full_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="mt-1">
+                <ClientSelect
+                  clients={clients}
+                  value={newAppt.client_id}
+                  onValueChange={(v) => setNewAppt({ ...newAppt, client_id: v })}
+                  placeholder="Search or select client..."
+                />
+              </div>
             </div>
 
             <div>
