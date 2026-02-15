@@ -108,7 +108,9 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
       // This week's appointments (for stats)
       const thisWeekAppts = allAppts.filter((appt) => {
         const apptDate = toIST(appt.start_time);
-        return apptDate >= weekStart && apptDate < weekEnd;
+        const apptDateOnly = new Date(apptDate);
+        apptDateOnly.setHours(0, 0, 0, 0);
+        return apptDateOnly >= weekStart && apptDateOnly < weekEnd;
       });
 
       // Week stats
@@ -117,10 +119,12 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
       const weekCancelled = thisWeekAppts.filter(a => a.status === 'cancelled').length;
       const weekNoShows = thisWeekAppts.filter(a => a.status === 'no_show').length;
 
-      // Week's appointments (grouped by day) - for display
+      // Week's appointments (grouped by day) - for display (today onwards)
       const weekAppts = allAppts.filter((appt) => {
         const apptDate = toIST(appt.start_time);
-        return apptDate >= today && apptDate < weekEnd && appt.status !== 'cancelled';
+        const apptDateOnly = new Date(apptDate);
+        apptDateOnly.setHours(0, 0, 0, 0);
+        return apptDateOnly >= todayIST && apptDateOnly < weekEnd && appt.status !== 'cancelled';
       }).sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
 
       // Group by day for week view
@@ -133,7 +137,7 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
 
       const completedToday = todayAppts.filter(a => a.status === 'completed').length;
 
-      // Find next upcoming appointment
+      // Find next upcoming appointment (after current IST time)
       const upcomingAppts = allAppts
         .filter(a => toIST(a.start_time) > now && a.status === 'scheduled')
         .sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
