@@ -4,7 +4,7 @@ Appointment management routes
 from fastapi import APIRouter, HTTPException, Depends, Query
 from pydantic import BaseModel, ConfigDict
 from typing import List, Optional
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import uuid
 
 from database import db
@@ -12,6 +12,18 @@ from dependencies import get_current_user, log_audit
 from services.notification_service import NotificationService
 
 router = APIRouter(prefix="/appointments", tags=["appointments"])
+
+# IST timezone offset
+IST_OFFSET = timedelta(hours=5, minutes=30)
+
+def format_datetime_ist(dt_str: str) -> tuple:
+    """Convert ISO datetime string to IST date and time strings"""
+    try:
+        dt = datetime.fromisoformat(dt_str.replace('Z', '+00:00'))
+        ist_dt = dt + IST_OFFSET
+        return ist_dt.strftime("%d/%m/%Y"), ist_dt.strftime("%H:%M")
+    except Exception:
+        return dt_str[:10], dt_str[11:16] if len(dt_str) > 16 else "N/A"
 
 
 # ============= APPOINTMENT MODELS =============
