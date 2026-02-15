@@ -194,7 +194,12 @@ const TherapistSchedule = ({ isReadOnly = false, isAssistant = false }) => {
       ? selectedDate 
       : new Date();
     
-    const dateStr = safeDate.toISOString().split('T')[0];
+    // Use local date string (not UTC) to avoid timezone issues
+    const year = safeDate.getFullYear();
+    const month = String(safeDate.getMonth() + 1).padStart(2, '0');
+    const day = String(safeDate.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
+    
     const dayName = getDayName(safeDate);
     const dayAvailability = availability[dayName];
     
