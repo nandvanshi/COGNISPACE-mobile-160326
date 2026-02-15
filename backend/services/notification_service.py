@@ -29,9 +29,23 @@ def format_date_ist(dt_str: str) -> str:
         return "N/A"
     try:
         dt = datetime.fromisoformat(dt_str.replace('Z', '+00:00'))
-        ist_dt = dt + timedelta(hours=5, minutes=30)
+        # Check if already has timezone info
+        if dt.tzinfo is not None:
+            # Convert to IST timezone properly
+            ist_tz = timezone(timedelta(hours=5, minutes=30))
+            ist_dt = dt.astimezone(ist_tz)
+        else:
+            # Assume UTC and add IST offset
+            ist_dt = dt + timedelta(hours=5, minutes=30)
         return ist_dt.strftime("%d/%m/%Y")
     except Exception:
+        # If parsing fails, try to extract date from string
+        if len(dt_str) >= 10:
+            try:
+                # Try DD/MM/YYYY format
+                return dt_str[:10]
+            except Exception:
+                pass
         return dt_str
 
 
@@ -41,7 +55,14 @@ def format_time_ist(dt_str: str) -> str:
         return "N/A"
     try:
         dt = datetime.fromisoformat(dt_str.replace('Z', '+00:00'))
-        ist_dt = dt + timedelta(hours=5, minutes=30)
+        # Check if already has timezone info
+        if dt.tzinfo is not None:
+            # Convert to IST timezone properly
+            ist_tz = timezone(timedelta(hours=5, minutes=30))
+            ist_dt = dt.astimezone(ist_tz)
+        else:
+            # Assume UTC and add IST offset
+            ist_dt = dt + timedelta(hours=5, minutes=30)
         return ist_dt.strftime("%I:%M %p")
     except Exception:
         return dt_str
