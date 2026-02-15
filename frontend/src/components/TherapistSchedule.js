@@ -218,7 +218,9 @@ const TherapistSchedule = ({ isReadOnly = false, isAssistant = false }) => {
       try {
         const apptDate = new Date(appt.start_time);
         if (isNaN(apptDate.getTime())) return false;
-        return apptDate.toISOString().split('T')[0] === dateStr && appt.status !== 'cancelled';
+        // Use local date comparison
+        const apptDateStr = `${apptDate.getFullYear()}-${String(apptDate.getMonth() + 1).padStart(2, '0')}-${String(apptDate.getDate()).padStart(2, '0')}`;
+        return apptDateStr === dateStr && appt.status !== 'cancelled';
       } catch (e) {
         return false;
       }
@@ -230,7 +232,9 @@ const TherapistSchedule = ({ isReadOnly = false, isAssistant = false }) => {
       try {
         const blockDate = new Date(block.start_datetime);
         if (isNaN(blockDate.getTime())) return false;
-        return blockDate.toISOString().split('T')[0] === dateStr;
+        // Use local date comparison
+        const blockDateStr = `${blockDate.getFullYear()}-${String(blockDate.getMonth() + 1).padStart(2, '0')}-${String(blockDate.getDate()).padStart(2, '0')}`;
+        return blockDateStr === dateStr;
       } catch (e) {
         return false;
       }
