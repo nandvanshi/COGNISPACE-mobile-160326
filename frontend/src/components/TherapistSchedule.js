@@ -1052,11 +1052,11 @@ const TherapistSchedule = ({ isReadOnly = false, isAssistant = false }) => {
             </div>
 
             <div className="flex gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={() => setShowScheduleDialog(false)} className="flex-1">
+              <Button type="button" variant="outline" onClick={() => setShowScheduleDialog(false)} className="flex-1" disabled={isSubmitting}>
                 Cancel
               </Button>
-              <Button type="submit" className="flex-1">
-                Schedule
+              <Button type="submit" className="flex-1" disabled={isSubmitting}>
+                {isSubmitting ? 'Scheduling...' : 'Schedule'}
               </Button>
             </div>
           </form>
