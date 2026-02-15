@@ -16,6 +16,7 @@ import {
   PlayCircle, StopCircle
 } from 'lucide-react';
 import { SessionActionButtons } from './SessionCheckInOut';
+import ClientSelect from './ClientSelect';
 
 // IST timezone offset
 const IST_OFFSET = 5.5 * 60 * 60 * 1000;
