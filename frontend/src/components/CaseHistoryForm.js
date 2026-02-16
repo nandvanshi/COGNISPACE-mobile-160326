@@ -25,7 +25,6 @@ const SECTIONS = [
   { id: 'mental_status_examination', label: 'Mental Status Examination', icon: ClipboardCheck },
   { id: 'provisional_formulation', label: 'Provisional Formulation', icon: Target },
   { id: 'initial_therapy_plan', label: 'Initial Therapy Plan', icon: Target },
-  { id: 'consent_disclaimer', label: 'Consent & Disclaimer', icon: FileCheck },
 ];
 
 const CaseHistoryForm = ({ clientId, clientName, clientProfile, onComplete, onClose, isReadOnly = false }) => {
