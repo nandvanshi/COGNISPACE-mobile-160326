@@ -175,6 +175,9 @@ Hindi (User communicates in Hindi/Hinglish)
 ## Known Issues
 - None currently
 
+## Resolved Issues (Feb 16, 2026)
+- [x] Case History UI inconsistency between Client Profile and Session Notes - FIXED
+
 ## Pending Tasks (P1)
 - [ ] Profile photo upload (Therapist & Client)
 - [ ] AI-powered SOAP/DAP note generation
