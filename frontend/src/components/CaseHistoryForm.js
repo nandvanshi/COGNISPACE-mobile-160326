@@ -72,8 +72,7 @@ const CaseHistoryForm = ({ clientId, clientName, clientProfile, onComplete, onCl
             personal_developmental_history: response.data.personal_developmental_history || {},
             mental_status_examination: response.data.mental_status_examination || {},
             provisional_formulation: response.data.provisional_formulation || {},
-            initial_therapy_plan: response.data.initial_therapy_plan || {},
-            consent_disclaimer: response.data.consent_disclaimer || { informed_consent_taken: false, confidentiality_explained: false }
+            initial_therapy_plan: response.data.initial_therapy_plan || {}
           });
           setIsComplete(response.data.is_complete || false);
         }
@@ -89,8 +88,7 @@ const CaseHistoryForm = ({ clientId, clientName, clientProfile, onComplete, onCl
           personal_developmental_history: {},
           mental_status_examination: {},
           provisional_formulation: {},
-          initial_therapy_plan: {},
-          consent_disclaimer: { informed_consent_taken: false, confidentiality_explained: false }
+          initial_therapy_plan: {}
         });
       } finally {
         setLoading(false);
