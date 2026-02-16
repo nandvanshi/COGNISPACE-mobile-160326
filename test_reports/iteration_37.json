@@ -1,0 +1,85 @@
+{
+  "summary": "Verified Case History and Consent separation feature. Case History now has 10 sections (consent_disclaimer removed). Backend APIs work correctly - case history completes without consent fields and generates consent document for client signature.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_case_history_consent_separation.py",
+    "/app/test_reports/pytest/pytest_results_case_history_consent_separation.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "VERIFIED: CaseHistoryForm.js SECTIONS array has exactly 10 sections (lines 16-27)",
+    "VERIFIED: consent_disclaimer section is NOT in SECTIONS array",
+    "VERIFIED: handleComplete() in CaseHistoryForm.js only validates name and main_problems (no consent checkbox)",
+    "VERIFIED: POST /api/case-history/{client_id}/complete creates consent document and notifies client",
+    "VERIFIED: ClientProfileView.js shows consent status: '⏳ Awaiting Signature' or '✓ Signed'",
+    "VERIFIED: ClientDashboard.js shows full-screen consent form when client logs in with pending consent"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_case_history_consent_separation.py"
+  ],
+  "success_rate": {
+    "backend": "100% (11/11 tests passed)",
+    "frontend": "Code verified - browser automation crashed due to resource constraints"
+  },
+  "test_credentials": {
+    "therapist": {
+      "mobile": "7275005007",
+      "password": "Test@123"
+    }
+  },
+  "seed_data_creation": "",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Case History and Consent separation feature verified. All backend APIs work correctly. Browser automation crashes after login due to resource constraints - manual UI testing recommended.",
+  "features_tested": {
+    "Case History has 10 sections (NOT 11)": {
+      "status": "PASS",
+      "notes": "CaseHistoryForm.js SECTIONS array has exactly 10 sections, consent_disclaimer removed"
+    },
+    "Case History completes without consent checkbox": {
+      "status": "PASS",
+      "notes": "handleComplete() only validates name and main_problems, no consent validation"
+    },
+    "POST /api/case-history/{client_id}/complete works without consent fields": {
+      "status": "PASS",
+      "notes": "API returns 200 and creates consent document"
+    },
+    "Consent document created after case history completion": {
+      "status": "PASS",
+      "notes": "GET /api/therapy-consent/check/{client_id} returns exists=true after completion"
+    },
+    "Therapist sees consent status in Client Profile": {
+      "status": "PASS (code verified)",
+      "notes": "ClientProfileView.js lines 646-662 show '⏳ Awaiting Signature' or '✓ Signed'"
+    },
+    "Client sees consent form when they login": {
+      "status": "PASS (code verified)",
+      "notes": "ClientDashboard.js lines 659-747 show full-screen consent form if not signed"
+    },
+    "All 10 sections can be saved individually": {
+      "status": "PASS",
+      "notes": "PATCH /api/case-history/{client_id}/section works for all 10 sections"
+    }
+  },
+  "sections_in_case_history": [
+    "basic_identification",
+    "presenting_complaints",
+    "history_of_present_illness",
+    "past_psychiatric_history",
+    "medical_history",
+    "family_history",
+    "personal_developmental_history",
+    "mental_status_examination",
+    "provisional_formulation",
+    "initial_therapy_plan"
+  ],
+  "removed_section": "consent_disclaimer"
+}
