@@ -78,7 +78,7 @@ class TestCaseHistoryConsentWorkflow:
             
             # Login as therapist
             login_resp = requests.post(f"{BASE_URL}/api/auth/login", json={
-                "mobile": test_mobile,
+                "identifier": test_mobile,
                 "password": "Test@123"
             })
             if login_resp.status_code == 200:
