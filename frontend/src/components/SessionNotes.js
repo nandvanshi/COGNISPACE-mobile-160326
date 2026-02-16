@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { toast } from 'sonner';
 import { Plus, FileText, Edit, Trash2, Calendar, Clock, Link, User, Zap, BookmarkPlus, Settings, AlertTriangle, ClipboardList, FileCheck, Eye } from 'lucide-react';
 import { formatDate, formatTime, formatDateLong } from '../utils/formatUtils';
-import CaseHistoryWizard from './CaseHistoryWizard';
+import CaseHistoryForm from './CaseHistoryForm';
 import TherapyConsent from './TherapyConsent';
 import ClientSelect from './ClientSelect';
 
