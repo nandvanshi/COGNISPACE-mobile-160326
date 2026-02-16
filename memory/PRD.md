@@ -92,7 +92,7 @@ Hindi (User communicates in Hindi/Hinglish)
 | Payment Received | Client | payment_receipt |
 | Payment Received | Therapist, Assistant | payment_received_therapist |
 | Consent Signed | Therapist, Assistant | consent_accepted |
-| **Consent Signed** | **Client** | **consent_confirmation_client** (NEW) |
+| **Consent Pending** | **Client** | **consent_pending_client** (NEW) |
 | Daily Summary (7 AM) | Therapist, Assistant | daily_summary |
 | Client Self-Registration | Therapist, Assistant | client_self_registration |
 
