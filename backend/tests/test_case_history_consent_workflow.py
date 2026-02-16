@@ -27,12 +27,12 @@ class TestCaseHistoryConsentWorkflow:
     @pytest.fixture(scope="class")
     def admin_token(self):
         """Get admin token"""
-        response = requests.post(f"{BASE_URL}/api/auth/admin-login", json={
+        response = requests.post(f"{BASE_URL}/api/auth/super-admin-login", json={
             "username": ADMIN_USERNAME,
             "password": ADMIN_PASSWORD
         })
         if response.status_code == 200:
-            return response.json().get("access_token")
+            return response.json().get("token")
         pytest.skip(f"Admin login failed: {response.status_code} - {response.text}")
     
     @pytest.fixture(scope="class")
