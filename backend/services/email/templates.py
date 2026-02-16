@@ -925,6 +925,56 @@ def template_consent_confirmation_client(data: Dict[str, Any]) -> Dict[str, str]
     }
 
 
+def template_consent_pending_client(data: Dict[str, Any]) -> Dict[str, str]:
+    """Template for notifying client to sign consent after case history completion"""
+    content = f"""
+    <p class="greeting">Action Required: Please Sign Your Consent Form 📋</p>
+    <p class="message">
+        Dear <strong>{data.get('client_name', 'Client')}</strong>,
+    </p>
+    <p class="message">
+        Your therapist <strong>{data.get('therapist_name', 'Your Therapist')}</strong> has completed your case history assessment. 
+        Before your therapy sessions can begin, please review and sign the Informed Consent for Psychological Services.
+    </p>
+    
+    <div class="info-box" style="background: #fff3e0; border-left: 4px solid #ff9800; padding: 20px; margin: 20px 0;">
+        <p style="margin: 0 0 10px 0; font-size: 16px; font-weight: bold; color: #e65100;">⚠️ Important</p>
+        <p style="margin: 0; font-size: 14px; color: #333;">
+            The consent form must be signed before your first therapy session can be scheduled.
+        </p>
+    </div>
+    
+    <div class="info-box" style="background: #f5f5f5; border-left: 4px solid #0d5c4d; padding: 15px; margin: 20px 0;">
+        <p style="margin: 0 0 10px 0; font-size: 14px; color: #333;">
+            <strong>What's in the Consent Form?</strong>
+        </p>
+        <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: #555;">
+            <li>Nature and purpose of therapy</li>
+            <li>Confidentiality terms</li>
+            <li>Your rights as a client</li>
+            <li>Fees and payment terms</li>
+        </ul>
+    </div>
+    
+    <a href="{data.get('dashboard_url', 'https://cognispace.in/login')}" class="button" style="display: block; text-align: center; margin: 20px 0;">Sign Consent Form Now</a>
+    
+    <p class="message" style="margin-top: 20px; font-size: 14px; color: #666;">
+        If you have any questions about the consent form, please reach out to your therapist.
+    </p>
+    
+    <p class="message" style="margin-top: 20px;">
+        <strong>Warm regards,</strong><br>
+        Team CogniSpace
+    </p>
+    """
+    
+    return {
+        "subject": f"📋 Action Required: Please Sign Your Therapy Consent - {data.get('therapist_name', 'CogniSpace')}",
+        "html_body": get_base_template(content, "Consent Pending"),
+        "text_body": f"Dear {data.get('client_name')}, your case history has been completed by {data.get('therapist_name')}. Please log in to your dashboard and sign the therapy consent form before your first session."
+    }
+
+
 def template_daily_summary(data: Dict[str, Any]) -> Dict[str, str]:
     """Enhanced daily summary template with appointments, pending payments, and pending notes"""
     appointments = data.get('appointments', [])
