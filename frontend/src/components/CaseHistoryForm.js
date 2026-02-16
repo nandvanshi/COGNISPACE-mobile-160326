@@ -162,12 +162,6 @@ const CaseHistoryForm = ({ clientId, clientName, clientProfile, onComplete, onCl
       setCurrentSection(1);
       return;
     }
-    
-    if (!formData.consent_disclaimer?.informed_consent_taken) {
-      toast.error('Please confirm informed consent');
-      setCurrentSection(10);
-      return;
-    }
 
     setSaving(true);
     try {
@@ -177,7 +171,7 @@ const CaseHistoryForm = ({ clientId, clientName, clientProfile, onComplete, onCl
       // Mark as complete
       await axios.post(`${API}/case-history/${clientId}/complete`);
       
-      toast.success('Case History completed successfully');
+      toast.success('Case History completed! Consent form has been generated for client signature.');
       setIsComplete(true);
       setShowFullView(true);
       
