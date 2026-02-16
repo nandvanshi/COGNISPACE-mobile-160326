@@ -1276,12 +1276,9 @@ const SessionNotes = ({ isReadOnly = false }) => {
 
       {/* Case History Dialog */}
       <Dialog open={showCaseHistoryDialog} onOpenChange={setShowCaseHistoryDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Case History</DialogTitle>
-          </DialogHeader>
+        <DialogContent className="max-w-4xl h-[90vh] p-0 overflow-hidden">
           {selectedClientForCaseHistory && (
-            <CaseHistoryWizard
+            <CaseHistoryForm
               clientId={selectedClientForCaseHistory.id}
               clientName={selectedClientForCaseHistory.full_name}
               isReadOnly={isReadOnly}
