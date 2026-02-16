@@ -109,7 +109,7 @@ class TestCaseHistoryConsentWorkflow:
             client = response.json()
             # Login as client
             login_resp = requests.post(f"{BASE_URL}/api/auth/login", json={
-                "mobile": client_data["mobile"],
+                "identifier": client_data["mobile"],
                 "password": "Client@123"
             })
             if login_resp.status_code == 200:
