@@ -692,6 +692,10 @@ I confirm that:
         if client:
             consent["client_name"] = client.get("full_name", "")
     
+    # Add consent_text_version if missing
+    if consent and not consent.get("consent_text_version"):
+        consent["consent_text_version"] = "1.0"
+    
     return consent
 
 
