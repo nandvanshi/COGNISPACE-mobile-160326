@@ -66,11 +66,11 @@ class TestCaseHistoryConsentWorkflow:
         """Create a test client for the therapist"""
         headers = {"Authorization": f"Bearer {test_therapist['token']}"}
         
-        # Create a unique client
+        # Create a unique client with valid 10-digit mobile
         unique_id = uuid.uuid4().hex[:6]
         client_data = {
             "full_name": f"TEST_Consent_Client_{unique_id}",
-            "mobile": f"98765{unique_id[:5]}",
+            "mobile": f"9876{unique_id[:6]}",  # 10 digits
             "email": f"test_consent_client_{unique_id}@test.com",
             "password": "Client@123"
         }
