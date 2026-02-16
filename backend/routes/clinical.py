@@ -270,7 +270,7 @@ async def update_case_history_section(
 
 @router.post("/case-history/{client_id}/complete")
 async def mark_case_history_complete(client_id: str, current_user: dict = Depends(require_active_therapist)):
-    """Mark case history as complete"""
+    """Mark case history as complete and notify client to sign consent"""
     result = await db.case_histories.update_one(
         {"client_id": client_id, "therapist_id": current_user["id"]},
         {"$set": {"is_complete": True, "updated_at": datetime.now(timezone.utc).isoformat()}}
@@ -279,7 +279,75 @@ async def mark_case_history_complete(client_id: str, current_user: dict = Depend
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="Case history not found")
     
-    return {"message": "Case history marked as complete"}
+    # Get client and therapist info
+    client = await db.users.find_one({"id": client_id}, {"_id": 0, "full_name": 1, "email": 1, "mobile": 1})
+    therapist = await db.users.find_one({"id": current_user["id"]}, {"_id": 0, "full_name": 1})
+    therapist_name = therapist.get("full_name", "Your Therapist") if therapist else "Your Therapist"
+    
+    # Check if consent already exists
+    existing_consent = await db.therapy_consents.find_one(
+        {"client_id": client_id, "therapist_id": current_user["id"]},
+        {"_id": 0, "id": 1}
+    )
+    
+    # Create consent document if not exists
+    if not existing_consent:
+        # Get therapist profile for qualifications
+        therapist_profile = await db.therapist_profiles.find_one(
+            {"therapist_id": current_user["id"]}, {"_id": 0, "qualifications": 1}
+        )
+        qualifications = therapist_profile.get("qualifications", "") if therapist_profile else ""
+        
+        consent_id = str(uuid.uuid4())
+        consent_doc = {
+            "id": consent_id,
+            "client_id": client_id,
+            "therapist_id": current_user["id"],
+            "therapist_name": therapist_name,
+            "qualifications": qualifications,
+            "is_signed": False,
+            "signature_date": None,
+            "signature_method": None,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.therapy_consents.insert_one(consent_doc)
+    
+    # Send notification to client to sign consent
+    try:
+        # Create in-app notification
+        from routes.notifications import create_notification
+        await create_notification(
+            user_id=client_id,
+            role="client",
+            notification_type="consent_pending",
+            title="Please Sign Therapy Consent",
+            message=f"Your case history has been completed by {therapist_name}. Please review and sign the therapy consent form before your first session.",
+            link="/dashboard#consent"
+        )
+        
+        # Send email to client
+        if client and client.get("email"):
+            from services.email.templates import get_email_template
+            from services.email import EmailProviderRegistry, EmailMessage
+            
+            email_content = get_email_template("consent_pending_client", {
+                "client_name": client.get("full_name", ""),
+                "therapist_name": therapist_name,
+                "dashboard_url": "https://cognispace.in/login"
+            })
+            
+            message = EmailMessage(
+                to=client.get("email"),
+                subject=email_content["subject"],
+                html_body=email_content["html_body"],
+                text_body=email_content["text_body"],
+                from_name=therapist_name
+            )
+            await EmailProviderRegistry.send_email(message)
+    except Exception as e:
+        print(f"Failed to send consent notification: {e}")
+    
+    return {"message": "Case history marked as complete. Client has been notified to sign consent."}
 
 
 # ============= THERAPY CONSENT ENDPOINTS =============
