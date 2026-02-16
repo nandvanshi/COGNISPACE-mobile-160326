@@ -1281,6 +1281,7 @@ const SessionNotes = ({ isReadOnly = false }) => {
             <CaseHistoryForm
               clientId={selectedClientForCaseHistory.id}
               clientName={selectedClientForCaseHistory.full_name}
+              clientProfile={selectedClientForCaseHistory}
               isReadOnly={isReadOnly}
               onComplete={() => {
                 setShowCaseHistoryDialog(false);
