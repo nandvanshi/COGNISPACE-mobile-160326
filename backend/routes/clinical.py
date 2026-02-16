@@ -686,6 +686,12 @@ I confirm that:
             {"$set": {"consent_text": consent_text, "consent_text_version": "1.0"}}
         )
     
+    # Add client_name if missing
+    if consent and not consent.get("client_name"):
+        client = await db.users.find_one({"id": client_id}, {"_id": 0, "full_name": 1})
+        if client:
+            consent["client_name"] = client.get("full_name", "")
+    
     return consent
 
 
