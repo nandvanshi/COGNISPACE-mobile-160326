@@ -357,7 +357,7 @@ class TestCaseHistoryCheckEndpoint:
     def therapist_token(self):
         """Get therapist token"""
         response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "mobile": "9999888877",
+            "identifier": "9999888877",
             "password": "Test@123"
         })
         if response.status_code == 200:
