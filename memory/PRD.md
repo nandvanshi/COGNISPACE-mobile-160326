@@ -28,6 +28,20 @@ Hindi (User communicates in Hindi/Hinglish)
 
 ## What's Implemented ✅
 
+### Feb 16, 2026 - Case History UI Consistency Fix ✅
+- [x] **Issue**: Case History UI format was different between Client Profile page and Session Notes page
+  - Client Profile showed step-by-step form with progress bar (CaseHistoryForm.js)
+  - Session Notes showed horizontal tabs with all sections (CaseHistoryWizard.js)
+- [x] **Fix Applied**:
+  - Replaced `CaseHistoryWizard` with `CaseHistoryForm` in SessionNotes.js
+  - Deleted unused `CaseHistoryWizard.js` component
+  - Now all three locations use same form: ClientProfilePage.js, ClientProfileView.js, SessionNotes.js
+- [x] **Unified UI Features**:
+  - Progress bar showing "X / 11" sections
+  - Previous/Next navigation buttons
+  - Single section view at a time
+  - Clean step-by-step wizard experience
+
 ### Feb 16, 2026 - Case History & Consent Workflow Rework ✅
 - [x] **Case History -> Consent Flow**:
   - When therapist marks case history as complete → Consent document auto-created
