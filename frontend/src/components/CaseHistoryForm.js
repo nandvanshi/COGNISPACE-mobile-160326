@@ -6,12 +6,11 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Checkbox } from './ui/checkbox';
 import { toast } from 'sonner';
 import { 
   ChevronLeft, ChevronRight, Save, Check, Download, FileText,
   Loader2, User, MessageSquare, History, Brain, Stethoscope,
-  Users, BookOpen, ClipboardCheck, Target, FileCheck
+  Users, BookOpen, ClipboardCheck, Target
 } from 'lucide-react';
 
 const SECTIONS = [
