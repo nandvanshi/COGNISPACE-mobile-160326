@@ -1112,6 +1112,7 @@ EMAIL_TEMPLATES = {
     "payment_received_therapist": template_payment_received_therapist,
     "consent_accepted": template_consent_accepted,
     "consent_confirmation_client": template_consent_confirmation_client,
+    "consent_pending_client": template_consent_pending_client,
     "subscription_expiry": template_subscription_expiry,
     "daily_schedule_briefing": template_daily_schedule_briefing,
     "daily_payment_statement": template_daily_payment_statement,
