@@ -119,14 +119,17 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
       try {
         const caseRes = await axios.get(`${API}/case-history/${client.id}`);
         caseHistory = caseRes.data;
+        console.log('Case history loaded:', caseHistory?.is_complete);
       } catch (e) {
-        // Case history doesn't exist
+        console.log('Case history not found');
       }
       try {
+        console.log('Fetching consent for:', client.id);
         const consentRes = await axios.get(`${API}/therapy-consent/${client.id}`);
         consent = consentRes.data;
+        console.log('Consent loaded:', consent?.id, 'has_text:', !!consent?.consent_text);
       } catch (e) {
-        // Consent doesn't exist
+        console.log('Consent error:', e.response?.status, e.message);
       }
 
       setProfileData({
