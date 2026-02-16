@@ -86,7 +86,7 @@ class TestCaseHistoryConsentWorkflow:
             if login_resp.status_code == 200:
                 return {
                     "id": client["id"],
-                    "token": login_resp.json().get("access_token"),
+                    "token": login_resp.json().get("token"),
                     "mobile": client_data["mobile"],
                     "full_name": client_data["full_name"]
                 }
