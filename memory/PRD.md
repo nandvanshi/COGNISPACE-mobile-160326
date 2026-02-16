@@ -28,6 +28,20 @@ Hindi (User communicates in Hindi/Hinglish)
 
 ## What's Implemented ✅
 
+### Feb 16, 2026 - Case History & Consent Workflow Rework ✅
+- [x] **Case History -> Consent Flow**:
+  - When therapist marks case history as complete → Consent document auto-created
+  - In-app notification sent to client ("Please Sign Therapy Consent")
+  - Email notification sent to client (template: consent_pending_client)
+  - Client sees consent form on their dashboard until signed
+  - After signing → Client gets full dashboard access
+- [x] **Email Template Registered**: `consent_pending_client` added to EMAIL_TEMPLATES registry
+- [x] **Flow Tested End-to-End**:
+  - POST /api/case-history/{client_id}/complete → Creates consent + notifications
+  - GET /api/therapy-consent/check/{client_id} → Client can check status
+  - GET /api/therapy-consent/{client_id} → Client can fetch consent document
+  - POST /api/therapy-consent/{client_id}/sign → Client can sign consent
+
 ### Feb 12, 2026 - Daily Summary, Consent Notification & Payment Debit
 - [x] **Daily Summary Email (7 AM IST)**: Morning email to therapists/assistants with:
   - Today's appointments list
