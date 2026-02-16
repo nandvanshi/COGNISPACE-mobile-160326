@@ -595,6 +595,97 @@ I confirm that:
             therapist = await db.users.find_one({"id": therapist_id}, {"_id": 0, "full_name": 1})
             consent["therapist_name"] = therapist.get("full_name", "Your Therapist") if therapist else "Your Therapist"
     
+    # Generate consent_text if missing (for old records)
+    if consent and not consent.get("consent_text"):
+        therapist_id = consent.get("therapist_id")
+        therapist_name = consent.get("therapist_name", "Your Therapist")
+        
+        # Get qualifications
+        therapist_profile = await db.therapist_profiles.find_one({"therapist_id": therapist_id}, {"_id": 0, "qualifications": 1})
+        qualifications = therapist_profile.get("qualifications", "") if therapist_profile else ""
+        
+        consent_text = f"""INFORMED CONSENT FOR PSYCHOLOGICAL SERVICES
+
+1. Services Offered
+{therapist_name} ({qualifications}) will provide psychological assessment, counseling, and therapeutic services.
+
+2. Purpose of Therapy
+Psychological therapy is a collaborative process aimed at understanding thoughts, emotions, behaviours, and experiences in order to support mental well-being and personal growth.
+The nature, goals, and duration of therapy may vary depending on individual needs and will be discussed with the therapist.
+
+3. Nature of Therapy
+I understand that:
+• Therapy may involve discussion of personal, emotional, or distressing topics.
+• Progress may be gradual and not always linear.
+• There may be times when therapy feels uncomfortable as difficult issues are explored.
+• No specific outcomes or guarantees can be promised.
+
+4. Role of the Therapist
+I understand that the therapist:
+• Will provide professional psychological services based on training, experience, and ethical guidelines.
+• Will not provide medical advice or prescribe medication.
+• Will not make decisions on my behalf.
+• Will encourage my active participation in the therapeutic process.
+
+5. Confidentiality
+I understand that all information shared during therapy is confidential and will not be disclosed without my consent, except in the following circumstances:
+• If there is a risk of serious harm to myself or others
+• If there is disclosure of abuse of a child, elderly person, or vulnerable individual
+• If required by a court of law or other legal authority
+• If disclosure is required for professional supervision, where identity will be protected as far as possible
+
+6. Records & Documentation
+I understand that:
+• The therapist may maintain session notes and clinical records for professional and legal purposes.
+• These records are stored securely and access is restricted.
+• I may request access to my records as per applicable laws and ethical guidelines.
+
+7. Fees & Payments
+I understand that:
+• Therapy sessions are chargeable as per the fee structure communicated by the therapist.
+• Payment is due during or after each session unless otherwise agreed.
+• Missed or late-cancelled sessions may be chargeable as per the therapist's cancellation policy.
+
+8. Appointments & Attendance
+I understand that:
+• Sessions are scheduled in advance.
+• Punctuality is important to make effective use of session time.
+• Late arrival may result in a shorter session without fee adjustment.
+
+9. Use of Digital Systems
+I consent to the use of secure digital systems for:
+• Appointment scheduling
+• Session documentation
+• Billing and receipts
+• Storage of consent and case history information
+I understand that reasonable measures are taken to protect my data and privacy.
+
+10. Client Responsibilities
+I understand that:
+• Therapy is most effective when I actively participate.
+• I am responsible for sharing relevant information honestly.
+• I may ask questions or seek clarification at any time during therapy.
+
+11. Right to Withdraw
+I understand that:
+• I may discontinue therapy at any time.
+• The therapist may recommend termination or referral if therapy is no longer appropriate or effective.
+
+12. Consent Statement
+I confirm that:
+• I have read and understood the information provided above.
+• I have had the opportunity to ask questions.
+• I voluntarily consent to participate in psychological therapy."""
+
+        consent["consent_text"] = consent_text
+        consent["consent_text_version"] = "1.0"
+        
+        # Update the database record too
+        await db.therapy_consents.update_one(
+            {"id": consent.get("id")},
+            {"$set": {"consent_text": consent_text, "consent_text_version": "1.0"}}
+        )
+    
     return consent
 
 
