@@ -40,55 +40,26 @@ class TestCaseHistoryConsentWorkflow:
         """Create or get a test therapist"""
         headers = {"Authorization": f"Bearer {admin_token}"}
         
-        # Check if test therapist exists
-        test_mobile = "9999888877"
-        response = requests.get(f"{BASE_URL}/api/admin/users?role=therapist", headers=headers)
+        # Check if test therapist exists - use existing therapist
+        response = requests.get(f"{BASE_URL}/api/admin/therapists", headers=headers)
         if response.status_code == 200:
             therapists = response.json()
             for t in therapists:
-                if t.get("mobile") == test_mobile:
+                if t.get("status") == "approved":
                     # Login as therapist
                     login_resp = requests.post(f"{BASE_URL}/api/auth/login", json={
-                        "identifier": test_mobile,
+                        "identifier": t.get("mobile"),
                         "password": "Test@123"
                     })
                     if login_resp.status_code == 200:
                         return {
                             "id": t["id"],
                             "token": login_resp.json().get("access_token"),
-                            "mobile": test_mobile
+                            "mobile": t.get("mobile"),
+                            "full_name": t.get("full_name")
                         }
         
-        # Create new therapist
-        therapist_data = {
-            "full_name": "TEST_Consent_Therapist",
-            "mobile": test_mobile,
-            "email": f"test_consent_therapist_{uuid.uuid4().hex[:6]}@test.com",
-            "password": "Test@123",
-            "qualifications": "M.Phil Clinical Psychology",
-            "specializations": ["Anxiety", "Depression"],
-            "experience_years": 5
-        }
-        
-        create_resp = requests.post(f"{BASE_URL}/api/admin/therapists", json=therapist_data, headers=headers)
-        if create_resp.status_code in [200, 201]:
-            therapist = create_resp.json()
-            # Approve therapist
-            requests.put(f"{BASE_URL}/api/admin/therapists/{therapist['id']}/approve", headers=headers)
-            
-            # Login as therapist
-            login_resp = requests.post(f"{BASE_URL}/api/auth/login", json={
-                "identifier": test_mobile,
-                "password": "Test@123"
-            })
-            if login_resp.status_code == 200:
-                return {
-                    "id": therapist["id"],
-                    "token": login_resp.json().get("access_token"),
-                    "mobile": test_mobile
-                }
-        
-        pytest.skip("Could not create/login test therapist")
+        pytest.skip("Could not find/login test therapist")
     
     @pytest.fixture(scope="class")
     def test_client(self, test_therapist):
