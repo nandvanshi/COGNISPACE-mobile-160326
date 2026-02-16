@@ -633,11 +633,12 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
                           <FileCheck className="text-success" size={18} />
                           <h4 className="font-semibold">Therapy Consent</h4>
                         </div>
-                        {profileData.consent && (
+                        {(profileData.consent || profileData.caseHistory?.is_complete) && (
                           <Button 
                             variant="outline" 
                             size="sm"
                             onClick={() => setShowConsentDialog(true)}
+                            data-testid="view-consent-btn"
                           >
                             View <ChevronRight size={14} />
                           </Button>
@@ -657,6 +658,8 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
                             <p><span className="text-muted-foreground">Signed on:</span> {formatDate(profileData.consent.signed_at)}</p>
                           )}
                         </div>
+                      ) : profileData.caseHistory?.is_complete ? (
+                        <p className="text-amber-600 text-sm">⏳ Consent pending - Click View to open</p>
                       ) : (
                         <p className="text-muted-foreground text-sm">Complete case history to generate consent</p>
                       )}
