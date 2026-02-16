@@ -890,6 +890,7 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
           <TherapyConsent
             clientId={clientId}
             clientName={client.full_name}
+            isOpen={showConsent}
             isReadOnly={isReadOnly}
             onComplete={() => {
               setShowConsent(false);
