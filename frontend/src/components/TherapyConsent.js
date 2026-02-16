@@ -34,9 +34,12 @@ const TherapyConsent = ({ clientId, clientName, isOpen, onClose, isReadOnly = fa
   const fetchConsent = async () => {
     setLoading(true);
     try {
+      console.log('Fetching consent for clientId:', clientId);
       const response = await axios.get(`${API}/therapy-consent/${clientId}`);
+      console.log('Consent response:', response.data);
       setConsent(response.data);
     } catch (error) {
+      console.error('Error fetching consent:', error.response?.status, error.response?.data);
       if (error.response?.status === 404) {
         setConsent(null);
       } else {
