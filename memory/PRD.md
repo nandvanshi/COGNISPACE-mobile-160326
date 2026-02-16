@@ -28,19 +28,30 @@ Hindi (User communicates in Hindi/Hinglish)
 
 ## What's Implemented ✅
 
+### Feb 16, 2026 - Consent Separated from Case History ✅
+- [x] **Case History now has 10 sections** (removed Consent & Disclaimer)
+  - Basic Identification, Presenting Complaints, History of Present Illness
+  - Past Psychiatric History, Medical History, Family History
+  - Personal & Developmental History, Mental Status Examination
+  - Provisional Formulation, Initial Therapy Plan
+- [x] **Consent is now a separate workflow**:
+  - Case History completes without consent checkbox
+  - After completion → Consent document auto-generated
+  - Therapist sees "Consent (pending)" status in Client Profile
+  - Client sees full-screen consent form on login
+  - Email sent to client with acceptance link
+- [x] **Acceptance triggers notifications to both**:
+  - Therapist receives `consent_accepted` email
+  - Client receives `consent_confirmation_client` email
+- [x] **Deleted unused CaseHistoryWizard.js** (cleanup)
+
 ### Feb 16, 2026 - Case History UI Consistency Fix ✅
 - [x] **Issue**: Case History UI format was different between Client Profile page and Session Notes page
-  - Client Profile showed step-by-step form with progress bar (CaseHistoryForm.js)
-  - Session Notes showed horizontal tabs with all sections (CaseHistoryWizard.js)
-- [x] **Fix Applied**:
-  - Replaced `CaseHistoryWizard` with `CaseHistoryForm` in SessionNotes.js
-  - Deleted unused `CaseHistoryWizard.js` component
-  - Now all three locations use same form: ClientProfilePage.js, ClientProfileView.js, SessionNotes.js
+- [x] **Fix Applied**: All three locations now use same CaseHistoryForm.js
 - [x] **Unified UI Features**:
-  - Progress bar showing "X / 11" sections
+  - Progress bar showing "X / 10" sections
   - Previous/Next navigation buttons
   - Single section view at a time
-  - Clean step-by-step wizard experience
 
 ### Feb 16, 2026 - Case History & Consent Workflow Rework ✅
 - [x] **Case History -> Consent Flow**:
