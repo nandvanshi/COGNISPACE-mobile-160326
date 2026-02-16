@@ -328,11 +328,11 @@ class TestCaseHistoryCheckEndpoint:
     def therapist_token(self):
         """Get therapist token"""
         response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "identifier": "9999888877",
+            "identifier": "7275005007",
             "password": "Test@123"
         })
         if response.status_code == 200:
-            return response.json().get("access_token")
+            return response.json().get("token")
         pytest.skip("Could not login as therapist")
     
     def test_check_case_history_endpoint(self, therapist_token):
