@@ -244,14 +244,14 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
       const subData = subscriptionRes.data;
       if (subData) {
         const daysRemaining = subData.days_remaining || 0;
-        const planName = subData.plan_name || 'Free Trial';
+        const planName = subData.subscription_plan || subData.plan_name || 'Free Trial';
         const status = subData.subscription_status || 'trial';
         
         let subMessage = '';
         let subType = 'info';
         
         if (status === 'trial') {
-          subMessage = `📦 Plan: Free Trial • ${daysRemaining} days remaining`;
+          subMessage = `📦 Plan: ${planName} • ${daysRemaining} days remaining`;
           subType = 'info';
         } else if (status === 'active') {
           subMessage = `📦 Plan: ${planName} • ${daysRemaining} days remaining`;
