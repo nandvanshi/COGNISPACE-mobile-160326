@@ -7,9 +7,9 @@ import { Label } from './ui/label';
 import { Input } from './ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { toast } from 'sonner';
-import { Plus, BookOpen, Sparkles } from 'lucide-react';
+import { Plus, BookOpen, Sparkles, Trash2 } from 'lucide-react';
 
-const Protocols = () => {
+const Protocols = ({ isReadOnly = false }) => {
   const [protocols, setProtocols] = useState([]);
   const [clients, setClients] = useState([]);
   const [templates, setTemplates] = useState({});
