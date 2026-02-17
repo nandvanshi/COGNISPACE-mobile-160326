@@ -217,7 +217,7 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
   // Handle template selection
   const handleTemplateSelect = (templateId) => {
     setSelectedTemplate(templateId);
-    if (templateId) {
+    if (templateId && templateId !== 'custom') {
       const template = homeworkTemplates.find(t => t.id === templateId);
       if (template) {
         setNewHomework({
@@ -226,6 +226,9 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
           description: template.description
         });
       }
+    } else {
+      // Custom - clear fields
+      setNewHomework({ title: '', description: '', due_date: '', priority: 'medium' });
     }
   };
   
