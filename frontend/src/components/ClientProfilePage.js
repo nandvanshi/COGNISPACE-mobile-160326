@@ -1028,6 +1028,75 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
           </div>
         </DialogContent>
       </Dialog>
+      
+      {/* Assign Homework Dialog */}
+      <Dialog open={showAssignHomework} onOpenChange={setShowAssignHomework}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <BookOpen size={20} /> Assign Homework to {client.full_name}
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleAssignHomework} className="space-y-4">
+            <div>
+              <Label htmlFor="hw-title">Title *</Label>
+              <Input
+                id="hw-title"
+                value={newHomework.title}
+                onChange={(e) => setNewHomework({ ...newHomework, title: e.target.value })}
+                placeholder="e.g., Breathing Exercise Practice"
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="hw-description">Description *</Label>
+              <Textarea
+                id="hw-description"
+                value={newHomework.description}
+                onChange={(e) => setNewHomework({ ...newHomework, description: e.target.value })}
+                placeholder="Detailed instructions for the homework..."
+                rows={4}
+                required
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="hw-due-date">Due Date (Optional)</Label>
+                <Input
+                  id="hw-due-date"
+                  type="date"
+                  value={newHomework.due_date}
+                  onChange={(e) => setNewHomework({ ...newHomework, due_date: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="hw-priority">Priority</Label>
+                <Select 
+                  value={newHomework.priority} 
+                  onValueChange={(v) => setNewHomework({ ...newHomework, priority: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button type="button" variant="outline" onClick={() => setShowAssignHomework(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">
+                Assign Homework
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
