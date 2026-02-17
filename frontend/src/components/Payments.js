@@ -107,21 +107,31 @@ const Payments = ({ isReadOnly = false }) => {
 
   return (
     <div data-testid="payments">
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
         <div>
           <h2 className="text-4xl font-serif text-primary mb-2">Payment Tracking</h2>
-          <p className="text-muted-foreground">Manually track client payments</p>
+          <p className="text-muted-foreground">
+            Showing payments for <span className="font-semibold text-primary">{getMonthDisplayName()}</span>
+          </p>
         </div>
-        {!isReadOnly && (
-          <Button
-            onClick={() => setShowDialog(true)}
-            className="bg-primary hover:bg-primary-700 rounded-full"
-            data-testid="record-payment-button"
-          >
-            <Plus size={20} className="mr-2" />
-            Record Payment
-          </Button>
-        )}
+        <div className="flex items-center gap-3">
+          <Input
+            type="month"
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className="w-auto"
+          />
+          {!isReadOnly && (
+            <Button
+              onClick={() => setShowDialog(true)}
+              className="bg-primary hover:bg-primary-700 rounded-full"
+              data-testid="record-payment-button"
+            >
+              <Plus size={20} className="mr-2" />
+              Record Payment
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Summary Card */}
