@@ -177,10 +177,10 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
 
       // Payment stats - Current Month Only
       const payments = paymentsRes.data || [];
-      const now = new Date();
-      const currentMonth = now.getMonth();
-      const currentYear = now.getFullYear();
-      const currentMonthName = now.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+      const currentDate = new Date();
+      const currentMonth = currentDate.getMonth();
+      const currentYear = currentDate.getFullYear();
+      const currentMonthName = currentDate.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
       
       // Filter payments for current month
       const currentMonthPayments = payments.filter(p => {
