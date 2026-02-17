@@ -263,18 +263,32 @@ const Protocols = () => {
       <Dialog open={showTemplates} onOpenChange={setShowTemplates}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" data-testid="templates-dialog">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-serif text-primary">Protocol Templates</DialogTitle>
+            <DialogTitle className="text-2xl font-serif text-primary">Protocol Templates Library</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             {Object.entries(templates).map(([key, value]) => (
               <Card key={key} className="p-4 bg-surface" data-testid={`template-${key}`}>
-                <h4 className="font-medium text-lg text-primary mb-1">{key}</h4>
+                <h4 className="font-medium text-lg text-primary mb-1">{value.name || key}</h4>
+                <p className="text-sm text-muted-foreground mb-2">{value.description}</p>
                 <p className="text-sm text-foreground mb-2">
-                  {value.modality} approach for {value.condition}
+                  <strong>{value.modality}</strong> approach for <strong>{value.condition}</strong>
                 </p>
-                <p className="text-xs text-muted-foreground">{value.sessions.length} sessions</p>
+                <p className="text-xs text-muted-foreground mb-2">{value.sessions?.length || 0} sessions</p>
+                <div className="mt-3 space-y-1">
+                  {value.sessions?.slice(0, 4).map((s) => (
+                    <p key={s.session_number} className="text-xs text-muted-foreground">
+                      • Session {s.session_number}: {s.title}
+                    </p>
+                  ))}
+                  {value.sessions?.length > 4 && (
+                    <p className="text-xs text-muted-foreground">... and {value.sessions.length - 4} more</p>
+                  )}
+                </div>
               </Card>
             ))}
+            {Object.keys(templates).length === 0 && (
+              <p className="text-center text-muted-foreground py-8">No templates available</p>
+            )}
           </div>
         </DialogContent>
       </Dialog>
