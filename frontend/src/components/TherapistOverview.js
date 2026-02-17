@@ -731,7 +731,16 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
                               </p>
                             </div>
                           </div>
-                          <div className="flex-shrink-0">
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            {/* Check In/Out Buttons */}
+                            {!isReadOnly && (appt.status === 'scheduled' || appt.status === 'in_progress') && (
+                              <SessionActionButtons 
+                                appointment={appt} 
+                                onRefresh={fetchDashboardData}
+                                isReadOnly={isReadOnly}
+                              />
+                            )}
+                            {/* Status Badge */}
                             {appt.status === 'completed' ? (
                               <span className="flex items-center gap-1.5 text-sm text-success bg-success/10 px-3 py-1.5 rounded-full">
                                 <CheckCircle size={14} />
