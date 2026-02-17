@@ -894,7 +894,7 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
                   <Button 
                     variant="outline" 
                     className="mt-4"
-                    onClick={() => setShowAssignHomework(true)}
+                    onClick={openAssignHomeworkDialog}
                   >
                     <Plus size={16} className="mr-2" /> Assign First Homework
                   </Button>
