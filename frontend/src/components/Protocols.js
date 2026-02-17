@@ -121,14 +121,14 @@ const Protocols = () => {
                 </p>
               </div>
               <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-secondary/10 text-secondary">
-                {protocol.sessions.length} Sessions
+                {protocol.sessions?.length || 0} Sessions
               </span>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              {protocol.sessions.slice(0, 4).map((session) => (
-                <div key={session.number} className="p-2 bg-surface rounded-lg text-center">
-                  <p className="text-xs text-muted-foreground">Session {session.number}</p>
-                  <p className="text-xs font-medium truncate">{session.focus}</p>
+              {protocol.sessions?.slice(0, 4).map((session) => (
+                <div key={session.session_number || session.number} className="p-2 bg-surface rounded-lg text-center">
+                  <p className="text-xs text-muted-foreground">Session {session.session_number || session.number}</p>
+                  <p className="text-xs font-medium truncate">{session.title || session.focus}</p>
                 </div>
               ))}
             </div>
@@ -137,7 +137,9 @@ const Protocols = () => {
 
         {protocols.length === 0 && (
           <div className="text-center py-12">
+            <BookOpen size={48} className="mx-auto text-muted-foreground mb-4" />
             <p className="text-muted-foreground">No protocols created yet</p>
+            <p className="text-sm text-muted-foreground mt-1">Create a protocol from our templates above</p>
           </div>
         )}
       </div>
