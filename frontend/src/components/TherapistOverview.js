@@ -30,9 +30,12 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
     weekCompleted: 0,
     weekCancelled: 0,
     weekNoShows: 0,
-    // Payment stats
+    // Payment stats - Current Month
     paymentsPending: 0,
     paymentsReceived: 0,
+    paymentsDebit: 0,
+    netRevenue: 0,
+    currentMonthName: '',
     pendingPaymentCount: 0,
     // Documentation stats
     avgNoteDelay: 0,
