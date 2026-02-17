@@ -204,6 +204,31 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
     }
   };
   
+  // Fetch homework templates
+  const fetchHomeworkTemplates = async () => {
+    try {
+      const res = await axios.get(`${API}/homework-templates`);
+      setHomeworkTemplates(res.data || []);
+    } catch (error) {
+      console.error('Failed to load templates:', error);
+    }
+  };
+  
+  // Handle template selection
+  const handleTemplateSelect = (templateId) => {
+    setSelectedTemplate(templateId);
+    if (templateId) {
+      const template = homeworkTemplates.find(t => t.id === templateId);
+      if (template) {
+        setNewHomework({
+          ...newHomework,
+          title: template.title,
+          description: template.description
+        });
+      }
+    }
+  };
+  
   // Assign Homework
   const handleAssignHomework = async (e) => {
     e.preventDefault();
@@ -212,6 +237,7 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
       return;
     }
     try {
+      // Assign homework
       await axios.post(`${API}/homework`, {
         client_id: clientId,
         title: newHomework.title,
@@ -219,13 +245,40 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
         due_date: newHomework.due_date ? new Date(newHomework.due_date).toISOString() : null,
         priority: newHomework.priority
       });
-      toast.success('Homework assigned successfully');
+      
+      // Save as template if checked
+      if (saveAsTemplate) {
+        try {
+          await axios.post(`${API}/homework-templates`, {
+            title: newHomework.title,
+            description: newHomework.description,
+            category: 'custom'
+          });
+          toast.success('Homework assigned & saved as template');
+        } catch (err) {
+          toast.success('Homework assigned (template save failed)');
+        }
+      } else {
+        toast.success('Homework assigned successfully');
+      }
+      
       setShowAssignHomework(false);
       setNewHomework({ title: '', description: '', due_date: '', priority: 'medium' });
+      setSelectedTemplate('');
+      setSaveAsTemplate(false);
       fetchClientData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to assign homework');
     }
+  };
+  
+  // Open assign homework dialog
+  const openAssignHomeworkDialog = () => {
+    fetchHomeworkTemplates();
+    setNewHomework({ title: '', description: '', due_date: '', priority: 'medium' });
+    setSelectedTemplate('');
+    setSaveAsTemplate(false);
+    setShowAssignHomework(true);
   };
   
   // Define all tabs - filter based on isAssistant
