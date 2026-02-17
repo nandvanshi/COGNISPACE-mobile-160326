@@ -203,7 +203,13 @@ const Payments = ({ isReadOnly = false }) => {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {filteredPayments.map((payment) => (
+              {monthFilteredPayments.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="px-6 py-12 text-center text-muted-foreground">
+                    No payments found for {getMonthDisplayName()}
+                  </td>
+                </tr>
+              ) : monthFilteredPayments.map((payment) => (
                 <tr key={payment.id} data-testid={`payment-${payment.id}`}>
                   <td className="px-6 py-4 text-sm text-foreground">
                     {formatDate(payment.created_at)}
