@@ -1,7 +1,7 @@
 """
 Clinical routes - Case History, Consent, Homework
 """
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Body
 from pydantic import BaseModel, ConfigDict
 from typing import List, Optional
 from datetime import datetime, timezone
