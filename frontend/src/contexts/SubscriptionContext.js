@@ -33,7 +33,10 @@ export const SubscriptionProvider = ({ children }) => {
     try {
       const res = await axios.get(`${API}/auth/subscription-status`);
       setSubscriptionStatus(res.data.subscription_status);
-      setFeatureToggles(res.data.feature_toggles || {
+      
+      // Merge API response with defaults (API values take precedence)
+      const apiToggles = res.data.feature_toggles || {};
+      const defaultToggles = {
         session_notes: true,
         assessments: true,
         ai_clinical: true,
@@ -42,7 +45,10 @@ export const SubscriptionProvider = ({ children }) => {
         payments: true,
         assistants: true,
         reports: true
-      });
+      };
+      // Only use API toggles if they have values, otherwise use defaults
+      const mergedToggles = Object.keys(apiToggles).length > 0 ? apiToggles : defaultToggles;
+      setFeatureToggles(mergedToggles);
       setIsReadOnly(res.data.is_read_only);
       setDaysRemaining(res.data.days_remaining);
       setExpiryWarning(res.data.expiry_warning);
