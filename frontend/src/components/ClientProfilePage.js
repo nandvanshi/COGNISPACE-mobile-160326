@@ -201,6 +201,30 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
     }
   };
   
+  // Assign Homework
+  const handleAssignHomework = async (e) => {
+    e.preventDefault();
+    if (!newHomework.title.trim() || !newHomework.description.trim()) {
+      toast.error('Please fill in title and description');
+      return;
+    }
+    try {
+      await axios.post(`${API}/homework`, {
+        client_id: clientId,
+        title: newHomework.title,
+        description: newHomework.description,
+        due_date: newHomework.due_date ? new Date(newHomework.due_date).toISOString() : null,
+        priority: newHomework.priority
+      });
+      toast.success('Homework assigned successfully');
+      setShowAssignHomework(false);
+      setNewHomework({ title: '', description: '', due_date: '', priority: 'medium' });
+      fetchClientData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to assign homework');
+    }
+  };
+  
   // Define all tabs - filter based on isAssistant
   const allTabs = [
     { id: 'overview', label: 'Overview', icon: User, clinicalOnly: false },
