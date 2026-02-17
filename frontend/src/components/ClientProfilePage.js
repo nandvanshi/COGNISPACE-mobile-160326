@@ -279,7 +279,7 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
   const openAssignHomeworkDialog = () => {
     fetchHomeworkTemplates();
     setNewHomework({ title: '', description: '', due_date: '', priority: 'medium' });
-    setSelectedTemplate('');
+    setSelectedTemplate('custom');
     setSaveAsTemplate(false);
     setShowAssignHomework(true);
   };
