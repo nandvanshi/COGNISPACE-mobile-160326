@@ -1102,7 +1102,7 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
                   <SelectValue placeholder="Select a template or write custom..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">-- Write Custom --</SelectItem>
+                  <SelectItem value="custom">-- Write Custom --</SelectItem>
                   {homeworkTemplates.filter(t => t.is_system).length > 0 && (
                     <>
                       <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted">
