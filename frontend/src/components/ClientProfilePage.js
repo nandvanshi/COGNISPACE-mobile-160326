@@ -1087,13 +1087,46 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
       
       {/* Assign Homework Dialog */}
       <Dialog open={showAssignHomework} onOpenChange={setShowAssignHomework}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <BookOpen size={20} /> Assign Homework to {client.full_name}
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleAssignHomework} className="space-y-4">
+            {/* Template Selection */}
+            <div>
+              <Label>Use Template (Optional)</Label>
+              <Select value={selectedTemplate} onValueChange={handleTemplateSelect}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select a template or write custom..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">-- Write Custom --</SelectItem>
+                  {homeworkTemplates.filter(t => t.is_system).length > 0 && (
+                    <>
+                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted">
+                        📚 CogniSpace Templates
+                      </div>
+                      {homeworkTemplates.filter(t => t.is_system).map(t => (
+                        <SelectItem key={t.id} value={t.id}>{t.title}</SelectItem>
+                      ))}
+                    </>
+                  )}
+                  {homeworkTemplates.filter(t => !t.is_system).length > 0 && (
+                    <>
+                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted">
+                        📁 My Templates
+                      </div>
+                      {homeworkTemplates.filter(t => !t.is_system).map(t => (
+                        <SelectItem key={t.id} value={t.id}>{t.title}</SelectItem>
+                      ))}
+                    </>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+            
             <div>
               <Label htmlFor="hw-title">Title *</Label>
               <Input
@@ -1111,7 +1144,7 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
                 value={newHomework.description}
                 onChange={(e) => setNewHomework({ ...newHomework, description: e.target.value })}
                 placeholder="Detailed instructions for the homework..."
-                rows={4}
+                rows={6}
                 required
               />
             </div>
@@ -1142,6 +1175,23 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
                 </Select>
               </div>
             </div>
+            
+            {/* Save as Template Option */}
+            {!selectedTemplate && newHomework.title && newHomework.description && (
+              <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
+                <input
+                  type="checkbox"
+                  id="save-template"
+                  checked={saveAsTemplate}
+                  onChange={(e) => setSaveAsTemplate(e.target.checked)}
+                  className="h-4 w-4"
+                />
+                <Label htmlFor="save-template" className="text-sm cursor-pointer">
+                  Save as template for future use
+                </Label>
+              </div>
+            )}
+            
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={() => setShowAssignHomework(false)}>
                 Cancel
