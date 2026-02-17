@@ -78,11 +78,25 @@ const Payments = ({ isReadOnly = false }) => {
     ? payments.filter((p) => p.client_id === filterClient)
     : payments;
 
-  // Calculate totals considering transaction_type
-  const creditTotal = filteredPayments
+  // Filter by selected month
+  const monthFilteredPayments = filteredPayments.filter(p => {
+    const paymentDate = new Date(p.payment_date || p.created_at);
+    const paymentMonth = `${paymentDate.getFullYear()}-${String(paymentDate.getMonth() + 1).padStart(2, '0')}`;
+    return paymentMonth === selectedMonth;
+  });
+
+  // Get month name for display
+  const getMonthDisplayName = () => {
+    const [year, month] = selectedMonth.split('-');
+    const date = new Date(year, parseInt(month) - 1, 1);
+    return date.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+  };
+
+  // Calculate totals considering transaction_type - for selected month only
+  const creditTotal = monthFilteredPayments
     .filter(p => p.transaction_type !== 'debit')
     .reduce((sum, p) => sum + p.amount, 0);
-  const debitTotal = filteredPayments
+  const debitTotal = monthFilteredPayments
     .filter(p => p.transaction_type === 'debit')
     .reduce((sum, p) => sum + p.amount, 0);
   const netTotal = creditTotal - debitTotal;
