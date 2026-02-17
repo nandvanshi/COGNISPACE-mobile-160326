@@ -49,6 +49,15 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
   const [showCaseHistory, setShowCaseHistory] = useState(false);
   const [showConsent, setShowConsent] = useState(false);
   const [showBookAppointment, setShowBookAppointment] = useState(false);
+  const [showAssignHomework, setShowAssignHomework] = useState(false);
+  
+  // Homework form state
+  const [newHomework, setNewHomework] = useState({
+    title: '',
+    description: '',
+    due_date: '',
+    priority: 'medium'
+  });
   
   // Book Appointment states
   const [availableSlots, setAvailableSlots] = useState([]);
