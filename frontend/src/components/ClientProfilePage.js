@@ -880,7 +880,7 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold">Homework & Assignments</h2>
               {!isReadOnly && (
-                <Button onClick={() => setShowAssignHomework(true)} className="gap-2">
+                <Button onClick={openAssignHomeworkDialog} className="gap-2">
                   <Plus size={16} /> Assign Homework
                 </Button>
               )}
