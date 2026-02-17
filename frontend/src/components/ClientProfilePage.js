@@ -1180,7 +1180,7 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
             </div>
             
             {/* Save as Template Option */}
-            {!selectedTemplate && newHomework.title && newHomework.description && (
+            {selectedTemplate === 'custom' && newHomework.title && newHomework.description && (
               <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
                 <input
                   type="checkbox"
