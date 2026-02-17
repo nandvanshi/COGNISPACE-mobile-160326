@@ -622,32 +622,41 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
           </div>
         </Card>
 
-        {/* Revenue Snapshot */}
+        {/* Revenue Snapshot - Current Month */}
         <Card 
           className="p-5 bg-white border cursor-pointer hover:shadow-md transition-all"
           onClick={() => handleNavigate('payments')}
           data-testid="revenue-snapshot-card"
         >
-          <div className="flex items-center gap-2 mb-4">
-            <TrendingUp size={18} className="text-green-500" />
-            <h3 className="font-semibold text-foreground">Revenue Snapshot</h3>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <TrendingUp size={18} className="text-green-500" />
+              <h3 className="font-semibold text-foreground">Revenue Snapshot</h3>
+            </div>
+            <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+              {stats.currentMonthName || 'This Month'}
+            </span>
           </div>
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Received</span>
-              <span className="font-semibold text-green-600">{formatCurrency(stats.paymentsReceived)}</span>
+              <span className="text-sm text-muted-foreground">Credit (Received)</span>
+              <span className="font-semibold text-green-600">+{formatCurrency(stats.paymentsReceived)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">Debit (Expenses)</span>
+              <span className="font-semibold text-red-600">-{formatCurrency(stats.paymentsDebit)}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Pending</span>
-              <span className={`font-semibold ${stats.paymentsPending > 0 ? 'text-rose-600' : 'text-slate-500'}`}>
+              <span className={`font-semibold ${stats.paymentsPending > 0 ? 'text-amber-600' : 'text-slate-500'}`}>
                 {formatCurrency(stats.paymentsPending)}
               </span>
             </div>
             <div className="pt-2 mt-2 border-t">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Total</span>
-                <span className="font-bold text-foreground">
-                  {formatCurrency(stats.paymentsReceived + stats.paymentsPending)}
+                <span className="text-sm font-medium text-muted-foreground">Net Revenue</span>
+                <span className={`font-bold text-lg ${stats.netRevenue >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                  {formatCurrency(stats.netRevenue)}
                 </span>
               </div>
             </div>
