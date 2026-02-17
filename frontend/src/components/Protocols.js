@@ -180,20 +180,26 @@ const Protocols = () => {
                 <option value="">Select a template</option>
                 {Object.entries(templates).map(([key, value]) => (
                   <option key={key} value={key}>
-                    {key} - {value.modality} for {value.condition}
+                    {value.name || key} - {value.modality} for {value.condition}
                   </option>
                 ))}
               </select>
             </div>
             {newProtocol.template && templates[newProtocol.template] && (
               <div className="p-4 bg-surface rounded-lg">
-                <p className="text-sm font-medium text-foreground mb-2">
-                  {templates[newProtocol.template].sessions.length} sessions planned
+                <p className="font-medium text-foreground mb-1">
+                  {templates[newProtocol.template].name}
                 </p>
-                <ul className="text-xs text-muted-foreground space-y-1">
+                <p className="text-sm text-muted-foreground mb-3">
+                  {templates[newProtocol.template].description}
+                </p>
+                <p className="text-sm font-medium text-foreground mb-2">
+                  {templates[newProtocol.template].sessions.length} sessions planned:
+                </p>
+                <ul className="text-xs text-muted-foreground space-y-1 max-h-40 overflow-y-auto">
                   {templates[newProtocol.template].sessions.map((s) => (
-                    <li key={s.number}>
-                      Session {s.number}: {s.focus}
+                    <li key={s.session_number}>
+                      Session {s.session_number}: {s.title}
                     </li>
                   ))}
                 </ul>
