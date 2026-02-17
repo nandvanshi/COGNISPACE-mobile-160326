@@ -304,7 +304,10 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
         weekCancelled,
         weekNoShows,
         paymentsReceived,
+        paymentsDebit,
         paymentsPending,
+        netRevenue,
+        currentMonthName,
         pendingPaymentCount: pendingPayments.length,
         avgNoteDelay,
       });
