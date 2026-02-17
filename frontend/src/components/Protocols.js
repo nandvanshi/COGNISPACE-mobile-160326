@@ -254,22 +254,46 @@ const Protocols = ({ isReadOnly = false }) => {
               <p className="text-sm text-muted-foreground">For {selectedProtocol.condition}</p>
             </DialogHeader>
             <div className="space-y-4">
-              {selectedProtocol.sessions.map((session) => (
-                <Card key={session.number} className="p-4 bg-surface">
-                  <h4 className="font-medium text-primary mb-2">
-                    Session {session.number}: {session.focus}
-                  </h4>
-                  <ul className="text-sm text-muted-foreground space-y-1">
-                    {session.activities.map((activity, idx) => (
-                      <li key={idx}>• {activity}</li>
-                    ))}
-                  </ul>
-                </Card>
-              ))}
+              {selectedProtocol.sessions?.length > 0 ? (
+                selectedProtocol.sessions.map((session) => (
+                  <Card key={session.session_number || session.number} className="p-4 bg-surface">
+                    <h4 className="font-medium text-primary mb-2">
+                      Session {session.session_number || session.number}: {session.title || session.focus}
+                    </h4>
+                    {session.goals && session.goals.length > 0 && (
+                      <ul className="text-sm text-muted-foreground space-y-1">
+                        {session.goals.map((goal, idx) => (
+                          <li key={idx}>• {goal}</li>
+                        ))}
+                      </ul>
+                    )}
+                    {session.activities && session.activities.length > 0 && (
+                      <ul className="text-sm text-muted-foreground space-y-1">
+                        {session.activities.map((activity, idx) => (
+                          <li key={idx}>• {activity}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </Card>
+                ))
+              ) : (
+                <p className="text-center text-muted-foreground py-8">No sessions in this protocol</p>
+              )}
             </div>
-            <Button onClick={() => setSelectedProtocol(null)} className="w-full" data-testid="close-protocol-button">
-              Close
-            </Button>
+            <div className="flex gap-3 mt-4">
+              <Button onClick={() => setSelectedProtocol(null)} className="flex-1" data-testid="close-protocol-button">
+                Close
+              </Button>
+              {!isReadOnly && (
+                <Button 
+                  variant="destructive" 
+                  onClick={() => handleDeleteProtocol(selectedProtocol.id)}
+                  data-testid="delete-protocol-button"
+                >
+                  <Trash2 size={16} className="mr-2" /> Delete Protocol
+                </Button>
+              )}
+            </div>
           </DialogContent>
         </Dialog>
       )}
