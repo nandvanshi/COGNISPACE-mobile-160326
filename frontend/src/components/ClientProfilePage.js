@@ -790,12 +790,26 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
           <div>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-semibold">Homework & Assignments</h2>
+              {!isReadOnly && (
+                <Button onClick={() => setShowAssignHomework(true)} className="gap-2">
+                  <Plus size={16} /> Assign Homework
+                </Button>
+              )}
             </div>
             
             {homework.length === 0 ? (
               <Card className="p-8 text-center">
                 <BookOpen size={48} className="mx-auto text-muted-foreground mb-4" />
                 <p className="text-muted-foreground">No homework assigned yet</p>
+                {!isReadOnly && (
+                  <Button 
+                    variant="outline" 
+                    className="mt-4"
+                    onClick={() => setShowAssignHomework(true)}
+                  >
+                    <Plus size={16} className="mr-2" /> Assign First Homework
+                  </Button>
+                )}
               </Card>
             ) : (
               <div className="space-y-4">
