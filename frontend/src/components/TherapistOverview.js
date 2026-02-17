@@ -172,12 +172,31 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
       });
       const avgNoteDelay = notesWithDelay > 0 ? Math.round(totalDelay / notesWithDelay) : 0;
 
-      // Payment stats
+      // Payment stats - Current Month Only
       const payments = paymentsRes.data || [];
-      const pendingPayments = payments.filter(p => p.payment_status === 'pending');
-      const receivedPayments = payments.filter(p => p.payment_status === 'paid' || p.payment_status === 'completed');
-      const paymentsReceived = receivedPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+      const now = new Date();
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
+      const currentMonthName = now.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+      
+      // Filter payments for current month
+      const currentMonthPayments = payments.filter(p => {
+        const paymentDate = new Date(p.payment_date || p.created_at);
+        return paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear;
+      });
+      
+      // Calculate credit (received) and debit separately
+      const creditPayments = currentMonthPayments.filter(p => 
+        (p.transaction_type === 'credit' || !p.transaction_type) && 
+        (p.payment_status === 'paid' || p.payment_status === 'completed')
+      );
+      const debitPayments = currentMonthPayments.filter(p => p.transaction_type === 'debit');
+      const pendingPayments = currentMonthPayments.filter(p => p.payment_status === 'pending');
+      
+      const paymentsReceived = creditPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+      const paymentsDebit = debitPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
       const paymentsPending = pendingPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+      const netRevenue = paymentsReceived - paymentsDebit;
 
       // Generate alerts
       const alertsList = [];
