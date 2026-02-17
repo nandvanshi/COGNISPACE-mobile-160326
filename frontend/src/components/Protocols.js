@@ -73,6 +73,19 @@ const Protocols = ({ isReadOnly = false }) => {
     }
   };
 
+  const handleDeleteProtocol = async (protocolId) => {
+    if (!window.confirm('Are you sure you want to delete this protocol?')) return;
+    
+    try {
+      await axios.delete(`${API}/protocols/${protocolId}`);
+      toast.success('Protocol deleted');
+      setSelectedProtocol(null);
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to delete protocol');
+    }
+  };
+
   if (loading) {
     return <div className="text-center py-12">Loading protocols...</div>;
   }
