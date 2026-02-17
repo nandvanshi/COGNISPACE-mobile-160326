@@ -945,3 +945,226 @@ async def complete_homework(homework_id: str, data: HomeworkComplete, current_us
     
     await log_audit(current_user["id"], "client", "complete", "homework", homework_id)
     return {"success": True}
+
+
+
+# ========== Homework Templates ==========
+
+# System templates - pre-built by CogniSpace
+SYSTEM_HOMEWORK_TEMPLATES = [
+    {
+        "id": "sys-1",
+        "title": "Daily Mood Journal",
+        "description": """Track your mood throughout the day:
+
+1. Morning (when you wake up):
+   - Rate your mood (1-10)
+   - Note any dreams or first thoughts
+
+2. Afternoon (around lunch):
+   - Rate your mood (1-10)
+   - What events affected your mood?
+
+3. Evening (before bed):
+   - Rate your mood (1-10)
+   - What was the highlight of your day?
+   - What was challenging?
+
+Bring this journal to your next session.""",
+        "category": "mood",
+        "is_system": True
+    },
+    {
+        "id": "sys-2",
+        "title": "Breathing Exercise Practice",
+        "description": """Practice 4-7-8 breathing technique twice daily:
+
+1. Sit comfortably with back straight
+2. Breathe in through nose for 4 seconds
+3. Hold breath for 7 seconds
+4. Exhale slowly through mouth for 8 seconds
+5. Repeat 4 times
+
+Practice once in morning and once before sleep. Note any changes in anxiety levels.""",
+        "category": "relaxation",
+        "is_system": True
+    },
+    {
+        "id": "sys-3",
+        "title": "Thought Record Worksheet",
+        "description": """When you notice a negative thought, fill in this worksheet:
+
+1. Situation: What happened? Where? When?
+2. Automatic Thought: What went through your mind?
+3. Emotions: What did you feel? (Rate intensity 0-100%)
+4. Evidence For: What supports this thought?
+5. Evidence Against: What contradicts this thought?
+6. Balanced Thought: A more realistic perspective
+7. Outcome: How do you feel now? (Rate 0-100%)
+
+Complete at least 3 thought records before next session.""",
+        "category": "cbt",
+        "is_system": True
+    },
+    {
+        "id": "sys-4",
+        "title": "Gratitude List",
+        "description": """Every night before sleeping, write down:
+
+1. Three things you are grateful for today
+2. One person you appreciate and why
+3. One thing about yourself you're proud of
+
+Be specific - instead of "family", write "my sister called to check on me".
+
+Review your list when feeling down.""",
+        "category": "positive_psychology",
+        "is_system": True
+    },
+    {
+        "id": "sys-5",
+        "title": "Sleep Hygiene Routine",
+        "description": """Follow this bedtime routine for one week:
+
+2 hours before bed:
+- No caffeine or heavy meals
+- Dim lights in your home
+
+1 hour before bed:
+- No screens (phone, TV, computer)
+- Take a warm shower/bath
+
+30 minutes before bed:
+- Light reading or gentle stretching
+- Practice relaxation breathing
+
+Track your sleep quality (1-10) each morning.""",
+        "category": "sleep",
+        "is_system": True
+    },
+    {
+        "id": "sys-6",
+        "title": "Anxiety Exposure Ladder",
+        "description": """Create your fear hierarchy:
+
+List 10 situations related to your anxiety, from least to most scary:
+
+1. (Easiest - anxiety level 10-20%)
+2.
+3.
+4.
+5.
+6.
+7.
+8.
+9.
+10. (Hardest - anxiety level 90-100%)
+
+This week, practice the first 2-3 items on your list. Note your anxiety before, during, and after each exposure.""",
+        "category": "anxiety",
+        "is_system": True
+    },
+    {
+        "id": "sys-7",
+        "title": "Mindfulness Body Scan",
+        "description": """Practice this 10-minute body scan daily:
+
+1. Lie down comfortably
+2. Close your eyes, take 3 deep breaths
+3. Focus attention on your:
+   - Feet and toes (1 min)
+   - Legs (1 min)
+   - Hips and lower back (1 min)
+   - Stomach and chest (1 min)
+   - Hands and arms (1 min)
+   - Shoulders and neck (1 min)
+   - Face and head (1 min)
+4. Feel your whole body (2 min)
+5. Slowly open your eyes
+
+Note any areas of tension or relaxation.""",
+        "category": "mindfulness",
+        "is_system": True
+    },
+    {
+        "id": "sys-8",
+        "title": "Activity Scheduling",
+        "description": """Plan and complete one enjoyable activity each day:
+
+Monday: _______________
+Tuesday: _______________
+Wednesday: _______________
+Thursday: _______________
+Friday: _______________
+Saturday: _______________
+Sunday: _______________
+
+After each activity, rate:
+- Enjoyment (1-10)
+- Sense of accomplishment (1-10)
+
+Include a mix of social, physical, and creative activities.""",
+        "category": "behavioral_activation",
+        "is_system": True
+    }
+]
+
+@router.get("/homework-templates")
+async def get_homework_templates(current_user: dict = Depends(require_active_therapist)):
+    """Get homework templates - system + therapist's saved templates"""
+    # Get therapist's saved templates
+    therapist_templates = await db.homework_templates.find(
+        {"therapist_id": current_user["id"]},
+        {"_id": 0}
+    ).to_list(100)
+    
+    # Mark therapist templates
+    for t in therapist_templates:
+        t["is_system"] = False
+    
+    # Combine system templates + therapist templates
+    all_templates = SYSTEM_HOMEWORK_TEMPLATES + therapist_templates
+    
+    return all_templates
+
+
+@router.post("/homework-templates")
+async def save_homework_template(
+    title: str = Body(...),
+    description: str = Body(...),
+    category: str = Body(default="custom"),
+    current_user: dict = Depends(require_active_therapist)
+):
+    """Save a homework as template for reuse"""
+    template_id = str(uuid.uuid4())
+    template_doc = {
+        "id": template_id,
+        "therapist_id": current_user["id"],
+        "title": title,
+        "description": description,
+        "category": category,
+        "is_system": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.homework_templates.insert_one(template_doc)
+    
+    return {"success": True, "id": template_id, "message": "Template saved successfully"}
+
+
+@router.delete("/homework-templates/{template_id}")
+async def delete_homework_template(template_id: str, current_user: dict = Depends(require_active_therapist)):
+    """Delete a therapist's homework template"""
+    # Can't delete system templates
+    if template_id.startswith("sys-"):
+        raise HTTPException(status_code=400, detail="Cannot delete system templates")
+    
+    result = await db.homework_templates.delete_one({
+        "id": template_id,
+        "therapist_id": current_user["id"]
+    })
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Template not found")
+    
+    return {"success": True, "message": "Template deleted"}
