@@ -58,6 +58,9 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
     due_date: '',
     priority: 'medium'
   });
+  const [homeworkTemplates, setHomeworkTemplates] = useState([]);
+  const [selectedTemplate, setSelectedTemplate] = useState('');
+  const [saveAsTemplate, setSaveAsTemplate] = useState(false);
   
   // Book Appointment states
   const [availableSlots, setAvailableSlots] = useState([]);
