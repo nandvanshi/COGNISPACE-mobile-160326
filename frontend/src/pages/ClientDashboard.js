@@ -14,7 +14,7 @@ import {
   Receipt, Clock, Settings as SettingsIcon,
   Eye, FileText, Sparkles, CheckCircle, User, MessageCircle, Send,
   Home, CalendarDays, BookMarked, BarChart3, Bell, ChevronRight,
-  ExternalLink, Download, Play, Video, FileType, Link2
+  ExternalLink, Download, Play, Video, FileType, Link2, Plus
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDate, formatTime, formatCurrency } from '../utils/formatUtils';
