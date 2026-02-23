@@ -252,67 +252,76 @@ const ClientDashboard = () => {
       return;
     }
     
-    // Dynamic imports for PDF generation
-    const { default: jsPDF } = await import('jspdf');
-    const { default: html2canvas } = await import('html2canvas');
-    
-    // Create a hidden container with the report
-    const container = document.createElement('div');
-    container.style.cssText = 'position: fixed; left: -9999px; top: 0; width: 210mm; background: white; padding: 20px;';
-    container.innerHTML = `
-      <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Inter', Arial, sans-serif; }
-        .clinical-report { max-width: 100%; }
-        .therapist-header { margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #000080; }
-        .therapist-header h1 { font-size: 16pt; font-weight: 700; margin: 0 0 5px 0; color: #000080; }
-        .therapist-header p { margin: 2px 0; font-size: 9pt; color: #333; }
-        .report-title { text-align: center; font-size: 14pt; font-weight: 600; margin: 20px 0; color: #000080; }
-        .report-meta { text-align: center; font-size: 8pt; color: #333; margin-bottom: 20px; }
-        .report-section { margin-bottom: 15px; }
-        .section-heading { font-size: 11pt; font-weight: 600; color: #000080; margin-bottom: 10px; }
-        .patient-info p { margin: 4px 0; font-size: 10pt; }
-        .report-content p { margin-bottom: 6px; font-size: 10pt; text-align: justify; line-height: 1.5; }
-        .assessment-item { margin-bottom: 12px; padding: 10px; background: #f5f5f5; border-left: 3px solid #000080; }
-        .assessment-item strong { font-size: 10pt; color: #000080; }
-        ul, ol { margin: 8px 0; padding-left: 18px; font-size: 10pt; }
-        li { margin-bottom: 5px; line-height: 1.4; }
-        .disclaimer-box { background: #f8f9fa; border: 1px solid #ddd; padding: 10px; margin: 20px 0; font-size: 8pt; }
-        .signature-section { margin-top: 30px; }
-        .signature-space { height: 50px; border-bottom: 1px solid #000; width: 150px; margin: 10px 0; }
-        .signature-name { font-weight: 600; font-size: 10pt; }
-        .signature-details { font-size: 8pt; color: #333; }
-      </style>
-      ${reportContent}
-    `;
-    document.body.appendChild(container);
+    const toastId = toast.loading('Generating PDF...');
     
     try {
-      toast.info('Generating PDF...');
+      // Dynamic imports
+      const { default: jsPDF } = await import('jspdf');
+      const { default: html2canvas } = await import('html2canvas');
+      const { saveAs } = await import('file-saver');
       
+      // Create hidden container
+      const container = document.createElement('div');
+      container.style.cssText = 'position: absolute; left: -9999px; top: 0; width: 794px; background: white; padding: 40px;';
+      container.innerHTML = `
+        <style>
+          * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+          .clinical-report { max-width: 100%; }
+          .therapist-header { margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #000080; }
+          .therapist-header h1 { font-size: 18px; font-weight: 700; margin: 0 0 5px 0; color: #000080; }
+          .therapist-header p { margin: 2px 0; font-size: 12px; color: #333; }
+          .report-title { text-align: center; font-size: 16px; font-weight: 600; margin: 20px 0; color: #000080; }
+          .report-meta { text-align: center; font-size: 11px; color: #333; margin-bottom: 20px; }
+          .report-section { margin-bottom: 15px; }
+          .section-heading { font-size: 14px; font-weight: 600; color: #000080; margin-bottom: 10px; }
+          .patient-info p { margin: 4px 0; font-size: 12px; }
+          .report-content p { margin-bottom: 8px; font-size: 12px; text-align: justify; line-height: 1.6; }
+          .assessment-item { margin-bottom: 12px; padding: 10px; background: #f5f5f5; border-left: 3px solid #000080; }
+          .assessment-item strong { font-size: 12px; color: #000080; }
+          ul, ol { margin: 8px 0; padding-left: 20px; font-size: 12px; }
+          li { margin-bottom: 5px; line-height: 1.5; }
+          .disclaimer-box { background: #f8f9fa; border: 1px solid #ddd; padding: 10px; margin: 20px 0; font-size: 10px; }
+          .signature-section { margin-top: 30px; }
+          .signature-space { height: 50px; border-bottom: 1px solid #000; width: 150px; margin: 10px 0; }
+          .signature-name { font-weight: 600; font-size: 12px; }
+          .signature-details { font-size: 10px; color: #333; }
+          .section-divider { border: none; border-top: 1px solid #ddd; margin: 15px 0; }
+          .recommendation-item { margin-bottom: 10px; }
+        </style>
+        ${reportContent}
+      `;
+      document.body.appendChild(container);
+      
+      // Wait for render
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Generate canvas
       const canvas = await html2canvas(container, {
         scale: 2,
         useCORS: true,
         logging: false,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        windowWidth: 794,
       });
       
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      // Remove container immediately after canvas capture
+      document.body.removeChild(container);
+      
+      // Create PDF
+      const imgData = canvas.toDataURL('image/jpeg', 0.92);
       const pdf = new jsPDF('p', 'mm', 'a4');
       
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pdfWidth - 20; // 10mm margin on each side
+      const imgWidth = pdfWidth - 20;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
       let heightLeft = imgHeight;
-      let position = 10; // Top margin
+      let position = 10;
       
-      // Add first page
       pdf.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight);
       heightLeft -= (pdfHeight - 20);
       
-      // Add more pages if needed
       while (heightLeft > 0) {
         position = heightLeft - imgHeight + 10;
         pdf.addPage();
@@ -320,37 +329,20 @@ const ClientDashboard = () => {
         heightLeft -= (pdfHeight - 20);
       }
       
-      // Download using blob method (more reliable across browsers)
-      const fileName = `Diagnostic_Report_${report.title?.replace(/[^a-zA-Z0-9]/g, '_') || 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`;
+      // Generate filename
+      const fileName = `Diagnostic_Report_${new Date().toISOString().split('T')[0]}.pdf`;
       
-      // Create blob and download link
+      // Use file-saver to download
       const pdfBlob = pdf.output('blob');
-      const blobUrl = URL.createObjectURL(pdfBlob);
+      saveAs(pdfBlob, fileName);
       
-      const downloadLink = document.createElement('a');
-      downloadLink.href = blobUrl;
-      downloadLink.download = fileName;
-      downloadLink.style.display = 'none';
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
+      toast.dismiss(toastId);
+      toast.success('PDF saved successfully!');
       
-      // Cleanup download link
-      setTimeout(() => {
-        if (downloadLink.parentNode) {
-          downloadLink.parentNode.removeChild(downloadLink);
-        }
-        URL.revokeObjectURL(blobUrl);
-      }, 100);
-      
-      toast.success('PDF downloaded!');
     } catch (error) {
       console.error('PDF generation error:', error);
-      toast.error('Failed to generate PDF');
-    } finally {
-      // Safe cleanup - check if container is still in DOM
-      if (container && container.parentNode) {
-        container.parentNode.removeChild(container);
-      }
+      toast.dismiss(toastId);
+      toast.error('Failed to generate PDF: ' + error.message);
     }
   };
 
