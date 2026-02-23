@@ -472,13 +472,21 @@ def calculate_score(assessment_type, answers):
     
     scoring_method = assessment.get("scoring_method", "sum")
     
+    # Helper function to get value from answer (handles both int and dict)
+    def get_answer_value(a):
+        if isinstance(a, dict):
+            return a.get("value", 0)
+        elif isinstance(a, (int, float)):
+            return a
+        return 0
+    
     if scoring_method == "sum":
-        total = sum(a.get("value", 0) for a in answers)
+        total = sum(get_answer_value(a) for a in answers)
         severity = get_severity(total, assessment.get("severity_bands", []))
         return {"total_score": total, "max_score": assessment.get("max_score"), "severity": severity, "subscores": {}}
     
     elif scoring_method == "sum_multiply":
-        raw_total = sum(a.get("value", 0) for a in answers)
+        raw_total = sum(get_answer_value(a) for a in answers)
         multiplier = assessment.get("multiplier", 1)
         total = raw_total * multiplier
         severity = get_severity(total, assessment.get("severity_bands", []))
@@ -490,7 +498,7 @@ def calculate_score(assessment_type, answers):
         for scale_name, scale_config in subscales.items():
             items = scale_config.get("items", [])
             multiplier = scale_config.get("multiplier", 1)
-            scale_total = sum(answers[i-1].get("value", 0) for i in items if i <= len(answers)) * multiplier
+            scale_total = sum(get_answer_value(answers[i-1]) for i in items if i <= len(answers)) * multiplier
             scale_severity = get_severity(scale_total, assessment.get("severity_bands", {}).get(scale_name, []))
             subscores[scale_name] = {"score": scale_total, "severity": scale_severity}
         return {"total_score": sum(s["score"] for s in subscores.values()), "subscores": subscores, "severity": None}
