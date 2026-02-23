@@ -147,7 +147,7 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
         .sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
       
       // Count unread messages
-      const unreadCount = messagesRes.data.filter(m => !m.read && m.recipient_id === user?.id).length;
+      const unreadCount = messagesRes.data.filter(m => !m.is_read && m.recipient_id === user?.id).length;
 
       // Count pending notes (completed sessions without notes)
       const completedWithoutNotes = allAppts.filter(a => {
