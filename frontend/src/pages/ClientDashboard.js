@@ -723,54 +723,105 @@ const ClientDashboard = () => {
       </Dialog>
 
       {/* Request Appointment Dialog */}
-      <Dialog open={showRequestAppointment} onOpenChange={setShowRequestAppointment}>
+      <Dialog open={showRequestAppointment} onOpenChange={(open) => {
+        setShowRequestAppointment(open);
+        if (!open) {
+          setAppointmentDate('');
+          setAppointmentNotes('');
+          setSelectedSlot(null);
+          setAvailableSlots([]);
+        }
+      }}>
         <DialogContent className="max-w-md rounded-3xl" data-testid="request-appointment-dialog">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-emerald-700">
-              <CalendarDays size={20} /> Request Appointment
+              <CalendarDays size={20} /> Book Appointment
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            {/* Date Picker */}
             <div>
-              <label className="text-sm font-medium text-gray-700 block mb-1">Date</label>
+              <label className="text-sm font-medium text-gray-700 block mb-2">Select Date</label>
               <Input
                 type="date"
-                value={appointmentRequest.date}
-                onChange={(e) => setAppointmentRequest({ ...appointmentRequest, date: e.target.value })}
+                value={appointmentDate}
+                onChange={(e) => handleDateChange(e.target.value)}
                 min={new Date().toISOString().split('T')[0]}
                 className="rounded-xl"
                 data-testid="appointment-date-input"
               />
             </div>
-            <div>
-              <label className="text-sm font-medium text-gray-700 block mb-1">Preferred Time</label>
-              <Input
-                type="time"
-                value={appointmentRequest.time}
-                onChange={(e) => setAppointmentRequest({ ...appointmentRequest, time: e.target.value })}
-                className="rounded-xl"
-                data-testid="appointment-time-input"
-              />
-            </div>
+            
+            {/* Available Slots */}
+            {appointmentDate && (
+              <div>
+                <label className="text-sm font-medium text-gray-700 block mb-2">
+                  Available Time Slots
+                </label>
+                {loadingSlots ? (
+                  <div className="flex items-center justify-center py-6">
+                    <Loader2 className="animate-spin text-emerald-600" size={24} />
+                  </div>
+                ) : availableSlots.length > 0 ? (
+                  <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
+                    {availableSlots.map((slot, idx) => (
+                      <Button
+                        key={idx}
+                        variant={selectedSlot?.start_time === slot.start_time ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setSelectedSlot(slot)}
+                        className={`rounded-lg ${
+                          selectedSlot?.start_time === slot.start_time 
+                            ? 'bg-emerald-600 text-white' 
+                            : 'hover:bg-emerald-50 hover:border-emerald-300'
+                        }`}
+                        data-testid={`slot-${idx}`}
+                      >
+                        <Clock size={14} className="mr-1" />
+                        {slot.display_time}
+                      </Button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-4 text-gray-500 bg-gray-50 rounded-xl">
+                    <AlertCircle size={24} className="mx-auto mb-2 text-gray-400" />
+                    <p className="text-sm">No slots available for this date</p>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {/* Selected Slot Display */}
+            {selectedSlot && (
+              <div className="bg-emerald-50 p-3 rounded-xl">
+                <p className="text-sm text-emerald-700">
+                  <strong>Selected:</strong> {appointmentDate} at {selectedSlot.display_time}
+                </p>
+              </div>
+            )}
+            
+            {/* Notes */}
             <div>
               <label className="text-sm font-medium text-gray-700 block mb-1">Notes (Optional)</label>
               <Input
                 placeholder="Any specific concerns or topics..."
-                value={appointmentRequest.notes}
-                onChange={(e) => setAppointmentRequest({ ...appointmentRequest, notes: e.target.value })}
+                value={appointmentNotes}
+                onChange={(e) => setAppointmentNotes(e.target.value)}
                 className="rounded-xl"
                 data-testid="appointment-notes-input"
               />
             </div>
+            
+            {/* Actions */}
             <div className="flex gap-3 pt-2">
               <Button
                 onClick={handleRequestAppointment}
-                disabled={requestingAppointment}
+                disabled={requestingAppointment || !selectedSlot}
                 className="flex-1 rounded-xl bg-emerald-600 hover:bg-emerald-700"
                 data-testid="submit-appointment-request-btn"
               >
                 {requestingAppointment ? <Loader2 className="animate-spin mr-2" size={16} /> : <Check size={16} className="mr-2" />}
-                Request
+                Book Appointment
               </Button>
               <Button
                 onClick={() => setShowRequestAppointment(false)}
