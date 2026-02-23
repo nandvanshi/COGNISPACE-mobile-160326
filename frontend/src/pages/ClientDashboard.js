@@ -1032,21 +1032,6 @@ const MyTasksTab = ({ homework, assessments, resources, onCompleteHomework, onCo
           </div>
         </div>
       )}
-              </summary>
-              <div className="space-y-2 mt-2">
-                {completedResources.map((resource) => (
-                  <Card key={resource.id} className="p-3 rounded-xl bg-gray-50" onClick={() => onViewResource(resource)}>
-                    <div className="flex items-center gap-2">
-                      <CheckCircle size={16} className="text-green-500" />
-                      <p className="text-sm text-gray-600 truncate">{resource.resource_title}</p>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </details>
-          )}
-        </div>
-      )}
 
       {/* Empty State */}
       {totalPending === 0 && homework.length === 0 && assessments.length === 0 && resources.length === 0 && (
