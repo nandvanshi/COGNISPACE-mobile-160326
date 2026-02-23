@@ -8,7 +8,8 @@ import {
   Plus, Bell, AlertTriangle, ChevronRight, ArrowRight,
   CheckCircle, User, ClipboardList, CalendarDays, 
   CalendarPlus, Sparkles, SunMedium, Moon, Sunset,
-  DollarSign, TrendingUp, XCircle, UserX, FileWarning, UserPlus, CreditCard
+  DollarSign, TrendingUp, XCircle, UserX, FileWarning, UserPlus, CreditCard,
+  CheckCircle2, Phone, Mail, Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatTime, formatTimeRange, formatDateLong, getRelativeDate, getTimeUntil, toIST, nowIST, formatCurrency } from '../utils/formatUtils';
