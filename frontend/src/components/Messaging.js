@@ -32,6 +32,7 @@ const Messaging = ({ isReadOnly = false }) => {
   const [mobileView, setMobileView] = useState('list');
   const messagesEndRef = useRef(null);
   const selectedConvRef = useRef(null);
+  const isScrolledToBottom = useRef(true);
   
   const isClient = user?.role === 'client';
 
@@ -47,9 +48,6 @@ const Messaging = ({ isReadOnly = false }) => {
     const { scrollTop, scrollHeight, clientHeight } = e.target;
     isScrolledToBottom.current = scrollHeight - scrollTop - clientHeight < 50;
   };
-
-  // Track if user is typing to pause polling
-  const selectedConvRef = useRef(null);
   
   // Keep ref updated
   useEffect(() => {
