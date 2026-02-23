@@ -183,13 +183,38 @@ Hindi (User communicates in Hindi/Hinglish)
 | Super Admin | admin | admin123 | /admin-login |
 | Test Therapist | 7275005007 | Test@123 | /login |
 
-## Known Issues
-- None currently
+## Public Booking Calendar ✅ (Feb 23, 2026)
+- [x] **Public Booking Page** (`/book/{therapist_id}`)
+  - Step 1: Calendar to select date, time slots displayed for selected date
+  - Step 2: Enter client details (name, email, mobile, gender, DOB, notes)
+  - Step 3: Confirmation page with booking details
+- [x] **Backend APIs**:
+  - `GET /api/public/therapist/{id}` - Therapist public profile
+  - `GET /api/public/therapist/{id}/slots` - Available time slots
+  - `POST /api/public/book` - Create booking (creates client account if new)
+  - `GET /api/appointments/pending-approval` - List pending bookings
+  - `POST /api/appointments/{id}/approve` - Approve booking
+  - `POST /api/appointments/{id}/decline` - Decline booking with reason
+- [x] **Dashboard Integration**:
+  - Therapist Dashboard: "Booking Requests" section with approve/decline buttons
+  - Assistant Dashboard: Same section for assistants to manage bookings
+- [x] **Therapist Profile Settings**:
+  - Toggle to enable/disable public booking
+  - Shareable link displayed when enabled
+  - Default session duration setting
+- [x] **Email Notifications**:
+  - Booking confirmation on approval
+  - Decline notification with reason
 
-## Resolved Issues (Feb 16, 2026)
+## Known Issues
+- **Messaging Typing Bug (P1)**: Input loses focus after typing one character. Needs investigation.
+
+## Resolved Issues (Feb 23, 2026)
 - [x] Case History UI inconsistency between Client Profile and Session Notes - FIXED
+- [x] Public Booking Calendar feature - IMPLEMENTED
 
 ## Pending Tasks (P1)
+- [ ] **FIX: Messaging Typing Bug** - Critical usability issue
 - [ ] Profile photo upload (Therapist & Client)
 - [ ] AI-powered SOAP/DAP note generation
 - [ ] Client-facing diagnostic reports sharing
@@ -202,4 +227,4 @@ Hindi (User communicates in Hindi/Hinglish)
 - [ ] WhatsApp "Daily Morning Briefing" notification
 
 ---
-Last Updated: February 16, 2026
+Last Updated: February 23, 2026
