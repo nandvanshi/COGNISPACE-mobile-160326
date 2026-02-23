@@ -90,7 +90,11 @@ const ClientDashboard = () => {
   const [showResourceDetail, setShowResourceDetail] = useState(false);
   const [selectedResource, setSelectedResource] = useState(null);
   const [showRequestAppointment, setShowRequestAppointment] = useState(false);
-  const [appointmentRequest, setAppointmentRequest] = useState({ date: '', time: '', notes: '' });
+  const [appointmentDate, setAppointmentDate] = useState('');
+  const [appointmentNotes, setAppointmentNotes] = useState('');
+  const [availableSlots, setAvailableSlots] = useState([]);
+  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [loadingSlots, setLoadingSlots] = useState(false);
   const [requestingAppointment, setRequestingAppointment] = useState(false);
 
   useEffect(() => {
