@@ -484,6 +484,88 @@ const AssistantOverview = ({ onNavigate }) => {
       {/* Contextual Quick Actions */}
       <ContextualQuickActions onNavigate={onNavigate} />
 
+      {/* PENDING BOOKING REQUESTS - Public Calendar Approvals */}
+      {pendingApprovals.length > 0 && (
+        <Card className="p-4 lg:p-5 bg-gradient-to-r from-blue-50/80 to-indigo-50/80 border-blue-300 border-2 shadow-md" data-testid="pending-approvals-section">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <CalendarPlus className="text-blue-600" size={20} />
+              <h2 className="text-lg font-semibold text-blue-800">Booking Requests</h2>
+            </div>
+            <Badge className="bg-blue-100 text-blue-700 border-blue-200">
+              {pendingApprovals.length} pending
+            </Badge>
+          </div>
+          
+          <div className="space-y-3">
+            {pendingApprovals.map((appt) => (
+              <div
+                key={appt.id}
+                className="p-4 bg-white rounded-xl border border-blue-200 shadow-sm"
+                data-testid={`pending-booking-${appt.id}`}
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <User size={16} className="text-blue-600" />
+                      <span className="font-semibold text-foreground">{appt.client_name}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <CalendarDays size={14} />
+                        {formatDate(appt.start_time)}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock size={14} />
+                        {formatTime(appt.start_time)}
+                      </span>
+                      {appt.client_mobile && (
+                        <a href={`tel:${appt.client_mobile}`} className="flex items-center gap-1 text-blue-600">
+                          <Phone size={14} />
+                          {appt.client_mobile}
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDeclineBooking(appt.id)}
+                      disabled={processingApproval === appt.id}
+                      className="gap-1 border-red-300 text-red-700 hover:bg-red-50"
+                      data-testid={`decline-booking-${appt.id}`}
+                    >
+                      {processingApproval === appt.id ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <XCircle size={14} />
+                      )}
+                      Decline
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => handleApproveBooking(appt.id)}
+                      disabled={processingApproval === appt.id}
+                      className="gap-1 bg-green-600 hover:bg-green-700"
+                      data-testid={`approve-booking-${appt.id}`}
+                    >
+                      {processingApproval === appt.id ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <CheckCircle2 size={14} />
+                      )}
+                      Approve
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
       {/* TODAY'S CALL REMINDERS (Enhanced) */}
       <Card className="p-4 lg:p-5" data-testid="call-reminders-section">
         <div className="flex items-center justify-between mb-4">
