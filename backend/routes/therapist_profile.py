@@ -301,6 +301,12 @@ async def update_therapist_profile(data: TherapistProfileUpdate, current_user: d
     if data.show_email_on_receipt is not None:
         profile_update["show_email_on_receipt"] = data.show_email_on_receipt
     
+    # Public Booking settings
+    if data.public_booking_enabled is not None:
+        profile_update["public_booking_enabled"] = data.public_booking_enabled
+    if data.session_duration is not None:
+        profile_update["session_duration"] = data.session_duration
+    
     # Upsert therapist profile
     await db.therapist_profiles.update_one(
         {"therapist_id": current_user["id"]},
