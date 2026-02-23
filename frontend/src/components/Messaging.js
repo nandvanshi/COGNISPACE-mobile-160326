@@ -49,22 +49,38 @@ const Messaging = ({ isReadOnly = false }) => {
     isScrolledToBottom.current = scrollHeight - scrollTop - clientHeight < 50;
   };
 
+  // Track if user is typing to pause polling
+  const isTyping = useRef(false);
+  const selectedConvRef = useRef(null);
+  
+  // Keep ref updated
+  useEffect(() => {
+    selectedConvRef.current = selectedConversation;
+  }, [selectedConversation]);
+
+  // Initial data load
   useEffect(() => {
     fetchData();
+  }, []);
+
+  // Polling - separate from typing state
+  useEffect(() => {
     const interval = setInterval(() => {
-      fetchConversations();
-      if (selectedConversation) {
-        fetchMessages(selectedConversation.user_id, false);
+      // Don't fetch while typing to prevent input issues
+      if (!isTyping.current) {
+        fetchConversations();
+        if (selectedConvRef.current) {
+          fetchMessages(selectedConvRef.current.user_id, false);
+        }
       }
     }, 5000);
     return () => clearInterval(interval);
-  }, [selectedConversation]);
+  }, []);
 
   useEffect(() => {
     if (selectedConversation) {
       fetchMessages(selectedConversation.user_id, true);
       setMobileView('chat');
-      // Focus input after selecting conversation
       setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [selectedConversation?.user_id]);
