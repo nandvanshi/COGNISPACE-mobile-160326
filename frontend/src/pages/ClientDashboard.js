@@ -735,7 +735,7 @@ const ClientDashboard = () => {
         <DialogContent className="max-w-md rounded-3xl" data-testid="request-appointment-dialog">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-emerald-700">
-              <CalendarDays size={20} /> Book Appointment
+              <CalendarDays size={20} /> Request Appointment
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
