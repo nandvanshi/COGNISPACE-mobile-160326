@@ -292,6 +292,7 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
     { id: 'notes', label: 'Session Notes', icon: PenSquare, clinicalOnly: true },
     { id: 'assessments', label: 'Assessments', icon: ClipboardList, clinicalOnly: true },
     { id: 'homework', label: 'Homework', icon: BookOpen, clinicalOnly: true },
+    { id: 'resources', label: 'Resources', icon: BookOpen, clinicalOnly: true },
     { id: 'payments', label: 'Payments', icon: DollarSign, clinicalOnly: false },
   ];
   
