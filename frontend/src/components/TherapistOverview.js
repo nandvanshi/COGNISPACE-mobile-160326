@@ -324,6 +324,7 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
       setNextAppointment(upcomingAppts[0] || null);
       setAlerts(alertsList);
       setSubscriptionInfo(subscriptionRes.data);
+      setPendingApprovals(pendingApprovalsRes.data?.pending_appointments || []);
 
     } catch (error) {
       console.error('Failed to load dashboard:', error);
