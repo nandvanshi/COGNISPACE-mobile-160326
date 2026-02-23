@@ -149,7 +149,6 @@ const Messaging = ({ isReadOnly = false }) => {
       });
       await fetchMessages(selectedConversation.user_id, true);
       await fetchConversations();
-      inputRef.current?.focus();
     } catch (error) {
       setNewMessage(messageToSend); // Restore on error
       toast.error(error.response?.data?.detail || 'Message भेजने में error');
