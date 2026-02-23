@@ -81,6 +81,7 @@ class TherapistProfile(BaseModel):
     experience_years: Optional[int] = None
     fee_slots: Optional[List[dict]] = None
     consultation_fee: Optional[float] = None  # Legacy field
+    session_duration: Optional[int] = None  # Session duration in minutes
     
     # Address
     address_line_1: Optional[str] = None
