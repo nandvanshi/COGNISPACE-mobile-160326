@@ -60,6 +60,7 @@ class TherapistProfileUpdate(BaseModel):
     
     # Public Booking
     public_booking_enabled: Optional[bool] = None
+    session_duration: Optional[int] = None  # Default session duration in minutes
 
 
 class TherapistProfile(BaseModel):
