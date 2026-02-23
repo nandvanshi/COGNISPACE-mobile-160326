@@ -115,6 +115,14 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
         setHomework([]);
       }
       
+      // Fetch shared resources for this client
+      try {
+        const resRes = await axios.get(`${API}/resources/assignments?client_id=${clientId}`);
+        setSharedResources(resRes.data || []);
+      } catch (e) {
+        setSharedResources([]);
+      }
+      
     } catch (error) {
       toast.error('Failed to load client data');
       console.error(error);
