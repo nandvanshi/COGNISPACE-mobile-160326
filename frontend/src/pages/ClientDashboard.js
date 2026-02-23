@@ -245,6 +245,78 @@ const ClientDashboard = () => {
     }
   };
 
+  const handlePrintDiagnosticReport = (report) => {
+    const reportContent = report.report_html || report.report_content;
+    if (!reportContent) {
+      toast.error('Report content not available');
+      return;
+    }
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Psychodiagnostic Evaluation Report</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    @media print {
+      @page { margin: 2cm; size: A4; }
+      html, body { margin: 0 !important; padding: 0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      .no-print { display: none !important; }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', Arial, sans-serif; font-size: 11pt; color: #000; line-height: 1.6; background: #fff; padding: 0; }
+    .clinical-report { max-width: 210mm; margin: 0 auto; padding: 0; }
+    .therapist-header { margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid #000080; }
+    .therapist-header h1 { font-size: 18pt; font-weight: 700; margin: 0 0 5px 0; color: #000080; }
+    .therapist-header p { margin: 3px 0; font-size: 10pt; color: #333; display: block; }
+    .report-title { text-align: center; font-size: 16pt; font-weight: 600; letter-spacing: 2px; margin: 25px 0; color: #000080; }
+    .report-meta { text-align: center; font-size: 9pt; color: #333; margin-bottom: 25px; }
+    .report-meta p { margin: 3px 0; display: block; }
+    .report-section { margin-bottom: 20px; }
+    .section-divider { border: none; border-top: 1px solid #ccc; margin: 20px 0 15px 0; }
+    .section-heading { font-size: 12pt; font-weight: 600; color: #000080; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .patient-info p { margin: 6px 0; display: block; font-size: 11pt; }
+    .patient-info strong { font-weight: 600; color: #000; }
+    .report-content p { margin-bottom: 8px; display: block; text-align: justify; }
+    .assessment-item { margin-bottom: 18px; padding: 12px; background: #f9f9f9; border-left: 3px solid #000080; display: block; }
+    .assessment-item strong { font-size: 11pt; color: #000080; display: block; margin-bottom: 5px; }
+    .assessment-item em { font-style: normal; font-weight: 600; }
+    .recommendation-item { margin-bottom: 15px; padding: 10px 0; border-bottom: 1px solid #eee; display: block; }
+    .recommendation-item strong { font-size: 11pt; color: #000080; display: block; margin-bottom: 5px; }
+    ul, ol { margin: 10px 0; padding-left: 20px; list-style-position: outside; }
+    li { display: list-item; margin-bottom: 8px; text-align: justify; padding-left: 5px; }
+    .disclaimer-box { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 4px; padding: 12px; margin: 25px 0; font-size: 8pt; color: #333; }
+    .disclaimer-box p { margin: 5px 0; text-align: justify; display: block; }
+    .signature-section { margin-top: 40px; }
+    .signature-space { height: 60px; border-bottom: 1px solid #000; width: 180px; margin: 15px 0 8px 0; }
+    .signature-name { font-weight: 600; font-size: 11pt; margin: 5px 0 2px 0; color: #000; }
+    .signature-details { font-size: 9pt; color: #333; margin: 2px 0; display: block; }
+    .branded-footer { margin-top: 40px; padding-top: 15px; border-top: 1px solid #ddd; display: flex; justify-content: center; align-items: center; }
+    .footer-logo { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .footer-logo span { font-size: 10pt; color: #666; margin-bottom: 5px; }
+    .footer-logo img { height: 100px; width: auto; }
+  </style>
+</head>
+<body>
+  ${reportContent}
+  <div class="branded-footer">
+    <div class="footer-logo">
+      <span>Powered by</span>
+      <img src="/logo-cognispace.png" alt="Cognispace" style="height: 100px;" onerror="this.outerHTML=''" />
+    </div>
+  </div>
+</body>
+</html>
+    `);
+    printWindow.document.close();
+    setTimeout(() => {
+      printWindow.focus();
+      printWindow.print();
+    }, 800);
+  };
+
   const handleLogout = () => {
     logout();
     navigate('/login');
