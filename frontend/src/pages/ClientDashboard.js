@@ -37,7 +37,7 @@ const getGreeting = () => {
 const NAV_ITEMS = [
   { id: 'home', label: 'Home', icon: Home },
   { id: 'appointments', label: 'Schedule', icon: CalendarDays },
-  { id: 'resources', label: 'Resources', icon: BookMarked },
+  { id: 'tasks', label: 'My Tasks', icon: ClipboardCheck },
   { id: 'reports', label: 'Reports', icon: BarChart3 },
   { id: 'messages', label: 'Messages', icon: MessageCircle },
 ];
