@@ -700,7 +700,7 @@ const HomeTab = ({
               <BookMarked size={18} className="text-emerald-500" />
               New Resources
             </h3>
-            <Button variant="ghost" size="sm" onClick={() => setActiveTab('resources')} className="text-emerald-600 text-xs">
+            <Button variant="ghost" size="sm" onClick={() => setActiveTab('tasks')} className="text-emerald-600 text-xs">
               View All
             </Button>
           </div>
