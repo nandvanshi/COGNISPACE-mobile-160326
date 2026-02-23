@@ -47,9 +47,9 @@ def generate_client_id():
 async def get_public_therapist_profile(therapist_id: str):
     """Get therapist's public profile for booking page"""
     
-    # Find therapist
+    # Find therapist (check both 'status' and 'account_status' for compatibility)
     therapist = await db.users.find_one(
-        {"id": therapist_id, "role": "therapist", "account_status": "approved"},
+        {"id": therapist_id, "role": "therapist", "$or": [{"status": "approved"}, {"account_status": "approved"}]},
         {"_id": 0, "id": 1, "full_name": 1, "email": 1}
     )
     
