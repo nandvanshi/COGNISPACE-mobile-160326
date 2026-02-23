@@ -72,7 +72,8 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
         subscriptionRes,
         notesRes,
         paymentsRes,
-        newRegsRes
+        newRegsRes,
+        pendingApprovalsRes
       ] = await Promise.all([
         axios.get(`${API}/clients`),
         axios.get(`${API}/appointments`),
@@ -81,6 +82,7 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
         axios.get(`${API}/session-notes`).catch(() => ({ data: [] })),
         axios.get(`${API}/payments`).catch(() => ({ data: [] })),
         axios.get(`${API}/clients/new-registrations`).catch(() => ({ data: [] })),
+        axios.get(`${API}/appointments/pending-approval`).catch(() => ({ data: { pending_appointments: [] } })),
       ]);
 
       // Get current IST time
