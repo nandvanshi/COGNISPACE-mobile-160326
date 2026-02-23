@@ -993,71 +993,45 @@ const MyTasksTab = ({ homework, assessments, resources, onCompleteHomework, onCo
       )}
 
       {/* RESOURCES SECTION */}
-      {(unviewedResources.length > 0 || viewedResources.length > 0 || completedResources.length > 0) && (
+      {resources.length > 0 && (
         <div>
           <h3 className="text-sm font-medium text-emerald-600 mb-2 flex items-center gap-2">
             <BookMarked size={16} /> Resources from Therapist
           </h3>
           
-          {/* New Resources */}
-          {unviewedResources.length > 0 && (
-            <div className="space-y-2 mb-3">
-              {unviewedResources.map((resource) => {
-                const Icon = getResourceIcon(resource.resource_type);
-                return (
-                  <Card 
-                    key={resource.id} 
-                    className="p-4 rounded-2xl border-emerald-200 bg-emerald-50/50 cursor-pointer hover:bg-emerald-100"
-                    onClick={() => onViewResource(resource)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
-                        <Icon size={20} className="text-emerald-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-800 truncate">{resource.resource_title}</p>
-                        <p className="text-xs text-emerald-600 capitalize">{resource.resource_type || 'Resource'}</p>
-                      </div>
+          <div className="space-y-2">
+            {resources.map((resource) => {
+              const Icon = getResourceIcon(resource.resource_type);
+              const isNew = !resource.viewed_at;
+              return (
+                <Card 
+                  key={resource.id} 
+                  className={`p-4 rounded-2xl cursor-pointer hover:shadow-md transition-shadow ${
+                    isNew ? 'border-emerald-200 bg-emerald-50/50' : 'bg-white'
+                  }`}
+                  onClick={() => onViewResource(resource)}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                      isNew ? 'bg-emerald-100' : 'bg-gray-100'
+                    }`}>
+                      <Icon size={20} className={isNew ? 'text-emerald-600' : 'text-gray-500'} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-800 truncate">{resource.resource_title}</p>
+                      <p className="text-xs text-gray-500 capitalize">{resource.resource_type || 'Resource'}</p>
+                    </div>
+                    {isNew && (
                       <Badge className="bg-emerald-100 text-emerald-700 text-xs">New</Badge>
-                    </div>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
-
-          {/* In Progress Resources */}
-          {viewedResources.length > 0 && (
-            <div className="space-y-2 mb-3">
-              {viewedResources.map((resource) => {
-                const Icon = getResourceIcon(resource.resource_type);
-                return (
-                  <Card 
-                    key={resource.id} 
-                    className="p-3 rounded-xl cursor-pointer hover:bg-gray-50"
-                    onClick={() => onViewResource(resource)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <Icon size={16} className="text-blue-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-700 truncate">{resource.resource_title}</p>
-                        <p className="text-xs text-gray-400">In progress</p>
-                      </div>
-                    </div>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Completed Resources (collapsed) */}
-          {completedResources.length > 0 && (
-            <details className="group">
-              <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700 flex items-center gap-1">
-                <CheckCircle size={12} className="text-green-500" />
-                {completedResources.length} completed
+                    )}
+                    <ChevronRight size={18} className="text-gray-400" />
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
               </summary>
               <div className="space-y-2 mt-2">
                 {completedResources.map((resource) => (
