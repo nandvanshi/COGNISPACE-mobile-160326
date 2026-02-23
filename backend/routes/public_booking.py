@@ -146,7 +146,12 @@ async def get_public_available_slots(therapist_id: str, date: Optional[str] = No
             end_hour, end_min = map(int, day_availability.get("end", "18:00").split(":"))
             
             slot_start = current_date.replace(hour=start_hour, minute=start_min, second=0, microsecond=0)
+            # Ensure slot_start has timezone info
+            if slot_start.tzinfo is None:
+                slot_start = slot_start.replace(tzinfo=timezone.utc)
             day_end = current_date.replace(hour=end_hour, minute=end_min, second=0, microsecond=0)
+            if day_end.tzinfo is None:
+                day_end = day_end.replace(tzinfo=timezone.utc)
             
             while slot_start + timedelta(minutes=session_duration) <= day_end:
                 slot_end = slot_start + timedelta(minutes=session_duration)
