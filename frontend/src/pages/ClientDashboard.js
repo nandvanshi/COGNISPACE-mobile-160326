@@ -348,9 +348,13 @@ const ClientDashboard = () => {
           payments={payments}
           onViewReceipt={(id) => { setSelectedPaymentId(id); setShowReceiptDialog(true); }}
         />;
-      case 'resources':
-        return <ResourcesTab 
+      case 'tasks':
+        return <MyTasksTab 
+          homework={homework}
+          assessments={assessments}
           resources={resources}
+          onCompleteHomework={handleCompleteHomework}
+          onCompleteAssessment={handleCompleteAssessment}
           onViewResource={handleViewResource}
         />;
       case 'reports':
