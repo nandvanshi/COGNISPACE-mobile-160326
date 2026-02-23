@@ -199,9 +199,9 @@ async def assign_resource(resource_id: str, client_id: str, notes: Optional[str]
     return {"message": "Resource assigned", "assignment_id": assignment_doc["id"]}
 
 
-@router.get("/resources/assignments", response_model=List[ResourceAssignment])
+@router.get("/resources/assignments")
 async def get_resource_assignments(client_id: Optional[str] = None, current_user: dict = Depends(get_current_user)):
-    """Get resource assignments"""
+    """Get resource assignments with full resource content"""
     if current_user["role"] == "therapist":
         query = {"therapist_id": current_user["id"]}
     elif current_user["role"] == "assistant":
@@ -216,13 +216,19 @@ async def get_resource_assignments(client_id: Optional[str] = None, current_user
     
     assignments = await _db.resource_assignments.find(query, {"_id": 0}).sort("assigned_at", -1).to_list(500)
     
-    def parse_assignment(a):
-        for k in ["assigned_at", "viewed_at", "completed_at"]:
-            if a.get(k):
-                a[k] = datetime.fromisoformat(a[k])
-        return ResourceAssignment(**a)
+    # Enrich with resource content for clients
+    enriched_assignments = []
+    for a in assignments:
+        # Get resource details
+        resource = await _db.resources.find_one({"id": a.get("resource_id")}, {"_id": 0})
+        if resource:
+            a["resource_content"] = resource.get("content")
+            a["resource_category"] = resource.get("category")
+            a["resource_url"] = resource.get("url")  # If external URL
+            a["resource_type"] = resource.get("category", "worksheet")
+        enriched_assignments.append(a)
     
-    return [parse_assignment(a) for a in assignments]
+    return enriched_assignments
 
 
 @router.post("/resources/assignments/{assignment_id}/view")
