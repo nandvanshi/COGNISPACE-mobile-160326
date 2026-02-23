@@ -540,12 +540,6 @@ const ClientDashboard = () => {
           )}
         </DialogContent>
       </Dialog>
-                </div>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
 
       {/* Diagnostic Report Dialog */}
       <Dialog open={showDiagnosticReport} onOpenChange={setShowDiagnosticReport}>
