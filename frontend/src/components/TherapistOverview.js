@@ -338,6 +338,33 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
     if (onNavigate) onNavigate(view, context);
   };
 
+  const handleApproveBooking = async (appointmentId) => {
+    setProcessingApproval(appointmentId);
+    try {
+      await axios.post(`${API}/appointments/${appointmentId}/approve`);
+      toast.success('Booking approved successfully');
+      setPendingApprovals(prev => prev.filter(a => a.id !== appointmentId));
+      fetchDashboardData(); // Refresh to update schedule
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to approve booking');
+    } finally {
+      setProcessingApproval(null);
+    }
+  };
+
+  const handleDeclineBooking = async (appointmentId) => {
+    setProcessingApproval(appointmentId);
+    try {
+      await axios.post(`${API}/appointments/${appointmentId}/decline`);
+      toast.success('Booking declined');
+      setPendingApprovals(prev => prev.filter(a => a.id !== appointmentId));
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to decline booking');
+    } finally {
+      setProcessingApproval(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
