@@ -461,53 +461,85 @@ const ClientDashboard = () => {
 
       {/* Resource Detail Dialog */}
       <Dialog open={showResourceDetail} onOpenChange={setShowResourceDetail}>
-        <DialogContent className="max-w-lg rounded-3xl" data-testid="resource-detail-dialog">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-emerald-700">
-              <BookMarked size={20} /> Resource Details
+        <DialogContent className="max-w-2xl max-h-[90vh] rounded-3xl p-0 overflow-hidden" data-testid="resource-detail-dialog">
+          <DialogHeader className="p-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white">
+            <DialogTitle className="flex items-center gap-2">
+              <BookMarked size={20} /> {selectedResource?.resource_title || 'Resource'}
             </DialogTitle>
           </DialogHeader>
           {selectedResource && (
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800">{selectedResource.resource_title}</h3>
-                <p className="text-sm text-gray-500 capitalize">{selectedResource.resource_type || 'Resource'}</p>
-              </div>
-              
-              {selectedResource.resource_description && (
-                <p className="text-sm text-gray-600">{selectedResource.resource_description}</p>
-              )}
-              
+            <div className="flex flex-col h-[calc(90vh-120px)]">
+              {/* Therapist Note */}
               {selectedResource.therapist_notes && (
-                <Card className="p-3 bg-emerald-50 border-emerald-100 rounded-xl">
+                <div className="px-4 py-3 bg-emerald-50 border-b border-emerald-100">
                   <p className="text-xs font-medium text-emerald-700 mb-1">Note from your therapist:</p>
                   <p className="text-sm text-emerald-800">{selectedResource.therapist_notes}</p>
-                </Card>
+                </div>
               )}
               
-              {selectedResource.resource_url && (
-                <Button
-                  onClick={() => window.open(selectedResource.resource_url, '_blank')}
-                  className="w-full rounded-xl bg-emerald-600 gap-2"
-                >
-                  <ExternalLink size={16} /> Open Resource
-                </Button>
-              )}
+              {/* Resource Content - Iframe or Content Area */}
+              <div className="flex-1 overflow-auto bg-gray-50">
+                {selectedResource.resource_url ? (
+                  <iframe 
+                    src={selectedResource.resource_url}
+                    className="w-full h-full min-h-[400px] border-0"
+                    title={selectedResource.resource_title}
+                  />
+                ) : selectedResource.resource_content ? (
+                  <div className="p-4 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: selectedResource.resource_content }} />
+                ) : selectedResource.resource_description ? (
+                  <div className="p-6 text-center">
+                    <BookMarked size={48} className="mx-auto text-gray-300 mb-4" />
+                    <p className="text-gray-600">{selectedResource.resource_description}</p>
+                  </div>
+                ) : (
+                  <div className="p-6 text-center text-gray-500">
+                    <BookMarked size={48} className="mx-auto text-gray-300 mb-4" />
+                    <p>No content available</p>
+                  </div>
+                )}
+              </div>
               
-              {!selectedResource.completed_at && (
-                <Button
-                  onClick={() => handleMarkResourceComplete(selectedResource.id)}
-                  variant="outline"
-                  className="w-full rounded-xl border-emerald-300 text-emerald-700 gap-2"
-                >
-                  <CheckCircle size={16} /> Mark as Completed
-                </Button>
-              )}
-              
-              {selectedResource.completed_at && (
-                <div className="flex items-center justify-center gap-2 text-emerald-600 py-2">
-                  <CheckCircle size={18} />
-                  <span className="text-sm font-medium">Completed on {formatDate(selectedResource.completed_at)}</span>
+              {/* Action Buttons */}
+              <div className="p-4 bg-white border-t flex gap-3">
+                {selectedResource.resource_url && (
+                  <>
+                    <Button
+                      onClick={() => window.open(selectedResource.resource_url, '_blank')}
+                      className="flex-1 rounded-xl bg-emerald-600 gap-2"
+                    >
+                      <ExternalLink size={16} /> Open in New Tab
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        const link = document.createElement('a');
+                        link.href = selectedResource.resource_url;
+                        link.download = selectedResource.resource_title || 'resource';
+                        link.target = '_blank';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                      }}
+                      variant="outline"
+                      className="rounded-xl border-emerald-300 text-emerald-700 gap-2"
+                    >
+                      <Download size={16} /> Download
+                    </Button>
+                  </>
+                )}
+                {!selectedResource.resource_url && (
+                  <Button
+                    onClick={() => setShowResourceDetail(false)}
+                    className="flex-1 rounded-xl bg-emerald-600"
+                  >
+                    Close
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
                 </div>
               )}
             </div>
