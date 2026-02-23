@@ -49,7 +49,6 @@ const Messaging = ({ isReadOnly = false }) => {
   };
 
   // Track if user is typing to pause polling
-  const isTyping = useRef(false);
   const selectedConvRef = useRef(null);
   
   // Keep ref updated
