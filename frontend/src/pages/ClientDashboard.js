@@ -820,8 +820,8 @@ const ClientDashboard = () => {
                 className="flex-1 rounded-xl bg-emerald-600 hover:bg-emerald-700"
                 data-testid="submit-appointment-request-btn"
               >
-                {requestingAppointment ? <Loader2 className="animate-spin mr-2" size={16} /> : <Check size={16} className="mr-2" />}
-                Book Appointment
+                {requestingAppointment ? <Loader2 className="animate-spin mr-2" size={16} /> : <Send size={16} className="mr-2" />}
+                Send Request
               </Button>
               <Button
                 onClick={() => setShowRequestAppointment(false)}
