@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import { 
   User, Building2, MapPin, Phone, Mail, Save, Loader2, 
   Search, CheckCircle, Shield, CreditCard, Camera, X,
-  Clock, Plus, Trash2, Upload
+  Clock, Plus, Trash2, Upload, Calendar
 } from 'lucide-react';
 import { formatCurrency } from '../utils/formatUtils';
 import { SPECIALIZATION_OPTIONS } from '../utils/constants';
