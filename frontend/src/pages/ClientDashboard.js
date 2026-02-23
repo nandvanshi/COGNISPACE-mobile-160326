@@ -694,6 +694,68 @@ const ClientDashboard = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Request Appointment Dialog */}
+      <Dialog open={showRequestAppointment} onOpenChange={setShowRequestAppointment}>
+        <DialogContent className="max-w-md rounded-3xl" data-testid="request-appointment-dialog">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-emerald-700">
+              <CalendarDays size={20} /> Request Appointment
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700 block mb-1">Date</label>
+              <Input
+                type="date"
+                value={appointmentRequest.date}
+                onChange={(e) => setAppointmentRequest({ ...appointmentRequest, date: e.target.value })}
+                min={new Date().toISOString().split('T')[0]}
+                className="rounded-xl"
+                data-testid="appointment-date-input"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 block mb-1">Preferred Time</label>
+              <Input
+                type="time"
+                value={appointmentRequest.time}
+                onChange={(e) => setAppointmentRequest({ ...appointmentRequest, time: e.target.value })}
+                className="rounded-xl"
+                data-testid="appointment-time-input"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 block mb-1">Notes (Optional)</label>
+              <Input
+                placeholder="Any specific concerns or topics..."
+                value={appointmentRequest.notes}
+                onChange={(e) => setAppointmentRequest({ ...appointmentRequest, notes: e.target.value })}
+                className="rounded-xl"
+                data-testid="appointment-notes-input"
+              />
+            </div>
+            <div className="flex gap-3 pt-2">
+              <Button
+                onClick={handleRequestAppointment}
+                disabled={requestingAppointment}
+                className="flex-1 rounded-xl bg-emerald-600 hover:bg-emerald-700"
+                data-testid="submit-appointment-request-btn"
+              >
+                {requestingAppointment ? <Loader2 className="animate-spin mr-2" size={16} /> : <Check size={16} className="mr-2" />}
+                Request
+              </Button>
+              <Button
+                onClick={() => setShowRequestAppointment(false)}
+                variant="outline"
+                className="flex-1 rounded-xl"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
