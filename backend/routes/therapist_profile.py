@@ -96,6 +96,9 @@ class TherapistProfile(BaseModel):
     show_mobile_on_receipt: bool = True
     show_email_on_receipt: bool = True
     
+    # Public Booking
+    public_booking_enabled: bool = False
+    
     # Subscription info
     subscription_status: Optional[str] = None
     subscription_plan: Optional[str] = None
