@@ -404,7 +404,9 @@ const ClientDashboard = () => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
               const showBadge = item.id === 'messages' && unreadCount > 0;
-              const showResourceBadge = item.id === 'resources' && unviewedResources.length > 0;
+              // Tasks badge: pending homework + pending assessments + unviewed resources
+              const pendingTasksCount = pendingHomework.length + pendingAssessments.length + unviewedResources.length;
+              const showTasksBadge = item.id === 'tasks' && pendingTasksCount > 0;
               
               return (
                 <button
@@ -424,9 +426,9 @@ const ClientDashboard = () => {
                       {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                   )}
-                  {showResourceBadge && (
-                    <span className="absolute -top-1 right-1 w-5 h-5 bg-emerald-500 text-white text-xs rounded-full flex items-center justify-center">
-                      {unviewedResources.length}
+                  {showTasksBadge && (
+                    <span className="absolute -top-1 right-1 w-5 h-5 bg-amber-500 text-white text-xs rounded-full flex items-center justify-center">
+                      {pendingTasksCount > 9 ? '9+' : pendingTasksCount}
                     </span>
                   )}
                 </button>
