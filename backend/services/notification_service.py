@@ -758,3 +758,48 @@ class NotificationService:
             await EmailProviderRegistry.send_email(message)
         except Exception as e:
             logger.error(f"Therapist booking notification error: {e}")
+
+
+    @staticmethod
+    async def send_booking_declined_notification(
+        client_email: str,
+        client_name: str,
+        therapist_name: str,
+        appointment_time: str,
+        reason: str = ""
+    ):
+        """Send booking declined notification to client"""
+        appt_date = format_date_ist(appointment_time)
+        appt_time_formatted = format_time_ist(appointment_time)
+        
+        reason_text = f"<p><strong>Reason:</strong> {reason}</p>" if reason else ""
+        
+        html_body = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #dc3545;">Booking Request Update</h2>
+            <p>Hello {client_name},</p>
+            <p>Unfortunately, your appointment request with <strong>{therapist_name}</strong> could not be approved.</p>
+            <div style="background: #f8d7da; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #dc3545;">
+                <p><strong>Requested Date:</strong> {appt_date}</p>
+                <p><strong>Requested Time:</strong> {appt_time_formatted}</p>
+                <p><strong>Status:</strong> Declined</p>
+                {reason_text}
+            </div>
+            <p>Please try booking a different time slot or contact the therapist for assistance.</p>
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="https://cognispace.in/login" style="background: #0d5c4d; color: white; padding: 10px 25px; border-radius: 20px; text-decoration: none;">Book Another Slot</a>
+            </div>
+        </div>
+        """
+        
+        try:
+            message = EmailMessage(
+                to=client_email,
+                subject=f"Booking Request Update - {therapist_name}",
+                html_body=html_body,
+                text_body=f"Hello {client_name}, your booking request with {therapist_name} for {appt_date} has been declined. {reason}"
+            )
+            await EmailProviderRegistry.send_email(message)
+            logger.info(f"Booking declined notification sent to {client_email}")
+        except Exception as e:
+            logger.error(f"Booking declined notification error: {e}")
