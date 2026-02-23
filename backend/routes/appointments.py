@@ -206,7 +206,7 @@ async def get_client_available_slots(date: Optional[str] = None, current_user: d
 
 @router.post("/client-request", response_model=Appointment)
 async def client_request_appointment(appt_data: ClientAppointmentRequest, current_user: dict = Depends(get_current_user)):
-    """Client requests an appointment with their assigned therapist"""
+    """Client requests an appointment with their assigned therapist - requires therapist approval"""
     if current_user["role"] != "client":
         raise HTTPException(status_code=403, detail="Only clients can request appointments via this endpoint")
     
@@ -222,9 +222,10 @@ async def client_request_appointment(appt_data: ClientAppointmentRequest, curren
     if appt_data.start_time >= appt_data.end_time:
         raise HTTPException(status_code=400, detail="End time must be after start time")
     
+    # Check for conflicts with scheduled or pending appointments
     existing = await db.appointments.find_one({
         "therapist_id": therapist_id,
-        "status": {"$ne": "cancelled"},
+        "status": {"$nin": ["cancelled", "declined"]},
         "$or": [
             {"start_time": {"$lt": appt_data.end_time.isoformat()}, "end_time": {"$gt": appt_data.start_time.isoformat()}}
         ]
@@ -242,62 +243,51 @@ async def client_request_appointment(appt_data: ClientAppointmentRequest, curren
         "start_time": appt_data.start_time.isoformat(),
         "end_time": appt_data.end_time.isoformat(),
         "notes": appt_data.notes,
-        "status": "scheduled",
+        "status": "pending_approval",  # Requires therapist approval
+        "booked_by_client": True,
         "actual_start_time": None,
         "actual_end_time": None,
         "actual_duration_minutes": None,
         "checked_in_by": None,
         "checked_out_by": None,
-        "confirmation_email_sent": False,  # Track instant email confirmation
+        "confirmation_email_sent": False,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     
     await db.appointments.insert_one(appointment_doc)
-    await log_audit(current_user["id"], "client", "create", "appointment", appointment_id, {"booked_by_client": True})
+    await log_audit(current_user["id"], "client", "create", "appointment", appointment_id, {"booked_by_client": True, "status": "pending_approval"})
     
-    # Get therapist name and send notifications
+    # Get therapist info
     therapist = await db.users.find_one({"id": therapist_id}, {"_id": 0, "full_name": 1})
     therapist_name = therapist["full_name"] if therapist else "Your Therapist"
     
-    # Send in-app notification
+    # Notify therapist about new appointment request
     try:
-        from routes.notifications import notify_client_appointment_confirmed
-        formatted_time = f"{appointment_doc['start_time'][:10]} {appointment_doc['start_time'][11:16]}"
-        await notify_client_appointment_confirmed(
+        from routes.notifications import create_notification
+        formatted_date, formatted_time = format_datetime_ist(appointment_doc["start_time"])
+        await create_notification(
+            therapist_id,
+            "appointment_request",
+            f"New appointment request from {current_user['full_name']}",
+            f"Requested for {formatted_date} at {formatted_time}. Please review and approve.",
+            {"appointment_id": appointment_id, "client_id": current_user["id"]}
+        )
+    except Exception as e:
+        print(f"Failed to send therapist notification: {e}")
+    
+    # Send confirmation to client that request is submitted
+    try:
+        from routes.notifications import create_notification
+        formatted_date, formatted_time = format_datetime_ist(appointment_doc["start_time"])
+        await create_notification(
             current_user["id"],
-            therapist_name,
-            formatted_time,
-            appointment_id
+            "appointment_pending",
+            "Appointment Request Submitted",
+            f"Your request for {formatted_date} at {formatted_time} with {therapist_name} has been submitted. Waiting for approval.",
+            {"appointment_id": appointment_id}
         )
     except Exception as e:
-        print(f"Failed to send in-app notification: {e}")
-    
-    # Send email confirmation
-    try:
-        from services.email import EmailService
-        duration = int((appt_data.end_time - appt_data.start_time).total_seconds() / 60)
-        email_result = await EmailService.send_appointment_confirmation_email(
-            client_id=current_user["id"],
-            therapist_id=therapist_id,
-            therapist_name=therapist_name,
-            appointment_time=appointment_doc["start_time"],
-            duration=duration
-        )
-        # Mark confirmation email as sent to avoid duplicate from scheduler
-        if email_result.success:
-            await db.appointments.update_one(
-                {"id": appointment_id},
-                {"$set": {"confirmation_email_sent": True}}
-            )
-    except Exception as e:
-        print(f"Failed to send appointment confirmation email: {e}")
-    
-    # Send WhatsApp confirmation (if configured and opted-in)
-    try:
-        from services.whatsapp import WhatsAppService
-        if WhatsAppService.is_configured():
-            appt_date = appointment_doc["start_time"][:10]
-            appt_time = appointment_doc["start_time"][11:16]
+        print(f"Failed to send client notification: {e}")
             await WhatsAppService.send_appointment_confirmation(
                 client_id=current_user["id"],
                 therapist_id=therapist_id,
