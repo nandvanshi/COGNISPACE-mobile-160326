@@ -11,6 +11,7 @@ import ClientDashboard from './pages/ClientDashboard';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import AssistantDashboard from './pages/AssistantDashboard';
 import ClientRegisterPage from './pages/ClientRegisterPage';
+import PublicBookingPage from './pages/PublicBookingPage';
 import AboutPage from './pages/AboutPage';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsConditions from './pages/TermsConditions';
