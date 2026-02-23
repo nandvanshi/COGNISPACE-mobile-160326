@@ -691,3 +691,173 @@ async def mark_no_show(appointment_id: str, current_user: dict = Depends(require
     
     await log_audit(current_user["id"], current_user["role"], "no_show", "appointment", appointment_id)
     return {"message": "Appointment marked as no-show"}
+
+
+# ============= PUBLIC BOOKING APPROVAL ENDPOINTS =============
+
+@router.get("/pending-approval")
+async def get_pending_approval_appointments(current_user: dict = Depends(require_therapist_or_assistant)):
+    """Get all appointments pending approval from public booking"""
+    therapist_id = get_effective_therapist_id(current_user)
+    
+    appointments = await db.appointments.find(
+        {"therapist_id": therapist_id, "status": "pending_approval"},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    
+    # Enrich with client details
+    for appt in appointments:
+        client = await db.users.find_one(
+            {"id": appt.get("client_id")},
+            {"_id": 0, "full_name": 1, "email": 1, "mobile": 1}
+        )
+        if client:
+            appt["client_name"] = client.get("full_name")
+            appt["client_email"] = client.get("email")
+            appt["client_mobile"] = client.get("mobile")
+    
+    return {"pending_appointments": appointments}
+
+
+@router.post("/{appointment_id}/approve")
+async def approve_appointment(appointment_id: str, current_user: dict = Depends(require_therapist_or_assistant)):
+    """Approve a pending appointment from public booking"""
+    therapist_id = get_effective_therapist_id(current_user)
+    
+    # Find appointment
+    appointment = await db.appointments.find_one(
+        {"id": appointment_id, "therapist_id": therapist_id, "status": "pending_approval"},
+        {"_id": 0}
+    )
+    
+    if not appointment:
+        raise HTTPException(status_code=404, detail="Appointment not found or already processed")
+    
+    # Check for time slot conflicts
+    existing = await db.appointments.find_one({
+        "therapist_id": therapist_id,
+        "id": {"$ne": appointment_id},
+        "status": {"$in": ["scheduled", "in_progress"]},
+        "$or": [
+            {"start_time": {"$lt": appointment["end_time"]}, "end_time": {"$gt": appointment["start_time"]}}
+        ]
+    })
+    
+    if existing:
+        raise HTTPException(status_code=400, detail="Time slot conflicts with existing appointment")
+    
+    # Approve appointment
+    result = await db.appointments.update_one(
+        {"id": appointment_id},
+        {"$set": {
+            "status": "scheduled",
+            "approved_by": current_user["id"],
+            "approved_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=500, detail="Failed to approve appointment")
+    
+    # Get client and therapist info for notifications
+    client = await db.users.find_one({"id": appointment["client_id"]}, {"_id": 0})
+    therapist = await db.users.find_one({"id": therapist_id}, {"_id": 0, "full_name": 1, "email": 1})
+    
+    # Create notification for client
+    notification_doc = {
+        "id": str(uuid.uuid4()),
+        "user_id": appointment["client_id"],
+        "type": "booking_approved",
+        "title": "Appointment Confirmed",
+        "message": f"Your appointment with {therapist['full_name']} on {appointment['start_time'][:10]} has been approved",
+        "data": {"appointment_id": appointment_id},
+        "is_read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.notifications.insert_one(notification_doc)
+    
+    # Send email notification
+    try:
+        await NotificationService.send_appointment_confirmation(
+            client_name=client.get("full_name", "Client") if client else "Client",
+            client_mobile=client.get("mobile") if client else None,
+            client_email=client.get("email") if client else None,
+            therapist_name=therapist.get("full_name", "Therapist") if therapist else "Therapist",
+            appointment_datetime=appointment.get("start_time", ""),
+            duration=60
+        )
+    except Exception as e:
+        print(f"Failed to send approval notification: {e}")
+    
+    await log_audit(current_user["id"], current_user["role"], "approve", "appointment", appointment_id)
+    return {"message": "Appointment approved successfully", "status": "scheduled"}
+
+
+@router.post("/{appointment_id}/decline")
+async def decline_appointment(
+    appointment_id: str, 
+    reason: str = "",
+    current_user: dict = Depends(require_therapist_or_assistant)
+):
+    """Decline a pending appointment from public booking"""
+    therapist_id = get_effective_therapist_id(current_user)
+    
+    # Find appointment
+    appointment = await db.appointments.find_one(
+        {"id": appointment_id, "therapist_id": therapist_id, "status": "pending_approval"},
+        {"_id": 0}
+    )
+    
+    if not appointment:
+        raise HTTPException(status_code=404, detail="Appointment not found or already processed")
+    
+    # Decline appointment
+    result = await db.appointments.update_one(
+        {"id": appointment_id},
+        {"$set": {
+            "status": "declined",
+            "declined_by": current_user["id"],
+            "decline_reason": reason,
+            "declined_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=500, detail="Failed to decline appointment")
+    
+    # Get client and therapist info for notifications
+    client = await db.users.find_one({"id": appointment["client_id"]}, {"_id": 0})
+    therapist = await db.users.find_one({"id": therapist_id}, {"_id": 0, "full_name": 1})
+    
+    # Create notification for client
+    decline_message = f"Your appointment request with {therapist['full_name']} has been declined."
+    if reason:
+        decline_message += f" Reason: {reason}"
+    
+    notification_doc = {
+        "id": str(uuid.uuid4()),
+        "user_id": appointment["client_id"],
+        "type": "booking_declined",
+        "title": "Appointment Declined",
+        "message": decline_message,
+        "data": {"appointment_id": appointment_id},
+        "is_read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.notifications.insert_one(notification_doc)
+    
+    # Send email notification for declined booking
+    try:
+        if client and client.get("email"):
+            await NotificationService.send_booking_declined_notification(
+                client_email=client.get("email"),
+                client_name=client.get("full_name", "Client"),
+                therapist_name=therapist.get("full_name", "Therapist") if therapist else "Therapist",
+                appointment_time=appointment.get("start_time", ""),
+                reason=reason
+            )
+    except Exception as e:
+        print(f"Failed to send decline notification: {e}")
+    
+    await log_audit(current_user["id"], current_user["role"], "decline", "appointment", appointment_id)
+    return {"message": "Appointment declined", "status": "declined"}
