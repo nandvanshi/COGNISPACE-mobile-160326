@@ -868,8 +868,6 @@ const MyTasksTab = ({ homework, assessments, resources, onCompleteHomework, onCo
   const pendingAssessments = assessments.filter(a => a.status !== 'completed');
   const completedAssessments = assessments.filter(a => a.status === 'completed');
   const unviewedResources = resources.filter(r => !r.viewed_at);
-  const viewedResources = resources.filter(r => r.viewed_at && !r.completed_at);
-  const completedResources = resources.filter(r => r.completed_at);
 
   const totalPending = pendingHomework.length + pendingAssessments.length + unviewedResources.length;
 
