@@ -206,6 +206,7 @@ async def get_therapist_profile(current_user: dict = Depends(require_therapist))
         experience_years=profile.get("experience_years") if profile else therapist.get("experience_years"),
         fee_slots=profile.get("fee_slots") if profile else None,
         consultation_fee=profile.get("consultation_fee") if profile else therapist.get("consultation_fee"),
+        session_duration=profile.get("session_duration", 60) if profile else 60,
         
         # Address fields
         address_line_1=profile.get("address_line_1") if profile else None,
@@ -219,6 +220,9 @@ async def get_therapist_profile(current_user: dict = Depends(require_therapist))
         # Privacy settings
         show_mobile_on_receipt=profile.get("show_mobile_on_receipt", True) if profile else True,
         show_email_on_receipt=profile.get("show_email_on_receipt", True) if profile else True,
+        
+        # Public Booking
+        public_booking_enabled=profile.get("public_booking_enabled", False) if profile else False,
         
         # Subscription
         subscription_status=therapist.get("subscription_status"),
