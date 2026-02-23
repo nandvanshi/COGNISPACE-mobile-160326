@@ -63,25 +63,18 @@ const Messaging = ({ isReadOnly = false }) => {
     fetchData();
   }, []);
 
-  // Polling - separate from typing state
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // Don't fetch while typing to prevent input issues
-      if (!isTyping.current) {
-        fetchConversations();
-        if (selectedConvRef.current) {
-          fetchMessages(selectedConvRef.current.user_id, false);
-        }
-      }
-    }, 5000);
-    return () => clearInterval(interval);
+  // Manual refresh only - no auto polling to avoid input issues
+  const refreshMessages = useCallback(() => {
+    fetchConversations();
+    if (selectedConvRef.current) {
+      fetchMessages(selectedConvRef.current.user_id, false);
+    }
   }, []);
 
   useEffect(() => {
     if (selectedConversation) {
       fetchMessages(selectedConversation.user_id, true);
       setMobileView('chat');
-      setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [selectedConversation?.user_id]);
 
