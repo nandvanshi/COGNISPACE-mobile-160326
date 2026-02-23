@@ -106,6 +106,104 @@ def parse_datetime(value):
 
 # ============= APPOINTMENT ENDPOINTS =============
 
+@router.get("/available-slots")
+async def get_client_available_slots(date: Optional[str] = None, current_user: dict = Depends(get_current_user)):
+    """Get available appointment slots for the client's assigned therapist"""
+    if current_user["role"] != "client":
+        raise HTTPException(status_code=403, detail="Only clients can access this endpoint")
+    
+    therapist_id = current_user.get("therapist_id")
+    if not therapist_id:
+        profile = await db.client_profiles.find_one({"user_id": current_user["id"]}, {"_id": 0})
+        if profile:
+            therapist_id = profile.get("therapist_id")
+    
+    if not therapist_id:
+        raise HTTPException(status_code=400, detail="No therapist assigned to your account")
+    
+    # Get therapist profile for session duration
+    therapist_profile = await db.therapist_profiles.find_one(
+        {"therapist_id": therapist_id},
+        {"_id": 0, "session_duration": 1}
+    )
+    session_duration = therapist_profile.get("session_duration", 60) if therapist_profile else 60
+    
+    # Parse date
+    if date:
+        try:
+            start_date = datetime.fromisoformat(date.replace('Z', '+00:00'))
+        except ValueError:
+            start_date = datetime.strptime(date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    else:
+        start_date = datetime.now(timezone.utc)
+    
+    if start_date.tzinfo is None:
+        start_date = start_date.replace(tzinfo=timezone.utc)
+    
+    end_date = start_date + timedelta(days=1)  # Only for that day
+    
+    # Get therapist's availability settings
+    availability = await db.therapist_availability.find_one(
+        {"therapist_id": therapist_id},
+        {"_id": 0}
+    )
+    
+    if not availability:
+        return {"slots": [], "message": "No availability configured"}
+    
+    # Get existing appointments to exclude
+    existing_appts = await db.appointments.find({
+        "therapist_id": therapist_id,
+        "start_time": {"$gte": start_date.isoformat(), "$lt": end_date.isoformat()},
+        "status": {"$nin": ["cancelled", "no_show"]}
+    }, {"_id": 0, "start_time": 1, "end_time": 1}).to_list(100)
+    
+    booked_times = [(a["start_time"], a["end_time"]) for a in existing_appts]
+    
+    # Generate available slots
+    available_slots = []
+    day_name = start_date.strftime("%A").lower()
+    day_availability = availability.get("weekly_schedule", {}).get(day_name, {})
+    
+    if day_availability.get("enabled", False):
+        start_hour, start_min = map(int, day_availability.get("start", "09:00").split(":"))
+        end_hour, end_min = map(int, day_availability.get("end", "18:00").split(":"))
+        
+        slot_start = start_date.replace(hour=start_hour, minute=start_min, second=0, microsecond=0)
+        if slot_start.tzinfo is None:
+            slot_start = slot_start.replace(tzinfo=timezone.utc)
+        
+        slot_end_limit = start_date.replace(hour=end_hour, minute=end_min, second=0, microsecond=0)
+        if slot_end_limit.tzinfo is None:
+            slot_end_limit = slot_end_limit.replace(tzinfo=timezone.utc)
+        
+        while slot_start < slot_end_limit:
+            slot_end = slot_start + timedelta(minutes=session_duration)
+            
+            # Check if slot is in the past
+            if slot_start > datetime.now(timezone.utc):
+                # Check if slot conflicts with existing appointments
+                is_available = True
+                for booked_start, booked_end in booked_times:
+                    booked_start_dt = datetime.fromisoformat(booked_start.replace('Z', '+00:00'))
+                    booked_end_dt = datetime.fromisoformat(booked_end.replace('Z', '+00:00'))
+                    
+                    if not (slot_end <= booked_start_dt or slot_start >= booked_end_dt):
+                        is_available = False
+                        break
+                
+                if is_available:
+                    available_slots.append({
+                        "start_time": slot_start.isoformat(),
+                        "end_time": slot_end.isoformat(),
+                        "display_time": slot_start.strftime("%H:%M")
+                    })
+            
+            slot_start = slot_end
+    
+    return {"slots": available_slots, "session_duration": session_duration}
+
+
 @router.post("/client-request", response_model=Appointment)
 async def client_request_appointment(appt_data: ClientAppointmentRequest, current_user: dict = Depends(get_current_user)):
     """Client requests an appointment with their assigned therapist"""
