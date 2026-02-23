@@ -580,6 +580,95 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
         </Card>
       )}
 
+      {/* PENDING BOOKING REQUESTS - Public Calendar Approvals */}
+      {pendingApprovals.length > 0 && (
+        <Card className="p-5 bg-gradient-to-r from-blue-50/80 to-indigo-50/80 border-blue-300 border-2 shadow-md" data-testid="pending-approvals-section">
+          <h3 className="text-lg font-bold text-blue-800 mb-4 flex items-center gap-2">
+            <div className="p-1.5 bg-blue-200 rounded-lg">
+              <CalendarPlus size={18} className="text-blue-600" />
+            </div>
+            Booking Requests
+            <span className="ml-2 px-2.5 py-1 bg-blue-500 text-white text-xs font-bold rounded-full">{pendingApprovals.length}</span>
+          </h3>
+          
+          <div className="space-y-3">
+            {pendingApprovals.map((appt) => (
+              <div
+                key={appt.id}
+                className="p-4 bg-white rounded-xl border border-blue-200 shadow-sm"
+                data-testid={`pending-booking-${appt.id}`}
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <User size={16} className="text-blue-600" />
+                      <span className="font-semibold text-foreground">{appt.client_name}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <CalendarDays size={14} />
+                        {formatDateLong(appt.start_time)}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock size={14} />
+                        {formatTime(appt.start_time)}
+                      </span>
+                      {appt.client_mobile && (
+                        <span className="flex items-center gap-1">
+                          <Phone size={14} />
+                          {appt.client_mobile}
+                        </span>
+                      )}
+                      {appt.client_email && (
+                        <span className="flex items-center gap-1">
+                          <Mail size={14} />
+                          {appt.client_email}
+                        </span>
+                      )}
+                    </div>
+                    {appt.notes && (
+                      <p className="text-xs text-muted-foreground mt-1 italic">Note: {appt.notes}</p>
+                    )}
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDeclineBooking(appt.id)}
+                      disabled={processingApproval === appt.id}
+                      className="gap-1 border-red-300 text-red-700 hover:bg-red-50"
+                      data-testid={`decline-booking-${appt.id}`}
+                    >
+                      {processingApproval === appt.id ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <XCircle size={14} />
+                      )}
+                      Decline
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => handleApproveBooking(appt.id)}
+                      disabled={processingApproval === appt.id}
+                      className="gap-1 bg-green-600 hover:bg-green-700"
+                      data-testid={`approve-booking-${appt.id}`}
+                    >
+                      {processingApproval === appt.id ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <CheckCircle2 size={14} />
+                      )}
+                      Approve
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
       {/* Lightweight Reporting Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* This Week at a Glance */}
