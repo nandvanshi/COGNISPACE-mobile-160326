@@ -571,8 +571,15 @@ const ClientDashboard = () => {
                   </div>
                 )}
               </div>
-              <div className="p-4 bg-white border-t">
-                <Button onClick={() => setShowDiagnosticReport(false)} className="w-full rounded-xl bg-violet-600">
+              <div className="p-4 bg-white border-t flex gap-3">
+                <Button 
+                  onClick={() => handlePrintDiagnosticReport(selectedDiagnosticReport)}
+                  variant="outline"
+                  className="flex-1 rounded-xl gap-2"
+                >
+                  <Download size={16} /> Print / PDF
+                </Button>
+                <Button onClick={() => setShowDiagnosticReport(false)} className="flex-1 rounded-xl bg-violet-600">
                   Close
                 </Button>
               </div>
