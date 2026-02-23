@@ -42,6 +42,7 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
   const [assessments, setAssessments] = useState([]);
   const [payments, setPayments] = useState([]);
   const [homework, setHomework] = useState([]);
+  const [sharedResources, setSharedResources] = useState([]);
   const [caseHistory, setCaseHistory] = useState(null);
   const [consent, setConsent] = useState(null);
   
