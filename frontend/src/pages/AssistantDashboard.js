@@ -291,6 +291,10 @@ const AssistantOverview = ({ onNavigate }) => {
   const [showHandoverDialog, setShowHandoverDialog] = useState(false);
   const [handoverNote, setHandoverNote] = useState('');
   const [submittingHandover, setSubmittingHandover] = useState(false);
+  
+  // Pending Approvals state
+  const [pendingApprovals, setPendingApprovals] = useState([]);
+  const [processingApproval, setProcessingApproval] = useState(null);
 
   const fetchDashboard = useCallback(async () => {
     try {
@@ -313,21 +317,33 @@ const AssistantOverview = ({ onNavigate }) => {
       console.error('Failed to fetch settlement:', error);
     }
   }, []);
+  
+  const fetchPendingApprovals = useCallback(async () => {
+    try {
+      const res = await axios.get(`${API}/appointments/pending-approval`);
+      setPendingApprovals(res.data?.pending_appointments || []);
+    } catch (error) {
+      console.error('Failed to fetch pending approvals:', error);
+    }
+  }, []);
 
   useEffect(() => {
     fetchDashboard();
     fetchSettlement();
+    fetchPendingApprovals();
     const interval = setInterval(() => {
       fetchDashboard();
       fetchSettlement();
+      fetchPendingApprovals();
     }, 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [fetchDashboard, fetchSettlement]);
+  }, [fetchDashboard, fetchSettlement, fetchPendingApprovals]);
 
   const handleRefresh = () => {
     setRefreshing(true);
     fetchDashboard();
     fetchSettlement();
+    fetchPendingApprovals();
   };
   
   const handleCashHandover = async () => {
