@@ -880,7 +880,7 @@ const HomeTab = ({
 };
 
 // ============= APPOINTMENTS TAB COMPONENT =============
-const AppointmentsTab = ({ appointments, payments, onViewReceipt }) => {
+const AppointmentsTab = ({ appointments, payments, onViewReceipt, onRequestAppointment }) => {
   const upcoming = appointments
     .filter((a) => new Date(a.start_time) > new Date() && a.status !== 'cancelled')
     .sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
@@ -891,7 +891,17 @@ const AppointmentsTab = ({ appointments, payments, onViewReceipt }) => {
 
   return (
     <div className="space-y-4 pb-4" data-testid="appointments-tab">
-      <h2 className="text-lg font-semibold text-gray-800">Your Schedule</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-gray-800">Your Schedule</h2>
+        <Button 
+          onClick={onRequestAppointment}
+          size="sm"
+          className="rounded-xl bg-emerald-600 hover:bg-emerald-700 gap-1"
+          data-testid="request-appointment-btn"
+        >
+          <Plus size={16} /> Request
+        </Button>
+      </div>
       
       {/* Upcoming */}
       <div>
