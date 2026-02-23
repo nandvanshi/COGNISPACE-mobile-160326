@@ -720,32 +720,6 @@ async def mark_no_show(appointment_id: str, current_user: dict = Depends(require
     return {"message": "Appointment marked as no-show"}
 
 
-# ============= PUBLIC BOOKING APPROVAL ENDPOINTS =============
-
-@router.get("/pending-approval")
-async def get_pending_approval_appointments(current_user: dict = Depends(require_therapist_or_assistant)):
-    """Get all appointments pending approval from public booking"""
-    therapist_id = get_effective_therapist_id(current_user)
-    
-    appointments = await db.appointments.find(
-        {"therapist_id": therapist_id, "status": "pending_approval"},
-        {"_id": 0}
-    ).sort("created_at", -1).to_list(50)
-    
-    # Enrich with client details
-    for appt in appointments:
-        client = await db.users.find_one(
-            {"id": appt.get("client_id")},
-            {"_id": 0, "full_name": 1, "email": 1, "mobile": 1}
-        )
-        if client:
-            appt["client_name"] = client.get("full_name")
-            appt["client_email"] = client.get("email")
-            appt["client_mobile"] = client.get("mobile")
-    
-    return {"pending_appointments": appointments}
-
-
 @router.post("/{appointment_id}/approve")
 async def approve_appointment(appointment_id: str, current_user: dict = Depends(require_therapist_or_assistant)):
     """Approve a pending appointment from public booking"""
