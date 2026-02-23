@@ -320,9 +320,25 @@ const ClientDashboard = () => {
         heightLeft -= (pdfHeight - 20);
       }
       
-      // Download
+      // Download using blob method (more reliable across browsers)
       const fileName = `Diagnostic_Report_${report.title?.replace(/[^a-zA-Z0-9]/g, '_') || 'Report'}_${new Date().toISOString().split('T')[0]}.pdf`;
-      pdf.save(fileName);
+      
+      // Create blob and download link
+      const pdfBlob = pdf.output('blob');
+      const blobUrl = URL.createObjectURL(pdfBlob);
+      
+      const downloadLink = document.createElement('a');
+      downloadLink.href = blobUrl;
+      downloadLink.download = fileName;
+      downloadLink.style.display = 'none';
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      
+      // Cleanup
+      setTimeout(() => {
+        document.body.removeChild(downloadLink);
+        URL.revokeObjectURL(blobUrl);
+      }, 100);
       
       toast.success('PDF downloaded!');
     } catch (error) {
