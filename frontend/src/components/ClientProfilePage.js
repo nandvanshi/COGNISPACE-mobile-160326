@@ -81,7 +81,7 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
         axios.get(`${API}/sessions?client_id=${clientId}`).catch(() => ({ data: [] })),
         axios.get(`${API}/session-notes?client_id=${clientId}`).catch(() => ({ data: [] })),
         axios.get(`${API}/appointments?client_id=${clientId}`).catch(() => ({ data: [] })),
-        axios.get(`${API}/assessments/client/${clientId}`).catch(() => ({ data: [] })),
+        axios.get(`${API}/assessments?client_id=${clientId}`).catch(() => ({ data: [] })),
         axios.get(`${API}/payments?client_id=${clientId}`).catch(() => ({ data: [] }))
       ]);
       
