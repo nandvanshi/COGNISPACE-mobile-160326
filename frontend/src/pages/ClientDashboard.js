@@ -486,11 +486,10 @@ const ClientDashboard = () => {
                     title={selectedResource.resource_title}
                   />
                 ) : selectedResource.resource_content ? (
-                  <div className="p-4 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: selectedResource.resource_content }} />
-                ) : selectedResource.resource_description ? (
-                  <div className="p-6 text-center">
-                    <BookMarked size={48} className="mx-auto text-gray-300 mb-4" />
-                    <p className="text-gray-600">{selectedResource.resource_description}</p>
+                  <div className="p-4 bg-white m-3 rounded-xl shadow-sm">
+                    <div className="prose prose-sm max-w-none whitespace-pre-wrap text-gray-700 leading-relaxed">
+                      {selectedResource.resource_content}
+                    </div>
                   </div>
                 ) : (
                   <div className="p-6 text-center text-gray-500">
