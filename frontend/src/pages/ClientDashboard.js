@@ -238,6 +238,34 @@ const ClientDashboard = () => {
     }
   };
 
+  const handleRequestAppointment = async () => {
+    if (!appointmentRequest.date || !appointmentRequest.time) {
+      toast.error('Please select date and time');
+      return;
+    }
+    
+    setRequestingAppointment(true);
+    try {
+      const startTime = new Date(`${appointmentRequest.date}T${appointmentRequest.time}`);
+      const endTime = new Date(startTime.getTime() + 60 * 60 * 1000); // 1 hour session
+      
+      await axios.post(`${API}/appointments/client-request`, {
+        start_time: startTime.toISOString(),
+        end_time: endTime.toISOString(),
+        notes: appointmentRequest.notes || ''
+      });
+      
+      toast.success('Appointment requested successfully!');
+      setShowRequestAppointment(false);
+      setAppointmentRequest({ date: '', time: '', notes: '' });
+      fetchDashboardData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to request appointment');
+    } finally {
+      setRequestingAppointment(false);
+    }
+  };
+
   const handleViewDiagnosticReport = async (reportId) => {
     try {
       const res = await axios.get(`${API}/diagnostic-reports/${reportId}`);
