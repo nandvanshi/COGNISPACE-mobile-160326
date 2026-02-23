@@ -462,6 +462,33 @@ async def get_appointments(
     ) for a in appointments]
 
 
+# ============= PUBLIC BOOKING APPROVAL ENDPOINTS =============
+# NOTE: These routes MUST be defined before /{appointment_id} routes to avoid path conflicts
+
+@router.get("/pending-approval")
+async def get_pending_approval_appointments(current_user: dict = Depends(require_therapist_or_assistant)):
+    """Get all appointments pending approval from public booking"""
+    therapist_id = get_effective_therapist_id(current_user)
+    
+    appointments = await db.appointments.find(
+        {"therapist_id": therapist_id, "status": "pending_approval"},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    
+    # Enrich with client details
+    for appt in appointments:
+        client = await db.users.find_one(
+            {"id": appt.get("client_id")},
+            {"_id": 0, "full_name": 1, "email": 1, "mobile": 1}
+        )
+        if client:
+            appt["client_name"] = client.get("full_name")
+            appt["client_email"] = client.get("email")
+            appt["client_mobile"] = client.get("mobile")
+    
+    return {"pending_appointments": appointments}
+
+
 @router.get("/{appointment_id}", response_model=Appointment)
 async def get_appointment(appointment_id: str, current_user: dict = Depends(get_current_user)):
     """Get single appointment"""
