@@ -284,8 +284,10 @@ async def get_assessment_results(assessment_id: str, current_user: dict = Depend
     severity = None
     
     if responses and assessment.get("status") == "completed":
-        score = calculate_score(assessment_type, responses)
-        severity = get_severity(assessment_type, score)
+        result = calculate_score(assessment_type, responses)
+        if result:
+            score = result.get("total_score")
+            severity = result.get("severity")
     
     return {
         "id": assessment["id"],
