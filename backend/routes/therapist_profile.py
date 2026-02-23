@@ -57,6 +57,9 @@ class TherapistProfileUpdate(BaseModel):
     # Privacy Settings
     show_mobile_on_receipt: Optional[bool] = None
     show_email_on_receipt: Optional[bool] = None
+    
+    # Public Booking
+    public_booking_enabled: Optional[bool] = None
 
 
 class TherapistProfile(BaseModel):
