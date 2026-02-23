@@ -439,7 +439,14 @@ const Messaging = ({ isReadOnly = false }) => {
                 <Input
                   ref={inputRef}
                   value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
+                  onChange={(e) => {
+                    isTyping.current = true;
+                    setNewMessage(e.target.value);
+                    // Reset typing flag after delay
+                    setTimeout(() => { isTyping.current = false; }, 2000);
+                  }}
+                  onFocus={() => { isTyping.current = true; }}
+                  onBlur={() => { isTyping.current = false; }}
                   placeholder="Type a message..."
                   className="flex-1 rounded-full bg-gray-50 border-gray-200 px-4 h-11 focus:bg-white transition-colors"
                   disabled={sending}
