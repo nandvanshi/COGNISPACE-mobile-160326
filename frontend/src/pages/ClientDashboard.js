@@ -835,115 +835,235 @@ const AppointmentsTab = ({ appointments, payments, onViewReceipt }) => {
   );
 };
 
-// ============= RESOURCES TAB COMPONENT =============
-const ResourcesTab = ({ resources, onViewResource }) => {
-  const unviewed = resources.filter(r => !r.viewed_at);
-  const viewed = resources.filter(r => r.viewed_at && !r.completed_at);
-  const completed = resources.filter(r => r.completed_at);
+// ============= MY TASKS TAB COMPONENT =============
+const MyTasksTab = ({ homework, assessments, resources, onCompleteHomework, onCompleteAssessment, onViewResource }) => {
+  const pendingHomework = homework.filter(h => h.status === 'assigned');
+  const completedHomework = homework.filter(h => h.status === 'completed');
+  const pendingAssessments = assessments.filter(a => a.status !== 'completed');
+  const completedAssessments = assessments.filter(a => a.status === 'completed');
+  const unviewedResources = resources.filter(r => !r.viewed_at);
+  const viewedResources = resources.filter(r => r.viewed_at && !r.completed_at);
+  const completedResources = resources.filter(r => r.completed_at);
+
+  const totalPending = pendingHomework.length + pendingAssessments.length + unviewedResources.length;
 
   return (
-    <div className="space-y-4 pb-4" data-testid="resources-tab">
-      <h2 className="text-lg font-semibold text-gray-800">Shared Resources</h2>
-      
-      {resources.length === 0 ? (
-        <Card className="p-8 rounded-2xl text-center">
-          <BookMarked size={40} className="mx-auto text-gray-300 mb-3" />
-          <p className="text-gray-500">No resources shared yet</p>
-          <p className="text-sm text-gray-400 mt-1">Your therapist will share helpful materials here</p>
-        </Card>
-      ) : (
-        <>
+    <div className="space-y-4 pb-4" data-testid="tasks-tab">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-gray-800">My Tasks</h2>
+        {totalPending > 0 && (
+          <Badge className="bg-amber-100 text-amber-700">{totalPending} pending</Badge>
+        )}
+      </div>
+
+      {/* HOMEWORK SECTION */}
+      {(pendingHomework.length > 0 || completedHomework.length > 0) && (
+        <div>
+          <h3 className="text-sm font-medium text-amber-600 mb-2 flex items-center gap-2">
+            <ClipboardCheck size={16} /> Homework
+          </h3>
+          
+          {/* Pending Homework */}
+          {pendingHomework.length > 0 && (
+            <div className="space-y-2 mb-3">
+              {pendingHomework.map((hw) => (
+                <Card 
+                  key={hw.id} 
+                  className="p-4 rounded-2xl border-amber-200 bg-amber-50/50"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-800">{hw.title}</p>
+                      {hw.description && (
+                        <p className="text-xs text-gray-500 mt-1 line-clamp-2">{hw.description}</p>
+                      )}
+                      {hw.due_date && (
+                        <p className="text-xs text-amber-600 mt-1">Due: {formatDate(hw.due_date)}</p>
+                      )}
+                    </div>
+                    <Button 
+                      size="sm" 
+                      onClick={() => onCompleteHomework(hw.id)}
+                      className="rounded-xl bg-amber-500 hover:bg-amber-600 ml-3"
+                    >
+                      <Check size={16} className="mr-1" /> Done
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {/* Completed Homework (collapsed) */}
+          {completedHomework.length > 0 && (
+            <details className="group">
+              <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700 flex items-center gap-1">
+                <CheckCircle size={12} className="text-green-500" />
+                {completedHomework.length} completed
+              </summary>
+              <div className="space-y-2 mt-2">
+                {completedHomework.slice(0, 5).map((hw) => (
+                  <Card key={hw.id} className="p-3 rounded-xl bg-gray-50">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle size={16} className="text-green-500" />
+                      <p className="text-sm text-gray-600 truncate">{hw.title}</p>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </details>
+          )}
+        </div>
+      )}
+
+      {/* ASSESSMENTS SECTION */}
+      {(pendingAssessments.length > 0 || completedAssessments.length > 0) && (
+        <div>
+          <h3 className="text-sm font-medium text-blue-600 mb-2 flex items-center gap-2">
+            <FileCheck size={16} /> Assessments
+          </h3>
+          
+          {/* Pending Assessments */}
+          {pendingAssessments.length > 0 && (
+            <div className="space-y-2 mb-3">
+              {pendingAssessments.map((assess) => (
+                <Card 
+                  key={assess.id} 
+                  className="p-4 rounded-2xl border-blue-200 bg-blue-50/50 cursor-pointer hover:bg-blue-100"
+                  onClick={() => onCompleteAssessment(assess)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-800">{assess.assessment_type}</p>
+                      <p className="text-xs text-blue-600">Tap to complete</p>
+                    </div>
+                    <ChevronRight size={20} className="text-blue-400" />
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {/* Completed Assessments (collapsed) */}
+          {completedAssessments.length > 0 && (
+            <details className="group">
+              <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700 flex items-center gap-1">
+                <CheckCircle size={12} className="text-green-500" />
+                {completedAssessments.length} completed
+              </summary>
+              <div className="space-y-2 mt-2">
+                {completedAssessments.slice(0, 5).map((assess) => (
+                  <Card key={assess.id} className="p-3 rounded-xl bg-gray-50">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle size={16} className="text-green-500" />
+                      <p className="text-sm text-gray-600 truncate">{assess.assessment_type}</p>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </details>
+          )}
+        </div>
+      )}
+
+      {/* RESOURCES SECTION */}
+      {(unviewedResources.length > 0 || viewedResources.length > 0 || completedResources.length > 0) && (
+        <div>
+          <h3 className="text-sm font-medium text-emerald-600 mb-2 flex items-center gap-2">
+            <BookMarked size={16} /> Resources from Therapist
+          </h3>
+          
           {/* New Resources */}
-          {unviewed.length > 0 && (
-            <div>
-              <h3 className="text-sm font-medium text-emerald-600 mb-2 flex items-center gap-2">
-                <Bell size={14} /> New ({unviewed.length})
-              </h3>
-              <div className="space-y-2">
-                {unviewed.map((resource) => {
-                  const Icon = getResourceIcon(resource.resource_type);
-                  return (
-                    <Card 
-                      key={resource.id} 
-                      className="p-4 rounded-2xl border-emerald-200 bg-emerald-50/50 cursor-pointer hover:bg-emerald-50"
-                      onClick={() => onViewResource(resource)}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
-                          <Icon size={22} className="text-emerald-600" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-gray-800 truncate">{resource.resource_title}</p>
-                          <p className="text-xs text-emerald-600 capitalize">{resource.resource_type || 'Resource'}</p>
-                          <p className="text-xs text-gray-400">Assigned {formatDate(resource.assigned_at)}</p>
-                        </div>
-                        <ChevronRight size={20} className="text-emerald-400" />
+          {unviewedResources.length > 0 && (
+            <div className="space-y-2 mb-3">
+              {unviewedResources.map((resource) => {
+                const Icon = getResourceIcon(resource.resource_type);
+                return (
+                  <Card 
+                    key={resource.id} 
+                    className="p-4 rounded-2xl border-emerald-200 bg-emerald-50/50 cursor-pointer hover:bg-emerald-100"
+                    onClick={() => onViewResource(resource)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
+                        <Icon size={20} className="text-emerald-600" />
                       </div>
-                    </Card>
-                  );
-                })}
-              </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-800 truncate">{resource.resource_title}</p>
+                        <p className="text-xs text-emerald-600 capitalize">{resource.resource_type || 'Resource'}</p>
+                      </div>
+                      <Badge className="bg-emerald-100 text-emerald-700 text-xs">New</Badge>
+                    </div>
+                  </Card>
+                );
+              })}
             </div>
           )}
 
-          {/* In Progress */}
-          {viewed.length > 0 && (
-            <div>
-              <h3 className="text-sm font-medium text-blue-600 mb-2">In Progress ({viewed.length})</h3>
-              <div className="space-y-2">
-                {viewed.map((resource) => {
-                  const Icon = getResourceIcon(resource.resource_type);
-                  return (
-                    <Card 
-                      key={resource.id} 
-                      className="p-3 rounded-xl cursor-pointer hover:bg-gray-50"
-                      onClick={() => onViewResource(resource)}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <Icon size={18} className="text-blue-600" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-gray-800 truncate text-sm">{resource.resource_title}</p>
-                          <p className="text-xs text-gray-500">Viewed {formatDate(resource.viewed_at)}</p>
-                        </div>
+          {/* In Progress Resources */}
+          {viewedResources.length > 0 && (
+            <div className="space-y-2 mb-3">
+              {viewedResources.map((resource) => {
+                const Icon = getResourceIcon(resource.resource_type);
+                return (
+                  <Card 
+                    key={resource.id} 
+                    className="p-3 rounded-xl cursor-pointer hover:bg-gray-50"
+                    onClick={() => onViewResource(resource)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <Icon size={16} className="text-blue-600" />
                       </div>
-                    </Card>
-                  );
-                })}
-              </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-700 truncate">{resource.resource_title}</p>
+                        <p className="text-xs text-gray-400">In progress</p>
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })}
             </div>
           )}
 
-          {/* Completed */}
-          {completed.length > 0 && (
-            <div>
-              <h3 className="text-sm font-medium text-gray-500 mb-2">Completed ({completed.length})</h3>
-              <div className="space-y-2">
-                {completed.map((resource) => {
-                  const Icon = getResourceIcon(resource.resource_type);
-                  return (
-                    <Card 
-                      key={resource.id} 
-                      className="p-3 rounded-xl bg-gray-50 cursor-pointer"
-                      onClick={() => onViewResource(resource)}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                          <CheckCircle size={18} className="text-green-500" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-gray-600 truncate text-sm">{resource.resource_title}</p>
-                          <p className="text-xs text-gray-400">Completed {formatDate(resource.completed_at)}</p>
-                        </div>
-                      </div>
-                    </Card>
-                  );
-                })}
+          {/* Completed Resources (collapsed) */}
+          {completedResources.length > 0 && (
+            <details className="group">
+              <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700 flex items-center gap-1">
+                <CheckCircle size={12} className="text-green-500" />
+                {completedResources.length} completed
+              </summary>
+              <div className="space-y-2 mt-2">
+                {completedResources.map((resource) => (
+                  <Card key={resource.id} className="p-3 rounded-xl bg-gray-50" onClick={() => onViewResource(resource)}>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle size={16} className="text-green-500" />
+                      <p className="text-sm text-gray-600 truncate">{resource.resource_title}</p>
+                    </div>
+                  </Card>
+                ))}
               </div>
-            </div>
+            </details>
           )}
-        </>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {totalPending === 0 && homework.length === 0 && assessments.length === 0 && resources.length === 0 && (
+        <Card className="p-8 rounded-2xl text-center bg-gradient-to-br from-emerald-50 to-teal-50">
+          <CheckCircle size={48} className="mx-auto text-emerald-400 mb-3" />
+          <p className="font-medium text-gray-700">All caught up!</p>
+          <p className="text-sm text-gray-500 mt-1">No tasks assigned yet</p>
+        </Card>
+      )}
+
+      {/* All Done State */}
+      {totalPending === 0 && (homework.length > 0 || assessments.length > 0 || resources.length > 0) && (
+        <Card className="p-6 rounded-2xl text-center bg-gradient-to-br from-green-50 to-emerald-50">
+          <CheckCircle size={40} className="mx-auto text-green-500 mb-2" />
+          <p className="font-medium text-green-700">Great job!</p>
+          <p className="text-sm text-green-600">All pending tasks completed</p>
+        </Card>
       )}
     </div>
   );
