@@ -97,9 +97,18 @@ async def get_public_available_slots(therapist_id: str, date: Optional[str] = No
     
     # Get date range (default: next 7 days)
     if date:
-        start_date = datetime.fromisoformat(date.replace('Z', '+00:00'))
+        # Parse date string and make it timezone aware
+        try:
+            start_date = datetime.fromisoformat(date.replace('Z', '+00:00'))
+        except ValueError:
+            # If just date without time, parse and add timezone
+            start_date = datetime.strptime(date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
     else:
         start_date = datetime.now(timezone.utc)
+    
+    # Ensure start_date has timezone info
+    if start_date.tzinfo is None:
+        start_date = start_date.replace(tzinfo=timezone.utc)
     
     end_date = start_date + timedelta(days=7)
     
