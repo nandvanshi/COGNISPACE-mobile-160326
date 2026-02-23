@@ -102,6 +102,7 @@ api_router.include_router(therapist_profile_router)
 api_router.include_router(ai_clinical_router)
 api_router.include_router(diagnostic_reports_router)
 api_router.include_router(resources_router)
+api_router.include_router(public_booking_router)
 
 # ============= MODELS =============
 
