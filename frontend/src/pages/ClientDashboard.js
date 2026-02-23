@@ -279,7 +279,7 @@ const ClientDashboard = () => {
         notes: appointmentNotes || ''
       });
       
-      toast.success('Appointment booked successfully!');
+      toast.success('Appointment request sent! Waiting for therapist approval.');
       setShowRequestAppointment(false);
       setAppointmentDate('');
       setAppointmentNotes('');
@@ -287,7 +287,7 @@ const ClientDashboard = () => {
       setAvailableSlots([]);
       fetchDashboardData();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to book appointment');
+      toast.error(error.response?.data?.detail || 'Failed to send request');
     } finally {
       setRequestingAppointment(false);
     }
