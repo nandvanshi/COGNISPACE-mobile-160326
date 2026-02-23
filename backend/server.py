@@ -43,6 +43,7 @@ from routes.scheduler_admin import router as scheduler_admin_router
 from routes.ai_clinical import router as ai_clinical_router, setup_ai_clinical
 from routes.diagnostic_reports import router as diagnostic_reports_router, setup_diagnostic_reports
 from routes.resources import router as resources_router, setup_resources
+from routes.public_booking import router as public_booking_router
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
