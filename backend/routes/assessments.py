@@ -348,6 +348,27 @@ async def update_therapist_notes(assessment_id: str, data: dict, current_user: d
     return {"message": "Notes updated"}
 
 
+@router.post("/{assessment_id}/save-progress")
+async def save_assessment_progress(assessment_id: str, data: dict, current_user: dict = Depends(get_current_user)):
+    """Save client's progress on assessment (auto-save)"""
+    if current_user["role"] != "client":
+        raise HTTPException(status_code=403, detail="Only clients can save progress")
+    
+    result = await db.assessments.update_one(
+        {"id": assessment_id, "client_id": current_user["id"], "status": {"$ne": "completed"}},
+        {"$set": {
+            "saved_answers": data.get("answers", []),
+            "current_question_index": data.get("current_index", 0),
+            "last_saved_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Assessment not found or already completed")
+    
+    return {"message": "Progress saved"}
+
+
 @router.delete("/{assessment_id}")
 async def delete_assessment(assessment_id: str, current_user: dict = Depends(require_active_therapist)):
     """Delete an assessment"""
