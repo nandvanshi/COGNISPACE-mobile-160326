@@ -23,7 +23,7 @@ const ClientAssessmentTaker = ({ assessmentId, onComplete, onCancel }) => {
 
   const fetchAssessment = async () => {
     try {
-      const res = await axios.get(`${API}/assessments/${assessmentId}/client-view`);
+      const res = await axios.get(`${API}/assessments/${assessmentId}`);
       setAssessment(res.data);
       
       // Restore saved progress if any
@@ -33,7 +33,7 @@ const ClientAssessmentTaker = ({ assessmentId, onComplete, onCancel }) => {
         setShowStartScreen(false);
       } else {
         // Initialize empty answers array
-        setAnswers(new Array(res.data.questions.length).fill(null));
+        setAnswers(new Array(res.data.questions?.length || 0).fill(null));
       }
     } catch (error) {
       toast.error('Failed to load assessment');
