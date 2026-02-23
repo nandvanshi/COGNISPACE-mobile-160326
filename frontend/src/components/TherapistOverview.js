@@ -45,6 +45,8 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
   const [nextAppointment, setNextAppointment] = useState(null);
   const [alerts, setAlerts] = useState([]);
   const [subscriptionInfo, setSubscriptionInfo] = useState(null);
+  const [pendingApprovals, setPendingApprovals] = useState([]);
+  const [processingApproval, setProcessingApproval] = useState(null);
 
   useEffect(() => {
     fetchDashboardData();
