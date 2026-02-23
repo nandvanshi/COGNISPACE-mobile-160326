@@ -14,7 +14,7 @@ import {
   Sparkles, Phone, PhoneCall, Clock, CheckCircle2, 
   AlertCircle, UserX, Calendar, CreditCard, Banknote, Plus,
   RefreshCw, ArrowRight, HandCoins, Lock, Send, FileCheck,
-  MessageSquare, PhoneOff, CalendarCheck, Sun, Coffee
+  MessageSquare, PhoneOff, CalendarCheck, Sun, Coffee, User, Mail, XCircle, CalendarPlus, Loader2
 } from 'lucide-react';
 import ClientManagement from '../components/ClientManagement';
 import ClientProfilePage from '../components/ClientProfilePage';
