@@ -31,8 +31,7 @@ const Messaging = ({ isReadOnly = false }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileView, setMobileView] = useState('list');
   const messagesEndRef = useRef(null);
-  const inputRef = useRef(null);
-  const isScrolledToBottom = useRef(true);
+  const selectedConvRef = useRef(null);
   
   const isClient = user?.role === 'client';
 
