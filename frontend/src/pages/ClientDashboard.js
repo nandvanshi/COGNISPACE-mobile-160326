@@ -959,16 +959,30 @@ const MyTasksTab = ({ homework, assessments, resources, onCompleteHomework, onCo
               {pendingAssessments.map((assess) => (
                 <Card 
                   key={assess.id} 
-                  className="p-4 rounded-2xl border-blue-200 bg-blue-50/50 cursor-pointer hover:bg-blue-100"
-                  onClick={() => onCompleteAssessment(assess)}
+                  className="rounded-2xl border-blue-200 bg-blue-50/50 overflow-hidden"
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <p className="font-medium text-gray-800">{assess.assessment_type}</p>
-                      <p className="text-xs text-blue-600">Tap to complete</p>
+                  <details className="group">
+                    <summary className="p-4 cursor-pointer list-none flex items-center justify-between hover:bg-blue-100/50">
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-800">{assess.assessment_type}</p>
+                        {assess.assessment_name && assess.assessment_name !== assess.assessment_type && (
+                          <p className="text-xs text-blue-600">{assess.assessment_name}</p>
+                        )}
+                      </div>
+                      <ChevronRight size={20} className="text-blue-500 transition-transform group-open:rotate-90" />
+                    </summary>
+                    <div className="px-4 pb-4 border-t border-blue-200 bg-white">
+                      {assess.notes && (
+                        <p className="py-3 text-sm text-gray-600">{assess.notes}</p>
+                      )}
+                      <Button 
+                        onClick={() => onCompleteAssessment(assess)}
+                        className="w-full rounded-xl bg-blue-600 hover:bg-blue-700 mt-2"
+                      >
+                        <Play size={16} className="mr-2" /> Start Assessment
+                      </Button>
                     </div>
-                    <ChevronRight size={20} className="text-blue-400" />
-                  </div>
+                  </details>
                 </Card>
               ))}
             </div>
