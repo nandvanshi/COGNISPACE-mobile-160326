@@ -1,0 +1,104 @@
+{
+  "summary": "Public Booking Calendar feature fully tested. All backend APIs working (13/13 tests passed). Frontend UI tested via Playwright - public booking page loads correctly, booking submission creates pending_approval appointment, confirmation page shows. Browser crashes on therapist dashboard due to resource constraints (known issue from previous iterations).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Public Booking Page",
+        "issues": [
+          "Past dates in calendar are correctly disabled but may not have visual distinction"
+        ]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_public_booking.py",
+    "/app/test_reports/pytest/pytest_results_public_booking.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "VERIFIED: PublicBookingPage.js correctly fetches therapist info via /api/public/therapist/{id}",
+    "VERIFIED: Available slots fetched from /api/public/therapist/{id}/slots with date param",
+    "VERIFIED: Booking submitted to /api/public/book creates client account if needed",
+    "VERIFIED: New bookings have status 'pending_approval' and require therapist action",
+    "VERIFIED: TherapistOverview.js has pendingApprovals section with approve/decline buttons (data-testid='pending-approvals-section')",
+    "VERIFIED: AssistantDashboard.js also has same pendingApprovals section for assistant access",
+    "VERIFIED: TherapistProfileSettings.js has public_booking_enabled toggle with data-testid='public-booking-toggle'",
+    "VERIFIED: Profile settings show shareable booking link when public booking is enabled",
+    "VERIFIED: /api/appointments/{id}/approve changes status to 'scheduled'",
+    "VERIFIED: /api/appointments/{id}/decline changes status to 'declined' with reason"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_public_booking.py"
+  ],
+  "success_rate": {
+    "backend": "100% (13/13 tests passed)",
+    "frontend": "Public booking flow tested via UI - works correctly. Dashboard verification via API due to browser resource constraints"
+  },
+  "test_credentials": {
+    "therapist": {
+      "mobile": "7275005007",
+      "password": "Test@123"
+    },
+    "therapist_id": "8210bdef-7566-4f48-a640-eb6ce5d98f6b"
+  },
+  "seed_data_creation": "Multiple test bookings created via public booking flow - can be cleaned up by declining/deleting",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Public Booking Calendar feature is fully implemented and working. Backend tests comprehensive. Browser automation crashes after therapist login due to resource constraints - use API testing or increase browser resources. Public booking page at /book/{therapist_id} works perfectly.",
+  "features_tested": {
+    "GET /api/public/therapist/{therapist_id}": {
+      "status": "PASS",
+      "notes": "Returns therapist name, qualifications, specializations, session_duration, consultation_fee"
+    },
+    "GET /api/public/therapist/{therapist_id}/slots": {
+      "status": "PASS",
+      "notes": "Returns available slots based on therapist availability settings"
+    },
+    "POST /api/public/book": {
+      "status": "PASS",
+      "notes": "Creates client account if new, creates appointment with pending_approval status"
+    },
+    "GET /api/appointments/pending-approval": {
+      "status": "PASS",
+      "notes": "Returns list of pending bookings with client details"
+    },
+    "POST /api/appointments/{id}/approve": {
+      "status": "PASS",
+      "notes": "Changes status to 'scheduled', creates notification for client"
+    },
+    "POST /api/appointments/{id}/decline": {
+      "status": "PASS",
+      "notes": "Changes status to 'declined', includes reason if provided"
+    },
+    "Public Booking Page UI (/book/{therapist_id})": {
+      "status": "PASS",
+      "notes": "Three-step wizard: 1) Select Date/Time, 2) Enter Details, 3) Confirmation. Works end-to-end."
+    },
+    "Therapist Profile Settings (public booking toggle)": {
+      "status": "VERIFIED (code review)",
+      "notes": "TherapistProfileSettings.js has data-testid='public-booking-toggle' Switch component"
+    },
+    "Therapist Dashboard (pending approvals section)": {
+      "status": "VERIFIED (code + API)",
+      "notes": "TherapistOverview.js has data-testid='pending-approvals-section' with approve/decline buttons"
+    },
+    "Assistant Dashboard (pending approvals section)": {
+      "status": "VERIFIED (code review)",
+      "notes": "AssistantDashboard.js has same pending approvals section as therapist"
+    }
+  },
+  "api_test_results": {
+    "public_therapist_profile": "200 OK - Returns therapist info",
+    "public_slots": "200 OK - Returns 47+ slots for next 7 days",
+    "public_book": "200 OK - Creates booking with pending_approval status",
+    "pending_approval": "200 OK - Returns pending bookings with client details",
+    "approve": "200 OK - Changes status to scheduled",
+    "decline": "200 OK - Changes status to declined"
+  }
+}
