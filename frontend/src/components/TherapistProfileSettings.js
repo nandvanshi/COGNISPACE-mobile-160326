@@ -89,7 +89,9 @@ const TherapistProfileSettings = ({ isReadOnly = false }) => {
         state: response.data.state || '',
         district: response.data.district || '',
         show_mobile_on_receipt: response.data.show_mobile_on_receipt ?? true,
-        show_email_on_receipt: response.data.show_email_on_receipt ?? true
+        show_email_on_receipt: response.data.show_email_on_receipt ?? true,
+        public_booking_enabled: response.data.public_booking_enabled ?? false,
+        session_duration: response.data.session_duration || 60
       });
     } catch (error) {
       toast.error('Failed to load profile');
