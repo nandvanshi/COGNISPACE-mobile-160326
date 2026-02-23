@@ -334,9 +334,11 @@ const ClientDashboard = () => {
       document.body.appendChild(downloadLink);
       downloadLink.click();
       
-      // Cleanup
+      // Cleanup download link
       setTimeout(() => {
-        document.body.removeChild(downloadLink);
+        if (downloadLink.parentNode) {
+          downloadLink.parentNode.removeChild(downloadLink);
+        }
         URL.revokeObjectURL(blobUrl);
       }, 100);
       
@@ -345,7 +347,10 @@ const ClientDashboard = () => {
       console.error('PDF generation error:', error);
       toast.error('Failed to generate PDF');
     } finally {
-      document.body.removeChild(container);
+      // Safe cleanup - check if container is still in DOM
+      if (container && container.parentNode) {
+        container.parentNode.removeChild(container);
+      }
     }
   };
 
