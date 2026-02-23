@@ -796,6 +796,85 @@ const TherapistProfileSettings = ({ isReadOnly = false }) => {
           </div>
         </Card>
 
+        {/* Public Booking Settings */}
+        <Card className="p-6 bg-white/70 backdrop-blur-xl border border-border/40">
+          <div className="flex items-center gap-2 mb-6">
+            <Calendar size={20} className="text-primary" />
+            <h3 className="text-xl font-serif text-primary">Public Booking Calendar</h3>
+          </div>
+
+          <p className="text-sm text-muted-foreground mb-6">
+            Enable public booking to allow new clients to book appointments directly from a shareable link.
+          </p>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 bg-surface rounded-lg">
+              <div className="flex items-center gap-3">
+                <Calendar size={18} className="text-primary" />
+                <div>
+                  <p className="font-medium">Enable Public Booking</p>
+                  <p className="text-sm text-muted-foreground">Allow new clients to request appointments</p>
+                </div>
+              </div>
+              <Switch
+                checked={formData.public_booking_enabled}
+                onCheckedChange={(checked) => setFormData({ ...formData, public_booking_enabled: checked })}
+                disabled={isReadOnly}
+                data-testid="public-booking-toggle"
+              />
+            </div>
+
+            {formData.public_booking_enabled && (
+              <>
+                <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-sm font-medium text-blue-800 mb-2">Your Public Booking Link</p>
+                  <div className="flex items-center gap-2">
+                    <Input 
+                      value={`${window.location.origin}/book/${profile?.id}`}
+                      readOnly
+                      className="bg-white text-sm"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        navigator.clipboard.writeText(`${window.location.origin}/book/${profile?.id}`);
+                        toast.success('Link copied to clipboard!');
+                      }}
+                      className="shrink-0"
+                    >
+                      Copy
+                    </Button>
+                  </div>
+                  <p className="text-xs text-blue-600 mt-2">
+                    Share this link with potential clients. Bookings require your approval.
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-surface rounded-lg">
+                  <div>
+                    <p className="font-medium">Default Session Duration</p>
+                    <p className="text-sm text-muted-foreground">For public booking slots</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      value={formData.session_duration}
+                      onChange={(e) => setFormData({ ...formData, session_duration: parseInt(e.target.value) || 60 })}
+                      className="w-20 text-center"
+                      min="15"
+                      max="180"
+                      disabled={isReadOnly}
+                      data-testid="session-duration-input"
+                    />
+                    <span className="text-muted-foreground">minutes</span>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </Card>
+
         {/* Subscription Info (Read-only) */}
         {profile && (
           <Card className="p-6 bg-surface/50 border border-border/40">
