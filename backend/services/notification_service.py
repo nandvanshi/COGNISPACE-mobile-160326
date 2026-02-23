@@ -615,3 +615,146 @@ class NotificationService:
                 logger.warning(f"Daily summary email failed for {recipient_email}: {result.error}")
         except Exception as e:
             logger.error(f"Daily summary email error for {recipient_email}: {e}")
+
+
+
+    @staticmethod
+    async def send_public_booking_confirmation(
+        client_email: str,
+        client_name: str,
+        therapist_name: str,
+        appointment_time: str,
+        temp_password: str,
+        mobile: str
+    ):
+        """Send booking confirmation with account credentials to new client"""
+        
+        # Format appointment time
+        appt_date = format_date_ist(appointment_time)
+        appt_time_formatted = format_time_ist(appointment_time)
+        
+        html_body = f"""
+        <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #0d5c4d 0%, #1a7a6a 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
+                <h1 style="color: white; margin: 0; font-size: 24px;">Booking Request Submitted! 🎉</h1>
+            </div>
+            
+            <div style="background: #f8faf9; padding: 30px; border-radius: 0 0 12px 12px; border: 1px solid #e0e0e0; border-top: none;">
+                <p style="font-size: 16px; color: #333;">Hello <strong>{client_name}</strong>,</p>
+                
+                <p style="color: #555;">Your appointment request with <strong>{therapist_name}</strong> has been submitted and is awaiting approval.</p>
+                
+                <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #0d5c4d;">
+                    <h3 style="margin: 0 0 15px 0; color: #0d5c4d;">📅 Appointment Details</h3>
+                    <p style="margin: 5px 0;"><strong>Date:</strong> {appt_date}</p>
+                    <p style="margin: 5px 0;"><strong>Time:</strong> {appt_time_formatted}</p>
+                    <p style="margin: 5px 0;"><strong>Therapist:</strong> {therapist_name}</p>
+                    <p style="margin: 5px 0;"><strong>Status:</strong> <span style="color: #f59e0b;">Awaiting Approval</span></p>
+                </div>
+                
+                <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <h3 style="margin: 0 0 15px 0; color: #2e7d32;">🔐 Your Account Created</h3>
+                    <p style="margin: 5px 0;"><strong>Mobile:</strong> {mobile}</p>
+                    <p style="margin: 5px 0;"><strong>Temporary Password:</strong> <code style="background: #fff; padding: 2px 8px; border-radius: 4px;">{temp_password}</code></p>
+                    <p style="font-size: 13px; color: #666; margin-top: 10px;">Use these credentials to login and track your appointment status.</p>
+                </div>
+                
+                <p style="color: #666; font-size: 14px;">You will receive another email once the therapist approves your appointment.</p>
+                
+                <div style="text-align: center; margin-top: 25px;">
+                    <a href="https://cognispace.in/login" style="background: #0d5c4d; color: white; padding: 12px 30px; border-radius: 25px; text-decoration: none; font-weight: 500;">Login to CogniSpace</a>
+                </div>
+            </div>
+            
+            <p style="text-align: center; color: #999; font-size: 12px; margin-top: 20px;">
+                © CogniSpace - Your Mental Wellness Partner
+            </p>
+        </div>
+        """
+        
+        try:
+            message = EmailMessage(
+                to=client_email,
+                subject=f"Booking Request Submitted - {therapist_name}",
+                html_body=html_body,
+                text_body=f"Hello {client_name}, your booking request with {therapist_name} for {appt_date} at {appt_time_formatted} has been submitted. Your login: Mobile: {mobile}, Password: {temp_password}"
+            )
+            await EmailProviderRegistry.send_email(message)
+            logger.info(f"Public booking confirmation sent to {client_email}")
+        except Exception as e:
+            logger.error(f"Public booking confirmation error: {e}")
+
+    @staticmethod
+    async def send_booking_request_notification(
+        client_email: str,
+        client_name: str,
+        therapist_name: str,
+        appointment_time: str
+    ):
+        """Send booking notification to existing client"""
+        appt_date = format_date_ist(appointment_time)
+        appt_time_formatted = format_time_ist(appointment_time)
+        
+        html_body = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #0d5c4d;">Booking Request Submitted</h2>
+            <p>Hello {client_name},</p>
+            <p>Your appointment request with <strong>{therapist_name}</strong> has been submitted.</p>
+            <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                <p><strong>Date:</strong> {appt_date}</p>
+                <p><strong>Time:</strong> {appt_time_formatted}</p>
+                <p><strong>Status:</strong> Awaiting Approval</p>
+            </div>
+            <p>You will be notified once the therapist approves your appointment.</p>
+        </div>
+        """
+        
+        try:
+            message = EmailMessage(
+                to=client_email,
+                subject=f"Booking Request Submitted - {therapist_name}",
+                html_body=html_body,
+                text_body=f"Hello {client_name}, your booking request with {therapist_name} for {appt_date} is awaiting approval."
+            )
+            await EmailProviderRegistry.send_email(message)
+        except Exception as e:
+            logger.error(f"Booking notification error: {e}")
+
+    @staticmethod
+    async def send_new_booking_request_to_therapist(
+        therapist_email: str,
+        therapist_name: str,
+        client_name: str,
+        appointment_time: str
+    ):
+        """Notify therapist about new booking request"""
+        appt_date = format_date_ist(appointment_time)
+        appt_time_formatted = format_time_ist(appointment_time)
+        
+        html_body = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #0d5c4d;">🔔 New Booking Request</h2>
+            <p>Hello Dr. {therapist_name},</p>
+            <p>You have received a new appointment request from <strong>{client_name}</strong>.</p>
+            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #ffc107;">
+                <p><strong>Client:</strong> {client_name}</p>
+                <p><strong>Requested Date:</strong> {appt_date}</p>
+                <p><strong>Requested Time:</strong> {appt_time_formatted}</p>
+            </div>
+            <p>Please login to CogniSpace to approve or decline this request.</p>
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="https://cognispace.in/login" style="background: #0d5c4d; color: white; padding: 10px 25px; border-radius: 20px; text-decoration: none;">Review Request</a>
+            </div>
+        </div>
+        """
+        
+        try:
+            message = EmailMessage(
+                to=therapist_email,
+                subject=f"New Booking Request from {client_name}",
+                html_body=html_body,
+                text_body=f"New booking request from {client_name} for {appt_date} at {appt_time_formatted}. Login to approve."
+            )
+            await EmailProviderRegistry.send_email(message)
+        except Exception as e:
+            logger.error(f"Therapist booking notification error: {e}")
