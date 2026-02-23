@@ -976,6 +976,50 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
             )}
           </div>
         )}
+
+        {/* RESOURCES TAB */}
+        {activeTab === 'resources' && (
+          <div>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold">Shared Resources</h2>
+              <Badge variant="outline">{sharedResources.length} shared</Badge>
+            </div>
+            
+            {sharedResources.length === 0 ? (
+              <Card className="p-8 text-center">
+                <BookOpen size={48} className="mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">No resources shared with this client yet</p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Go to TheraGenie → Resource Library to share resources
+                </p>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {sharedResources.map(resource => (
+                  <Card key={resource.id} className="p-5">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <h3 className="font-semibold">{resource.resource_title}</h3>
+                        <p className="text-sm text-muted-foreground capitalize">{resource.resource_type || 'Resource'}</p>
+                        {resource.therapist_notes && (
+                          <p className="text-sm text-primary mt-2 italic">Note: {resource.therapist_notes}</p>
+                        )}
+                      </div>
+                      <div className="text-right ml-4">
+                        <p className="text-xs text-muted-foreground">Assigned {formatDate(resource.assigned_at)}</p>
+                        {resource.viewed_at ? (
+                          <Badge className="mt-1 bg-blue-100 text-blue-700">Viewed</Badge>
+                        ) : (
+                          <Badge className="mt-1 bg-amber-100 text-amber-700">Not viewed</Badge>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
       
       {/* Case History Modal */}
