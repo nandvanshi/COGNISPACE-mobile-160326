@@ -101,8 +101,11 @@ const ClientAssessmentTaker = ({ assessmentId, onComplete, onCancel }) => {
 
     setSubmitting(true);
     try {
-      await axios.post(`${API}/assessments/${assessmentId}/submit-with-scoring`, {
-        answers: answers
+      // Convert answers to simple response values for backend
+      const responses = answers.map(a => a?.value || 0);
+      await axios.post(`${API}/assessments/${assessmentId}/submit`, {
+        responses: responses,
+        notes: ''
       });
       setShowConfirmation(true);
     } catch (error) {
