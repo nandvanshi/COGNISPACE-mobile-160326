@@ -892,26 +892,33 @@ const MyTasksTab = ({ homework, assessments, resources, onCompleteHomework, onCo
               {pendingHomework.map((hw) => (
                 <Card 
                   key={hw.id} 
-                  className="p-4 rounded-2xl border-amber-200 bg-amber-50/50"
+                  className="rounded-2xl border-amber-200 bg-amber-50/50 overflow-hidden"
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-800">{hw.title}</p>
+                  <details className="group">
+                    <summary className="p-4 cursor-pointer list-none flex items-center justify-between hover:bg-amber-100/50">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-800">{hw.title}</p>
+                        {hw.due_date && (
+                          <p className="text-xs text-amber-600 mt-1">Due: {formatDate(hw.due_date)}</p>
+                        )}
+                      </div>
+                      <ChevronRight size={20} className="text-amber-500 transition-transform group-open:rotate-90" />
+                    </summary>
+                    <div className="px-4 pb-4 border-t border-amber-200 bg-white">
                       {hw.description && (
-                        <p className="text-xs text-gray-500 mt-1 line-clamp-2">{hw.description}</p>
+                        <div className="py-3 text-sm text-gray-700 whitespace-pre-wrap">
+                          {hw.description}
+                        </div>
                       )}
-                      {hw.due_date && (
-                        <p className="text-xs text-amber-600 mt-1">Due: {formatDate(hw.due_date)}</p>
-                      )}
+                      <Button 
+                        size="sm" 
+                        onClick={() => onCompleteHomework(hw.id)}
+                        className="w-full rounded-xl bg-amber-500 hover:bg-amber-600 mt-2"
+                      >
+                        <Check size={16} className="mr-1" /> Mark as Complete
+                      </Button>
                     </div>
-                    <Button 
-                      size="sm" 
-                      onClick={() => onCompleteHomework(hw.id)}
-                      className="rounded-xl bg-amber-500 hover:bg-amber-600 ml-3"
-                    >
-                      <Check size={16} className="mr-1" /> Done
-                    </Button>
-                  </div>
+                  </details>
                 </Card>
               ))}
             </div>
