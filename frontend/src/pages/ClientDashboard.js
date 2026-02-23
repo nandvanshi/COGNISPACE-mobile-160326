@@ -242,29 +242,52 @@ const ClientDashboard = () => {
     }
   };
 
+  const fetchAvailableSlots = async (date) => {
+    if (!date) return;
+    setLoadingSlots(true);
+    setSelectedSlot(null);
+    try {
+      const res = await axios.get(`${API}/appointments/available-slots?date=${date}`);
+      setAvailableSlots(res.data.slots || []);
+      if (res.data.slots?.length === 0) {
+        toast.info('No slots available for this date');
+      }
+    } catch (error) {
+      toast.error('Failed to load available slots');
+      setAvailableSlots([]);
+    } finally {
+      setLoadingSlots(false);
+    }
+  };
+
+  const handleDateChange = (date) => {
+    setAppointmentDate(date);
+    fetchAvailableSlots(date);
+  };
+
   const handleRequestAppointment = async () => {
-    if (!appointmentRequest.date || !appointmentRequest.time) {
-      toast.error('Please select date and time');
+    if (!selectedSlot) {
+      toast.error('Please select a time slot');
       return;
     }
     
     setRequestingAppointment(true);
     try {
-      const startTime = new Date(`${appointmentRequest.date}T${appointmentRequest.time}`);
-      const endTime = new Date(startTime.getTime() + 60 * 60 * 1000); // 1 hour session
-      
       await axios.post(`${API}/appointments/client-request`, {
-        start_time: startTime.toISOString(),
-        end_time: endTime.toISOString(),
-        notes: appointmentRequest.notes || ''
+        start_time: selectedSlot.start_time,
+        end_time: selectedSlot.end_time,
+        notes: appointmentNotes || ''
       });
       
-      toast.success('Appointment requested successfully!');
+      toast.success('Appointment booked successfully!');
       setShowRequestAppointment(false);
-      setAppointmentRequest({ date: '', time: '', notes: '' });
+      setAppointmentDate('');
+      setAppointmentNotes('');
+      setSelectedSlot(null);
+      setAvailableSlots([]);
       fetchDashboardData();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to request appointment');
+      toast.error(error.response?.data?.detail || 'Failed to book appointment');
     } finally {
       setRequestingAppointment(false);
     }
