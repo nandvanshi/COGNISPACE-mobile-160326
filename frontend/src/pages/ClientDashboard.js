@@ -448,6 +448,7 @@ const ClientDashboard = () => {
           appointments={appointments}
           payments={payments}
           onViewReceipt={(id) => { setSelectedPaymentId(id); setShowReceiptDialog(true); }}
+          onRequestAppointment={() => setShowRequestAppointment(true)}
         />;
       case 'tasks':
         return <MyTasksTab 
