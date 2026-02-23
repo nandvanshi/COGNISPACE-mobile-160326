@@ -189,6 +189,8 @@ function App() {
               <Route path="/reset-password" element={<ForgotPassword />} />
               <Route path="/therapist-application" element={<TherapistApplicationPage />} />
               <Route path="/register/client/:therapistCode" element={<ClientRegisterPage />} />
+              {/* Public Booking Calendar */}
+              <Route path="/book/:therapistId" element={<PublicBookingPage />} />
               {/* Legal & Compliance Pages */}
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-conditions" element={<TermsConditions />} />
