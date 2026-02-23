@@ -42,7 +42,9 @@ const TherapistProfileSettings = ({ isReadOnly = false }) => {
     state: '',
     district: '',
     show_mobile_on_receipt: true,
-    show_email_on_receipt: true
+    show_email_on_receipt: true,
+    public_booking_enabled: false,
+    session_duration: 60
   });
 
   useEffect(() => {
