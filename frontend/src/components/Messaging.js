@@ -428,7 +428,6 @@ const Messaging = ({ isReadOnly = false }) => {
             <div className="p-3 bg-white border-t shrink-0">
               <form onSubmit={handleSendMessage} className="flex gap-2 items-center">
                 <input
-                  ref={inputRef}
                   type="text"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
