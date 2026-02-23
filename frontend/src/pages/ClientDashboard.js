@@ -89,6 +89,9 @@ const ClientDashboard = () => {
   const [selectedDiagnosticReport, setSelectedDiagnosticReport] = useState(null);
   const [showResourceDetail, setShowResourceDetail] = useState(false);
   const [selectedResource, setSelectedResource] = useState(null);
+  const [showRequestAppointment, setShowRequestAppointment] = useState(false);
+  const [appointmentRequest, setAppointmentRequest] = useState({ date: '', time: '', notes: '' });
+  const [requestingAppointment, setRequestingAppointment] = useState(false);
 
   useEffect(() => {
     checkConsentStatus();
