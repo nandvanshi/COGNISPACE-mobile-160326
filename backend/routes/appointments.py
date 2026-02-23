@@ -288,27 +288,6 @@ async def client_request_appointment(appt_data: ClientAppointmentRequest, curren
         )
     except Exception as e:
         print(f"Failed to send client notification: {e}")
-            await WhatsAppService.send_appointment_confirmation(
-                client_id=current_user["id"],
-                therapist_id=therapist_id,
-                therapist_name=therapist_name,
-                appointment_date=appt_date,
-                appointment_time=appt_time
-            )
-    except Exception as e:
-        print(f"Failed to send WhatsApp confirmation: {e}")
-    
-    # Notify therapist about client booking
-    try:
-        from routes.notifications import notify_therapist_appointment_booked
-        await notify_therapist_appointment_booked(
-            therapist_id,
-            current_user["full_name"],
-            formatted_time,
-            appointment_id
-        )
-    except Exception as e:
-        print(f"Failed to notify therapist: {e}")
     
     return Appointment(
         id=appointment_doc["id"],
