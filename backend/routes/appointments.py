@@ -258,10 +258,11 @@ async def client_request_appointment(appt_data: ClientAppointmentRequest, curren
     await log_audit(current_user["id"], "client", "create", "appointment", appointment_id, {"booked_by_client": True, "status": "pending_approval"})
     
     # Get therapist info
-    therapist = await db.users.find_one({"id": therapist_id}, {"_id": 0, "full_name": 1})
+    therapist = await db.users.find_one({"id": therapist_id}, {"_id": 0, "full_name": 1, "mobile": 1})
     therapist_name = therapist["full_name"] if therapist else "Your Therapist"
+    therapist_mobile = therapist.get("mobile") if therapist else None
     
-    # Notify therapist about new appointment request
+    # Notify therapist about new appointment request (in-app)
     try:
         from routes.notifications import create_notification
         formatted_date, formatted_time = format_datetime_ist(appointment_doc["start_time"])
@@ -273,7 +274,19 @@ async def client_request_appointment(appt_data: ClientAppointmentRequest, curren
             {"appointment_id": appointment_id, "client_id": current_user["id"]}
         )
     except Exception as e:
-        print(f"Failed to send therapist notification: {e}")
+        print(f"Failed to send therapist in-app notification: {e}")
+    
+    # Send WhatsApp to therapist about appointment request
+    if therapist_mobile:
+        try:
+            await NotificationService.send_appointment_request_whatsapp_to_therapist(
+                therapist_mobile=therapist_mobile,
+                therapist_name=therapist_name,
+                client_name=current_user["full_name"],
+                appointment_datetime=appointment_doc["start_time"]
+            )
+        except Exception as e:
+            print(f"Failed to send therapist WhatsApp: {e}")
     
     # Send confirmation to client that request is submitted
     try:
