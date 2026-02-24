@@ -98,3 +98,38 @@ def get_payment_received_variables(
         "3": therapist_name,
         "4": date,
     }
+
+
+def get_appointment_request_variables(
+    therapist_name: str,
+    client_name: str,
+    date: str,
+    time: str
+) -> dict:
+    """Get variables for therapist appointment request alert template."""
+    return {
+        "1": therapist_name,
+        "2": client_name,
+        "3": date,
+        "4": time,
+    }
+
+
+def get_daily_schedule_variables(
+    therapist_name: str,
+    date: str,
+    schedule_block: str
+) -> dict:
+    """
+    Get variables for daily schedule template.
+    
+    schedule_block should be formatted like:
+    "1. Rahul Sharma – 10:00 AM
+    2. Priya Verma – 12:30 PM
+    3. Arjun Kapoor – 4:00 PM"
+    """
+    return {
+        "1": therapist_name,
+        "2": date,
+        "3": schedule_block,
+    }
