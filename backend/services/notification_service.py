@@ -807,3 +807,83 @@ class NotificationService:
             logger.info(f"Booking declined notification sent to {client_email}")
         except Exception as e:
             logger.error(f"Booking declined notification error: {e}")
+
+
+    @staticmethod
+    async def send_appointment_request_whatsapp_to_therapist(
+        therapist_mobile: str,
+        therapist_name: str,
+        client_name: str,
+        appointment_datetime: str
+    ):
+        """
+        Send WhatsApp notification to therapist when client requests appointment.
+        Template: cogni_t_apreq
+        """
+        date_str = format_date_ist(appointment_datetime)
+        time_str = format_time_ist(appointment_datetime)
+        
+        try:
+            result = await WhatsAppService.send_template_message(
+                to_mobile=therapist_mobile,
+                content_sid=TEMPLATE_APPOINTMENT_REQUEST["sid"],
+                content_variables=get_appointment_request_variables(
+                    therapist_name=therapist_name,
+                    client_name=client_name,
+                    date=date_str,
+                    time=time_str
+                )
+            )
+            if result.success:
+                logger.info(f"Appointment request WhatsApp sent to therapist {therapist_mobile}")
+            else:
+                logger.warning(f"WhatsApp failed for therapist {therapist_mobile}: {result.error}")
+            return result
+        except Exception as e:
+            logger.error(f"WhatsApp error for therapist {therapist_mobile}: {e}")
+            return None
+
+    @staticmethod
+    async def send_daily_schedule_whatsapp(
+        therapist_mobile: str,
+        therapist_name: str,
+        date: str,
+        appointments: list
+    ):
+        """
+        Send daily schedule WhatsApp to therapist.
+        Template: cogni_t_daysh
+        
+        Args:
+            appointments: List of dicts with 'client_name' and 'time' keys
+        """
+        # Build schedule block
+        if not appointments:
+            schedule_block = "No appointments scheduled for today."
+        else:
+            schedule_lines = []
+            for idx, appt in enumerate(appointments, 1):
+                client_name = appt.get('client_name', 'Client')
+                appt_time = appt.get('time', 'N/A')
+                schedule_lines.append(f"{idx}. {client_name} – {appt_time}")
+            schedule_block = "\n".join(schedule_lines)
+        
+        try:
+            result = await WhatsAppService.send_template_message(
+                to_mobile=therapist_mobile,
+                content_sid=TEMPLATE_DAILY_SCHEDULE["sid"],
+                content_variables=get_daily_schedule_variables(
+                    therapist_name=therapist_name,
+                    date=date,
+                    schedule_block=schedule_block
+                )
+            )
+            if result.success:
+                logger.info(f"Daily schedule WhatsApp sent to therapist {therapist_mobile}")
+            else:
+                logger.warning(f"WhatsApp failed for therapist {therapist_mobile}: {result.error}")
+            return result
+        except Exception as e:
+            logger.error(f"WhatsApp error for therapist {therapist_mobile}: {e}")
+            return None
+
