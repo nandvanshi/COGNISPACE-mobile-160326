@@ -32,6 +32,20 @@ TEMPLATE_PAYMENT_RECEIVED = {
     "variables": ["client_name", "amount", "therapist_name", "date"],
 }
 
+# 5. Therapist - New Appointment Request Alert
+TEMPLATE_APPOINTMENT_REQUEST = {
+    "name": "cogni_t_apreq",
+    "sid": "HX51a8cb4327e62756a8d266aac7b2bf",
+    "variables": ["therapist_name", "client_name", "date", "time"],
+}
+
+# 6. Therapist - Daily Schedule
+TEMPLATE_DAILY_SCHEDULE = {
+    "name": "cogni_t_daysh",
+    "sid": "HX6fe00bbd875b0522c74189f193536",
+    "variables": ["therapist_name", "date", "schedule_block"],
+}
+
 
 def get_welcome_variables(name: str) -> dict:
     """
