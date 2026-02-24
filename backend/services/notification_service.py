@@ -11,10 +11,14 @@ from services.whatsapp.templates import (
     TEMPLATE_APPOINTMENT_CONFIRMED,
     TEMPLATE_APPOINTMENT_REMINDER,
     TEMPLATE_PAYMENT_RECEIVED,
+    TEMPLATE_APPOINTMENT_REQUEST,
+    TEMPLATE_DAILY_SCHEDULE,
     get_welcome_variables,
     get_appointment_confirmed_variables,
     get_appointment_reminder_variables,
     get_payment_received_variables,
+    get_appointment_request_variables,
+    get_daily_schedule_variables,
 )
 from services.email.registry import EmailProviderRegistry
 from services.email.base import EmailMessage
