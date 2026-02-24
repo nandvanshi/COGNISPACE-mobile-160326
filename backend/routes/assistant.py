@@ -131,9 +131,33 @@ async def get_assistant_dashboard(current_user: dict = Depends(require_assistant
         "date": today_start_ist.strftime("%Y-%m-%d")
     }, {"_id": 0})
     
+    # Get today's payments summary
+    todays_payments = await db.payments.find({
+        "therapist_id": therapist_id,
+        "created_at": {"$gte": today_start_str[:10], "$lte": today_end_str[:10] + "T23:59:59"}
+    }, {"_id": 0}).to_list(1000)
+    
+    # Only count paid payments
+    paid_payments = [p for p in todays_payments if p.get("payment_status") == "paid"]
+    payments_total = sum(p.get("amount", 0) for p in paid_payments)
+    cash_total = sum(p.get("amount", 0) for p in paid_payments if p.get("payment_method") == "cash")
+    online_total = sum(p.get("amount", 0) for p in paid_payments if p.get("payment_method") in ["online", "upi", "card", "bank_transfer"])
+    
+    # Format payments for display
+    formatted_payments = []
+    for p in paid_payments:
+        formatted_payments.append({
+            "id": p.get("id"),
+            "client_name": p.get("client_name", ""),
+            "amount": p.get("amount", 0),
+            "payment_method": p.get("payment_method", "cash"),
+            "time": p.get("created_at", "")[11:16] if p.get("created_at") else ""
+        })
+    
     return {
         "therapist": therapist,
         "today_date": today_start_ist.strftime("%Y-%m-%d"),
+        "today_day": today_start_ist.strftime("%A"),
         "stats": {
             "todays_appointments": len(todays_appointments),
             "upcoming_soon": len(upcoming_sessions),
@@ -146,7 +170,13 @@ async def get_assistant_dashboard(current_user: dict = Depends(require_assistant
             "upcoming_sessions": upcoming_sessions[:5],
             "pending_checkins": pending_checkins
         },
-        "cash_settlement": today_settlement
+        "cash_settlement": today_settlement,
+        "payments_summary": {
+            "payments": formatted_payments,
+            "total": payments_total,
+            "cash_total": cash_total,
+            "online_total": online_total
+        }
     }
 
 
