@@ -467,6 +467,25 @@ async def send_morning_schedule_briefing(db):
                 except Exception as e:
                     logger.warning(f"Failed to send daily summary to therapist {therapist_id}: {e}")
             
+            # Send WhatsApp daily schedule to therapist
+            therapist_mobile = therapist.get("mobile")
+            if therapist_mobile and formatted_appts:
+                try:
+                    from services.notification_service import NotificationService
+                    # Format appointments for WhatsApp
+                    whatsapp_appts = [
+                        {"client_name": appt["client_name"], "time": appt["time"]}
+                        for appt in formatted_appts
+                    ]
+                    await NotificationService.send_daily_schedule_whatsapp(
+                        therapist_mobile=therapist_mobile,
+                        therapist_name=therapist.get("full_name", "Therapist"),
+                        date=today_start.strftime("%d %B %Y"),  # e.g., "13 February 2026"
+                        appointments=whatsapp_appts
+                    )
+                except Exception as e:
+                    logger.warning(f"Failed to send WhatsApp schedule to therapist {therapist_id}: {e}")
+            
             # Also send to assistants of this therapist
             assistants = await db.users.find({
                 "role": "assistant",
