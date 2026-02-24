@@ -739,9 +739,12 @@ async def get_daily_payment_summary(
     
     payments = await db.payments.find(query, {"_id": 0}).sort("created_at", 1).to_list(1000)
     
-    total = sum(p.get("amount", 0) for p in payments)
-    cash_total = sum(p.get("amount", 0) for p in payments if p.get("payment_method") == "cash")
-    online_total = sum(p.get("amount", 0) for p in payments if p.get("payment_method") in ["online", "upi", "card", "bank_transfer"])
+    # Only count paid payments for totals
+    paid_payments = [p for p in payments if p.get("payment_status") == "paid"]
+    
+    total = sum(p.get("amount", 0) for p in paid_payments)
+    cash_total = sum(p.get("amount", 0) for p in paid_payments if p.get("payment_method") == "cash")
+    online_total = sum(p.get("amount", 0) for p in paid_payments if p.get("payment_method") in ["online", "upi", "card", "bank_transfer"])
     
     # Format for display
     formatted = []
@@ -759,7 +762,7 @@ async def get_daily_payment_summary(
     return {
         "date": date,
         "summary": {
-            "total_transactions": len(payments),
+            "total_transactions": len(paid_payments),
             "total_amount": total,
             "cash_total": cash_total,
             "online_total": online_total
