@@ -552,8 +552,8 @@ async def send_daily_payment_statement(db):
                 }
             }, {"_id": 0}).to_list(100)
             
-            # Calculate totals
-            total_amount = sum(p.get("amount", 0) for p in payments if p.get("status") == "paid")
+            # Calculate totals - field is payment_status not status
+            total_amount = sum(p.get("amount", 0) for p in payments if p.get("payment_status") == "paid")
             
             # Format payments for template
             formatted_payments = []
@@ -563,7 +563,7 @@ async def send_daily_payment_statement(db):
                     "client_name": client.get("full_name", "Unknown") if client else "Unknown",
                     "amount": pmt.get("amount", 0),
                     "method": pmt.get("payment_method", "N/A"),
-                    "status": pmt.get("status", "pending")
+                    "status": pmt.get("payment_status", "pending")
                 })
             
             # Only send if there are payments or user wants daily summary
