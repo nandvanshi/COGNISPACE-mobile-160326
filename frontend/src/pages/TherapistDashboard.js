@@ -141,6 +141,7 @@ const TherapistDashboard = () => {
         { id: 'notes', label: 'Session Notes', icon: FileText, feature: 'session_notes' },
         { id: 'assessments', label: 'Assessments', icon: ClipboardList, feature: 'assessments' },
         { id: 'protocols', label: 'Protocols', icon: BookOpen, feature: 'protocols' },
+        { id: 'messages', label: 'Messages', icon: MessageSquare, feature: 'messaging' },
         { id: 'ai-support', label: 'TheraGenie ✨', icon: Brain, feature: 'ai_clinical', highlight: true },
       ]
     },
@@ -149,7 +150,6 @@ const TherapistDashboard = () => {
       items: [
         { id: 'availability', label: 'Availability', icon: Clock },
         { id: 'recurring', label: 'Recurring', icon: Repeat },
-        { id: 'messages', label: 'Messages', icon: MessageSquare, feature: 'messaging' },
         { id: 'payments', label: 'Payments', icon: DollarSign, feature: 'payments' },
         { id: 'payment-reports', label: 'Reports', icon: BarChart2, feature: 'payments' },
         { id: 'assistants', label: 'Assistants', icon: UserCog, feature: 'assistants' },
