@@ -407,7 +407,7 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
                 size="sm" 
                 variant="secondary"
                 className="bg-white/20 hover:bg-white/30 text-white border-0"
-                onClick={() => navigate('/therapist', { state: { view: 'notes', clientId } })}
+                onClick={() => navigate('/therapist#notes')}
                 disabled={isReadOnly}
               >
                 <PenSquare size={14} className="mr-1" /> Start Session
