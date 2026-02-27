@@ -33,6 +33,8 @@ const CaseHistoryForm = ({ clientId, clientName, clientProfile, onComplete, onCl
   const [saving, setSaving] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [showFullView, setShowFullView] = useState(false);
+  const [viewMode, setViewMode] = useState('form'); // 'form' or 'wizard'
+  const [expandedSections, setExpandedSections] = useState(['basic_identification']);
   const printRef = useRef(null);
 
   // Build default basic_identification from client profile
