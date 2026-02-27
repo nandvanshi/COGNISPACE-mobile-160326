@@ -224,6 +224,7 @@ async def get_therapist_profile(current_user: dict = Depends(require_therapist))
         
         # Public Booking
         public_booking_enabled=profile.get("public_booking_enabled", False) if profile else False,
+        public_booking_slug=profile.get("public_booking_slug") if profile else None,
         
         # Subscription
         subscription_status=therapist.get("subscription_status"),
