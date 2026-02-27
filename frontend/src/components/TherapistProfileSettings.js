@@ -830,7 +830,7 @@ const TherapistProfileSettings = ({ isReadOnly = false }) => {
                   <p className="text-sm font-medium text-blue-800 mb-2">Your Public Booking Link</p>
                   <div className="flex items-center gap-2">
                     <Input 
-                      value={`${window.location.origin}/book/${profile?.id}`}
+                      value={`${window.location.origin}/booking/${profile?.public_booking_slug || profile?.full_name?.toLowerCase().replace(/[^a-z0-9]/g, '').replace('dr', 'dr') || profile?.id}`}
                       readOnly
                       className="bg-white text-sm"
                     />
@@ -838,7 +838,8 @@ const TherapistProfileSettings = ({ isReadOnly = false }) => {
                       type="button"
                       variant="outline"
                       onClick={() => {
-                        navigator.clipboard.writeText(`${window.location.origin}/book/${profile?.id}`);
+                        const slug = profile?.public_booking_slug || profile?.full_name?.toLowerCase().replace(/[^a-z0-9]/g, '').replace('dr', 'dr') || profile?.id;
+                        navigator.clipboard.writeText(`${window.location.origin}/booking/${slug}`);
                         toast.success('Link copied to clipboard!');
                       }}
                       className="shrink-0"
