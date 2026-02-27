@@ -101,9 +101,20 @@ async def get_public_therapist_profile(identifier: str):
     if not profile.get("public_booking_enabled", False):
         raise HTTPException(status_code=403, detail="Public booking is not available for this therapist")
     
+    # Generate or get slug
+    slug = profile.get("public_booking_slug")
+    if not slug:
+        slug = generate_booking_slug(therapist["full_name"])
+        # Save slug for future use
+        await db.therapist_profiles.update_one(
+            {"therapist_id": therapist_id},
+            {"$set": {"public_booking_slug": slug}}
+        )
+    
     return {
         "id": therapist["id"],
         "name": therapist["full_name"],
+        "slug": slug,
         "qualifications": profile.get("qualifications", ""),
         "specializations": profile.get("specializations", []),
         "bio": profile.get("bio", ""),
@@ -114,11 +125,16 @@ async def get_public_therapist_profile(identifier: str):
     }
 
 
-@router.get("/therapist/{therapist_id}/slots")
-async def get_public_available_slots(therapist_id: str, date: Optional[str] = None):
+@router.get("/therapist/{identifier}/slots")
+async def get_public_available_slots(identifier: str, date: Optional[str] = None):
     """Get available slots for a therapist (public access)"""
     
-    # Verify therapist exists and has public booking enabled
+    # Get therapist by slug or ID
+    therapist, therapist_id = await get_therapist_by_slug_or_id(identifier)
+    if not therapist:
+        raise HTTPException(status_code=404, detail="Therapist not found")
+    
+    # Verify public booking enabled
     profile = await db.therapist_profiles.find_one(
         {"therapist_id": therapist_id},
         {"_id": 0, "public_booking_enabled": 1, "session_duration": 1}
