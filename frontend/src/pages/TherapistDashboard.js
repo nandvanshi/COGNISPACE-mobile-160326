@@ -27,8 +27,22 @@ import SupportTickets from '../components/SupportTickets';
 import SubscriptionInfo from '../components/SubscriptionInfo';
 import Settings from '../components/Settings';
 import NotificationBell from '../components/NotificationBell';
+import MobileTherapistView from '../components/therapist/MobileTherapistView';
 import { toast } from 'sonner';
 import { formatCurrency } from '../utils/formatUtils';
+
+// Hook to detect mobile/desktop
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+  
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 1024);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
+  return isMobile;
+};
 
 const TherapistDashboard = () => {
   const { user, logout } = useAuth();
