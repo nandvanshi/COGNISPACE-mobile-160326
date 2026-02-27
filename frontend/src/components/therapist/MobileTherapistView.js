@@ -392,9 +392,33 @@ const MobileTherapistView = ({
   };
 
   const handleAddClient = () => {
-    // Navigate to clients page with hash for add client
-    navigate('/therapist#clients');
-    onViewChange('clients');
+    setShowAddClient(true);
+  };
+
+  const handleCreateClient = async () => {
+    if (!newClientData.full_name || !newClientData.mobile) {
+      toast.error('Name and mobile are required');
+      return;
+    }
+    
+    setAddingClient(true);
+    try {
+      const response = await axios.post(`${API}/clients`, newClientData);
+      toast.success('Client added successfully!');
+      setShowAddClient(false);
+      setNewClientData({ full_name: '', mobile: '', email: '' });
+      // Refresh clients list
+      const clientsRes = await axios.get(`${API}/clients`);
+      setClients(clientsRes.data || []);
+      // Navigate to new client profile
+      if (response.data?.id) {
+        handleViewClient(response.data.id);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to add client');
+    } finally {
+      setAddingClient(false);
+    }
   };
 
   const handleQuickAction = (action) => {
