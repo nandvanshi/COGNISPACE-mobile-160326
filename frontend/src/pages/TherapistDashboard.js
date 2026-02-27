@@ -267,6 +267,66 @@ const TherapistDashboard = () => {
     return <ClientProfilePage clientIdProp={clientIdFromUrl} isReadOnly={isReadOnly} isAssistant={false} />;
   }
 
+  // Handle mobile view navigation
+  const handleMobileViewChange = (view) => {
+    setCurrentView(view);
+  };
+
+  const handleMobileClientSelect = (clientId) => {
+    navigate(`/therapist/clients/${clientId}`);
+  };
+
+  // Mobile-first view for smaller screens
+  if (isMobile) {
+    // For schedule, payments views render them with bottom nav wrapper
+    if (currentView === 'schedule' || currentView === 'payments' || currentView === 'availability' || 
+        currentView === 'recurring' || currentView === 'assistants' || currentView === 'profile' ||
+        currentView === 'support' || currentView === 'notes' || currentView === 'ai-support') {
+      return (
+        <div className="min-h-screen bg-gray-50 pb-20">
+          <header className="sticky top-0 z-40 bg-white border-b border-gray-100 px-4 py-3">
+            <div className="flex items-center justify-between">
+              <button onClick={() => setCurrentView('overview')} className="text-gray-600">
+                <ChevronDown size={24} className="rotate-90" />
+              </button>
+              <h1 className="text-lg font-bold text-gray-900">{getCurrentViewLabel()}</h1>
+              <NotificationBell />
+            </div>
+          </header>
+          <main className="p-4">
+            {currentView === 'schedule' && <TherapistSchedule isReadOnly={isReadOnly} />}
+            {currentView === 'payments' && <Payments isReadOnly={isReadOnly} navContext={navContext} />}
+            {currentView === 'availability' && <AvailabilitySettings isReadOnly={isReadOnly} />}
+            {currentView === 'recurring' && <RecurringAppointments isReadOnly={isReadOnly} />}
+            {currentView === 'assistants' && <AssistantManagement isReadOnly={isReadOnly} />}
+            {currentView === 'profile' && <TherapistProfileSettings isReadOnly={isReadOnly} />}
+            {currentView === 'support' && <SupportTickets />}
+            {currentView === 'notes' && <SessionNotes isReadOnly={isReadOnly} navContext={navContext} />}
+            {currentView === 'ai-support' && <AIClinicalSupport isReadOnly={isReadOnly} />}
+          </main>
+          {/* Back to home button */}
+          <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 safe-area-bottom">
+            <div className="flex justify-around items-center h-16">
+              <button onClick={() => setCurrentView('overview')} className="flex flex-col items-center text-violet-600">
+                <Home size={22} />
+                <span className="text-xs mt-1">Home</span>
+              </button>
+            </div>
+          </nav>
+        </div>
+      );
+    }
+    
+    return (
+      <MobileTherapistView
+        onViewChange={handleMobileViewChange}
+        onClientSelect={handleMobileClientSelect}
+        currentView={currentView}
+        setCurrentView={setCurrentView}
+      />
+    );
+  }
+
   return (
     <div className="flex h-screen bg-background">
       {/* Mobile Header */}
