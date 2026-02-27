@@ -429,8 +429,17 @@ const CaseHistoryForm = ({ clientId, clientName, clientProfile, onComplete, onCl
               <p className="text-sm text-muted-foreground">{clientName}</p>
             </div>
           </div>
-          <div className="text-sm text-muted-foreground font-medium">
-            {currentSection + 1} / {SECTIONS.length}
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setViewMode('form')}
+            >
+              Form View
+            </Button>
+            <span className="text-sm text-muted-foreground font-medium">
+              {currentSection + 1} / {SECTIONS.length}
+            </span>
           </div>
         </div>
         
