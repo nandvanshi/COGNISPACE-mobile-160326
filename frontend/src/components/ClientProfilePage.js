@@ -981,9 +981,9 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
         {/* TheraGenie Tab - AI Features for this client */}
         {activeTab === 'theragenie' && (
           <div className="space-y-6">
-            <div className="text-center py-8">
+            <div className="text-center py-4">
               <div className="w-16 h-16 bg-violet-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <BookOpen size={32} className="text-violet-600" />
+                <Brain size={32} className="text-violet-600" />
               </div>
               <h3 className="text-lg font-semibold mb-2">TheraGenie AI</h3>
               <p className="text-muted-foreground text-sm mb-6">
@@ -991,27 +991,57 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
               </p>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-md mx-auto">
-                <Card className="p-4 cursor-pointer hover:bg-muted/50 transition-colors rounded-xl">
+                <Card 
+                  className="p-4 cursor-pointer hover:bg-violet-50 hover:border-violet-200 transition-colors rounded-xl text-left"
+                  onClick={() => navigate('/therapist', { state: { view: 'ai-support', clientId, action: 'generate-report' } })}
+                >
                   <FileText size={24} className="text-violet-600 mb-2" />
                   <p className="font-medium text-sm">Generate Report</p>
                   <p className="text-xs text-muted-foreground">AI diagnostic report</p>
                 </Card>
-                <Card className="p-4 cursor-pointer hover:bg-muted/50 transition-colors rounded-xl">
+                <Card 
+                  className="p-4 cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition-colors rounded-xl text-left"
+                  onClick={() => setActiveTab('tasks')}
+                >
                   <ClipboardList size={24} className="text-blue-600 mb-2" />
                   <p className="font-medium text-sm">Assign Assessment</p>
                   <p className="text-xs text-muted-foreground">From library</p>
                 </Card>
-                <Card className="p-4 cursor-pointer hover:bg-muted/50 transition-colors rounded-xl">
+                <Card 
+                  className="p-4 cursor-pointer hover:bg-emerald-50 hover:border-emerald-200 transition-colors rounded-xl text-left"
+                  onClick={() => navigate('/therapist', { state: { view: 'protocols', clientId } })}
+                >
                   <BookOpen size={24} className="text-emerald-600 mb-2" />
                   <p className="font-medium text-sm">Treatment Protocol</p>
-                  <p className="text-xs text-muted-foreground">AI suggestions</p>
+                  <p className="text-xs text-muted-foreground">View/Apply protocols</p>
                 </Card>
-                <Card className="p-4 cursor-pointer hover:bg-muted/50 transition-colors rounded-xl">
+                <Card 
+                  className="p-4 cursor-pointer hover:bg-amber-50 hover:border-amber-200 transition-colors rounded-xl text-left"
+                  onClick={() => navigate('/therapist', { state: { view: 'notes', clientId, action: 'ai-generate' } })}
+                >
                   <PenSquare size={24} className="text-amber-600 mb-2" />
                   <p className="font-medium text-sm">Session Summary</p>
-                  <p className="text-xs text-muted-foreground">AI generated</p>
+                  <p className="text-xs text-muted-foreground">AI generated notes</p>
                 </Card>
               </div>
+            </div>
+            
+            {/* Diagnostic Reports Section */}
+            <div className="border-t pt-6">
+              <h4 className="font-semibold mb-4 flex items-center gap-2">
+                <FileText size={18} className="text-violet-600" /> Diagnostic Reports
+              </h4>
+              <Card className="p-4 text-center text-muted-foreground rounded-xl">
+                <p className="text-sm">No reports generated yet</p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="mt-3"
+                  onClick={() => navigate('/therapist', { state: { view: 'ai-support', clientId } })}
+                >
+                  Go to TheraGenie
+                </Button>
+              </Card>
             </div>
           </div>
         )}
