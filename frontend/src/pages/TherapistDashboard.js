@@ -49,6 +49,7 @@ const TherapistDashboard = () => {
   const { isFeatureEnabled, isReadOnly, daysRemaining, expiryWarning, refreshStatus } = useSubscription();
   const navigate = useNavigate();
   const location = useLocation();
+  const isMobile = useIsMobile();
   const [currentView, setCurrentView] = useState('overview');
   const [showSettings, setShowSettings] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
