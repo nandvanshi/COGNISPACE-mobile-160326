@@ -1092,7 +1092,7 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
               <MessageSquare size={48} className="mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground mb-4">Chat with {client.full_name}</p>
               <Button 
-                onClick={() => navigate('/therapist', { state: { view: 'messages', clientId } })}
+                onClick={() => navigate('/therapist#messages')}
                 className="rounded-xl"
               >
                 <MessageSquare size={16} className="mr-2" /> Open Chat
