@@ -294,15 +294,15 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
   };
   
   // Define all tabs - filter based on isAssistant
+  // Mobile-friendly structure: Tasks combines Homework, Resources, Assessments
   const allTabs = [
     { id: 'overview', label: 'Overview', icon: User, clinicalOnly: false },
-    { id: 'case-history', label: 'Case History', icon: FileText, clinicalOnly: true },
     { id: 'sessions', label: 'Sessions', icon: Calendar, clinicalOnly: false },
-    { id: 'notes', label: 'Session Notes', icon: PenSquare, clinicalOnly: true },
-    { id: 'assessments', label: 'Assessments', icon: ClipboardList, clinicalOnly: true },
-    { id: 'homework', label: 'Homework', icon: BookOpen, clinicalOnly: true },
-    { id: 'resources', label: 'Resources', icon: BookOpen, clinicalOnly: true },
+    { id: 'notes', label: 'Notes', icon: PenSquare, clinicalOnly: true },
+    { id: 'tasks', label: 'Tasks', icon: ClipboardList, clinicalOnly: true },
+    { id: 'theragenie', label: 'TheraGenie', icon: BookOpen, clinicalOnly: true },
     { id: 'payments', label: 'Payments', icon: DollarSign, clinicalOnly: false },
+    { id: 'messages', label: 'Messages', icon: MessageSquare, clinicalOnly: true },
   ];
   
   // For Assistant: show only non-clinical tabs (Sessions, Payments, + limited Overview)
