@@ -163,41 +163,88 @@ async def get_client_available_slots(date: Optional[str] = None, current_user: d
     # Generate available slots
     available_slots = []
     day_name = start_date.strftime("%A").lower()
-    day_availability = availability.get("weekly_schedule", {}).get(day_name, {})
+    
+    # Support both formats: weekly_schedule.{day} or direct {day} key
+    day_availability = availability.get("weekly_schedule", {}).get(day_name)
+    if not day_availability:
+        day_availability = availability.get(day_name, {})
     
     if day_availability.get("enabled", False):
-        start_hour, start_min = map(int, day_availability.get("start", "09:00").split(":"))
-        end_hour, end_min = map(int, day_availability.get("end", "18:00").split(":"))
+        # Get time blocks - support both old format (start/end) and new format (time_blocks)
+        time_blocks = day_availability.get("time_blocks", [])
         
-        slot_start = start_date.replace(hour=start_hour, minute=start_min, second=0, microsecond=0)
-        if slot_start.tzinfo is None:
-            slot_start = slot_start.replace(tzinfo=timezone.utc)
-        
-        slot_end_limit = start_date.replace(hour=end_hour, minute=end_min, second=0, microsecond=0)
-        if slot_end_limit.tzinfo is None:
-            slot_end_limit = slot_end_limit.replace(tzinfo=timezone.utc)
-        
-        while slot_start < slot_end_limit:
-            slot_end = slot_start + timedelta(minutes=session_duration)
-            
-            # Check if slot is in the past
-            if slot_start > datetime.now(timezone.utc):
-                # Check if slot conflicts with existing appointments
-                is_available = True
-                for booked_start, booked_end in booked_times:
-                    booked_start_dt = datetime.fromisoformat(booked_start.replace('Z', '+00:00'))
-                    booked_end_dt = datetime.fromisoformat(booked_end.replace('Z', '+00:00'))
-                    
-                    if not (slot_end <= booked_start_dt or slot_start >= booked_end_dt):
-                        is_available = False
-                        break
+        if time_blocks:
+            # New format with time_blocks array
+            for block in time_blocks:
+                start_time = block.get("start_time") or block.get("start") or "09:00"
+                end_time = block.get("end_time") or block.get("end") or "17:00"
                 
-                if is_available:
-                    available_slots.append({
-                        "start_time": slot_start.isoformat(),
-                        "end_time": slot_end.isoformat(),
-                        "display_time": slot_start.strftime("%H:%M")
-                    })
+                start_hour, start_min = map(int, start_time.split(":"))
+                end_hour, end_min = map(int, end_time.split(":"))
+                
+                slot_start = start_date.replace(hour=start_hour, minute=start_min, second=0, microsecond=0)
+                if slot_start.tzinfo is None:
+                    slot_start = slot_start.replace(tzinfo=timezone.utc)
+                
+                slot_end_limit = start_date.replace(hour=end_hour, minute=end_min, second=0, microsecond=0)
+                if slot_end_limit.tzinfo is None:
+                    slot_end_limit = slot_end_limit.replace(tzinfo=timezone.utc)
+                
+                while slot_start < slot_end_limit:
+                    slot_end = slot_start + timedelta(minutes=session_duration)
+                    
+                    if slot_start > datetime.now(timezone.utc):
+                        is_available = True
+                        for booked_start, booked_end in booked_times:
+                            booked_start_dt = datetime.fromisoformat(booked_start.replace('Z', '+00:00'))
+                            booked_end_dt = datetime.fromisoformat(booked_end.replace('Z', '+00:00'))
+                            
+                            if not (slot_end <= booked_start_dt or slot_start >= booked_end_dt):
+                                is_available = False
+                                break
+                        
+                        if is_available:
+                            available_slots.append({
+                                "start_time": slot_start.isoformat(),
+                                "end_time": slot_end.isoformat(),
+                                "display_time": slot_start.strftime("%H:%M")
+                            })
+                    
+                    slot_start = slot_end
+        else:
+            # Old format with direct start/end
+            start_hour, start_min = map(int, day_availability.get("start", "09:00").split(":"))
+            end_hour, end_min = map(int, day_availability.get("end", "18:00").split(":"))
+            
+            slot_start = start_date.replace(hour=start_hour, minute=start_min, second=0, microsecond=0)
+            if slot_start.tzinfo is None:
+                slot_start = slot_start.replace(tzinfo=timezone.utc)
+            
+            slot_end_limit = start_date.replace(hour=end_hour, minute=end_min, second=0, microsecond=0)
+            if slot_end_limit.tzinfo is None:
+                slot_end_limit = slot_end_limit.replace(tzinfo=timezone.utc)
+            
+            while slot_start < slot_end_limit:
+                slot_end = slot_start + timedelta(minutes=session_duration)
+                
+                if slot_start > datetime.now(timezone.utc):
+                    is_available = True
+                    for booked_start, booked_end in booked_times:
+                        booked_start_dt = datetime.fromisoformat(booked_start.replace('Z', '+00:00'))
+                        booked_end_dt = datetime.fromisoformat(booked_end.replace('Z', '+00:00'))
+                        
+                        if not (slot_end <= booked_start_dt or slot_start >= booked_end_dt):
+                            is_available = False
+                            break
+                    
+                    if is_available:
+                        available_slots.append({
+                            "start_time": slot_start.isoformat(),
+                            "end_time": slot_end.isoformat(),
+                            "display_time": slot_start.strftime("%H:%M")
+                        })
+                
+                slot_start = slot_end
             
             slot_start = slot_end
     
