@@ -387,11 +387,16 @@ const MobileTherapistView = ({
     handleViewClient(appointment.client_id);
   };
 
+  const handleAddClient = () => {
+    // Navigate to clients page with hash for add client
+    navigate('/therapist#clients');
+    onViewChange('clients');
+  };
+
   const handleQuickAction = (action) => {
     switch (action) {
       case 'add-client':
-        setActiveTab('clients');
-        // Could open add client modal
+        handleAddClient();
         break;
       case 'book':
         onViewChange('schedule');
