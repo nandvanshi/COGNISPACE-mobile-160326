@@ -850,26 +850,6 @@ const TherapistProfileSettings = ({ isReadOnly = false }) => {
                     Share this link with potential clients. Bookings require your approval.
                   </p>
                 </div>
-
-                <div className="flex items-center justify-between p-4 bg-surface rounded-lg">
-                  <div>
-                    <p className="font-medium">Default Session Duration</p>
-                    <p className="text-sm text-muted-foreground">For public booking slots</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      value={formData.session_duration}
-                      onChange={(e) => setFormData({ ...formData, session_duration: parseInt(e.target.value) || 60 })}
-                      className="w-20 text-center"
-                      min="15"
-                      max="180"
-                      disabled={isReadOnly}
-                      data-testid="session-duration-input"
-                    />
-                    <span className="text-muted-foreground">minutes</span>
-                  </div>
-                </div>
               </>
             )}
           </div>
