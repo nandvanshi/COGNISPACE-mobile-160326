@@ -798,7 +798,7 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
               <h2 className="text-xl font-semibold">Session Notes</h2>
               {!isAssistant && (
                 <Button 
-                  onClick={() => navigate('/therapist', { state: { view: 'notes', clientId } })}
+                  onClick={() => navigate('/therapist#notes')}
                   disabled={isReadOnly}
                 >
                   <Plus size={16} className="mr-2" /> New Note
