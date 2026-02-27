@@ -180,6 +180,67 @@ async def lookup_pincode(pincode: str):
 
 # ============= PROFILE ENDPOINTS =============
 
+@router.get("/dashboard-stats")
+async def get_therapist_dashboard_stats(current_user: dict = Depends(require_therapist)):
+    """Get therapist dashboard statistics for today"""
+    from datetime import timedelta
+    
+    therapist_id = current_user["id"]
+    
+    # Get today's date range
+    today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    tomorrow = today + timedelta(days=1)
+    today_str = today.isoformat()
+    tomorrow_str = tomorrow.isoformat()
+    
+    # Today's appointments
+    today_appointments = await db.appointments.count_documents({
+        "therapist_id": therapist_id,
+        "start_time": {"$gte": today_str, "$lt": tomorrow_str},
+        "status": {"$nin": ["cancelled"]}
+    })
+    
+    # Today's revenue (paid payments)
+    today_payments = await db.payments.find({
+        "therapist_id": therapist_id,
+        "created_at": {"$gte": today_str, "$lt": tomorrow_str},
+        "payment_status": "paid"
+    }, {"_id": 0, "amount": 1}).to_list(1000)
+    today_revenue = sum(p.get("amount", 0) for p in today_payments)
+    
+    # Pending session notes (appointments without notes)
+    completed_appts = await db.appointments.find({
+        "therapist_id": therapist_id,
+        "status": "completed",
+        "start_time": {"$gte": (today - timedelta(days=7)).isoformat()}
+    }, {"_id": 0, "id": 1}).to_list(100)
+    
+    appt_ids = [a["id"] for a in completed_appts]
+    notes_count = await db.session_notes.count_documents({
+        "appointment_id": {"$in": appt_ids}
+    }) if appt_ids else 0
+    pending_notes = max(0, len(appt_ids) - notes_count)
+    
+    # Pending payments
+    pending_payments = await db.payments.count_documents({
+        "therapist_id": therapist_id,
+        "payment_status": "pending"
+    })
+    
+    # Total clients
+    total_clients = await db.client_profiles.count_documents({
+        "therapist_id": therapist_id
+    })
+    
+    return {
+        "todayAppointments": today_appointments,
+        "todayRevenue": today_revenue,
+        "pendingNotes": pending_notes,
+        "pendingPayments": pending_payments,
+        "totalClients": total_clients
+    }
+
+
 @router.get("/profile", response_model=TherapistProfile)
 async def get_therapist_profile(current_user: dict = Depends(require_therapist)):
     """Get current therapist's profile"""
