@@ -506,6 +506,72 @@ const MobileTherapistView = ({
 
       {/* Bottom Navigation */}
       <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
+
+      {/* Add Client Dialog */}
+      <Dialog open={showAddClient} onOpenChange={setShowAddClient}>
+        <DialogContent className="max-w-md mx-4 rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <User size={20} className="text-violet-600" />
+              Add New Client
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="client-name">Full Name *</Label>
+              <Input
+                id="client-name"
+                placeholder="Enter client name"
+                value={newClientData.full_name}
+                onChange={(e) => setNewClientData({ ...newClientData, full_name: e.target.value })}
+                className="mt-1 rounded-xl"
+              />
+            </div>
+            <div>
+              <Label htmlFor="client-mobile">Mobile Number *</Label>
+              <Input
+                id="client-mobile"
+                placeholder="Enter mobile number"
+                value={newClientData.mobile}
+                onChange={(e) => setNewClientData({ ...newClientData, mobile: e.target.value })}
+                className="mt-1 rounded-xl"
+              />
+            </div>
+            <div>
+              <Label htmlFor="client-email">Email (Optional)</Label>
+              <Input
+                id="client-email"
+                type="email"
+                placeholder="Enter email"
+                value={newClientData.email}
+                onChange={(e) => setNewClientData({ ...newClientData, email: e.target.value })}
+                className="mt-1 rounded-xl"
+              />
+            </div>
+            <div className="flex gap-3 pt-2">
+              <Button
+                onClick={handleCreateClient}
+                disabled={addingClient}
+                className="flex-1 rounded-xl bg-violet-600 hover:bg-violet-700"
+              >
+                {addingClient ? (
+                  <Loader2 size={16} className="mr-2 animate-spin" />
+                ) : (
+                  <Plus size={16} className="mr-2" />
+                )}
+                Add Client
+              </Button>
+              <Button
+                onClick={() => setShowAddClient(false)}
+                variant="outline"
+                className="flex-1 rounded-xl"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
