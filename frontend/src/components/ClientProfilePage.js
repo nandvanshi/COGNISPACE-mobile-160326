@@ -300,7 +300,7 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
     { id: 'sessions', label: 'Sessions', icon: Calendar, clinicalOnly: false },
     { id: 'notes', label: 'Notes', icon: PenSquare, clinicalOnly: true },
     { id: 'tasks', label: 'Tasks', icon: ClipboardList, clinicalOnly: true },
-    { id: 'theragenie', label: 'TheraGenie', icon: BookOpen, clinicalOnly: true },
+    { id: 'theragenie', label: 'TheraGenie', icon: Brain, clinicalOnly: true },
     { id: 'payments', label: 'Payments', icon: DollarSign, clinicalOnly: false },
     { id: 'messages', label: 'Messages', icon: MessageSquare, clinicalOnly: true },
   ];
