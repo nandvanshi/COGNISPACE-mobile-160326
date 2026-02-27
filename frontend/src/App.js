@@ -191,6 +191,7 @@ function App() {
               <Route path="/register/client/:therapistCode" element={<ClientRegisterPage />} />
               {/* Public Booking Calendar */}
               <Route path="/book/:therapistId" element={<PublicBookingPage />} />
+              <Route path="/booking/:therapistId" element={<PublicBookingPage />} />
               {/* Legal & Compliance Pages */}
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-conditions" element={<TermsConditions />} />
