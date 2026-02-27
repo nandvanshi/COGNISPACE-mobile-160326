@@ -80,6 +80,18 @@ const TherapistDashboard = () => {
     }
   }, [location.hash, isClientProfilePage]);
 
+  // Handle navigation state from other pages (like client profile)
+  useEffect(() => {
+    if (location.state?.view) {
+      setCurrentView(location.state.view);
+      if (location.state.clientId) {
+        setNavContext(prev => ({ ...prev, selectedClientId: location.state.clientId }));
+      }
+      // Clear the state to avoid re-triggering
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
   // Handle navigation with optional context - updates URL hash
   const handleNavigation = (view, context = {}) => {
     setNavContext({ 
