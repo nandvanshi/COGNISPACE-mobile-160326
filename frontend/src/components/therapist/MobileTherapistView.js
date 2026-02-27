@@ -7,12 +7,14 @@ import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
+import { Label } from '../ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { 
   Home, Users, Calendar, DollarSign, MoreHorizontal, 
   Search, Plus, Bell, ChevronRight, Clock, FileText,
   Phone, MessageSquare, Play, CheckCircle, AlertCircle,
   TrendingUp, User, LogOut, Settings, HelpCircle,
-  BookOpen, ClipboardList, Repeat, UserCog, Brain
+  BookOpen, ClipboardList, Repeat, UserCog, Brain, Loader2, X
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatCurrency, formatDate, formatTime } from '../../utils/formatUtils';
