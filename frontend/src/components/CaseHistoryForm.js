@@ -282,6 +282,137 @@ const CaseHistoryForm = ({ clientId, clientName, clientProfile, onComplete, onCl
   const currentSectionData = formData[SECTIONS[currentSection].id] || {};
   const SectionIcon = SECTIONS[currentSection].icon;
 
+  // Toggle section expand/collapse for form view
+  const toggleSection = (sectionId) => {
+    setExpandedSections(prev => 
+      prev.includes(sectionId) 
+        ? prev.filter(s => s !== sectionId)
+        : [...prev, sectionId]
+    );
+  };
+
+  // Save all sections at once (for form view)
+  const saveAllSections = async () => {
+    if (isReadOnly) return;
+    setSaving(true);
+    try {
+      for (const section of SECTIONS) {
+        await axios.patch(
+          `${API}/case-history/${clientId}/section?section=${section.id}`, 
+          formData[section.id] || {}
+        );
+      }
+      toast.success('Case history saved');
+    } catch (error) {
+      toast.error('Failed to save');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Form View - All sections in accordion
+  if (viewMode === 'form') {
+    return (
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        {/* Header */}
+        <div style={{ flexShrink: 0 }} className="bg-background border-b px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {onClose && (
+                <Button variant="ghost" size="sm" onClick={onClose}>
+                  <ChevronLeft size={20} />
+                </Button>
+              )}
+              <div>
+                <h1 className="text-lg font-semibold">Case History</h1>
+                <p className="text-sm text-muted-foreground">{clientName}</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setViewMode('wizard')}
+              >
+                Wizard View
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Scrollable Sections */}
+        <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }} className="px-4 py-4">
+          <div className="space-y-3 max-w-3xl mx-auto">
+            {SECTIONS.map((section) => {
+              const Icon = section.icon;
+              const isExpanded = expandedSections.includes(section.id);
+              const sectionData = formData[section.id] || {};
+              const hasData = Object.values(sectionData).some(v => v && v !== '');
+              
+              return (
+                <div key={section.id} className="border rounded-lg overflow-hidden">
+                  {/* Section Header */}
+                  <button
+                    onClick={() => toggleSection(section.id)}
+                    className="w-full flex items-center justify-between p-4 bg-muted/30 hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon size={18} className="text-primary" />
+                      <span className="font-medium">{section.label}</span>
+                      {hasData && <Check size={14} className="text-green-600" />}
+                    </div>
+                    <ChevronRight 
+                      size={18} 
+                      className={`text-muted-foreground transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                    />
+                  </button>
+                  
+                  {/* Section Content */}
+                  {isExpanded && (
+                    <div className="p-4 border-t bg-background">
+                      <div className="space-y-4">
+                        {renderSectionFields(section.id, sectionData, updateField, isReadOnly)}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div style={{ flexShrink: 0 }} className="bg-background border-t px-4 py-3">
+          <div className="flex justify-between items-center max-w-3xl mx-auto">
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <div className="flex gap-2">
+              {isComplete && (
+                <Button variant="outline" onClick={() => setShowFullView(true)}>
+                  <FileText size={16} className="mr-2" /> View
+                </Button>
+              )}
+              <Button onClick={saveAllSections} disabled={saving || isReadOnly}>
+                {saving ? <Loader2 size={16} className="mr-2 animate-spin" /> : <Save size={16} className="mr-2" />}
+                Save
+              </Button>
+              <Button 
+                onClick={handleComplete} 
+                disabled={saving || isReadOnly}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <Check size={16} className="mr-2" /> Complete
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Wizard View (existing)
+
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Header - Fixed at top */}
