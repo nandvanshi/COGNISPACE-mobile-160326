@@ -45,6 +45,7 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
   const [sharedResources, setSharedResources] = useState([]);
   const [caseHistory, setCaseHistory] = useState(null);
   const [consent, setConsent] = useState(null);
+  const [diagnosticReports, setDiagnosticReports] = useState([]);
   
   // Dialog states
   const [showCaseHistory, setShowCaseHistory] = useState(false);
