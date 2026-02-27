@@ -328,6 +328,7 @@ const MobileTherapistView = ({
   const [pendingTasks, setPendingTasks] = useState([]);
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showAddClient, setShowAddClient] = useState(false);
 
   // Fetch dashboard data
   const fetchDashboardData = useCallback(async () => {
