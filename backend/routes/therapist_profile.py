@@ -100,6 +100,7 @@ class TherapistProfile(BaseModel):
     
     # Public Booking
     public_booking_enabled: bool = False
+    public_booking_slug: Optional[str] = None
     
     # Subscription info
     subscription_status: Optional[str] = None
