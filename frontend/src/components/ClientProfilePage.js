@@ -993,7 +993,10 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-md mx-auto">
                 <Card 
                   className="p-4 cursor-pointer hover:bg-violet-50 hover:border-violet-200 transition-colors rounded-xl text-left"
-                  onClick={() => navigate('/therapist', { state: { view: 'ai-support', clientId, action: 'generate-report' } })}
+                  onClick={() => {
+                    toast.info('Opening TheraGenie for Diagnostic Report');
+                    navigate('/therapist#ai-support');
+                  }}
                 >
                   <FileText size={24} className="text-violet-600 mb-2" />
                   <p className="font-medium text-sm">Generate Report</p>
@@ -1005,11 +1008,14 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
                 >
                   <ClipboardList size={24} className="text-blue-600 mb-2" />
                   <p className="font-medium text-sm">Assign Assessment</p>
-                  <p className="text-xs text-muted-foreground">From library</p>
+                  <p className="text-xs text-muted-foreground">Go to Tasks tab</p>
                 </Card>
                 <Card 
                   className="p-4 cursor-pointer hover:bg-emerald-50 hover:border-emerald-200 transition-colors rounded-xl text-left"
-                  onClick={() => navigate('/therapist', { state: { view: 'protocols', clientId } })}
+                  onClick={() => {
+                    toast.info('Opening Protocols');
+                    navigate('/therapist#protocols');
+                  }}
                 >
                   <BookOpen size={24} className="text-emerald-600 mb-2" />
                   <p className="font-medium text-sm">Treatment Protocol</p>
@@ -1017,11 +1023,14 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
                 </Card>
                 <Card 
                   className="p-4 cursor-pointer hover:bg-amber-50 hover:border-amber-200 transition-colors rounded-xl text-left"
-                  onClick={() => navigate('/therapist', { state: { view: 'notes', clientId, action: 'ai-generate' } })}
+                  onClick={() => {
+                    toast.info('Opening Session Notes');
+                    navigate('/therapist#notes');
+                  }}
                 >
                   <PenSquare size={24} className="text-amber-600 mb-2" />
                   <p className="font-medium text-sm">Session Summary</p>
-                  <p className="text-xs text-muted-foreground">AI generated notes</p>
+                  <p className="text-xs text-muted-foreground">Create new note</p>
                 </Card>
               </div>
             </div>
@@ -1031,17 +1040,35 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
               <h4 className="font-semibold mb-4 flex items-center gap-2">
                 <FileText size={18} className="text-violet-600" /> Diagnostic Reports
               </h4>
-              <Card className="p-4 text-center text-muted-foreground rounded-xl">
-                <p className="text-sm">No reports generated yet</p>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="mt-3"
-                  onClick={() => navigate('/therapist', { state: { view: 'ai-support', clientId } })}
-                >
-                  Go to TheraGenie
-                </Button>
-              </Card>
+              {diagnosticReports.length === 0 ? (
+                <Card className="p-4 text-center text-muted-foreground rounded-xl">
+                  <p className="text-sm">No reports generated yet</p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="mt-3"
+                    onClick={() => navigate('/therapist#ai-support')}
+                  >
+                    Go to TheraGenie
+                  </Button>
+                </Card>
+              ) : (
+                <div className="space-y-2">
+                  {diagnosticReports.map(report => (
+                    <Card key={report.id} className="p-3 rounded-xl">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-medium text-sm">{report.title || 'Diagnostic Report'}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatDate(report.created_at)}
+                          </p>
+                        </div>
+                        <Badge variant="outline">{report.status}</Badge>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
