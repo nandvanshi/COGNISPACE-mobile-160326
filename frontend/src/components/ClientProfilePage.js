@@ -124,6 +124,14 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
         setSharedResources([]);
       }
       
+      // Fetch diagnostic reports for this client
+      try {
+        const diagRes = await axios.get(`${API}/diagnostic-reports?client_id=${clientId}`);
+        setDiagnosticReports(diagRes.data || []);
+      } catch (e) {
+        setDiagnosticReports([]);
+      }
+      
     } catch (error) {
       toast.error('Failed to load client data');
       console.error(error);
