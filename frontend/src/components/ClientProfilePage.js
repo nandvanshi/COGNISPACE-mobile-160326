@@ -297,6 +297,7 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
   // Mobile-friendly structure: Tasks combines Homework, Resources, Assessments
   const allTabs = [
     { id: 'overview', label: 'Overview', icon: User, clinicalOnly: false },
+    { id: 'case-history', label: 'Case History', icon: FileText, clinicalOnly: true },
     { id: 'sessions', label: 'Sessions', icon: Calendar, clinicalOnly: false },
     { id: 'notes', label: 'Notes', icon: PenSquare, clinicalOnly: true },
     { id: 'tasks', label: 'Tasks', icon: ClipboardList, clinicalOnly: true },
