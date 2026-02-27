@@ -850,7 +850,191 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
           </div>
         )}
         
-        {/* Assessments Tab */}
+        {/* Tasks Tab - Combined Homework, Assessments, Resources */}
+        {activeTab === 'tasks' && (
+          <div className="space-y-6">
+            {/* Homework Section */}
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <BookOpen size={20} className="text-violet-600" /> Homework
+                </h3>
+                {!isReadOnly && (
+                  <Button size="sm" onClick={openAssignHomeworkDialog} className="gap-1 rounded-xl">
+                    <Plus size={14} /> Assign
+                  </Button>
+                )}
+              </div>
+              {homework.length === 0 ? (
+                <Card className="p-4 text-center text-muted-foreground rounded-xl">
+                  No homework assigned
+                </Card>
+              ) : (
+                <div className="space-y-2">
+                  {homework.slice(0, 3).map(hw => (
+                    <Card key={hw.id} className="p-3 rounded-xl">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-medium text-sm">{hw.title}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatDate(hw.assigned_date || hw.created_at)}
+                          </p>
+                        </div>
+                        <Badge 
+                          variant={hw.status === 'completed' ? 'default' : 'outline'}
+                          className="text-xs"
+                        >
+                          {hw.status || 'pending'}
+                        </Badge>
+                      </div>
+                    </Card>
+                  ))}
+                  {homework.length > 3 && (
+                    <Button variant="ghost" size="sm" className="w-full text-muted-foreground">
+                      View all {homework.length} homework
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Assessments Section */}
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <ClipboardList size={20} className="text-blue-600" /> Assessments
+                </h3>
+              </div>
+              {assessments.length === 0 ? (
+                <Card className="p-4 text-center text-muted-foreground rounded-xl">
+                  No assessments completed
+                </Card>
+              ) : (
+                <div className="space-y-2">
+                  {assessments.slice(0, 3).map(assessment => (
+                    <Card key={assessment.id} className="p-3 rounded-xl">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-medium text-sm">{assessment.assessment_type || assessment.type}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatDate(assessment.completed_at || assessment.created_at)}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-lg font-bold text-primary">{assessment.total_score || assessment.score}</p>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                  {assessments.length > 3 && (
+                    <Button variant="ghost" size="sm" className="w-full text-muted-foreground">
+                      View all {assessments.length} assessments
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Resources Section */}
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <BookOpen size={20} className="text-emerald-600" /> Shared Resources
+                </h3>
+                {!isReadOnly && (
+                  <Button size="sm" variant="outline" className="gap-1 rounded-xl">
+                    <Plus size={14} /> Share
+                  </Button>
+                )}
+              </div>
+              {sharedResources.length === 0 ? (
+                <Card className="p-4 text-center text-muted-foreground rounded-xl">
+                  No resources shared
+                </Card>
+              ) : (
+                <div className="space-y-2">
+                  {sharedResources.slice(0, 3).map(resource => (
+                    <Card key={resource.id} className="p-3 rounded-xl">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-medium text-sm">{resource.title}</p>
+                          <p className="text-xs text-muted-foreground capitalize">{resource.type}</p>
+                        </div>
+                        <Badge variant="outline" className="text-xs">
+                          {resource.status === 'viewed' ? 'Viewed' : 'Sent'}
+                        </Badge>
+                      </div>
+                    </Card>
+                  ))}
+                  {sharedResources.length > 3 && (
+                    <Button variant="ghost" size="sm" className="w-full text-muted-foreground">
+                      View all {sharedResources.length} resources
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* TheraGenie Tab - AI Features for this client */}
+        {activeTab === 'theragenie' && (
+          <div className="space-y-6">
+            <div className="text-center py-8">
+              <div className="w-16 h-16 bg-violet-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <BookOpen size={32} className="text-violet-600" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">TheraGenie AI</h3>
+              <p className="text-muted-foreground text-sm mb-6">
+                AI-powered clinical support for {client.full_name}
+              </p>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-md mx-auto">
+                <Card className="p-4 cursor-pointer hover:bg-muted/50 transition-colors rounded-xl">
+                  <FileText size={24} className="text-violet-600 mb-2" />
+                  <p className="font-medium text-sm">Generate Report</p>
+                  <p className="text-xs text-muted-foreground">AI diagnostic report</p>
+                </Card>
+                <Card className="p-4 cursor-pointer hover:bg-muted/50 transition-colors rounded-xl">
+                  <ClipboardList size={24} className="text-blue-600 mb-2" />
+                  <p className="font-medium text-sm">Assign Assessment</p>
+                  <p className="text-xs text-muted-foreground">From library</p>
+                </Card>
+                <Card className="p-4 cursor-pointer hover:bg-muted/50 transition-colors rounded-xl">
+                  <BookOpen size={24} className="text-emerald-600 mb-2" />
+                  <p className="font-medium text-sm">Treatment Protocol</p>
+                  <p className="text-xs text-muted-foreground">AI suggestions</p>
+                </Card>
+                <Card className="p-4 cursor-pointer hover:bg-muted/50 transition-colors rounded-xl">
+                  <PenSquare size={24} className="text-amber-600 mb-2" />
+                  <p className="font-medium text-sm">Session Summary</p>
+                  <p className="text-xs text-muted-foreground">AI generated</p>
+                </Card>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Messages Tab */}
+        {activeTab === 'messages' && (
+          <div>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold">Messages</h2>
+            </div>
+            <Card className="p-8 text-center rounded-xl">
+              <MessageSquare size={48} className="mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground mb-4">Chat with {client.full_name}</p>
+              <Button 
+                onClick={() => navigate('/therapist', { state: { view: 'messages', clientId } })}
+                className="rounded-xl"
+              >
+                <MessageSquare size={16} className="mr-2" /> Open Chat
+              </Button>
+            </Card>
+          </div>
+        )}
+
+        {/* Assessments Tab - Keep for backward compatibility */}
         {activeTab === 'assessments' && (
           <div>
             <div className="flex justify-between items-center mb-6">
