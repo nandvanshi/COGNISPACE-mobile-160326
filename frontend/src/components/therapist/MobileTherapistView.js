@@ -195,7 +195,7 @@ const HomeTab = ({ stats, upcomingAppointments, pendingTasks, onStartSession, on
 };
 
 // ============= CLIENTS TAB =============
-const ClientsTab = ({ clients, loading, onViewClient, onSearch }) => {
+const ClientsTab = ({ clients, loading, onViewClient, onAddClient }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredClients = clients.filter(client => 
@@ -205,23 +205,41 @@ const ClientsTab = ({ clients, loading, onViewClient, onSearch }) => {
 
   return (
     <div className="space-y-4 pb-4">
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-        <Input
-          placeholder="Search clients..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10 rounded-xl bg-gray-50 border-0"
-        />
+      {/* Header with Add Button */}
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <Input
+            placeholder="Search clients..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 rounded-xl bg-gray-50 border-0"
+          />
+        </div>
+        <Button 
+          onClick={onAddClient}
+          className="rounded-xl bg-violet-600 hover:bg-violet-700"
+          size="icon"
+          data-testid="add-client-btn"
+        >
+          <Plus size={20} />
+        </Button>
       </div>
 
       {/* Client List */}
       {loading ? (
         <div className="text-center py-8 text-gray-500">Loading...</div>
       ) : filteredClients.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
-          {searchQuery ? 'No clients found' : 'No clients yet'}
+        <div className="text-center py-8">
+          <Users size={48} className="mx-auto text-gray-300 mb-3" />
+          <p className="text-gray-500">{searchQuery ? 'No clients found' : 'No clients yet'}</p>
+          <Button 
+            onClick={onAddClient}
+            variant="outline"
+            className="mt-4 rounded-xl"
+          >
+            <Plus size={16} className="mr-2" /> Add First Client
+          </Button>
         </div>
       ) : (
         <div className="space-y-2">
