@@ -343,28 +343,49 @@ const MobileTherapistView = ({
         axios.get(`${API}/clients`).catch(() => ({ data: [] })),
       ]);
 
-      setStats(statsRes.data || {});
+      // Safely set stats - ensure it's not an error object
+      const statsData = statsRes.data;
+      if (statsData && !statsData.detail && typeof statsData === 'object') {
+        setStats(statsData);
+      } else {
+        setStats({});
+      }
       
-      const now = new Date();
-      const upcoming = (appointmentsRes.data || [])
-        .filter(a => new Date(a.start_time) >= now && a.status !== 'cancelled')
-        .sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
-      setUpcomingAppointments(upcoming);
+      // Safely handle appointments
+      const appointmentsData = appointmentsRes.data;
+      if (Array.isArray(appointmentsData)) {
+        const now = new Date();
+        const upcoming = appointmentsData
+          .filter(a => a && new Date(a.start_time) >= now && a.status !== 'cancelled')
+          .sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
+        setUpcomingAppointments(upcoming);
+      } else {
+        setUpcomingAppointments([]);
+      }
       
-      setClients(clientsRes.data || []);
+      // Safely handle clients
+      const clientsData = clientsRes.data;
+      if (Array.isArray(clientsData)) {
+        setClients(clientsData);
+      } else {
+        setClients([]);
+      }
       
       // Generate pending tasks
       const tasks = [];
-      if (statsRes.data?.pending_notes > 0) {
-        tasks.push({ title: `${statsRes.data.pending_notes} session notes pending` });
+      if (statsData?.pending_notes > 0) {
+        tasks.push({ title: `${statsData.pending_notes} session notes pending` });
       }
-      if (statsRes.data?.pending_payments > 0) {
-        tasks.push({ title: `${statsRes.data.pending_payments} payments pending` });
+      if (statsData?.pending_payments > 0) {
+        tasks.push({ title: `${statsData.pending_payments} payments pending` });
       }
       setPendingTasks(tasks);
       
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
+      setStats({});
+      setUpcomingAppointments([]);
+      setClients([]);
     } finally {
       setLoading(false);
     }
