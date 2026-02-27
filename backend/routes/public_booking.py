@@ -10,6 +10,7 @@ from database import db
 import uuid
 import secrets
 import string
+import re
 from passlib.context import CryptContext
 from services.notification_service import NotificationService
 
@@ -43,15 +44,46 @@ def generate_client_id():
     return f"CL-{random.randint(100000, 999999)}"
 
 
-@router.get("/therapist/{therapist_id}")
-async def get_public_therapist_profile(therapist_id: str):
-    """Get therapist's public profile for booking page"""
+def generate_booking_slug(name: str) -> str:
+    """Generate a URL-friendly slug from therapist name"""
+    # Remove special characters and convert to lowercase
+    slug = re.sub(r'[^a-zA-Z0-9\s]', '', name.lower())
+    # Replace spaces with nothing (drdeepak style)
+    slug = slug.replace(' ', '')
+    # Remove common prefixes like 'dr' if at start and add back
+    if slug.startswith('dr'):
+        slug = 'dr' + slug[2:]
+    return slug
+
+
+async def get_therapist_by_slug_or_id(identifier: str):
+    """Find therapist by slug or ID"""
+    # First try to find by public_booking_slug
+    profile = await db.therapist_profiles.find_one(
+        {"public_booking_slug": identifier},
+        {"_id": 0, "therapist_id": 1}
+    )
     
-    # Find therapist (check both 'status' and 'account_status' for compatibility)
+    if profile:
+        therapist_id = profile["therapist_id"]
+    else:
+        # Fallback to treating identifier as therapist_id
+        therapist_id = identifier
+    
+    # Get therapist
     therapist = await db.users.find_one(
         {"id": therapist_id, "role": "therapist", "$or": [{"status": "approved"}, {"account_status": "approved"}]},
         {"_id": 0, "id": 1, "full_name": 1, "email": 1}
     )
+    
+    return therapist, therapist_id
+
+
+@router.get("/therapist/{identifier}")
+async def get_public_therapist_profile(identifier: str):
+    """Get therapist's public profile for booking page (by slug or ID)"""
+    
+    therapist, therapist_id = await get_therapist_by_slug_or_id(identifier)
     
     if not therapist:
         raise HTTPException(status_code=404, detail="Therapist not found")
