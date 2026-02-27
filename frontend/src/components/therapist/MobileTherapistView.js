@@ -465,6 +465,7 @@ const MobileTherapistView = ({
             clients={clients}
             loading={loading}
             onViewClient={handleViewClient}
+            onAddClient={handleAddClient}
           />
         )}
         {activeTab === 'more' && (
