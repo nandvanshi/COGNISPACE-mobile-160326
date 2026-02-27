@@ -15,7 +15,7 @@ import { formatDate, formatTime, formatCurrency } from '../utils/formatUtils';
 import { 
   ArrowLeft, Phone, Mail, User, Calendar, FileText, ClipboardList, 
   BookOpen, DollarSign, MessageSquare, Edit, Plus, CheckCircle2,
-  AlertCircle, Clock, CalendarPlus, PenSquare, ChevronRight, Loader2
+  AlertCircle, Clock, CalendarPlus, PenSquare, ChevronRight, Loader2, Brain
 } from 'lucide-react';
 
 // Import sub-components
