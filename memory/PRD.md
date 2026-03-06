@@ -13,6 +13,7 @@ Build a secure, therapist-first web application named **COGNISPACE** for practic
 - **TheraGenie & CogniVision**: AI module for clinical intelligence
 - **Notifications**: WhatsApp + Email notifications using Twilio templates
 - **PWA Sound & Badge**: Notification sounds and app icon badge count
+- **Mobile-First Therapist View**: Separate mobile UI with bottom navigation
 
 ## User's Preferred Language
 Hindi (User communicates in Hindi/Hinglish)
@@ -24,223 +25,88 @@ Hindi (User communicates in Hindi/Hinglish)
 - **AI**: Anthropic Claude (User API Key)
 - **Email**: Resend (User API Key)
 - **SMS/WhatsApp**: Twilio (User API Key)
-- **PDF Generation**: jsPDF & html2canvas
+- **PDF Generation**: iframe-based print approach
 
-## What's Implemented ✅
+## What's Implemented
 
-### Feb 16, 2026 - Consent Separated from Case History ✅
-- [x] **Case History now has 10 sections** (removed Consent & Disclaimer)
-  - Basic Identification, Presenting Complaints, History of Present Illness
-  - Past Psychiatric History, Medical History, Family History
-  - Personal & Developmental History, Mental Status Examination
-  - Provisional Formulation, Initial Therapy Plan
-- [x] **Consent is now a separate workflow**:
-  - Case History completes without consent checkbox
-  - After completion → Consent document auto-generated
-  - Therapist sees "Consent (pending)" status in Client Profile
-  - Client sees full-screen consent form on login
-  - Email sent to client with acceptance link
-- [x] **Acceptance triggers notifications to both**:
-  - Therapist receives `consent_accepted` email
-  - Client receives `consent_confirmation_client` email
-- [x] **Deleted unused CaseHistoryWizard.js** (cleanup)
+### March 6, 2026 - Mobile Therapist View P0 Fixes
+- [x] **Client Context Navigation Fix**: When navigating from client profile to Notes/Messages/TheraGenie in mobile view, the client context (selectedClientId) is now properly maintained via React Router state and navContext prop
+- [x] **All Secondary Views in Mobile**: Added messages, protocols, assessments, payment-reports, homework-templates, resource-library views to mobile rendering
+- [x] **Mobile Back Button**: Back button in secondary views navigates to client profile if came from there, otherwise goes to dashboard home
+- [x] **More Tab Navigation**: All More menu items (homework-templates, resource-library, availability, recurring, assistants, profile, settings, support) now properly navigate to correct views
+- [x] **Settings from More Tab**: Settings item from More tab opens the settings modal correctly
 
-### Feb 16, 2026 - Case History UI Consistency Fix ✅
-- [x] **Issue**: Case History UI format was different between Client Profile page and Session Notes page
-- [x] **Fix Applied**: All three locations now use same CaseHistoryForm.js
-- [x] **Unified UI Features**:
-  - Progress bar showing "X / 10" sections
-  - Previous/Next navigation buttons
-  - Single section view at a time
+### March 6, 2026 - Messaging Typing Bug Fix
+- [x] **Extracted MessageInput component**: Created a React.memo-wrapped MessageInput component with its own local state, preventing parent re-renders from causing typing lag
+- [x] **useCallback on handleSendMessage**: Wrapped send handler with useCallback to prevent unnecessary re-renders
 
-### Feb 16, 2026 - Case History & Consent Workflow Rework ✅
-- [x] **Case History -> Consent Flow**:
-  - When therapist marks case history as complete → Consent document auto-created
-  - In-app notification sent to client ("Please Sign Therapy Consent")
-  - Email notification sent to client (template: consent_pending_client)
-  - Client sees consent form on their dashboard until signed
-  - After signing → Client gets full dashboard access
-- [x] **Email Template Registered**: `consent_pending_client` added to EMAIL_TEMPLATES registry
-- [x] **Flow Tested End-to-End**:
-  - POST /api/case-history/{client_id}/complete → Creates consent + notifications
-  - GET /api/therapy-consent/check/{client_id} → Client can check status
-  - GET /api/therapy-consent/{client_id} → Client can fetch consent document
-  - POST /api/therapy-consent/{client_id}/sign → Client can sign consent
+### March 6, 2026 - Client PDF Download Improvement
+- [x] **Iframe-based approach**: Replaced window.open with hidden iframe for PDF print dialog to avoid popup blockers
+- [x] **Fallback mechanism**: Falls back to window.open if iframe approach fails
+- [x] **Better cleanup**: Iframe removed from DOM after use
 
-### Feb 12, 2026 - Daily Summary, Consent Notification & Payment Debit
-- [x] **Daily Summary Email (7 AM IST)**: Morning email to therapists/assistants with:
-  - Today's appointments list
-  - Pending payments summary
-  - Pending session notes (therapist only)
-- [x] **Consent Accept Notification**: Email to therapist/assistant when client signs consent form
-  - Includes: client name, therapist name, consent details, signature date/time
-- [x] **Payment Debit/Refund Feature**:
-  - transaction_type field: "credit" (payment) or "debit" (refund)
-  - Credit/Debit toggle buttons in payment form
-  - Type column in payment table with colored badges
-  - Summary card shows: Net Revenue, Credit total, Debit total
-  - Debit amounts shown in red with minus sign
+### March 6, 2026 - Resource Creation Safeguard
+- [x] **Null-safe content rendering**: Fixed potential crash in ResourcesTab when resource.content is null/undefined
 
-### Feb 12, 2026 - PWA Sound & Badge Notifications
-- [x] Backend API for user notification preferences (GET/PUT /api/notifications/preferences)
-- [x] Sound toggle in Settings - users can enable/disable notification sounds
-- [x] Badge toggle in Settings - users can enable/disable app icon badge count
-- [x] NotificationBell component plays sound on new notifications
-- [x] NotificationBell updates app badge count (PWA mode)
+### Earlier Completed Features
+- Client Appointment Request Feature
+- WhatsApp Template Integration (cogni_t_apreq, cogni_t_daysh)
+- Payment Calculation Fixes
+- Slug-Based Public Booking URL
+- Availability Logic Fix
+- Therapist Mobile View Scaffolding
+- Mobile Home Tab Backend (/api/therapist/dashboard-stats)
+- Consent separated from Case History
+- Case History UI Consistency
+- Subscription & Feature Toggle System
+- Cash Settlement Flow
+- Payment Reports Dashboard
+- Client Self-Registration
+- Public Booking Calendar
+- Mobile-First Client UI
+- Shared Resources Feature
+- Homework Templates
+- In-App Notifications
 
-### Feb 11, 2026 - Notification System Complete
-- [x] Centralized NotificationService for WhatsApp + Email
-- [x] Forgot Password functionality with email reset link
-- [x] PWA login persistence (users stay logged in)
-- [x] Messaging UI overhaul (mobile-responsive, soft delete)
-- [x] Dynamic email sender names (therapist name for client emails)
-- [x] Client self-registration email notifications
+## Pending Tasks
 
-### Previous Sessions
-- [x] JWT-based authentication for all roles
-- [x] Admin dashboard with hash-based SPA routing
-- [x] Therapist Management (View, Edit, Delete, Suspend)
-- [x] Subscription Management (Assign, Extend, Trial)
-- [x] Client password reset fix
-- [x] Messaging UI improvements
-
-## Notification System
-
-### Email Notifications
-| Event | Recipients | Template |
-|-------|------------|----------|
-| Therapist Approved | Therapist | therapist_welcome |
-| Client Created | Client | client_welcome |
-| Appointment Fixed | Client, Therapist, Assistant | appointment_confirmation |
-| Appointment Reminder (1hr) | Client, Therapist, Assistant | appointment_reminder |
-| Appointment Cancelled | Client, Therapist, Assistant | appointment_cancellation |
-| Payment Received | Client | payment_receipt |
-| Payment Received | Therapist, Assistant | payment_received_therapist |
-| Consent Signed | Therapist, Assistant | consent_accepted |
-| **Consent Pending** | **Client** | **consent_pending_client** (NEW) |
-| Daily Summary (7 AM) | Therapist, Assistant | daily_summary |
-| Client Self-Registration | Therapist, Assistant | client_self_registration |
-
-### WhatsApp Templates (Twilio Approved)
-| Template | SID | Usage |
-|----------|-----|-------|
-| cogni_1st | HXc374... | Welcome message |
-| cogni_appointment | HX6d3de... | Appointment confirmation |
-| cogni_rem | HX2589... | Appointment reminder |
-| cogni_pay | HX34fc7... | Payment received |
-
-## Architecture
-```
-/app/backend/
-├── services/
-│   ├── notification_service.py    # Centralized notifications
-│   │   ├── send_consent_accepted_notification()  # NEW
-│   │   └── send_daily_summary()                  # NEW
-│   ├── email/
-│   │   └── templates.py
-│   │       ├── template_consent_accepted()       # NEW
-│   │       └── template_daily_summary()          # NEW
-│   └── scheduler/
-│       └── jobs.py
-│           └── send_morning_schedule_briefing()  # Enhanced
-├── routes/
-│   ├── payments.py                # Credit/Debit support
-│   └── clinical.py                # Consent notification trigger
-
-/app/frontend/src/
-├── components/
-│   └── Payments.js                # Credit/Debit UI
-└── services/
-    └── notificationService.js     # PWA sound & badge
-```
-
-## Payment System
-
-### Transaction Types
-| Type | Description | Display |
-|------|-------------|---------|
-| credit | Payment received | Green badge, positive amount |
-| debit | Refund/cancellation | Red badge, negative amount |
-
-### Payment Statistics API
-```json
-{
-  "summary": {
-    "total_transactions": 10,
-    "total_amount": 50000,
-    "paid_amount": 45000,
-    "pending_amount": 5000,
-    "credit_amount": 47000,
-    "debit_amount": 2000,
-    "net_amount": 45000
-  }
-}
-```
-
-## Test Credentials
-| Role | Login ID | Password | URL |
-|------|----------|----------|-----|
-| Super Admin | admin | admin123 | /admin-login |
-| Test Therapist | 7275005007 | Test@123 | /login |
-
-## Public Booking Calendar ✅ (Feb 23, 2026)
-- [x] **Public Booking Page** (`/book/{therapist_id}`)
-  - Step 1: Calendar to select date, time slots displayed for selected date
-  - Step 2: Enter client details (name, email, mobile, gender, DOB, notes)
-  - Step 3: Confirmation page with booking details
-- [x] **Backend APIs**:
-  - `GET /api/public/therapist/{id}` - Therapist public profile
-  - `GET /api/public/therapist/{id}/slots` - Available time slots
-  - `POST /api/public/book` - Create booking (creates client account if new)
-  - `GET /api/appointments/pending-approval` - List pending bookings
-  - `POST /api/appointments/{id}/approve` - Approve booking
-  - `POST /api/appointments/{id}/decline` - Decline booking with reason
-- [x] **Dashboard Integration**:
-  - Therapist Dashboard: "Booking Requests" section with approve/decline buttons
-  - Assistant Dashboard: Same section for assistants to manage bookings
-- [x] **Therapist Profile Settings**:
-  - Toggle to enable/disable public booking
-  - Shareable link displayed when enabled
-  - Default session duration setting
-- [x] **Email Notifications**:
-  - Booking confirmation on approval
-  - Decline notification with reason
-
-## Known Issues
-- **Messaging Typing Bug (P1)**: Input loses focus after typing one character. Needs investigation.
-
-## Resolved Issues (Feb 23, 2026)
-- [x] Case History UI inconsistency between Client Profile and Session Notes - FIXED
-- [x] Public Booking Calendar feature - IMPLEMENTED
-- [x] Client Dashboard Mobile Redesign - IMPLEMENTED (Bottom nav, Resources tab, mobile-first UI)
-
-## Client Dashboard Mobile Redesign ✅ (Feb 23, 2026)
-- [x] **Mobile App Style UI**:
-  - Bottom Navigation Bar with 5 tabs (Home, Schedule, Resources, Reports, Messages)
-  - Simplified dashboard with key metrics
-- [x] **Navigation Tabs**:
-  - **Home**: Greeting, next appointment, quick stats, pending homework/assessments
-  - **Schedule**: Upcoming & past appointments, payment history
-  - **Resources**: Shared resources from therapist (new/viewed/completed)
-  - **Reports**: Diagnostic reports & assessment results
-  - **Messages**: In-app messaging
-- [x] **Shared Resources Feature**:
-  - Therapist assigns resources from Resource Library
-  - Client sees them in Resources tab
-  - View/Complete tracking for resources
-
-## Pending Tasks (P1)
-- [ ] **FIX: Messaging Typing Bug** - Critical usability issue
+### P1 - High Priority
 - [ ] Profile photo upload (Therapist & Client)
 - [ ] AI-powered SOAP/DAP note generation
-- [ ] Client-facing diagnostic reports sharing
+- [ ] N+1 Query in /api/clients (recurring performance issue)
 
-## Future Tasks (P2)
+### P2 - Medium Priority
 - [ ] Usage tracking/rate limiting for AI features
-- [ ] Note templates sharing feature
+- [ ] Homework Templates & Resource Library management (Global templates)
 - [ ] Coupon code management backend
-- [ ] N+1 query optimization in /api/clients
-- [ ] WhatsApp "Daily Morning Briefing" notification
+
+### Future Tasks
+- [ ] Google Calendar integration for automatic event creation
+- [ ] Voice input (Speech-to-Text) for session notes
+- [ ] Note templates sharing feature
+
+## Key Technical Architecture
+
+### Mobile View Pattern
+- `useIsMobile` hook detects viewport < 1024px
+- Mobile: renders `MobileTherapistView` with bottom navigation (Home, Clients, Schedule, Payments, More)
+- Desktop: renders traditional sidebar + content layout
+- Client profiles: Full-page at `/therapist/clients/:id`
+- Secondary views: Rendered in mobile wrapper with back button
+- Client context: Passed via `navContext` prop through `location.state`
+
+### Key Files
+- `/app/frontend/src/pages/TherapistDashboard.js` - Main dashboard with mobile/desktop switching
+- `/app/frontend/src/components/therapist/MobileTherapistView.js` - Mobile view container
+- `/app/frontend/src/components/ClientProfilePage.js` - Client profile with tabs
+- `/app/frontend/src/components/SessionNotes.js` - Session notes (accepts navContext)
+- `/app/frontend/src/components/Messaging.js` - Messaging with isolated MessageInput
+- `/app/frontend/src/components/ai-clinical/index.js` - TheraGenie AI (accepts navContext)
+
+### Test Credentials
+- Therapist: mobile=7275005007, password=Test@123
+- Client: mobile=9235555549, password=Test@123
+- Admin: username=admin, password=admin123
 
 ---
-Last Updated: February 23, 2026
+Last Updated: March 6, 2026
