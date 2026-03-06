@@ -208,7 +208,12 @@ const TherapistDashboard = () => {
       const item = group.items.find(i => i.id === currentView);
       if (item) return item.label;
     }
-    return 'Dashboard';
+    // Mobile-only views from the More tab
+    const mobileLabels = {
+      'homework-templates': 'Homework Templates',
+      'resource-library': 'Resource Library',
+    };
+    return mobileLabels[currentView] || 'Dashboard';
   };
 
   const handleLogout = () => {
@@ -291,6 +296,10 @@ const TherapistDashboard = () => {
 
   // Handle mobile view navigation
   const handleMobileViewChange = (view) => {
+    if (view === 'settings') {
+      setShowSettings(true);
+      return;
+    }
     setCurrentView(view);
   };
 
@@ -343,6 +352,8 @@ const TherapistDashboard = () => {
             {currentView === 'protocols' && <Protocols isReadOnly={isReadOnly} />}
             {currentView === 'assessments' && <Assessments isReadOnly={isReadOnly} />}
             {currentView === 'payment-reports' && <PaymentReports />}
+            {currentView === 'homework-templates' && <AIClinicalSupport isReadOnly={isReadOnly} navContext={navContext} initialTab="homework" />}
+            {currentView === 'resource-library' && <AIClinicalSupport isReadOnly={isReadOnly} navContext={navContext} initialTab="resources" />}
           </main>
           {/* Back to home button */}
           <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 safe-area-bottom">

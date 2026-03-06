@@ -19,8 +19,8 @@ import ResourceDialog from './dialogs/ResourceDialog';
 import ReportEditorDialog from './dialogs/ReportEditorDialog';
 import ReportPreviewDialog from './dialogs/ReportPreviewDialog';
 
-const AIClinicalSupport = ({ isReadOnly = false, navContext = {} }) => {
-  const [activeTab, setActiveTab] = useState('assessments');
+const AIClinicalSupport = ({ isReadOnly = false, navContext = {}, initialTab = null }) => {
+  const [activeTab, setActiveTab] = useState(initialTab || 'assessments');
   
   const {
     // Shared

@@ -310,14 +310,21 @@ const ClientDashboard = () => {
       return;
     }
     
-    // Open print window - same method as therapist view
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      toast.error('Please allow popups to download the report');
-      return;
-    }
+    // Create an invisible iframe for printing (avoids popup blockers)
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = 'none';
+    document.body.appendChild(iframe);
     
-    printWindow.document.write(`
+    const iframeDoc = iframe.contentWindow || iframe.contentDocument;
+    const doc = iframeDoc.document || iframeDoc;
+    
+    doc.open();
+    doc.write(`
 <!DOCTYPE html>
 <html>
 <head>
@@ -362,15 +369,33 @@ const ClientDashboard = () => {
 </body>
 </html>
     `);
-    printWindow.document.close();
+    doc.close();
     
-    // Wait for content to load, then trigger print
+    // Wait for content to render, then trigger print
     setTimeout(() => {
-      printWindow.focus();
-      printWindow.print();
-    }, 500);
-    
-    toast.success('Print dialog opened - Choose "Save as PDF" to download');
+      try {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+        toast.success('Print dialog opened - Choose "Save as PDF" to download');
+      } catch (err) {
+        // Fallback: try window.open approach
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+          printWindow.document.write(doc.documentElement.outerHTML);
+          printWindow.document.close();
+          setTimeout(() => {
+            printWindow.focus();
+            printWindow.print();
+          }, 500);
+        } else {
+          toast.error('Please allow popups to download the report');
+        }
+      }
+      // Clean up iframe after a delay
+      setTimeout(() => {
+        document.body.removeChild(iframe);
+      }, 2000);
+    }, 800);
   };
 
   const handleLogout = () => {

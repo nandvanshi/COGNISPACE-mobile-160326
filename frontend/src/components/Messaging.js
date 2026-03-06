@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import axios from 'axios';
 import { API, useAuth } from '../App';
 import { Card } from './ui/card';
@@ -14,13 +14,52 @@ import {
 } from 'lucide-react';
 import { formatDateTime } from '../utils/formatUtils';
 
+// Isolated input component to prevent parent re-renders on each keystroke
+const MessageInput = memo(({ onSend, disabled }) => {
+  const [text, setText] = useState('');
+  const inputRef = useRef(null);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!text.trim() || disabled) return;
+    onSend(text.trim());
+    setText('');
+    inputRef.current?.focus();
+  };
+
+  return (
+    <div className="p-3 border-t bg-white flex-shrink-0">
+      <form onSubmit={handleSubmit} className="flex gap-2">
+        <input
+          ref={inputRef}
+          type="text"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="Type a message..."
+          className="flex-1 px-4 py-2 rounded-full border bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:bg-white"
+          disabled={disabled}
+          data-testid="message-input"
+        />
+        <button
+          type="submit"
+          disabled={!text.trim() || disabled}
+          className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center disabled:opacity-50 hover:bg-primary/90"
+          data-testid="send-message-btn"
+        >
+          <Send size={18} />
+        </button>
+      </form>
+    </div>
+  );
+});
+MessageInput.displayName = 'MessageInput';
+
 const Messaging = ({ isReadOnly = false, navContext = {} }) => {
   const { user } = useAuth();
   const [conversations, setConversations] = useState([]);
   const [contacts, setContacts] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState('');
   const [showNewConversationDialog, setShowNewConversationDialog] = useState(false);
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
   const [selectedContact, setSelectedContact] = useState('');
@@ -111,29 +150,25 @@ const Messaging = ({ isReadOnly = false, navContext = {} }) => {
     }
   };
 
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!newMessage.trim() || !selectedConversation || sending) return;
+  const handleSendMessage = useCallback(async (messageContent) => {
+    if (!messageContent || !selectedConversation || sending) return;
 
-    const messageToSend = newMessage.trim();
-    setNewMessage('');
     setSending(true);
     
     try {
       await axios.post(`${API}/messages`, {
         recipient_id: selectedConversation.user_id,
-        content: messageToSend,
+        content: messageContent,
       });
       await fetchMessages(selectedConversation.user_id);
       const convsRes = await axios.get(`${API}/messages/conversations`);
       setConversations(convsRes.data);
     } catch (error) {
-      setNewMessage(messageToSend);
       toast.error(error.response?.data?.detail || 'Message भेजने में error');
     } finally {
       setSending(false);
     }
-  };
+  }, [selectedConversation, sending]);
 
   const handleDeleteMessage = async (messageId) => {
     try {
@@ -310,27 +345,9 @@ const Messaging = ({ isReadOnly = false, navContext = {} }) => {
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Input - Simple native input */}
+              {/* Input - Isolated component to prevent typing lag */}
               {!isReadOnly && (
-                <div className="p-3 border-t bg-white flex-shrink-0">
-                  <form onSubmit={handleSendMessage} className="flex gap-2">
-                    <input
-                      type="text"
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      placeholder="Type a message..."
-                      className="flex-1 px-4 py-2 rounded-full border bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:bg-white"
-                      disabled={sending}
-                    />
-                    <button
-                      type="submit"
-                      disabled={!newMessage.trim() || sending}
-                      className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center disabled:opacity-50 hover:bg-primary/90"
-                    >
-                      <Send size={18} />
-                    </button>
-                  </form>
-                </div>
+                <MessageInput onSend={handleSendMessage} disabled={sending} />
               )}
             </>
           ) : (

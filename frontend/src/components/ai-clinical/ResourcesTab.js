@@ -42,7 +42,7 @@ const ResourcesTab = ({
             </div>
             <h4 className="font-medium mb-2">{resource.title}</h4>
             <p className="text-sm text-muted-foreground line-clamp-3 mb-3">
-              {resource.content.substring(0, 150)}...
+              {(resource.content || '').substring(0, 150)}...
             </p>
             <div className="flex gap-2">
               <Select onValueChange={(clientId) => handleAssignResource(resource.id, clientId)}>
