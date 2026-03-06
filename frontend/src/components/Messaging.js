@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { formatDateTime } from '../utils/formatUtils';
 
-const Messaging = ({ isReadOnly = false }) => {
+const Messaging = ({ isReadOnly = false, navContext = {} }) => {
   const { user } = useAuth();
   const [conversations, setConversations] = useState([]);
   const [contacts, setContacts] = useState([]);
@@ -51,6 +51,23 @@ const Messaging = ({ isReadOnly = false }) => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Pre-select conversation from navigation context (e.g., coming from client profile)
+  useEffect(() => {
+    if (navContext?.selectedClientId && conversations.length > 0) {
+      const existingConv = conversations.find(c => c.user_id === navContext.selectedClientId);
+      if (existingConv) {
+        setSelectedConversation(existingConv);
+      } else if (contacts.length > 0) {
+        // No existing conversation, find the contact and create a new one
+        const contact = contacts.find(c => c.id === navContext.selectedClientId);
+        if (contact) {
+          setSelectedConversation({ user_id: contact.id, user_name: contact.name });
+        }
+      }
+    }
+  }, [navContext?.selectedClientId, conversations.length, contacts.length]);
+
 
   const fetchData = async () => {
     setLoading(true);

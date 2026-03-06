@@ -407,7 +407,7 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
                 size="sm" 
                 variant="secondary"
                 className="bg-white/20 hover:bg-white/30 text-white border-0"
-                onClick={() => navigate('/therapist#notes')}
+                onClick={() => navigate('/therapist#notes', { state: { selectedClientId: clientId, clientName: client.full_name } })}
                 disabled={isReadOnly}
               >
                 <PenSquare size={14} className="mr-1" /> Start Session
@@ -798,7 +798,7 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
               <h2 className="text-xl font-semibold">Session Notes</h2>
               {!isAssistant && (
                 <Button 
-                  onClick={() => navigate('/therapist#notes')}
+                  onClick={() => navigate('/therapist#notes', { state: { selectedClientId: clientId, clientName: client.full_name } })}
                   disabled={isReadOnly}
                 >
                   <Plus size={16} className="mr-2" /> New Note
@@ -1004,7 +1004,7 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
                   className="p-4 cursor-pointer hover:bg-violet-50 hover:border-violet-200 transition-colors rounded-xl text-left"
                   onClick={() => {
                     toast.info('Opening TheraGenie for Diagnostic Report');
-                    navigate('/therapist#ai-support');
+                    navigate('/therapist#ai-support', { state: { selectedClientId: clientId, clientName: client.full_name } });
                   }}
                 >
                   <FileText size={24} className="text-violet-600 mb-2" />
@@ -1023,7 +1023,7 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
                   className="p-4 cursor-pointer hover:bg-emerald-50 hover:border-emerald-200 transition-colors rounded-xl text-left"
                   onClick={() => {
                     toast.info('Opening Protocols');
-                    navigate('/therapist#protocols');
+                    navigate('/therapist#protocols', { state: { selectedClientId: clientId, clientName: client.full_name } });
                   }}
                 >
                   <BookOpen size={24} className="text-emerald-600 mb-2" />
@@ -1034,7 +1034,7 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
                   className="p-4 cursor-pointer hover:bg-amber-50 hover:border-amber-200 transition-colors rounded-xl text-left"
                   onClick={() => {
                     toast.info('Opening Session Notes');
-                    navigate('/therapist#notes');
+                    navigate('/therapist#notes', { state: { selectedClientId: clientId, clientName: client.full_name } });
                   }}
                 >
                   <PenSquare size={24} className="text-amber-600 mb-2" />
@@ -1056,7 +1056,7 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
                     variant="outline" 
                     size="sm" 
                     className="mt-3"
-                    onClick={() => navigate('/therapist#ai-support')}
+                    onClick={() => navigate('/therapist#ai-support', { state: { selectedClientId: clientId, clientName: client.full_name } })}
                   >
                     Go to TheraGenie
                   </Button>
@@ -1092,7 +1092,7 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
               <MessageSquare size={48} className="mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground mb-4">Chat with {client.full_name}</p>
               <Button 
-                onClick={() => navigate('/therapist#messages')}
+                onClick={() => navigate('/therapist#messages', { state: { selectedClientId: clientId, clientName: client.full_name } })}
                 className="rounded-xl"
               >
                 <MessageSquare size={16} className="mr-2" /> Open Chat

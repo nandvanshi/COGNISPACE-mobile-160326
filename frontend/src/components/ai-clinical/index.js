@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Brain, ClipboardCheck, BookOpen, FileText, FileSearch, Library, Sparkles } from 'lucide-react';
 
@@ -19,7 +19,7 @@ import ResourceDialog from './dialogs/ResourceDialog';
 import ReportEditorDialog from './dialogs/ReportEditorDialog';
 import ReportPreviewDialog from './dialogs/ReportPreviewDialog';
 
-const AIClinicalSupport = ({ isReadOnly = false }) => {
+const AIClinicalSupport = ({ isReadOnly = false, navContext = {} }) => {
   const [activeTab, setActiveTab] = useState('assessments');
   
   const {
@@ -89,6 +89,18 @@ const AIClinicalSupport = ({ isReadOnly = false }) => {
     handleCreateResource,
     handleAssignResource,
   } = useAIClinical();
+
+  // Pre-select client from navigation context
+  useEffect(() => {
+    if (navContext?.selectedClientId && clients.length > 0) {
+      const cid = navContext.selectedClientId;
+      setAssessmentRequest(prev => ({ ...prev, client_id: cid }));
+      setDiagnosticRequest(prev => ({ ...prev, client_id: cid }));
+      setProtocolRequest(prev => ({ ...prev, client_id: cid }));
+      setHomeworkRequest(prev => ({ ...prev, client_id: cid }));
+      fetchClientAssessments(cid);
+    }
+  }, [navContext?.selectedClientId, clients.length]);
 
   if (loading) {
     return <div className="text-center py-12">Loading...</div>;

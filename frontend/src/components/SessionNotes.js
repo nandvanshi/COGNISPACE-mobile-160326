@@ -34,7 +34,7 @@ const TEMPLATE_CATEGORIES = [
 ];
 
 
-const SessionNotes = ({ isReadOnly = false }) => {
+const SessionNotes = ({ isReadOnly = false, navContext = {} }) => {
   const [notes, setNotes] = useState([]);
   const [clients, setClients] = useState([]);
   const [appointments, setAppointments] = useState([]);
@@ -81,6 +81,15 @@ const SessionNotes = ({ isReadOnly = false }) => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Pre-select client from navigation context (e.g., coming from client profile)
+  useEffect(() => {
+    if (navContext?.selectedClientId && clients.length > 0) {
+      setFilterClient(navContext.selectedClientId);
+      setNewNote(prev => ({ ...prev, client_id: navContext.selectedClientId }));
+    }
+  }, [navContext?.selectedClientId, clients.length]);
+
 
   const fetchData = async () => {
     try {

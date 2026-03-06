@@ -82,12 +82,22 @@ const TherapistDashboard = () => {
 
   // Handle navigation state from other pages (like client profile)
   useEffect(() => {
-    if (location.state?.view) {
-      setCurrentView(location.state.view);
-      if (location.state.clientId) {
-        setNavContext(prev => ({ ...prev, selectedClientId: location.state.clientId }));
-      }
-      // Clear the state to avoid re-triggering
+    const state = location.state;
+    if (!state) return;
+    
+    // Set view if provided
+    if (state.view) {
+      setCurrentView(state.view);
+    }
+    
+    // Set client context from any of the possible state keys
+    const clientId = state.selectedClientId || state.clientId;
+    if (clientId) {
+      setNavContext(prev => ({ ...prev, selectedClientId: clientId }));
+    }
+    
+    // Clear the state to avoid re-triggering
+    if (state.view || state.selectedClientId || state.clientId) {
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
@@ -293,12 +303,26 @@ const TherapistDashboard = () => {
     // For schedule, payments views render them with bottom nav wrapper
     if (currentView === 'schedule' || currentView === 'payments' || currentView === 'availability' || 
         currentView === 'recurring' || currentView === 'assistants' || currentView === 'profile' ||
-        currentView === 'support' || currentView === 'notes' || currentView === 'ai-support') {
+        currentView === 'support' || currentView === 'notes' || currentView === 'ai-support' ||
+        currentView === 'messages' || currentView === 'protocols' || currentView === 'assessments' ||
+        currentView === 'payment-reports' || currentView === 'homework-templates' || currentView === 'resource-library') {
       return (
         <div className="min-h-screen bg-gray-50 pb-20">
           <header className="sticky top-0 z-40 bg-white border-b border-gray-100 px-4 py-3">
             <div className="flex items-center justify-between">
-              <button onClick={() => setCurrentView('overview')} className="text-gray-600">
+              <button 
+                onClick={() => {
+                  // If user came from a client profile, go back to it
+                  if (navContext.selectedClientId) {
+                    navigate(`/therapist/clients/${navContext.selectedClientId}`);
+                    setNavContext({ selectedClientId: null, clientFilter: null, filterData: null });
+                  } else {
+                    setCurrentView('overview');
+                  }
+                }} 
+                className="text-gray-600"
+                data-testid="mobile-back-btn"
+              >
                 <ChevronDown size={24} className="rotate-90" />
               </button>
               <h1 className="text-lg font-bold text-gray-900">{getCurrentViewLabel()}</h1>
@@ -314,7 +338,11 @@ const TherapistDashboard = () => {
             {currentView === 'profile' && <TherapistProfileSettings isReadOnly={isReadOnly} />}
             {currentView === 'support' && <SupportTickets />}
             {currentView === 'notes' && <SessionNotes isReadOnly={isReadOnly} navContext={navContext} />}
-            {currentView === 'ai-support' && <AIClinicalSupport isReadOnly={isReadOnly} />}
+            {currentView === 'ai-support' && <AIClinicalSupport isReadOnly={isReadOnly} navContext={navContext} />}
+            {currentView === 'messages' && <Messaging isReadOnly={isReadOnly} navContext={navContext} />}
+            {currentView === 'protocols' && <Protocols isReadOnly={isReadOnly} />}
+            {currentView === 'assessments' && <Assessments isReadOnly={isReadOnly} />}
+            {currentView === 'payment-reports' && <PaymentReports />}
           </main>
           {/* Back to home button */}
           <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 safe-area-bottom">
@@ -648,11 +676,11 @@ const TherapistDashboard = () => {
           {currentView === 'schedule' && <TherapistSchedule isReadOnly={isReadOnly} />}
           {currentView === 'availability' && <AvailabilitySettings isReadOnly={isReadOnly} onSave={() => setHasAvailability(true)} />}
           {currentView === 'recurring' && <RecurringAppointments isReadOnly={isReadOnly} />}
-          {currentView === 'notes' && <SessionNotes isReadOnly={isReadOnly} />}
-          {currentView === 'messages' && <Messaging isReadOnly={isReadOnly} />}
+          {currentView === 'notes' && <SessionNotes isReadOnly={isReadOnly} navContext={navContext} />}
+          {currentView === 'messages' && <Messaging isReadOnly={isReadOnly} navContext={navContext} />}
           {currentView === 'assessments' && <Assessments isReadOnly={isReadOnly} />}
           {currentView === 'protocols' && <Protocols isReadOnly={isReadOnly} />}
-          {currentView === 'ai-support' && <AIClinicalSupport isReadOnly={isReadOnly} />}
+          {currentView === 'ai-support' && <AIClinicalSupport isReadOnly={isReadOnly} navContext={navContext} />}
           {currentView === 'payments' && <Payments isReadOnly={isReadOnly} />}
           {currentView === 'payment-reports' && <PaymentReports />}
           {currentView === 'assistants' && <AssistantManagement isReadOnly={isReadOnly} />}
