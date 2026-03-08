@@ -48,7 +48,13 @@ Hindi (User communicates in Hindi/Hinglish)
 ### March 6, 2026 - Resource Creation Safeguard
 - [x] **Null-safe content rendering**: Fixed potential crash in ResourcesTab when resource.content is null/undefined
 
-### Earlier Completed Features
+### March 8, 2026 - Scheduler Timezone & UTC Date Fix
+- [x] **Root Cause 1**: All CronTrigger jobs were running on UTC instead of IST because `timezone` param was only on scheduler, not on individual CronTriggers
+- [x] **Root Cause 2**: All date range queries in scheduled jobs used IST `.isoformat()` (e.g., `2026-03-07T00:00:00+05:30`) but database stores dates in UTC format (e.g., `2026-03-07T18:30:00Z`), causing MongoDB string comparisons to fail
+- [x] **Fix**: Explicitly passed `timezone=IST_TZ` to each CronTrigger in scheduler.py
+- [x] **Fix**: Converted all date range queries in jobs.py to UTC format using `.astimezone(timezone.utc).strftime()` before querying
+- [x] **Fix**: Also fixed `timedelta(hours=5, minutes=30)` manual IST conversion to use proper `.astimezone(IST)`
+- [x] **Jobs fixed**: `send_daily_payment_statement`, `send_morning_schedule_briefing`, `check_appointment_reminders`, `check_pending_session_notes`, `check_subscription_expiry`
 - Client Appointment Request Feature
 - WhatsApp Template Integration (cogni_t_apreq, cogni_t_daysh)
 - Payment Calculation Fixes

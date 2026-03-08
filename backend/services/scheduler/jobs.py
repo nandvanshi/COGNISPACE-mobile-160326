@@ -23,18 +23,21 @@ async def check_appointment_reminders(db):
     try:
         now = datetime.now(timezone.utc)
         
-        # Time windows for reminders
+        # Time windows for reminders (use format matching database: YYYY-MM-DDTHH:MM:SSZ)
         reminder_60_start = now + timedelta(minutes=55)
         reminder_60_end = now + timedelta(minutes=65)
         reminder_30_start = now + timedelta(minutes=25)
         reminder_30_end = now + timedelta(minutes=35)
         
+        # Format to match database UTC format (without +00:00 offset)
+        fmt = "%Y-%m-%dT%H:%M:%S"
+        
         # Find appointments needing 60-minute reminder
         appointments_60 = await db.appointments.find({
             "status": "scheduled",
             "start_time": {
-                "$gte": reminder_60_start.isoformat(),
-                "$lt": reminder_60_end.isoformat()
+                "$gte": reminder_60_start.strftime(fmt),
+                "$lt": reminder_60_end.strftime(fmt)
             },
             "reminder_60_sent": {"$ne": True}
         }, {"_id": 0}).to_list(100)
@@ -43,8 +46,8 @@ async def check_appointment_reminders(db):
         appointments_30 = await db.appointments.find({
             "status": "scheduled",
             "start_time": {
-                "$gte": reminder_30_start.isoformat(),
-                "$lt": reminder_30_end.isoformat()
+                "$gte": reminder_30_start.strftime(fmt),
+                "$lt": reminder_30_end.strftime(fmt)
             },
             "reminder_30_sent": {"$ne": True}
         }, {"_id": 0}).to_list(100)
@@ -178,11 +181,14 @@ async def check_pending_session_notes(db):
         # Find completed appointments without notes (completed in last 24 hours)
         twenty_four_hours_ago = now - timedelta(hours=24)
         
+        # Use format matching database UTC format
+        fmt = "%Y-%m-%dT%H:%M:%S"
+        
         completed_appointments = await db.appointments.find({
             "status": "completed",
             "end_time": {
-                "$gte": twenty_four_hours_ago.isoformat(),
-                "$lt": one_hour_ago.isoformat()
+                "$gte": twenty_four_hours_ago.strftime(fmt),
+                "$lt": one_hour_ago.strftime(fmt)
             },
             "note_reminder_sent": {"$ne": True}
         }, {"_id": 0}).to_list(100)
@@ -278,6 +284,9 @@ async def check_subscription_expiry(db):
     try:
         now = datetime.now(timezone.utc)
         
+        # Use format matching database UTC format
+        fmt = "%Y-%m-%dT%H:%M:%S"
+        
         # Define warning windows
         warning_days = [7, 3, 1]
         
@@ -290,8 +299,8 @@ async def check_subscription_expiry(db):
             expiring_subs = await db.subscriptions.find({
                 "status": {"$in": ["trial", "active"]},
                 "end_date": {
-                    "$gte": target_start.isoformat(),
-                    "$lte": target_end.isoformat()
+                    "$gte": target_start.strftime(fmt),
+                    "$lte": target_end.strftime(fmt)
                 },
                 f"expiry_warning_{days}d_sent": {"$ne": True}
             }, {"_id": 0}).to_list(100)
@@ -369,12 +378,20 @@ async def send_morning_schedule_briefing(db):
     logger.info("Running morning daily summary briefing...")
     
     try:
-        # Get today's date in IST
+        # Get today's date in IST for display
         now_ist = datetime.now(IST)
-        today_start = now_ist.replace(hour=0, minute=0, second=0, microsecond=0)
-        today_end = today_start + timedelta(days=1)
+        today_start_ist = now_ist.replace(hour=0, minute=0, second=0, microsecond=0)
+        today_end_ist = today_start_ist + timedelta(days=1)
         
-        today_str = today_start.strftime("%d/%m/%Y")
+        # Convert to UTC for database queries (dates stored in UTC)
+        today_start_utc = today_start_ist.astimezone(timezone.utc)
+        today_end_utc = today_end_ist.astimezone(timezone.utc)
+        
+        # Use UTC format matching database format
+        start_str = today_start_utc.strftime("%Y-%m-%dT%H:%M:%S")
+        end_str = today_end_utc.strftime("%Y-%m-%dT%H:%M:%S")
+        
+        today_str = today_start_ist.strftime("%d/%m/%Y")
         
         # Get all active therapists
         therapists = await db.users.find({
@@ -388,13 +405,13 @@ async def send_morning_schedule_briefing(db):
             therapist_id = therapist.get("id")
             therapist_email = therapist.get("email")
             
-            # Get today's appointments for this therapist
+            # Get today's appointments for this therapist (using UTC range)
             appointments = await db.appointments.find({
                 "therapist_id": therapist_id,
                 "status": "scheduled",
                 "start_time": {
-                    "$gte": today_start.isoformat(),
-                    "$lt": today_end.isoformat()
+                    "$gte": start_str,
+                    "$lt": end_str
                 }
             }, {"_id": 0}).sort("start_time", 1).to_list(50)
             
@@ -402,11 +419,14 @@ async def send_morning_schedule_briefing(db):
             formatted_appts = []
             for appt in appointments:
                 client = await db.users.find_one({"id": appt.get("client_id")}, {"_id": 0, "full_name": 1})
-                appt_time = datetime.fromisoformat(appt.get("start_time", "").replace('Z', '+00:00'))
-                appt_time_ist = appt_time + timedelta(hours=5, minutes=30)
+                try:
+                    appt_time = datetime.fromisoformat(appt.get("start_time", "").replace('Z', '+00:00'))
+                    appt_time_ist = appt_time.astimezone(IST)
+                except (ValueError, AttributeError):
+                    appt_time_ist = None
                 
                 formatted_appts.append({
-                    "time": appt_time_ist.strftime("%I:%M %p"),
+                    "time": appt_time_ist.strftime("%I:%M %p") if appt_time_ist else "N/A",
                     "client_name": client.get("full_name", "Unknown") if client else "Unknown",
                     "type": appt.get("type", "Session"),
                     "duration": appt.get("duration", 50)
@@ -424,13 +444,15 @@ async def send_morning_schedule_briefing(db):
             ]
             
             # Get pending session notes (completed appointments without notes in last 7 days)
-            seven_days_ago = now_ist - timedelta(days=7)
+            seven_days_ago_utc = (now_ist - timedelta(days=7)).astimezone(timezone.utc)
+            seven_days_str = seven_days_ago_utc.strftime("%Y-%m-%dT%H:%M:%S")
+            
             completed_appts = await db.appointments.find({
                 "therapist_id": therapist_id,
                 "status": "completed",
-                "end_time": {"$gte": seven_days_ago.isoformat()},
+                "end_time": {"$gte": seven_days_str},
                 "note_created": {"$ne": True}
-            }, {"_id": 0, "client_id": 1, "start_time": 1}).to_list(50)
+            }, {"_id": 0, "client_id": 1, "start_time": 1, "id": 1}).to_list(50)
             
             pending_notes = []
             for appt in completed_appts:
@@ -441,7 +463,7 @@ async def send_morning_schedule_briefing(db):
                     appt_time = appt.get("start_time", "")
                     try:
                         dt = datetime.fromisoformat(appt_time.replace('Z', '+00:00'))
-                        session_date = (dt + timedelta(hours=5, minutes=30)).strftime("%d/%m %I:%M %p")
+                        session_date = dt.astimezone(IST).strftime("%d/%m %I:%M %p")
                     except (ValueError, AttributeError):
                         session_date = appt_time[:10] if appt_time else "N/A"
                     
@@ -480,7 +502,7 @@ async def send_morning_schedule_briefing(db):
                     await NotificationService.send_daily_schedule_whatsapp(
                         therapist_mobile=therapist_mobile,
                         therapist_name=therapist.get("full_name", "Therapist"),
-                        date=today_start.strftime("%d %B %Y"),  # e.g., "13 February 2026"
+                        date=today_start_ist.strftime("%d %B %Y"),  # e.g., "13 February 2026"
                         appointments=whatsapp_appts
                     )
                 except Exception as e:
@@ -525,12 +547,21 @@ async def send_daily_payment_statement(db):
     logger.info("Running daily payment statement...")
     
     try:
-        # Get today's date in IST
+        # Get today's date in IST for display
         now_ist = datetime.now(IST)
-        today_start = now_ist.replace(hour=0, minute=0, second=0, microsecond=0)
-        today_end = today_start + timedelta(days=1)
+        today_start_ist = now_ist.replace(hour=0, minute=0, second=0, microsecond=0)
+        today_end_ist = today_start_ist + timedelta(days=1)
         
-        today_str = today_start.strftime("%d/%m/%Y")
+        # Convert to UTC for database queries (dates stored in UTC)
+        today_start_utc = today_start_ist.astimezone(timezone.utc)
+        today_end_utc = today_end_ist.astimezone(timezone.utc)
+        
+        # Use UTC format matching database format
+        start_str = today_start_utc.strftime("%Y-%m-%dT%H:%M:%S") 
+        end_str = today_end_utc.strftime("%Y-%m-%dT%H:%M:%S")
+        
+        # Display date in IST
+        today_str = today_start_ist.strftime("%d/%m/%Y")
         
         # Get all active therapists
         therapists = await db.users.find({
@@ -543,12 +574,12 @@ async def send_daily_payment_statement(db):
         for therapist in therapists:
             therapist_id = therapist.get("id")
             
-            # Get today's payments for this therapist
+            # Get today's payments for this therapist (using UTC range)
             payments = await db.payments.find({
                 "therapist_id": therapist_id,
                 "created_at": {
-                    "$gte": today_start.isoformat(),
-                    "$lt": today_end.isoformat()
+                    "$gte": start_str,
+                    "$lt": end_str
                 }
             }, {"_id": 0}).to_list(100)
             

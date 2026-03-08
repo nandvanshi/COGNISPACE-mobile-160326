@@ -6,8 +6,11 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.triggers.cron import CronTrigger
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 
 logger = logging.getLogger(__name__)
+
+IST_TZ = ZoneInfo("Asia/Kolkata")
 
 
 class NotificationScheduler:
@@ -81,7 +84,7 @@ class NotificationScheduler:
         # Warns therapists about expiring subscriptions
         cls._scheduler.add_job(
             check_subscription_expiry,
-            trigger=CronTrigger(hour=9, minute=0),
+            trigger=CronTrigger(hour=9, minute=0, timezone=IST_TZ),
             id='subscription_expiry',
             name='Check Subscription Expiry',
             args=[cls._db],
@@ -92,7 +95,7 @@ class NotificationScheduler:
         # Sends daily schedule to therapists and assistants
         cls._scheduler.add_job(
             send_morning_schedule_briefing,
-            trigger=CronTrigger(hour=7, minute=0),
+            trigger=CronTrigger(hour=7, minute=0, timezone=IST_TZ),
             id='morning_schedule_briefing',
             name='Morning Schedule Briefing',
             args=[cls._db],
@@ -103,7 +106,7 @@ class NotificationScheduler:
         # Sends end-of-day payment summary to therapists
         cls._scheduler.add_job(
             send_daily_payment_statement,
-            trigger=CronTrigger(hour=21, minute=0),
+            trigger=CronTrigger(hour=21, minute=0, timezone=IST_TZ),
             id='daily_payment_statement',
             name='Daily Payment Statement',
             args=[cls._db],
