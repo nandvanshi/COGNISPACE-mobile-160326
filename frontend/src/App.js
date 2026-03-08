@@ -22,7 +22,7 @@ import InstallPWA from './components/InstallPWA';
 import { applyTheme, getStoredTheme } from './config/themes';
 import { SubscriptionProvider } from './contexts/SubscriptionContext';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = window.location.origin;
 const API = `${BACKEND_URL}/api`;
 
 const AuthContext = createContext(null);

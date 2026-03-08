@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { format, addDays, isSameDay, parseISO, startOfDay } from 'date-fns';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = window.location.origin;
 
 const PublicBookingPage = () => {
   const { therapistId } = useParams();

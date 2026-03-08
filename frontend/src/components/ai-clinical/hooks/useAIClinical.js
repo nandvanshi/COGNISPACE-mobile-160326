@@ -3,7 +3,7 @@ import axios from 'axios';
 import { toast } from 'sonner';
 
 // Get API from environment
-const API = process.env.REACT_APP_BACKEND_URL + '/api';
+const API = window.location.origin + '/api';
 
 /**
  * Custom hook for all AI Clinical Support functionality
