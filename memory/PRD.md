@@ -91,19 +91,21 @@ Hindi (User communicates in Hindi/Hinglish)
 - [x] Fixed: Client-therapist mapping to use client_profiles collection
 - [x] Testing: 17/17 backend tests pass
 
-### Key DB Collection Added
-- **follow_up_recommendations**: `{id, client_id, therapist_id, recommended_date, notes, recommended_by_session_id, recommended_by, created_at, status}`
+### March 16, 2026 - Follow-Up Intelligence System (Phase 3-4)
+- [x] TherapistOverview (desktop): Follow-Up Intelligence card with Booked/Recommended/Overdue/Dropout Risk + urgent clients list
+- [x] MobileTherapistView: Follow-Up strip with 4 status counts in HomeTab
+- [x] AssistantOverview: Follow-Up Intelligence card with stats + urgent client tags
+- [x] ClientDashboard: Enhanced follow-up reminder with "Book Your Session" CTA button, overdue/recommended differentiation
+- [x] Testing: 14/14 backend tests pass, all frontend code verified
 
 ## Pending Tasks
 
 ### P0 - Critical
-- [ ] Follow-Up System Phase 2: Frontend fine-tuning (mobile view support in MobileTherapistView)
-- [ ] Follow-Up System Phase 3: Dashboard overview cards on TherapistOverview component
+- [ ] Follow-Up System Phase 5: Retention Analytics deep-dive, Client Journey Timeline
 - [ ] Production deployment login fix (blocked - platform issue)
 
 ### P1 - High Priority
-- [ ] Follow-Up System Phase 4: Client Portal improvements, Dropout Risk alerts
-- [ ] Follow-Up System Phase 5: Retention Analytics report deep-dive, Client Journey Timeline
+- [ ] Automated follow-up reminders (WhatsApp/Email for unbooked follow-ups)
 - [ ] Profile photo upload (Therapist & Client)
 - [ ] AI-powered SOAP/DAP note generation
 - [ ] N+1 Query in /api/clients (recurring performance issue - 5+ recurrences)
