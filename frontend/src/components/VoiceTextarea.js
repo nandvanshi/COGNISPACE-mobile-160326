@@ -29,23 +29,16 @@ const VoiceInputButton = ({ onTranscript, disabled, className = '' }) => {
       recognitionRef.current = recognition;
       transcriptRef.current = '';
 
-      recognition.continuous = true;
-      recognition.interimResults = true;
+      recognition.continuous = false;
+      recognition.interimResults = false;
       recognition.lang = 'en-IN'; // English (India) - handles Indian accent well
       recognition.maxAlternatives = 1;
 
       recognition.onresult = (event) => {
-        let finalText = '';
-        let interimText = '';
-        for (let i = 0; i < event.results.length; i++) {
-          const result = event.results[i];
-          if (result.isFinal) {
-            finalText += result[0].transcript + ' ';
-          } else {
-            interimText += result[0].transcript;
-          }
+        const result = event.results[0];
+        if (result && result[0]) {
+          transcriptRef.current = result[0].transcript.trim();
         }
-        transcriptRef.current = finalText.trim();
       };
 
       recognition.onerror = (event) => {
