@@ -7,7 +7,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
-import { Textarea } from './ui/textarea';
+import { VoiceTextarea as Textarea } from './VoiceTextarea';
 import { toast } from 'sonner';
 import { UserPlus, Search, Key, Camera, Edit, User, Phone, Mail, MapPin, AlertCircle, Eye } from 'lucide-react';
 

@@ -5,7 +5,7 @@ import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Label } from './ui/label';
 import { Input } from './ui/input';
-import { Textarea } from './ui/textarea';
+import { VoiceTextarea as Textarea } from './VoiceTextarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Badge } from './ui/badge';
 import { toast } from 'sonner';

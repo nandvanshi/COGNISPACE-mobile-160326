@@ -4,7 +4,7 @@ import { API } from '../App';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Label } from './ui/label';
-import { Textarea } from './ui/textarea';
+import { VoiceTextarea as Textarea } from './VoiceTextarea';
 import { Input } from './ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
