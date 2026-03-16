@@ -23,6 +23,7 @@ import TherapyConsent from './TherapyConsent';
 import { SessionActionButtons, AppointmentStatusBadge } from './SessionCheckInOut';
 import { PaymentCard } from './PaymentReceipt';
 import AssessmentTrendChart from './AssessmentTrendChart';
+import ClientJourneyTimeline from './ClientJourneyTimeline';
 
 // Helper to safely extract error message from API response
 const getErrorMessage = (error, fallback = 'An error occurred') => {
@@ -551,6 +552,7 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
                 <TabsTrigger value="assessments">Assessments</TabsTrigger>
                 {!isAssistant && <TabsTrigger value="homework">Homework</TabsTrigger>}
                 <TabsTrigger value="payments">Payments</TabsTrigger>
+                <TabsTrigger value="journey">Journey</TabsTrigger>
               </TabsList>
 
               <div className="flex-1 overflow-y-auto p-4">
@@ -1249,6 +1251,13 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
                         <p className="text-xs text-muted-foreground mt-1">Payments will appear here after session check-out</p>
                       </Card>
                     )}
+                  </div>
+                </TabsContent>
+
+                {/* Journey Timeline Tab */}
+                <TabsContent value="journey" className="mt-0 space-y-4">
+                  <div className="p-4">
+                    <ClientJourneyTimeline clientId={client?.id} />
                   </div>
                 </TabsContent>
               </div>

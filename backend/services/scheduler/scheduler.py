@@ -57,9 +57,9 @@ class NotificationScheduler:
             send_morning_schedule_briefing,
             send_daily_payment_statement
         )
+        from .followup_reminders import check_followup_reminders
         
         # Job 1: Appointment Reminders - Run every 5 minutes
-        # Checks for appointments starting in next 30/60 minutes
         cls._scheduler.add_job(
             check_appointment_reminders,
             trigger=IntervalTrigger(minutes=5),
@@ -70,7 +70,6 @@ class NotificationScheduler:
         )
         
         # Job 2: Pending Session Notes - Run every 15 minutes
-        # Reminds therapists about notes pending after completed sessions
         cls._scheduler.add_job(
             check_pending_session_notes,
             trigger=IntervalTrigger(minutes=15),
@@ -81,7 +80,6 @@ class NotificationScheduler:
         )
         
         # Job 3: Subscription Expiry - Run daily at 9 AM IST
-        # Warns therapists about expiring subscriptions
         cls._scheduler.add_job(
             check_subscription_expiry,
             trigger=CronTrigger(hour=9, minute=0, timezone=IST_TZ),
@@ -92,7 +90,6 @@ class NotificationScheduler:
         )
         
         # Job 4: Morning Schedule Briefing - Run daily at 7 AM IST
-        # Sends daily schedule to therapists and assistants
         cls._scheduler.add_job(
             send_morning_schedule_briefing,
             trigger=CronTrigger(hour=7, minute=0, timezone=IST_TZ),
@@ -103,7 +100,6 @@ class NotificationScheduler:
         )
         
         # Job 5: Daily Payment Statement - Run daily at 9 PM IST
-        # Sends end-of-day payment summary to therapists
         cls._scheduler.add_job(
             send_daily_payment_statement,
             trigger=CronTrigger(hour=21, minute=0, timezone=IST_TZ),
@@ -113,7 +109,17 @@ class NotificationScheduler:
             replace_existing=True
         )
         
-        logger.info("Registered 5 scheduled jobs: appointment_reminders (5min), pending_notes (15min), subscription_expiry (daily 9AM), morning_briefing (daily 7AM), payment_statement (daily 9PM)")
+        # Job 6: Follow-Up Reminders - Run every 30 minutes
+        cls._scheduler.add_job(
+            check_followup_reminders,
+            trigger=IntervalTrigger(minutes=30),
+            id='followup_reminders',
+            name='Follow-Up Session Reminders',
+            args=[cls._db],
+            replace_existing=True
+        )
+        
+        logger.info("Registered 6 scheduled jobs: appointment_reminders (5min), pending_notes (15min), subscription_expiry (daily 9AM), morning_briefing (daily 7AM), payment_statement (daily 9PM), followup_reminders (30min)")
     
     @classmethod
     def start(cls):

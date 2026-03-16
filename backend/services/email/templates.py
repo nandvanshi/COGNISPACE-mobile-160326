@@ -1120,6 +1120,123 @@ EMAIL_TEMPLATES = {
 }
 
 
+def template_followup_2day_reminder(data: Dict[str, Any]) -> Dict[str, str]:
+    """2 days before recommended session date"""
+    client_name = data.get("client_name", "")
+    therapist_name = data.get("therapist_name", "")
+    recommended_date = data.get("recommended_date", "")
+    notes = data.get("notes", "")
+    booking_url = data.get("booking_url", "")
+
+    notes_section = f'<p class="message">Your therapist noted: <em>"{notes}"</em></p>' if notes else ""
+
+    content = f"""
+    <p class="greeting">Hi {client_name},</p>
+    <p class="message">Just a gentle reminder that your next session with {therapist_name} is recommended for <strong>{recommended_date}</strong> - that's in 2 days!</p>
+    {notes_section}
+    <p class="message">Consistent sessions help build momentum in your journey. We'd love to see you continue making progress.</p>
+    <div class="info-box">
+        <p><strong>Recommended Date:</strong> {recommended_date}</p>
+        <p><strong>Therapist:</strong> {therapist_name}</p>
+    </div>
+    {f'<p><a href="{booking_url}" class="button">Book Your Session</a></p>' if booking_url else '<p class="message">Please contact your therapist or the clinic to book your session.</p>'}
+    <p class="message">Looking forward to seeing you!</p>
+    """
+    return {
+        "subject": f"Your session is coming up - {recommended_date}",
+        "html_body": get_base_template(content, "Session Reminder"),
+        "text_body": f"Hi {client_name}, your next session with {therapist_name} is recommended for {recommended_date}. Please book your appointment."
+    }
+
+
+def template_followup_sameday_reminder(data: Dict[str, Any]) -> Dict[str, str]:
+    """Same day as recommended session date"""
+    client_name = data.get("client_name", "")
+    therapist_name = data.get("therapist_name", "")
+    recommended_date = data.get("recommended_date", "")
+    booking_url = data.get("booking_url", "")
+
+    content = f"""
+    <p class="greeting">Hi {client_name},</p>
+    <p class="message">Today is the day! Your therapist {therapist_name} had recommended a session for today (<strong>{recommended_date}</strong>).</p>
+    <p class="message">If you haven't booked yet, there might still be time. Every session is a step forward in your well-being journey.</p>
+    <div class="info-box">
+        <p><strong>Recommended Date:</strong> Today, {recommended_date}</p>
+        <p><strong>Therapist:</strong> {therapist_name}</p>
+    </div>
+    {f'<p><a href="{booking_url}" class="button">Book Now</a></p>' if booking_url else '<p class="message">Please reach out to your therapist to schedule.</p>'}
+    <p class="message">Wishing you a wonderful day!</p>
+    """
+    return {
+        "subject": f"Today's the day - session recommended for today",
+        "html_body": get_base_template(content, "Session Today"),
+        "text_body": f"Hi {client_name}, today is the recommended session date with {therapist_name}. Please book if you haven't already."
+    }
+
+
+def template_followup_1week_missed(data: Dict[str, Any]) -> Dict[str, str]:
+    """1 week after missed recommended session"""
+    client_name = data.get("client_name", "")
+    therapist_name = data.get("therapist_name", "")
+    recommended_date = data.get("recommended_date", "")
+    booking_url = data.get("booking_url", "")
+
+    reach_out_msg = "<p class=\"message\">Feel free to reach out whenever you are ready.</p>"
+    booking_link = f'<p><a href="{booking_url}" class="button">Schedule a Session</a></p>' if booking_url else reach_out_msg
+
+    content = f"""
+    <p class="greeting">Hi {client_name},</p>
+    <p class="message">We noticed you had a session recommended for {recommended_date} with {therapist_name}, and we have not seen you since. We hope everything is going well!</p>
+    <p class="message">Life gets busy, and that is completely okay. Your therapist is here whenever you are ready. Research shows that maintaining regular sessions, even during busy times, helps sustain the progress you have already made.</p>
+    <div class="info-box">
+        <p><strong>Your Progress Matters</strong></p>
+        <p>Picking up from where you left off is always easier than starting over. {therapist_name} is ready to continue supporting you.</p>
+    </div>
+    {booking_link}
+    <p class="message">Take care of yourself. We are here for you.</p>
+    """
+    return {
+        "subject": f"We miss you - ready when you are",
+        "html_body": get_base_template(content, "We Miss You"),
+        "text_body": f"Hi {client_name}, we noticed you missed your recommended session on {recommended_date}. Your therapist {therapist_name} is here for you whenever you're ready."
+    }
+
+
+def template_followup_30day_reengagement(data: Dict[str, Any]) -> Dict[str, str]:
+    """30 days after last session - warm re-engagement"""
+    client_name = data.get("client_name", "")
+    therapist_name = data.get("therapist_name", "")
+    days_since = data.get("days_since", 30)
+    booking_url = data.get("booking_url", "")
+
+    reconnect_msg = "<p class=\"message\">Whenever you are ready, just reach out. We are here.</p>"
+    reconnect_link = f'<p><a href="{booking_url}" class="button">Reconnect with {therapist_name}</a></p>' if booking_url else reconnect_msg
+
+    content = f"""
+    <p class="greeting">Dear {client_name},</p>
+    <p class="message">It has been about {days_since} days since your last session, and {therapist_name} wanted to check in on you.</p>
+    <p class="message">Your well-being is important to us, and we understand that sometimes taking a break is part of the process. Whatever you are going through, know that there is always a safe space waiting for you here.</p>
+    <div class="info-box">
+        <p><strong>A gentle thought:</strong></p>
+        <p>Many clients find that even a single check-in session after a break can help reorient their goals and provide fresh perspective. There is no judgment - just support.</p>
+    </div>
+    {reconnect_link}
+    <p class="message">Warmly,<br>The COGNISPACE Team</p>
+    """
+    return {
+        "subject": "Checking in - your well-being matters",
+        "html_body": get_base_template(content, "Thinking of You"),
+        "text_body": f"Dear {client_name}, it has been {days_since} days since your last session. {therapist_name} wanted to check in on you. Whenever you are ready, we are here."
+    }
+
+
+# Register followup templates after definition
+EMAIL_TEMPLATES["followup_2day_reminder"] = template_followup_2day_reminder
+EMAIL_TEMPLATES["followup_sameday_reminder"] = template_followup_sameday_reminder
+EMAIL_TEMPLATES["followup_1week_missed"] = template_followup_1week_missed
+EMAIL_TEMPLATES["followup_30day_reengagement"] = template_followup_30day_reengagement
+
+
 def get_email_template(event: str, data: Dict[str, Any]) -> Dict[str, str]:
     """
     Get email template for an event.

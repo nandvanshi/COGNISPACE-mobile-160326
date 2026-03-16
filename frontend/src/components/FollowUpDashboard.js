@@ -54,8 +54,11 @@ const FollowUpDashboard = ({ onNavigateToClient }) => {
 
   const fetchAnalytics = useCallback(async () => {
     try {
-      const res = await axios.get(`${API}/follow-ups/retention-analytics`);
-      setAnalytics(res.data);
+      const [basicRes, detailedRes] = await Promise.all([
+        axios.get(`${API}/follow-ups/retention-analytics`),
+        axios.get(`${API}/follow-ups/retention-analytics/detailed`)
+      ]);
+      setAnalytics({ ...basicRes.data, ...detailedRes.data });
     } catch (err) {
       console.error('Analytics fetch error:', err);
     }
@@ -302,6 +305,62 @@ const FollowUpDashboard = ({ onNavigateToClient }) => {
                   <p className="text-2xl font-bold text-orange-600">{analytics.dropout_risk_clients}</p>
                 </Card>
               </div>
+
+              {/* Detailed Client Metrics */}
+              {analytics.avg_sessions_per_client != null && (
+                <div className="grid grid-cols-2 gap-3">
+                  <Card className="p-4 text-center border-l-4 border-l-indigo-400">
+                    <p className="text-sm text-muted-foreground">Avg Sessions/Client</p>
+                    <p className="text-2xl font-bold text-indigo-600">{analytics.avg_sessions_per_client}</p>
+                  </Card>
+                  <Card className="p-4 text-center border-l-4 border-l-teal-400">
+                    <p className="text-sm text-muted-foreground">Avg Gap (days)</p>
+                    <p className="text-2xl font-bold text-teal-600">{analytics.avg_gap_between_sessions ?? '-'}</p>
+                  </Card>
+                </div>
+              )}
+
+              {/* Per-Client Retention Table */}
+              {analytics.client_details?.length > 0 && (
+                <Card className="p-4">
+                  <h3 className="font-medium mb-3 flex items-center gap-2">
+                    <Users size={16} /> Client Retention Details
+                  </h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-xs text-muted-foreground border-b">
+                          <th className="text-left py-2 pr-3">Client</th>
+                          <th className="text-center py-2 px-2">Sessions</th>
+                          <th className="text-center py-2 px-2">Avg Gap</th>
+                          <th className="text-center py-2 pl-2">Last Visit</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {analytics.client_details.map((cd, i) => (
+                          <tr key={i} className="border-b border-dashed last:border-0 hover:bg-muted/30">
+                            <td className="py-2 pr-3">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium truncate max-w-[120px]">{cd.client_name}</span>
+                                {cd.days_since_last_session > 30 && (
+                                  <span className="text-[10px] px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded-full">At Risk</span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="text-center py-2 px-2 font-medium">{cd.session_count}</td>
+                            <td className="text-center py-2 px-2 text-muted-foreground">{cd.avg_gap_days ? `${cd.avg_gap_days}d` : '-'}</td>
+                            <td className="text-center py-2 pl-2">
+                              <span className={cd.days_since_last_session > 14 ? 'text-red-600' : 'text-green-600'}>
+                                {cd.days_since_last_session}d ago
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </Card>
+              )}
             </>
           )}
         </div>

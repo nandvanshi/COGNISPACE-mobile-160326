@@ -230,7 +230,6 @@ async def get_retention_analytics(current_user: dict = Depends(require_therapist
     """Get retention metrics for the therapist"""
     therapist_id = get_effective_therapist_id(current_user)
     now_utc = datetime.now(timezone.utc)
-    now_str = now_utc.strftime("%Y-%m-%dT%H:%M:%S")
 
     # Total clients via client_profiles
     total_clients = await db.client_profiles.count_documents({"therapist_id": therapist_id})
@@ -332,3 +331,269 @@ async def get_my_recommendation(current_user: dict = Depends(get_current_user)):
         "is_overdue": is_overdue,
         "created_at": recommendation.get("created_at")
     }
+
+
+
+# ============= CLIENT JOURNEY TIMELINE =============
+
+@router.get("/journey/{client_id}")
+async def get_client_journey(client_id: str, current_user: dict = Depends(require_therapist_or_assistant)):
+    """Get the complete journey timeline for a client"""
+    therapist_id = get_effective_therapist_id(current_user)
+
+    # Verify client belongs to therapist
+    profile = await db.client_profiles.find_one(
+        {"user_id": client_id, "therapist_id": therapist_id},
+        {"_id": 0}
+    )
+    if not profile:
+        raise HTTPException(status_code=404, detail="Client not found")
+
+    timeline = []
+
+    # 1. Get all sessions (completed + cancelled + no_show)
+    sessions = await db.appointments.find(
+        {"client_id": client_id, "therapist_id": therapist_id, "status": {"$in": ["completed", "cancelled", "no_show"]}},
+        {"_id": 0, "id": 1, "start_time": 1, "end_time": 1, "status": 1, "session_type": 1, "actual_duration_minutes": 1}
+    ).to_list(500)
+
+    for s in sessions:
+        timeline.append({
+            "type": "session",
+            "date": s.get("start_time", ""),
+            "status": s.get("status"),
+            "session_type": s.get("session_type", ""),
+            "duration_minutes": s.get("actual_duration_minutes"),
+            "id": s.get("id")
+        })
+
+    # 2. Get all follow-up recommendations
+    recommendations = await db.follow_up_recommendations.find(
+        {"client_id": client_id, "therapist_id": therapist_id},
+        {"_id": 0, "id": 1, "recommended_date": 1, "notes": 1, "created_at": 1, "status": 1}
+    ).to_list(100)
+
+    for r in recommendations:
+        timeline.append({
+            "type": "recommendation",
+            "date": r.get("created_at", ""),
+            "recommended_date": r.get("recommended_date"),
+            "notes": r.get("notes", ""),
+            "status": r.get("status"),
+            "id": r.get("id")
+        })
+
+    # 3. Get session notes (just metadata)
+    notes = await db.session_notes.find(
+        {"client_id": client_id, "therapist_id": therapist_id},
+        {"_id": 0, "id": 1, "created_at": 1, "note_type": 1, "appointment_id": 1}
+    ).to_list(500)
+
+    for n in notes:
+        timeline.append({
+            "type": "note",
+            "date": n.get("created_at", ""),
+            "note_type": n.get("note_type", "general"),
+            "appointment_id": n.get("appointment_id"),
+            "id": n.get("id")
+        })
+
+    # 4. Get assessments assigned
+    assessments = await db.assessments.find(
+        {"client_id": client_id, "therapist_id": therapist_id},
+        {"_id": 0, "id": 1, "created_at": 1, "title": 1, "status": 1, "assessment_type": 1}
+    ).to_list(100)
+
+    for a in assessments:
+        timeline.append({
+            "type": "assessment",
+            "date": a.get("created_at", ""),
+            "title": a.get("title", ""),
+            "status": a.get("status"),
+            "assessment_type": a.get("assessment_type", ""),
+            "id": a.get("id")
+        })
+
+    # 5. Get reminder log
+    reminders = await db.follow_up_reminder_log.find(
+        {"client_id": client_id, "therapist_id": therapist_id},
+        {"_id": 0}
+    ).to_list(100)
+
+    for rem in reminders:
+        timeline.append({
+            "type": "reminder_sent",
+            "date": rem.get("sent_at", ""),
+            "reminder_type": rem.get("reminder_type"),
+            "channel": rem.get("channel", "email")
+        })
+
+    # Sort by date descending
+    def sort_key(item):
+        d = item.get("date", "")
+        try:
+            return datetime.fromisoformat(d.replace("Z", "+00:00"))
+        except (ValueError, TypeError, AttributeError):
+            try:
+                return datetime.strptime(d[:10], "%Y-%m-%d").replace(tzinfo=timezone.utc)
+            except (ValueError, TypeError):
+                return datetime.min.replace(tzinfo=timezone.utc)
+
+    timeline.sort(key=sort_key, reverse=True)
+
+    # Calculate stats
+    completed_sessions = len([s for s in sessions if s["status"] == "completed"])
+    cancelled_sessions = len([s for s in sessions if s["status"] == "cancelled"])
+    no_shows = len([s for s in sessions if s["status"] == "no_show"])
+
+    # Average gap between sessions
+    min_date = datetime.min.replace(tzinfo=timezone.utc)
+    completed_dates = sorted([
+        d for d in [sort_key(s) for s in sessions if s["status"] == "completed"]
+        if d > min_date
+    ])
+    avg_gap_days = None
+    if len(completed_dates) > 1:
+        gaps = [(completed_dates[i+1] - completed_dates[i]).days for i in range(len(completed_dates) - 1)]
+        avg_gap_days = round(sum(gaps) / len(gaps), 1)
+
+    # First session date
+    first_session = min(completed_dates) if completed_dates else None
+
+    return {
+        "client_id": client_id,
+        "timeline": timeline[:100],  # Limit to 100 events
+        "stats": {
+            "total_sessions": completed_sessions,
+            "cancelled_sessions": cancelled_sessions,
+            "no_shows": no_shows,
+            "total_recommendations": len(recommendations),
+            "total_assessments": len(assessments),
+            "avg_gap_days": avg_gap_days,
+            "first_session_date": first_session.isoformat() if first_session else None,
+            "journey_duration_days": (datetime.now(timezone.utc) - first_session).days if first_session else 0
+        }
+    }
+
+
+# ============= ENHANCED RETENTION ANALYTICS =============
+
+@router.get("/retention-analytics/detailed")
+async def get_detailed_retention_analytics(current_user: dict = Depends(require_therapist_or_assistant)):
+    """Enhanced retention analytics with deeper insights"""
+    therapist_id = get_effective_therapist_id(current_user)
+    now_utc = datetime.now(timezone.utc)
+
+    profiles = await db.client_profiles.find(
+        {"therapist_id": therapist_id},
+        {"_id": 0, "user_id": 1}
+    ).to_list(500)
+
+    total_clients = len(profiles)
+    client_analytics = []
+
+    for profile in profiles:
+        cid = profile["user_id"]
+        user = await db.users.find_one({"id": cid}, {"_id": 0, "full_name": 1})
+        if not user:
+            continue
+
+        sessions = await db.appointments.find(
+            {"client_id": cid, "therapist_id": therapist_id, "status": "completed"},
+            {"_id": 0, "start_time": 1}
+        ).sort("start_time", 1).to_list(500)
+
+        session_count = len(sessions)
+        if session_count == 0:
+            continue
+
+        # Calculate avg gap
+        dates = []
+        for s in sessions:
+            try:
+                dates.append(datetime.fromisoformat(s["start_time"].replace("Z", "+00:00")))
+            except (ValueError, TypeError):
+                pass
+
+        avg_gap = None
+        if len(dates) > 1:
+            gaps = [(dates[i+1] - dates[i]).days for i in range(len(dates) - 1)]
+            avg_gap = round(sum(gaps) / len(gaps), 1)
+
+        days_since_last = (now_utc - dates[-1]).days if dates else None
+
+        client_analytics.append({
+            "client_id": cid,
+            "client_name": user.get("full_name", "Unknown"),
+            "session_count": session_count,
+            "avg_gap_days": avg_gap,
+            "days_since_last_session": days_since_last,
+            "first_session": dates[0].isoformat() if dates else None,
+            "last_session": dates[-1].isoformat() if dates else None,
+        })
+
+    # Sort by risk (most days since last session first)
+    client_analytics.sort(key=lambda x: x.get("days_since_last_session") or 0, reverse=True)
+
+    # Calculate global averages
+    all_gaps = [c["avg_gap_days"] for c in client_analytics if c["avg_gap_days"] is not None]
+    all_sessions = [c["session_count"] for c in client_analytics]
+
+    return {
+        "total_clients": total_clients,
+        "clients_with_sessions": len(client_analytics),
+        "avg_sessions_per_client": round(sum(all_sessions) / len(all_sessions), 1) if all_sessions else 0,
+        "avg_gap_between_sessions": round(sum(all_gaps) / len(all_gaps), 1) if all_gaps else None,
+        "client_details": client_analytics[:50],
+    }
+
+
+# ============= THERAPIST SETTINGS =============
+
+class FollowUpSettingsRequest(BaseModel):
+    followup_email_enabled: Optional[bool] = None
+    followup_whatsapp_enabled: Optional[bool] = None
+
+
+@router.get("/settings")
+async def get_followup_settings(current_user: dict = Depends(require_therapist_or_assistant)):
+    """Get therapist's follow-up reminder settings"""
+    therapist_id = get_effective_therapist_id(current_user)
+
+    settings = await db.therapist_settings.find_one(
+        {"therapist_id": therapist_id},
+        {"_id": 0}
+    )
+
+    return {
+        "followup_email_enabled": settings.get("followup_email_enabled", True) if settings else True,
+        "followup_whatsapp_enabled": settings.get("followup_whatsapp_enabled", False) if settings else False,
+    }
+
+
+@router.put("/settings")
+async def update_followup_settings(
+    req: FollowUpSettingsRequest,
+    current_user: dict = Depends(require_therapist_or_assistant)
+):
+    """Update therapist's follow-up reminder settings"""
+    therapist_id = get_effective_therapist_id(current_user)
+
+    update_data = {}
+    if req.followup_email_enabled is not None:
+        update_data["followup_email_enabled"] = req.followup_email_enabled
+    if req.followup_whatsapp_enabled is not None:
+        update_data["followup_whatsapp_enabled"] = req.followup_whatsapp_enabled
+
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No settings to update")
+
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+
+    await db.therapist_settings.update_one(
+        {"therapist_id": therapist_id},
+        {"$set": update_data, "$setOnInsert": {"therapist_id": therapist_id}},
+        upsert=True
+    )
+
+    return {"message": "Settings updated", **update_data}

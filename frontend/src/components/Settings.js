@@ -5,7 +5,7 @@ import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { toast } from 'sonner';
-import { Settings as SettingsIcon, Palette, Loader2, Bell, Mail, MessageCircle, AlertTriangle, Volume2, Smartphone } from 'lucide-react';
+import { Settings as SettingsIcon, Palette, Loader2, Bell, Mail, MessageCircle, AlertTriangle, Volume2, Smartphone, CalendarPlus } from 'lucide-react';
 import ThemePicker from './ThemePicker';
 import { applyTheme, getStoredTheme, DEFAULT_THEME } from '../config/themes';
 import { Switch } from './ui/switch';
@@ -30,6 +30,11 @@ const Settings = ({ isOpen, onClose }) => {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [badgeEnabled, setBadgeEnabled] = useState(true);
   const [loadingPWAPrefs, setLoadingPWAPrefs] = useState(false);
+  
+  // Follow-up reminder settings
+  const [followUpEmailEnabled, setFollowUpEmailEnabled] = useState(true);
+  const [followUpWhatsAppEnabled, setFollowUpWhatsAppEnabled] = useState(false);
+  const [savingFollowUp, setSavingFollowUp] = useState(false);
 
   useEffect(() => {
     if (isOpen && user) {
@@ -37,6 +42,7 @@ const Settings = ({ isOpen, onClose }) => {
       fetchPWAPreferences();
       if (user.role === 'therapist') {
         fetchNotificationSettings();
+        fetchFollowUpSettings();
       }
     }
   }, [isOpen, user]);
@@ -131,6 +137,28 @@ const Settings = ({ isOpen, onClose }) => {
       toast.error('Failed to load notification settings');
     } finally {
       setLoadingNotifications(false);
+    }
+  };
+
+  const fetchFollowUpSettings = async () => {
+    try {
+      const res = await axios.get(`${API}/follow-ups/settings`);
+      setFollowUpEmailEnabled(res.data.followup_email_enabled ?? true);
+      setFollowUpWhatsAppEnabled(res.data.followup_whatsapp_enabled ?? false);
+    } catch (e) { /* ignore */ }
+  };
+
+  const handleFollowUpToggle = async (field, value) => {
+    setSavingFollowUp(true);
+    try {
+      await axios.put(`${API}/follow-ups/settings`, { [field]: value });
+      if (field === 'followup_email_enabled') setFollowUpEmailEnabled(value);
+      if (field === 'followup_whatsapp_enabled') setFollowUpWhatsAppEnabled(value);
+      toast.success('Follow-up reminder setting updated');
+    } catch (e) {
+      toast.error('Failed to update setting');
+    } finally {
+      setSavingFollowUp(false);
     }
   };
 
@@ -343,6 +371,55 @@ const Settings = ({ isOpen, onClose }) => {
                   Loading notification settings...
                 </div>
               )}
+            </Card>
+          )}
+
+          {/* Follow-Up Reminder Settings - Only for Therapists */}
+          {user?.role === 'therapist' && (
+            <Card className="p-4">
+              <div className="flex items-center gap-2 mb-4">
+                <CalendarPlus size={18} className="text-primary" />
+                <h3 className="font-medium">Follow-Up Reminders</h3>
+                {savingFollowUp && <Loader2 size={14} className="animate-spin text-muted-foreground" />}
+              </div>
+              
+              <p className="text-sm text-muted-foreground mb-4">
+                Automated reminders sent to clients who have pending follow-up sessions
+              </p>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                  <div className="flex items-center gap-2">
+                    <Mail size={16} className="text-blue-600" />
+                    <div>
+                      <p className="text-sm font-medium">Email Reminders</p>
+                      <p className="text-xs text-muted-foreground">2 days before, same day, 1 week & 30 days after</p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={followUpEmailEnabled}
+                    onCheckedChange={(v) => handleFollowUpToggle('followup_email_enabled', v)}
+                    disabled={savingFollowUp}
+                    data-testid="followup-email-toggle"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                  <div className="flex items-center gap-2">
+                    <MessageCircle size={16} className="text-green-600" />
+                    <div>
+                      <p className="text-sm font-medium">WhatsApp Reminders</p>
+                      <p className="text-xs text-muted-foreground">Template approval pending from Twilio</p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={followUpWhatsAppEnabled}
+                    onCheckedChange={(v) => handleFollowUpToggle('followup_whatsapp_enabled', v)}
+                    disabled={savingFollowUp}
+                    data-testid="followup-whatsapp-toggle"
+                  />
+                </div>
+              </div>
             </Card>
           )}
         </div>
