@@ -52,6 +52,14 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
   const [showConsent, setShowConsent] = useState(false);
   const [showBookAppointment, setShowBookAppointment] = useState(false);
   const [showAssignHomework, setShowAssignHomework] = useState(false);
+  const [showAssignAssessment, setShowAssignAssessment] = useState(false);
+  const [showShareResource, setShowShareResource] = useState(false);
+  const [assessmentLibrary, setAssessmentLibrary] = useState({});
+  const [availableResources, setAvailableResources] = useState([]);
+  const [selectedAssessment, setSelectedAssessment] = useState('');
+  const [assessmentNotes, setAssessmentNotes] = useState('');
+  const [selectedResource, setSelectedResource] = useState('');
+  const [resourceNotes, setResourceNotes] = useState('');
   
   // Homework form state
   const [newHomework, setNewHomework] = useState({
@@ -301,6 +309,65 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
     setSaveAsTemplate(false);
     setShowAssignHomework(true);
   };
+
+  // Open assign assessment dialog
+  const openAssignAssessmentDialog = async () => {
+    try {
+      const res = await axios.get(`${API}/assessments/library`);
+      setAssessmentLibrary(res.data);
+      setSelectedAssessment('');
+      setAssessmentNotes('');
+      setShowAssignAssessment(true);
+    } catch (err) {
+      toast.error('Assessment library load nahi ho payi');
+    }
+  };
+
+  // Handle assign assessment
+  const handleAssignAssessment = async () => {
+    if (!selectedAssessment) { toast.error('Assessment select karein'); return; }
+    try {
+      await axios.post(`${API}/assessments`, {
+        client_id: clientId,
+        assessment_type: selectedAssessment,
+        notes: assessmentNotes || undefined
+      });
+      toast.success('Assessment assigned successfully');
+      setShowAssignAssessment(false);
+      fetchClientData();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Assessment assign nahi ho paya');
+    }
+  };
+
+  // Open share resource dialog
+  const openShareResourceDialog = async () => {
+    try {
+      const res = await axios.get(`${API}/resources`);
+      setAvailableResources(res.data);
+      setSelectedResource('');
+      setResourceNotes('');
+      setShowShareResource(true);
+    } catch (err) {
+      toast.error('Resources load nahi ho paye');
+    }
+  };
+
+  // Handle share resource
+  const handleShareResource = async () => {
+    if (!selectedResource) { toast.error('Resource select karein'); return; }
+    try {
+      await axios.post(`${API}/resources/${selectedResource}/assign?client_id=${clientId}`, {
+        notes: resourceNotes || undefined
+      });
+      toast.success('Resource shared successfully');
+      setShowShareResource(false);
+      fetchClientData();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Resource share nahi ho paya');
+    }
+  };
+
   
   // Define all tabs - filter based on isAssistant
   // Mobile-friendly structure: Tasks combines Homework, Resources, Assessments
@@ -914,6 +981,11 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
                 <h3 className="text-lg font-semibold flex items-center gap-2">
                   <ClipboardList size={20} className="text-blue-600" /> Assessments
                 </h3>
+                {!isReadOnly && (
+                  <Button size="sm" variant="outline" onClick={openAssignAssessmentDialog} className="gap-1 rounded-xl" data-testid="assign-assessment-btn">
+                    <Plus size={14} /> Assign
+                  </Button>
+                )}
               </div>
               {assessments.length === 0 ? (
                 <Card className="p-4 text-center text-muted-foreground rounded-xl">
@@ -952,7 +1024,7 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
                   <BookOpen size={20} className="text-emerald-600" /> Shared Resources
                 </h3>
                 {!isReadOnly && (
-                  <Button size="sm" variant="outline" className="gap-1 rounded-xl">
+                  <Button size="sm" variant="outline" onClick={openShareResourceDialog} className="gap-1 rounded-xl" data-testid="share-resource-btn">
                     <Plus size={14} /> Share
                   </Button>
                 )}
@@ -1509,6 +1581,109 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Assign Assessment Dialog */}
+      <Dialog open={showAssignAssessment} onOpenChange={setShowAssignAssessment}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ClipboardList size={20} className="text-blue-600" /> Assign Assessment
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">Assessment Type *</label>
+              <select
+                value={selectedAssessment}
+                onChange={e => setSelectedAssessment(e.target.value)}
+                className="w-full border rounded-lg px-3 py-2 text-sm"
+                data-testid="assessment-type-select"
+              >
+                <option value="">-- Select Assessment --</option>
+                {Object.entries(assessmentLibrary).map(([key, val]) => (
+                  <option key={key} value={key}>
+                    {val.name || key} {val.source === 'admin' ? '(Global)' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {selectedAssessment && assessmentLibrary[selectedAssessment] && (
+              <div className="bg-blue-50 rounded-lg p-3 text-sm text-blue-800">
+                <p className="font-medium">{assessmentLibrary[selectedAssessment].name}</p>
+                <p className="text-xs mt-1">{assessmentLibrary[selectedAssessment].description || assessmentLibrary[selectedAssessment].category}</p>
+              </div>
+            )}
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">Notes (optional)</label>
+              <Textarea
+                value={assessmentNotes}
+                onChange={e => setAssessmentNotes(e.target.value)}
+                placeholder="Instructions for the client..."
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAssignAssessment(false)}>Cancel</Button>
+            <Button onClick={handleAssignAssessment} disabled={!selectedAssessment} data-testid="confirm-assign-assessment">
+              Assign Assessment
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Share Resource Dialog */}
+      <Dialog open={showShareResource} onOpenChange={setShowShareResource}>
+        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <BookOpen size={20} className="text-green-600" /> Share Resource
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">Select Resource *</label>
+              <select
+                value={selectedResource}
+                onChange={e => setSelectedResource(e.target.value)}
+                className="w-full border rounded-lg px-3 py-2 text-sm"
+                data-testid="resource-select"
+              >
+                <option value="">-- Select Resource --</option>
+                {availableResources.map(r => (
+                  <option key={r.id} value={r.id}>
+                    {r.title} ({r.category}) {r.therapist_id === 'admin' ? '(Global)' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {selectedResource && (() => {
+              const res = availableResources.find(r => r.id === selectedResource);
+              return res ? (
+                <div className="bg-green-50 rounded-lg p-3 text-sm text-green-800">
+                  <p className="font-medium">{res.title}</p>
+                  <p className="text-xs mt-1 line-clamp-3">{res.content || 'No preview available'}</p>
+                </div>
+              ) : null;
+            })()}
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">Notes (optional)</label>
+              <Textarea
+                value={resourceNotes}
+                onChange={e => setResourceNotes(e.target.value)}
+                placeholder="Message for the client..."
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowShareResource(false)}>Cancel</Button>
+            <Button onClick={handleShareResource} disabled={!selectedResource} data-testid="confirm-share-resource">
+              Share Resource
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
