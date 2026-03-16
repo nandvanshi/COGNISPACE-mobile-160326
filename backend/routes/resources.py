@@ -132,18 +132,40 @@ async def create_resource(resource: ResourceCreate, current_user: dict = Depends
 
 @router.get("/resources", response_model=List[Resource])
 async def get_resources(category: Optional[str] = None, current_user: dict = Depends(get_current_user)):
-    """Get all resources (therapist's own + system resources)"""
+    """Get all resources (therapist's own + system + admin global resources)"""
     if current_user["role"] not in ["therapist", "assistant"]:
         raise HTTPException(status_code=403, detail="Access denied")
     
     therapist_id = current_user["id"] if current_user["role"] == "therapist" else current_user.get("therapist_id")
     
-    query = {"$or": [{"therapist_id": therapist_id}, {"therapist_id": "system"}]}
+    query = {"$or": [{"therapist_id": therapist_id}, {"therapist_id": "system"}, {"therapist_id": "admin"}]}
     if category:
         query["category"] = category
     
     resources = await _db.resources.find(query, {"_id": 0}).sort("usage_count", -1).to_list(500)
-    return [Resource(**{k: datetime.fromisoformat(v) if k == "created_at" else v for k, v in r.items()}) for r in resources]
+    
+    # Also get admin content resources
+    admin_query = {"type": "resource"}
+    if category:
+        admin_query["category"] = category
+    admin_resources = await _db.admin_content.find(admin_query, {"_id": 0}).to_list(100)
+    
+    # Format admin resources to match Resource model
+    for ar in admin_resources:
+        resources.append({
+            "id": ar["id"],
+            "therapist_id": "admin",
+            "title": ar.get("title", ""),
+            "category": ar.get("category", "general"),
+            "content": ar.get("description", "") or ar.get("content", {}).get("text", ""),
+            "tags": ar.get("tags", []),
+            "is_downloadable": True,
+            "usage_count": 0,
+            "created_at": ar.get("created_at", datetime.now(timezone.utc).isoformat()),
+            "source": "admin"
+        })
+    
+    return [Resource(**{k: datetime.fromisoformat(v) if k == "created_at" else v for k, v in r.items() if k != "source"}) for r in resources]
 
 
 @router.delete("/resources/{resource_id}")

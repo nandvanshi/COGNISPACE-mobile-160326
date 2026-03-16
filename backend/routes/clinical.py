@@ -1111,7 +1111,7 @@ Include a mix of social, physical, and creative activities.""",
 
 @router.get("/homework-templates")
 async def get_homework_templates(current_user: dict = Depends(require_active_therapist)):
-    """Get homework templates - system + therapist's saved templates"""
+    """Get homework templates - system + admin (global) + therapist's saved templates"""
     # Get therapist's saved templates
     therapist_templates = await db.homework_templates.find(
         {"therapist_id": current_user["id"]},
@@ -1121,9 +1121,28 @@ async def get_homework_templates(current_user: dict = Depends(require_active_the
     # Mark therapist templates
     for t in therapist_templates:
         t["is_system"] = False
+        t["source"] = "therapist"
     
-    # Combine system templates + therapist templates
-    all_templates = SYSTEM_HOMEWORK_TEMPLATES + therapist_templates
+    # Get admin-created global templates
+    admin_templates = await db.admin_content.find(
+        {"type": "homework_template"},
+        {"_id": 0}
+    ).to_list(100)
+    
+    # Format admin templates to match existing structure
+    formatted_admin = []
+    for at in admin_templates:
+        formatted_admin.append({
+            "id": at["id"],
+            "title": at.get("title", ""),
+            "description": at.get("description", "") or at.get("content", {}).get("description", ""),
+            "category": at.get("category", "general"),
+            "is_system": True,
+            "source": "admin"
+        })
+    
+    # Combine: system (hardcoded) + admin (global) + therapist templates
+    all_templates = SYSTEM_HOMEWORK_TEMPLATES + formatted_admin + therapist_templates
     
     return all_templates
 

@@ -87,8 +87,30 @@ def parse_datetime(value):
 
 @router.get("/library")
 async def get_assessment_library(current_user: dict = Depends(get_current_user)):
-    """Get available assessment types"""
-    return ASSESSMENT_LIBRARY
+    """Get available assessment types - built-in + admin (global)"""
+    # Start with built-in library
+    result = dict(ASSESSMENT_LIBRARY)
+    
+    # Get admin-created global assessments
+    admin_assessments = await db.admin_content.find(
+        {"type": "assessment"},
+        {"_id": 0}
+    ).to_list(100)
+    
+    # Add admin assessments to library
+    for aa in admin_assessments:
+        key = f"ADMIN_{aa['id'][:8].upper()}"
+        content = aa.get("content", {})
+        result[key] = {
+            "name": aa.get("title", ""),
+            "description": aa.get("description", ""),
+            "category": aa.get("category", "general"),
+            "questions": content.get("questions", []),
+            "scoring": content.get("scoring", {}),
+            "source": "admin"
+        }
+    
+    return result
 
 
 @router.get("/custom")

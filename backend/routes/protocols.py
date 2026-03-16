@@ -158,8 +158,30 @@ def parse_datetime(value):
 
 @router.get("/templates")
 async def get_protocol_templates(current_user: dict = Depends(require_therapist_or_assistant)):
-    """Get available protocol templates"""
-    return PROTOCOL_TEMPLATES
+    """Get available protocol templates - built-in + admin (global)"""
+    # Start with built-in templates
+    result = dict(PROTOCOL_TEMPLATES)
+    
+    # Get admin-created global protocol templates
+    admin_templates = await db.admin_content.find(
+        {"type": "protocol_template"},
+        {"_id": 0}
+    ).to_list(100)
+    
+    # Add admin templates with a prefix to distinguish
+    for at in admin_templates:
+        key = f"ADMIN_{at['id'][:8].upper()}"
+        content = at.get("content", {})
+        result[key] = {
+            "name": at.get("title", ""),
+            "modality": content.get("modality", at.get("category", "General")),
+            "condition": content.get("condition", ""),
+            "description": at.get("description", ""),
+            "sessions": content.get("sessions", []),
+            "source": "admin"
+        }
+    
+    return result
 
 
 @router.post("", response_model=Protocol)
