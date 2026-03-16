@@ -7,7 +7,7 @@ import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../ui/dialog';
 import { toast } from 'sonner';
-import { Plus, Trash2, Edit2, BookOpen, FileText, ClipboardList, Lightbulb, ScrollText, Search } from 'lucide-react';
+import { Plus, Trash2, Edit2, BookOpen, FileText, ClipboardList, Lightbulb, ScrollText, Search, Sparkles, Loader2 } from 'lucide-react';
 
 const CONTENT_TYPES = [
   { id: 'homework_template', label: 'Homework Templates', icon: BookOpen, color: 'bg-blue-500' },
@@ -36,6 +36,11 @@ const AdminContentLibrary = () => {
   const [formData, setFormData] = useState({
     title: '', description: '', category: '', tags: '', content: {}
   });
+  const [aiTopic, setAiTopic] = useState('');
+  const [aiLanguage, setAiLanguage] = useState('hindi');
+  const [aiExtraInstructions, setAiExtraInstructions] = useState('');
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [showAiDialog, setShowAiDialog] = useState(false);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -119,6 +124,38 @@ const AdminContentLibrary = () => {
       fetchStats();
     } catch (err) {
       toast.error('Delete failed');
+    }
+  };
+
+  const handleAiGenerate = async () => {
+    if (!aiTopic.trim()) { toast.error('Topic enter karein'); return; }
+    setAiGenerating(true);
+    try {
+      const res = await axios.post(`${API}/admin/content/${activeType}/ai-generate`, {
+        type: activeType,
+        topic: aiTopic.trim(),
+        language: aiLanguage,
+        additional_instructions: aiExtraInstructions.trim()
+      });
+      if (res.data.generated) {
+        const generated = res.data.data;
+        // Pre-fill the create form with AI-generated data
+        setFormData({
+          title: generated.title || '',
+          description: generated.description || '',
+          category: generated.category || CATEGORIES[activeType]?.[0] || '',
+          tags: (generated.tags || []).join(', '),
+          content: generated.content || {}
+        });
+        setShowAiDialog(false);
+        setEditingItem(null);
+        setShowDialog(true);
+        toast.success('AI ne content generate kiya! Review karke save karein.');
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'AI generation failed');
+    } finally {
+      setAiGenerating(false);
     }
   };
 
@@ -255,7 +292,14 @@ const AdminContentLibrary = () => {
           />
         </div>
         <Button onClick={openCreate} data-testid="create-content-btn">
-          <Plus size={16} className="mr-1" /> Create New
+          <Plus size={16} className="mr-1" /> Manual
+        </Button>
+        <Button 
+          onClick={() => { setAiTopic(''); setAiExtraInstructions(''); setShowAiDialog(true); }}
+          className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700"
+          data-testid="ai-generate-btn"
+        >
+          <Sparkles size={16} className="mr-1" /> AI Generate
         </Button>
       </div>
 
@@ -358,6 +402,66 @@ const AdminContentLibrary = () => {
             <Button variant="outline" onClick={() => setShowDialog(false)}>Cancel</Button>
             <Button onClick={handleSave} data-testid="save-content-btn">
               {editingItem ? 'Update' : 'Create'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* AI Generate Dialog */}
+      <Dialog open={showAiDialog} onOpenChange={setShowAiDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles size={20} className="text-violet-600" />
+              AI se {activeConfig?.label?.replace(/s$/, '')} Generate
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700">Topic / Subject *</label>
+              <Input
+                value={aiTopic}
+                onChange={e => setAiTopic(e.target.value)}
+                placeholder="e.g., Social Anxiety, Grief Counseling, Sleep Hygiene..."
+                data-testid="ai-topic-input"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700">Language</label>
+              <select
+                value={aiLanguage}
+                onChange={e => setAiLanguage(e.target.value)}
+                className="w-full border rounded-lg px-3 py-2 text-sm"
+              >
+                <option value="hindi">Hindi</option>
+                <option value="english">English</option>
+                <option value="hinglish">Hinglish</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700">Extra Instructions (optional)</label>
+              <Textarea
+                value={aiExtraInstructions}
+                onChange={e => setAiExtraInstructions(e.target.value)}
+                placeholder="e.g., For children ages 8-12, Include visual exercises..."
+                rows={3}
+              />
+            </div>
+            <p className="text-xs text-gray-400">AI generate karega → aap review karenge → phir save</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAiDialog(false)} disabled={aiGenerating}>Cancel</Button>
+            <Button 
+              onClick={handleAiGenerate} 
+              disabled={aiGenerating || !aiTopic.trim()}
+              className="bg-gradient-to-r from-violet-600 to-indigo-600"
+              data-testid="ai-generate-submit-btn"
+            >
+              {aiGenerating ? (
+                <><Loader2 size={16} className="mr-1 animate-spin" /> Generating...</>
+              ) : (
+                <><Sparkles size={16} className="mr-1" /> Generate</>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
