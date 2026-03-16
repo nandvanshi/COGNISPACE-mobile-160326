@@ -2,157 +2,115 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Textarea } from './ui/textarea';
 import { Mic, MicOff, Loader2, Square } from 'lucide-react';
 
-// Singleton pipeline loader
-let pipelineInstance = null;
-let pipelineLoading = false;
-let pipelineLoadPromise = null;
-
-const loadWhisperPipeline = async () => {
-  if (pipelineInstance) return pipelineInstance;
-  if (pipelineLoadPromise) return pipelineLoadPromise;
-
-  pipelineLoading = true;
-  pipelineLoadPromise = (async () => {
-    try {
-      const { pipeline } = await import('@xenova/transformers');
-      pipelineInstance = await pipeline(
-        'automatic-speech-recognition',
-        'Xenova/whisper-tiny',
-        { quantized: true }
-      );
-      return pipelineInstance;
-    } catch (err) {
-      console.error('Whisper load failed:', err);
-      pipelineLoadPromise = null;
-      throw err;
-    } finally {
-      pipelineLoading = false;
-    }
-  })();
-
-  return pipelineLoadPromise;
-};
+// Check browser support
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
 const VoiceInputButton = ({ onTranscript, disabled, className = '' }) => {
-  const [status, setStatus] = useState('idle'); // idle | loading | recording | transcribing
-  const mediaRecorderRef = useRef(null);
-  const chunksRef = useRef([]);
-  const streamRef = useRef(null);
+  const [status, setStatus] = useState('idle'); // idle | recording
+  const recognitionRef = useRef(null);
+  const transcriptRef = useRef('');
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(t => t.stop());
+      if (recognitionRef.current) {
+        try { recognitionRef.current.abort(); } catch (e) {}
       }
     };
   }, []);
 
-  const startRecording = useCallback(async () => {
+  const startRecording = useCallback(() => {
+    if (!SpeechRecognition) {
+      alert('Speech recognition is not supported in this browser. Please use Chrome or Edge.');
+      return;
+    }
+
     try {
-      setStatus('loading');
+      const recognition = new SpeechRecognition();
+      recognitionRef.current = recognition;
+      transcriptRef.current = '';
 
-      // Start loading model and getting mic access in parallel
-      const [_, stream] = await Promise.all([
-        loadWhisperPipeline(),
-        navigator.mediaDevices.getUserMedia({ audio: true })
-      ]);
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'hi-IN'; // Hindi primary, also recognizes English
+      recognition.maxAlternatives = 1;
 
-      streamRef.current = stream;
-      chunksRef.current = [];
-
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-      mediaRecorderRef.current = mediaRecorder;
-
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data);
-      };
-
-      mediaRecorder.onstop = async () => {
-        stream.getTracks().forEach(t => t.stop());
-        streamRef.current = null;
-
-        if (chunksRef.current.length === 0) {
-          setStatus('idle');
-          return;
-        }
-
-        setStatus('transcribing');
-        try {
-          const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
-          const audioUrl = URL.createObjectURL(blob);
-
-          const transcriber = await loadWhisperPipeline();
-          const result = await transcriber(audioUrl, {
-            language: 'en',
-            task: 'transcribe',
-          });
-
-          URL.revokeObjectURL(audioUrl);
-
-          if (result?.text?.trim()) {
-            onTranscript(result.text.trim());
+      recognition.onresult = (event) => {
+        let finalText = '';
+        let interimText = '';
+        for (let i = 0; i < event.results.length; i++) {
+          const result = event.results[i];
+          if (result.isFinal) {
+            finalText += result[0].transcript + ' ';
+          } else {
+            interimText += result[0].transcript;
           }
-        } catch (err) {
-          console.error('Transcription error:', err);
-        } finally {
-          setStatus('idle');
         }
+        transcriptRef.current = finalText.trim();
       };
 
-      mediaRecorder.start(1000);
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        if (event.error === 'not-allowed') {
+          alert('Microphone access denied. Please allow microphone permission.');
+        }
+        setStatus('idle');
+      };
+
+      recognition.onend = () => {
+        if (transcriptRef.current) {
+          onTranscript(transcriptRef.current);
+        }
+        setStatus('idle');
+      };
+
+      recognition.start();
       setStatus('recording');
     } catch (err) {
-      console.error('Recording error:', err);
+      console.error('Speech recognition start error:', err);
       setStatus('idle');
-      if (err.name === 'NotAllowedError') {
-        alert('Microphone access denied. Please allow microphone access in browser settings.');
-      }
     }
   }, [onTranscript]);
 
   const stopRecording = useCallback(() => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-      mediaRecorderRef.current.stop();
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch (e) {}
     }
   }, []);
 
   const handleClick = () => {
     if (status === 'recording') {
       stopRecording();
-    } else if (status === 'idle') {
+    } else {
       startRecording();
     }
   };
 
+  if (!SpeechRecognition) return null;
+
   const isActive = status === 'recording';
-  const isBusy = status === 'loading' || status === 'transcribing';
 
   return (
     <button
       type="button"
       onClick={handleClick}
-      disabled={disabled || isBusy}
+      disabled={disabled}
       className={`inline-flex items-center justify-center rounded-md transition-all duration-200 ${
         isActive
-          ? 'bg-red-500 text-white hover:bg-red-600 shadow-lg shadow-red-200 animate-pulse'
-          : isBusy
-          ? 'bg-muted text-muted-foreground cursor-wait'
+          ? 'bg-red-500 text-white hover:bg-red-600 shadow-lg shadow-red-200'
           : 'bg-primary/10 text-primary hover:bg-primary/20'
       } ${className}`}
       style={{ width: 32, height: 32, minWidth: 32 }}
-      title={
-        isActive ? 'Stop recording' :
-        status === 'loading' ? 'Loading speech model...' :
-        status === 'transcribing' ? 'Transcribing...' :
-        'Voice input'
-      }
+      title={isActive ? 'Stop recording' : 'Voice input (Hindi/English)'}
       data-testid="voice-input-btn"
     >
-      {status === 'loading' && <Loader2 size={15} className="animate-spin" />}
-      {status === 'recording' && <Square size={13} fill="currentColor" />}
-      {status === 'transcribing' && <Loader2 size={15} className="animate-spin" />}
-      {status === 'idle' && <Mic size={15} />}
+      {isActive ? (
+        <div className="relative">
+          <Square size={12} fill="currentColor" />
+          <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-white rounded-full animate-ping" />
+        </div>
+      ) : (
+        <Mic size={15} />
+      )}
     </button>
   );
 };
@@ -164,7 +122,6 @@ const VoiceTextarea = React.forwardRef(({ value, onChange, onVoiceTranscript, di
       onVoiceTranscript(text);
       return;
     }
-    // Simulate onChange event with appended text
     const currentVal = value || '';
     const separator = currentVal && !currentVal.endsWith(' ') && !currentVal.endsWith('\n') ? ' ' : '';
     const newVal = currentVal + separator + text;
@@ -179,16 +136,17 @@ const VoiceTextarea = React.forwardRef(({ value, onChange, onVoiceTranscript, di
   }, [value, onChange, onVoiceTranscript, props.name]);
 
   return (
-    <div className="relative">
+    <div className="relative group">
       <Textarea
         ref={ref}
         value={value}
         onChange={onChange}
         disabled={disabled}
         {...props}
+        style={{ ...(props.style || {}), paddingRight: disabled ? undefined : '40px' }}
       />
-      {!disabled && (
-        <div className="absolute bottom-2 right-2">
+      {!disabled && SpeechRecognition && (
+        <div className="absolute bottom-2 right-2 opacity-60 group-hover:opacity-100 transition-opacity">
           <VoiceInputButton
             onTranscript={handleTranscript}
             disabled={disabled}
