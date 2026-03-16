@@ -48,6 +48,14 @@ Hindi (User communicates in Hindi/Hinglish)
 ### March 6, 2026 - Resource Creation Safeguard
 - [x] **Null-safe content rendering**: Fixed potential crash in ResourcesTab when resource.content is null/undefined
 
+### March 16, 2026 - Admin Content Library
+- [x] **Admin Panel**: New "Content Library" section in Super Admin Dashboard
+- [x] **5 Content Types**: homework_template, protocol_template, resource, assessment, note_template - all CRUD operational
+- [x] **Therapist Integration**: Admin content automatically appears in therapist's existing tabs (Homework Templates, Protocol Templates, Resources, Assessment Library)
+- [x] **Access Control**: Only super_admin can create/edit/delete admin content; therapists can only view/use
+- [x] **Backward Compatible**: All existing therapist functionality untouched; admin content is additive only
+- [x] **Testing**: 22/22 backend tests passed, frontend UI verified
+
 ### March 8, 2026 - Scheduler Timezone & UTC Date Fix
 - [x] **Root Cause 1**: All CronTrigger jobs were running on UTC instead of IST because `timezone` param was only on scheduler, not on individual CronTriggers
 - [x] **Root Cause 2**: All date range queries in scheduled jobs used IST `.isoformat()` (e.g., `2026-03-07T00:00:00+05:30`) but database stores dates in UTC format (e.g., `2026-03-07T18:30:00Z`), causing MongoDB string comparisons to fail
