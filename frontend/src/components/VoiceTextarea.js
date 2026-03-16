@@ -31,7 +31,7 @@ const VoiceInputButton = ({ onTranscript, disabled, className = '' }) => {
 
       recognition.continuous = true;
       recognition.interimResults = true;
-      recognition.lang = 'hi-IN'; // Hindi primary, also recognizes English
+      recognition.lang = 'en-IN'; // English (India) - handles Indian accent well
       recognition.maxAlternatives = 1;
 
       recognition.onresult = (event) => {
