@@ -82,12 +82,31 @@ Hindi (User communicates in Hindi/Hinglish)
 - Homework Templates
 - In-App Notifications
 
+### March 16, 2026 - Follow-Up Intelligence System (Phase 1-2)
+- [x] Backend: 5 API endpoints for follow-up recommendations, summary, client list, retention analytics, client self-view
+- [x] Frontend: Checkout dialog "Recommend Next Session" checkbox with date picker
+- [x] Frontend: Follow-Up Dashboard with summary cards, client list, retention analytics
+- [x] Frontend: Therapist & Assistant sidebar nav integration
+- [x] Frontend: Client home tab follow-up reminder card
+- [x] Fixed: Client-therapist mapping to use client_profiles collection
+- [x] Testing: 17/17 backend tests pass
+
+### Key DB Collection Added
+- **follow_up_recommendations**: `{id, client_id, therapist_id, recommended_date, notes, recommended_by_session_id, recommended_by, created_at, status}`
+
 ## Pending Tasks
 
+### P0 - Critical
+- [ ] Follow-Up System Phase 2: Frontend fine-tuning (mobile view support in MobileTherapistView)
+- [ ] Follow-Up System Phase 3: Dashboard overview cards on TherapistOverview component
+- [ ] Production deployment login fix (blocked - platform issue)
+
 ### P1 - High Priority
+- [ ] Follow-Up System Phase 4: Client Portal improvements, Dropout Risk alerts
+- [ ] Follow-Up System Phase 5: Retention Analytics report deep-dive, Client Journey Timeline
 - [ ] Profile photo upload (Therapist & Client)
 - [ ] AI-powered SOAP/DAP note generation
-- [ ] N+1 Query in /api/clients (recurring performance issue)
+- [ ] N+1 Query in /api/clients (recurring performance issue - 5+ recurrences)
 
 ### P2 - Medium Priority
 - [ ] Usage tracking/rate limiting for AI features
@@ -95,9 +114,10 @@ Hindi (User communicates in Hindi/Hinglish)
 - [ ] Coupon code management backend
 
 ### Future Tasks
-- [ ] Google Calendar integration for automatic event creation
+- [ ] Google Calendar integration for automatic event creation (user deferred)
 - [ ] Voice input (Speech-to-Text) for session notes
 - [ ] Note templates sharing feature
+- [ ] Automated follow-up reminders (WhatsApp/Email)
 
 ## Key Technical Architecture
 
@@ -116,11 +136,13 @@ Hindi (User communicates in Hindi/Hinglish)
 - `/app/frontend/src/components/SessionNotes.js` - Session notes (accepts navContext)
 - `/app/frontend/src/components/Messaging.js` - Messaging with isolated MessageInput
 - `/app/frontend/src/components/ai-clinical/index.js` - TheraGenie AI (accepts navContext)
+- `/app/frontend/src/components/FollowUpDashboard.js` - Follow-up dashboard with analytics
+- `/app/backend/routes/follow_ups.py` - Follow-up Intelligence System APIs
 
 ### Test Credentials
 - Therapist: mobile=7275005007, password=Test@123
 - Client: mobile=9235555549, password=Test@123
-- Admin: username=admin, password=admin123
+- Super Admin: mobile=7275005000, password=Test@123
 
 ---
-Last Updated: March 6, 2026
+Last Updated: March 16, 2026
