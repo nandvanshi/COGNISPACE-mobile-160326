@@ -14,7 +14,8 @@ import {
   Search, Plus, Bell, ChevronRight, Clock, FileText,
   Phone, MessageSquare, Play, CheckCircle, AlertCircle,
   TrendingUp, User, LogOut, Settings, HelpCircle,
-  BookOpen, ClipboardList, Repeat, UserCog, Brain, Loader2, X
+  BookOpen, ClipboardList, Repeat, UserCog, Brain, Loader2, X,
+  CalendarPlus, UserX, AlertTriangle
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatCurrency, formatDate, formatTime } from '../../utils/formatUtils';
@@ -60,7 +61,7 @@ const BottomNav = ({ activeTab, onTabChange }) => {
 };
 
 // ============= HOME TAB =============
-const HomeTab = ({ stats, upcomingAppointments, pendingTasks, onStartSession, onViewClient, onQuickAction }) => {
+const HomeTab = ({ stats, upcomingAppointments, pendingTasks, onStartSession, onViewClient, onQuickAction, followUpSummary, onNavigateFollowUps }) => {
   const { user } = useAuth();
   
   const getGreeting = () => {
@@ -140,6 +141,41 @@ const HomeTab = ({ stats, upcomingAppointments, pendingTasks, onStartSession, on
           ))}
         </div>
       </div>
+
+      {/* Follow-Up Intelligence */}
+      {followUpSummary && (followUpSummary.overdue > 0 || followUpSummary.dropout_risk > 0 || followUpSummary.recommended > 0) && (
+        <Card 
+          className="p-4 rounded-2xl border-indigo-200 bg-indigo-50/50 cursor-pointer active:scale-[0.98] transition-transform"
+          onClick={onNavigateFollowUps}
+          data-testid="mobile-followup-card"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <CalendarPlus size={18} className="text-indigo-600" />
+              <span className="font-medium text-indigo-800 text-sm">Follow-Ups</span>
+            </div>
+            <ChevronRight size={16} className="text-indigo-400" />
+          </div>
+          <div className="grid grid-cols-4 gap-2">
+            <div className="text-center">
+              <p className="text-lg font-bold text-green-600">{followUpSummary.booked}</p>
+              <p className="text-[10px] text-green-700">Booked</p>
+            </div>
+            <div className="text-center">
+              <p className="text-lg font-bold text-blue-600">{followUpSummary.recommended}</p>
+              <p className="text-[10px] text-blue-700">Due</p>
+            </div>
+            <div className="text-center">
+              <p className={`text-lg font-bold ${followUpSummary.overdue > 0 ? 'text-red-600' : 'text-gray-400'}`}>{followUpSummary.overdue}</p>
+              <p className={`text-[10px] ${followUpSummary.overdue > 0 ? 'text-red-700' : 'text-gray-500'}`}>Overdue</p>
+            </div>
+            <div className="text-center">
+              <p className={`text-lg font-bold ${followUpSummary.dropout_risk > 0 ? 'text-orange-600' : 'text-gray-400'}`}>{followUpSummary.dropout_risk}</p>
+              <p className={`text-[10px] ${followUpSummary.dropout_risk > 0 ? 'text-orange-700' : 'text-gray-500'}`}>At Risk</p>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* Pending Tasks */}
       {pendingTasks.length > 0 && (
@@ -333,6 +369,7 @@ const MobileTherapistView = ({
   const [showAddClient, setShowAddClient] = useState(false);
   const [newClientData, setNewClientData] = useState({ full_name: '', mobile: '', email: '' });
   const [addingClient, setAddingClient] = useState(false);
+  const [followUpSummary, setFollowUpSummary] = useState(null);
 
   // Fetch dashboard data
   const fetchDashboardData = useCallback(async () => {
@@ -380,6 +417,12 @@ const MobileTherapistView = ({
         tasks.push({ title: `${statsData.pending_payments} payments pending` });
       }
       setPendingTasks(tasks);
+      
+      // Fetch follow-up summary
+      try {
+        const fuRes = await axios.get(`${API}/follow-ups/summary`);
+        setFollowUpSummary(fuRes.data);
+      } catch (e) { /* ignore */ }
       
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
@@ -507,6 +550,8 @@ const MobileTherapistView = ({
             onStartSession={handleStartSession}
             onViewClient={handleViewClient}
             onQuickAction={handleQuickAction}
+            followUpSummary={followUpSummary}
+            onNavigateFollowUps={() => onViewChange('follow-ups')}
           />
         )}
         {activeTab === 'clients' && (

@@ -928,21 +928,29 @@ const HomeTab = ({
           data-testid="followup-reminder-card"
         >
           <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${followUpRecommendation.is_overdue ? 'bg-red-100' : 'bg-blue-100'}`}>
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${followUpRecommendation.is_overdue ? 'bg-red-100' : 'bg-blue-100'}`}>
               <CalendarDays size={20} className={followUpRecommendation.is_overdue ? 'text-red-600' : 'text-blue-600'} />
             </div>
             <div className="flex-1">
               <p className={`text-xs font-medium ${followUpRecommendation.is_overdue ? 'text-red-600' : 'text-blue-600'}`}>
-                {followUpRecommendation.is_overdue ? 'Overdue Follow-Up' : 'Recommended Next Session'}
+                {followUpRecommendation.is_overdue ? 'Your follow-up session is overdue' : 'Your therapist recommends a session on'}
               </p>
               <p className="font-semibold text-gray-800">
                 {new Date(followUpRecommendation.recommended_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
               </p>
               {followUpRecommendation.notes && (
-                <p className="text-xs text-gray-500 mt-0.5">{followUpRecommendation.notes}</p>
+                <p className="text-xs text-gray-500 mt-0.5 italic">"{followUpRecommendation.notes}"</p>
               )}
             </div>
           </div>
+          <Button 
+            className={`w-full mt-3 rounded-xl gap-2 ${followUpRecommendation.is_overdue ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}
+            onClick={() => setActiveTab('appointments')}
+            data-testid="book-followup-btn"
+          >
+            <CalendarDays size={16} />
+            Book Your Session
+          </Button>
         </Card>
       )}
 

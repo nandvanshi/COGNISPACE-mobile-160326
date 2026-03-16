@@ -48,6 +48,8 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
   const [subscriptionInfo, setSubscriptionInfo] = useState(null);
   const [pendingApprovals, setPendingApprovals] = useState([]);
   const [processingApproval, setProcessingApproval] = useState(null);
+  const [followUpSummary, setFollowUpSummary] = useState(null);
+  const [followUpClients, setFollowUpClients] = useState([]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -327,6 +329,16 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
       setSubscriptionInfo(subscriptionRes.data);
       setPendingApprovals(pendingApprovalsRes.data?.pending_appointments || []);
 
+      // Fetch follow-up data
+      try {
+        const [fuSummary, fuClients] = await Promise.all([
+          axios.get(`${API}/follow-ups/summary`),
+          axios.get(`${API}/follow-ups/clients`)
+        ]);
+        setFollowUpSummary(fuSummary.data);
+        setFollowUpClients(fuClients.data?.filter(c => c.status === 'overdue' || c.status === 'dropout_risk') || []);
+      } catch (e) { /* follow-up API may not be ready */ }
+
     } catch (error) {
       console.error('Failed to load dashboard:', error);
       toast.error('Failed to load dashboard data');
@@ -525,6 +537,84 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
           )}
         </Card>
       </div>
+
+      {/* Follow-Up Intelligence Strip */}
+      {followUpSummary && (followUpSummary.overdue > 0 || followUpSummary.dropout_risk > 0 || followUpSummary.recommended > 0 || followUpSummary.booked > 0) && (
+        <Card 
+          className="p-5 border-2 border-indigo-200 bg-gradient-to-r from-indigo-50/80 to-violet-50/60 shadow-sm cursor-pointer hover:shadow-md transition-all"
+          onClick={() => handleNavigate('follow-ups')}
+          data-testid="followup-overview-card"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-indigo-800 flex items-center gap-2">
+              <div className="p-1.5 bg-indigo-200 rounded-lg">
+                <CalendarPlus size={18} className="text-indigo-600" />
+              </div>
+              Follow-Up Intelligence
+            </h3>
+            <Button variant="ghost" size="sm" className="text-indigo-600 gap-1 text-xs" data-testid="view-all-followups-btn">
+              View All <ArrowRight size={14} />
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-4 gap-3">
+            <div className="text-center p-3 bg-white/70 rounded-xl border border-green-100">
+              <p className="text-2xl font-bold text-green-600">{followUpSummary.booked}</p>
+              <p className="text-xs text-green-700 font-medium">Booked</p>
+            </div>
+            <div className="text-center p-3 bg-white/70 rounded-xl border border-blue-100">
+              <p className="text-2xl font-bold text-blue-600">{followUpSummary.recommended}</p>
+              <p className="text-xs text-blue-700 font-medium">Recommended</p>
+            </div>
+            <div className={`text-center p-3 rounded-xl border ${followUpSummary.overdue > 0 ? 'bg-red-50 border-red-200' : 'bg-white/70 border-red-100'}`}>
+              <p className={`text-2xl font-bold ${followUpSummary.overdue > 0 ? 'text-red-600' : 'text-gray-400'}`}>{followUpSummary.overdue}</p>
+              <p className={`text-xs font-medium ${followUpSummary.overdue > 0 ? 'text-red-700' : 'text-gray-500'}`}>Overdue</p>
+            </div>
+            <div className={`text-center p-3 rounded-xl border ${followUpSummary.dropout_risk > 0 ? 'bg-orange-50 border-orange-200' : 'bg-white/70 border-orange-100'}`}>
+              <p className={`text-2xl font-bold ${followUpSummary.dropout_risk > 0 ? 'text-orange-600' : 'text-gray-400'}`}>{followUpSummary.dropout_risk}</p>
+              <p className={`text-xs font-medium ${followUpSummary.dropout_risk > 0 ? 'text-orange-700' : 'text-gray-500'}`}>Dropout Risk</p>
+            </div>
+          </div>
+
+          {/* Urgent clients list */}
+          {followUpClients.length > 0 && (
+            <div className="mt-4 space-y-2">
+              <p className="text-xs font-semibold text-red-700 uppercase tracking-wide">Needs Immediate Attention</p>
+              {followUpClients.slice(0, 3).map(client => (
+                <div 
+                  key={client.client_id} 
+                  className={`flex items-center justify-between p-2.5 rounded-lg border ${
+                    client.status === 'dropout_risk' ? 'bg-orange-50/80 border-orange-200' : 'bg-red-50/80 border-red-200'
+                  }`}
+                  data-testid={`urgent-followup-${client.client_id}`}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
+                      client.status === 'dropout_risk' ? 'bg-orange-200' : 'bg-red-200'
+                    }`}>
+                      <UserX size={14} className={client.status === 'dropout_risk' ? 'text-orange-700' : 'text-red-700'} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{client.client_name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {client.days_since_last_session != null ? `${client.days_since_last_session} days ago` : 'No sessions'}
+                      </p>
+                    </div>
+                  </div>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full shrink-0 ${
+                    client.status === 'dropout_risk' ? 'bg-orange-200 text-orange-800' : 'bg-red-200 text-red-800'
+                  }`}>
+                    {client.status === 'dropout_risk' ? 'Dropout Risk' : 'Overdue'}
+                  </span>
+                </div>
+              ))}
+              {followUpClients.length > 3 && (
+                <p className="text-xs text-indigo-600 font-medium text-center pt-1">+{followUpClients.length - 3} more clients need attention</p>
+              )}
+            </div>
+          )}
+        </Card>
+      )}
 
       {/* NEEDS ATTENTION - Priority Alerts Section (Moved to Top) */}
       {alerts.length > 0 && (

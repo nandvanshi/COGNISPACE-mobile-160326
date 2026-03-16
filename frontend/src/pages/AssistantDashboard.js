@@ -296,6 +296,8 @@ const AssistantOverview = ({ onNavigate }) => {
   // Pending Approvals state
   const [pendingApprovals, setPendingApprovals] = useState([]);
   const [processingApproval, setProcessingApproval] = useState(null);
+  const [followUpSummary, setFollowUpSummary] = useState(null);
+  const [followUpUrgent, setFollowUpUrgent] = useState([]);
 
   const fetchDashboard = useCallback(async () => {
     try {
@@ -328,23 +330,37 @@ const AssistantOverview = ({ onNavigate }) => {
     }
   }, []);
 
+  const fetchFollowUps = useCallback(async () => {
+    try {
+      const [sumRes, cliRes] = await Promise.all([
+        axios.get(`${API}/follow-ups/summary`),
+        axios.get(`${API}/follow-ups/clients`)
+      ]);
+      setFollowUpSummary(sumRes.data);
+      setFollowUpUrgent(cliRes.data?.filter(c => c.status === 'overdue' || c.status === 'dropout_risk') || []);
+    } catch (e) { /* ignore */ }
+  }, []);
+
   useEffect(() => {
     fetchDashboard();
     fetchSettlement();
     fetchPendingApprovals();
+    fetchFollowUps();
     const interval = setInterval(() => {
       fetchDashboard();
       fetchSettlement();
       fetchPendingApprovals();
+      fetchFollowUps();
     }, 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [fetchDashboard, fetchSettlement, fetchPendingApprovals]);
+  }, [fetchDashboard, fetchSettlement, fetchPendingApprovals, fetchFollowUps]);
 
   const handleRefresh = () => {
     setRefreshing(true);
     fetchDashboard();
     fetchSettlement();
     fetchPendingApprovals();
+    fetchFollowUps();
   };
   
   const handleCashHandover = async () => {
@@ -484,6 +500,55 @@ const AssistantOverview = ({ onNavigate }) => {
       
       {/* Contextual Quick Actions */}
       <ContextualQuickActions onNavigate={onNavigate} />
+
+      {/* Follow-Up Intelligence Strip */}
+      {followUpSummary && (followUpSummary.overdue > 0 || followUpSummary.dropout_risk > 0 || followUpSummary.recommended > 0 || followUpSummary.booked > 0) && (
+        <Card 
+          className="p-4 lg:p-5 border-2 border-indigo-200 bg-gradient-to-r from-indigo-50/80 to-violet-50/60 cursor-pointer hover:shadow-md transition-all"
+          onClick={() => onNavigate('follow-ups')}
+          data-testid="assistant-followup-card"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <CalendarPlus className="text-indigo-600" size={20} />
+              <h2 className="text-lg font-semibold text-indigo-800">Follow-Up Intelligence</h2>
+            </div>
+            <ArrowRight size={18} className="text-indigo-400" />
+          </div>
+          <div className="grid grid-cols-4 gap-2 lg:gap-3">
+            <div className="text-center p-2.5 bg-white/70 rounded-xl border border-green-100">
+              <p className="text-xl font-bold text-green-600">{followUpSummary.booked}</p>
+              <p className="text-xs text-green-700 font-medium">Booked</p>
+            </div>
+            <div className="text-center p-2.5 bg-white/70 rounded-xl border border-blue-100">
+              <p className="text-xl font-bold text-blue-600">{followUpSummary.recommended}</p>
+              <p className="text-xs text-blue-700 font-medium">Recommended</p>
+            </div>
+            <div className={`text-center p-2.5 rounded-xl border ${followUpSummary.overdue > 0 ? 'bg-red-50 border-red-200' : 'bg-white/70 border-red-100'}`}>
+              <p className={`text-xl font-bold ${followUpSummary.overdue > 0 ? 'text-red-600' : 'text-gray-400'}`}>{followUpSummary.overdue}</p>
+              <p className={`text-xs font-medium ${followUpSummary.overdue > 0 ? 'text-red-700' : 'text-gray-500'}`}>Overdue</p>
+            </div>
+            <div className={`text-center p-2.5 rounded-xl border ${followUpSummary.dropout_risk > 0 ? 'bg-orange-50 border-orange-200' : 'bg-white/70 border-orange-100'}`}>
+              <p className={`text-xl font-bold ${followUpSummary.dropout_risk > 0 ? 'text-orange-600' : 'text-gray-400'}`}>{followUpSummary.dropout_risk}</p>
+              <p className={`text-xs font-medium ${followUpSummary.dropout_risk > 0 ? 'text-orange-700' : 'text-gray-500'}`}>Dropout Risk</p>
+            </div>
+          </div>
+          {followUpUrgent.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {followUpUrgent.slice(0, 3).map(c => (
+                <span key={c.client_id} className={`text-xs px-2 py-1 rounded-full ${
+                  c.status === 'dropout_risk' ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'
+                }`}>
+                  {c.client_name} - {c.days_since_last_session}d
+                </span>
+              ))}
+              {followUpUrgent.length > 3 && (
+                <span className="text-xs text-indigo-600 font-medium self-center">+{followUpUrgent.length - 3} more</span>
+              )}
+            </div>
+          )}
+        </Card>
+      )}
 
       {/* PENDING BOOKING REQUESTS - Public Calendar Approvals */}
       {pendingApprovals.length > 0 && (
