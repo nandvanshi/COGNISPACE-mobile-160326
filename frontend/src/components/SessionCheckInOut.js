@@ -8,10 +8,12 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Calendar as CalendarWidget } from './ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { toast } from 'sonner';
 import { 
   PlayCircle, StopCircle, Clock, CreditCard, CheckCircle, 
-  AlertCircle, User, Calendar, Loader2, Receipt
+  AlertCircle, User, Calendar, Loader2, Receipt, CalendarPlus
 } from 'lucide-react';
 import { formatDate, formatTime, formatCurrency } from '../utils/formatUtils';
 
@@ -42,6 +44,12 @@ export const SessionActionButtons = ({ appointment, onRefresh, isReadOnly = fals
   // Result state
   const [checkOutResult, setCheckOutResult] = useState(null);
   const [showReceiptDialog, setShowReceiptDialog] = useState(false);
+  
+  // Follow-up recommendation state
+  const [recommendFollowUp, setRecommendFollowUp] = useState(false);
+  const [followUpDate, setFollowUpDate] = useState(null);
+  const [followUpNotes, setFollowUpNotes] = useState('');
+  const [followUpCalendarOpen, setFollowUpCalendarOpen] = useState(false);
 
   const handleCheckIn = async () => {
     setLoading(true);
@@ -76,6 +84,23 @@ export const SessionActionButtons = ({ appointment, onRefresh, isReadOnly = fals
       
       toast.success(`Session completed! Duration: ${response.data.actual_duration_minutes} minutes`);
       
+      // Submit follow-up recommendation if set
+      if (recommendFollowUp && followUpDate) {
+        try {
+          const dateStr = followUpDate.toISOString().split('T')[0];
+          await axios.post(`${API}/follow-ups/recommend`, {
+            client_id: appointment.client_id,
+            recommended_date: dateStr,
+            notes: followUpNotes || '',
+            session_id: appointment.id
+          });
+          toast.success('Follow-up recommendation saved');
+        } catch (fuErr) {
+          console.error('Follow-up save failed:', fuErr);
+          toast.error('Follow-up recommendation could not be saved');
+        }
+      }
+      
       if (recordPayment && response.data.payment) {
         setCheckOutResult(response.data);
         setShowReceiptDialog(true);
@@ -98,6 +123,9 @@ export const SessionActionButtons = ({ appointment, onRefresh, isReadOnly = fals
     setPaymentMode('cash');
     setPaymentStatus('paid');
     setPaymentNotes('');
+    setRecommendFollowUp(false);
+    setFollowUpDate(null);
+    setFollowUpNotes('');
   };
 
   // Don't show for cancelled or completed appointments
@@ -278,10 +306,66 @@ export const SessionActionButtons = ({ appointment, onRefresh, isReadOnly = fals
             )}
           </div>
 
+          {/* Follow-Up Recommendation Section */}
+          <div className="border-t pt-4">
+            <div className="flex items-center gap-2 mb-3">
+              <input
+                type="checkbox"
+                id="recommendFollowUp"
+                checked={recommendFollowUp}
+                onChange={(e) => setRecommendFollowUp(e.target.checked)}
+                className="rounded border-gray-300"
+                data-testid="recommend-followup-checkbox"
+              />
+              <Label htmlFor="recommendFollowUp" className="cursor-pointer flex items-center gap-2">
+                <CalendarPlus size={16} /> Recommend Next Session
+              </Label>
+            </div>
+
+            {recommendFollowUp && (
+              <div className="space-y-3 p-3 bg-muted/30 rounded-lg">
+                <div>
+                  <Label>Recommended Date</Label>
+                  <Popover open={followUpCalendarOpen} onOpenChange={setFollowUpCalendarOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full mt-1 justify-start text-left font-normal"
+                        data-testid="followup-date-picker"
+                      >
+                        <Calendar size={14} className="mr-2" />
+                        {followUpDate ? followUpDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Select date'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarWidget
+                        mode="single"
+                        selected={followUpDate}
+                        onSelect={(d) => { setFollowUpDate(d); setFollowUpCalendarOpen(false); }}
+                        disabled={(date) => date < new Date()}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div>
+                  <Label>Notes (optional)</Label>
+                  <Input
+                    value={followUpNotes}
+                    onChange={(e) => setFollowUpNotes(e.target.value)}
+                    placeholder="e.g., Continue CBT exercises, weekly session..."
+                    className="mt-1"
+                    data-testid="followup-notes-input"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="flex gap-2">
             <Button 
-              onClick={handleCheckOut} 
-              disabled={loading || (recordPayment && !paymentAmount)}
+              onClick={handleCheckOut}
+              disabled={loading || (recordPayment && !paymentAmount) || (recommendFollowUp && !followUpDate)}
               className="flex-1 bg-red-600 hover:bg-red-700"
             >
               {loading ? <Loader2 className="animate-spin mr-2" size={16} /> : <StopCircle size={16} className="mr-2" />}

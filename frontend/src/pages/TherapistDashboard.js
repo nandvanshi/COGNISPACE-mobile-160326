@@ -7,7 +7,7 @@ import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Textarea } from '../components/ui/textarea';
 import { Label } from '../components/ui/label';
-import { LogOut, Users, Calendar, FileText, MessageSquare, ClipboardList, BookOpen, DollarSign, Home, AlertTriangle, Clock, Repeat, UserCog, Brain, Settings as SettingsIcon, Sparkles, Menu, X, ChevronDown, CalendarDays, AlertCircle, HandCoins, CheckCircle2, XCircle, Lock, RefreshCw, HelpCircle, UserCircle, BarChart2 } from 'lucide-react';
+import { LogOut, Users, Calendar, FileText, MessageSquare, ClipboardList, BookOpen, DollarSign, Home, AlertTriangle, Clock, Repeat, UserCog, Brain, Settings as SettingsIcon, Sparkles, Menu, X, ChevronDown, CalendarDays, AlertCircle, HandCoins, CheckCircle2, XCircle, Lock, RefreshCw, HelpCircle, UserCircle, BarChart2, CalendarPlus } from 'lucide-react';
 import TherapistOverview from '../components/TherapistOverview';
 import ClientManagement from '../components/ClientManagement';
 import ClientProfilePage from '../components/ClientProfilePage';
@@ -28,6 +28,7 @@ import SubscriptionInfo from '../components/SubscriptionInfo';
 import Settings from '../components/Settings';
 import NotificationBell from '../components/NotificationBell';
 import MobileTherapistView from '../components/therapist/MobileTherapistView';
+import FollowUpDashboard from '../components/FollowUpDashboard';
 import { toast } from 'sonner';
 import { formatCurrency } from '../utils/formatUtils';
 
@@ -185,6 +186,7 @@ const TherapistDashboard = () => {
     {
       label: 'Operations',
       items: [
+        { id: 'follow-ups', label: 'Follow-Ups', icon: CalendarPlus },
         { id: 'availability', label: 'Availability', icon: Clock },
         { id: 'recurring', label: 'Recurring', icon: Repeat },
         { id: 'payments', label: 'Payments', icon: DollarSign, feature: 'payments' },
@@ -314,7 +316,8 @@ const TherapistDashboard = () => {
         currentView === 'recurring' || currentView === 'assistants' || currentView === 'profile' ||
         currentView === 'support' || currentView === 'notes' || currentView === 'ai-support' ||
         currentView === 'messages' || currentView === 'protocols' || currentView === 'assessments' ||
-        currentView === 'payment-reports' || currentView === 'homework-templates' || currentView === 'resource-library') {
+        currentView === 'payment-reports' || currentView === 'homework-templates' || currentView === 'resource-library' ||
+        currentView === 'follow-ups') {
       return (
         <div className="min-h-screen bg-gray-50 pb-20">
           <header className="sticky top-0 z-40 bg-white border-b border-gray-100 px-4 py-3">
@@ -354,6 +357,7 @@ const TherapistDashboard = () => {
             {currentView === 'payment-reports' && <PaymentReports />}
             {currentView === 'homework-templates' && <AIClinicalSupport isReadOnly={isReadOnly} navContext={navContext} initialTab="homework" />}
             {currentView === 'resource-library' && <AIClinicalSupport isReadOnly={isReadOnly} navContext={navContext} initialTab="resources" />}
+            {currentView === 'follow-ups' && <FollowUpDashboard onNavigateToClient={(cid) => navigate(`/therapist/clients/${cid}`)} />}
           </main>
           {/* Back to home button */}
           <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 safe-area-bottom">
@@ -698,6 +702,7 @@ const TherapistDashboard = () => {
           {currentView === 'profile' && <TherapistProfileSettings isReadOnly={isReadOnly} />}
           {currentView === 'subscription' && <SubscriptionInfo />}
           {currentView === 'support' && <SupportTickets />}
+          {currentView === 'follow-ups' && <FollowUpDashboard onNavigateToClient={(cid) => navigate(`/therapist/clients/${cid}`)} />}
         </div>
       </main>
 

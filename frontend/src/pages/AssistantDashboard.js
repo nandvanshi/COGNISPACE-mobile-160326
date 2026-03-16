@@ -21,6 +21,7 @@ import ClientProfilePage from '../components/ClientProfilePage';
 import TherapistSchedule from '../components/TherapistSchedule';
 import Payments from '../components/Payments';
 import NotificationBell from '../components/NotificationBell';
+import FollowUpDashboard from '../components/FollowUpDashboard';
 import { toast } from 'sonner';
 import { formatDate, formatTime, formatCurrency } from '../utils/formatUtils';
 
@@ -814,6 +815,7 @@ const BottomNavigation = ({ currentView, onNavigate }) => {
     { id: 'overview', label: 'Home', icon: Home },
     { id: 'clients', label: 'Clients', icon: Users },
     { id: 'schedule', label: 'Schedule', icon: CalendarDays },
+    { id: 'follow-ups', label: 'Follow-Ups', icon: CalendarPlus },
     { id: 'payments', label: 'Payments', icon: DollarSign },
   ];
 
@@ -822,7 +824,7 @@ const BottomNavigation = ({ currentView, onNavigate }) => {
       className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-border z-50 safe-area-pb"
       data-testid="bottom-navigation"
     >
-      <div className="grid grid-cols-4 h-16">
+      <div className="grid grid-cols-5 h-16">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentView === item.id;
@@ -882,6 +884,7 @@ const AssistantDashboard = () => {
     { id: 'overview', label: 'Home', icon: Home },
     { id: 'clients', label: 'Clients', icon: Users },
     { id: 'schedule', label: 'Schedule', icon: CalendarDays },
+    { id: 'follow-ups', label: 'Follow-Ups', icon: CalendarPlus },
     { id: 'payments', label: 'Payments', icon: DollarSign },
   ];
 
@@ -1000,6 +1003,11 @@ const AssistantDashboard = () => {
           {currentView === 'payments' && (
             <div className="pb-20 lg:pb-0">
               <Payments isReadOnly={isReadOnly} />
+            </div>
+          )}
+          {currentView === 'follow-ups' && (
+            <div className="pb-20 lg:pb-0">
+              <FollowUpDashboard onNavigateToClient={(cid) => navigate(`/assistant/clients/${cid}`)} />
             </div>
           )}
         </div>

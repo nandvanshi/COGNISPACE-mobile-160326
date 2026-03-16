@@ -45,6 +45,7 @@ from routes.diagnostic_reports import router as diagnostic_reports_router, setup
 from routes.resources import router as resources_router, setup_resources
 from routes.public_booking import router as public_booking_router
 from routes.admin_content import router as admin_content_router
+from routes.follow_ups import router as follow_ups_router
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -1163,6 +1164,7 @@ app.include_router(notifications_router, prefix="/api")
 app.include_router(notification_settings_router, prefix="/api")
 app.include_router(scheduler_admin_router, prefix="/api")
 app.include_router(admin_content_router, prefix="/api")
+app.include_router(follow_ups_router, prefix="/api")
 
 
 # ============= USER PREFERENCES (Direct route for all users) =============

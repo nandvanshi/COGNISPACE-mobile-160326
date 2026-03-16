@@ -96,6 +96,7 @@ const ClientDashboard = () => {
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [requestingAppointment, setRequestingAppointment] = useState(false);
+  const [followUpRecommendation, setFollowUpRecommendation] = useState(null);
 
   useEffect(() => {
     checkConsentStatus();
@@ -156,6 +157,12 @@ const ClientDashboard = () => {
       try {
         const reportsRes = await axios.get(`${API}/diagnostic-reports`);
         setDiagnosticReports(reportsRes.data || []);
+      } catch (e) { /* ignore */ }
+      
+      // Fetch follow-up recommendation
+      try {
+        const fuRes = await axios.get(`${API}/follow-ups/my-recommendation`);
+        setFollowUpRecommendation(fuRes.data);
       } catch (e) { /* ignore */ }
       
       // Get therapist name
@@ -494,6 +501,7 @@ const ClientDashboard = () => {
           onCompleteAssessment={handleCompleteAssessment}
           onViewResource={handleViewResource}
           setActiveTab={setActiveTab}
+          followUpRecommendation={followUpRecommendation}
         />;
       case 'appointments':
         return <AppointmentsTab 
@@ -867,7 +875,8 @@ const ClientDashboard = () => {
 const HomeTab = ({ 
   greeting, user, therapistName, upcomingAppointments, 
   pendingHomework, pendingAssessments, unviewedResources,
-  onCompleteHomework, onCompleteAssessment, onViewResource, setActiveTab 
+  onCompleteHomework, onCompleteAssessment, onViewResource, setActiveTab,
+  followUpRecommendation
 }) => {
   const nextAppointment = upcomingAppointments[0];
   
@@ -908,6 +917,31 @@ const HomeTab = ({
               </div>
             </div>
             <ChevronRight size={20} className="text-gray-400" />
+          </div>
+        </Card>
+      )}
+
+      {/* Follow-Up Reminder */}
+      {followUpRecommendation?.has_recommendation && !nextAppointment && (
+        <Card 
+          className={`p-4 rounded-2xl border ${followUpRecommendation.is_overdue ? 'border-red-200 bg-red-50/50' : 'border-blue-200 bg-blue-50/50'}`}
+          data-testid="followup-reminder-card"
+        >
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${followUpRecommendation.is_overdue ? 'bg-red-100' : 'bg-blue-100'}`}>
+              <CalendarDays size={20} className={followUpRecommendation.is_overdue ? 'text-red-600' : 'text-blue-600'} />
+            </div>
+            <div className="flex-1">
+              <p className={`text-xs font-medium ${followUpRecommendation.is_overdue ? 'text-red-600' : 'text-blue-600'}`}>
+                {followUpRecommendation.is_overdue ? 'Overdue Follow-Up' : 'Recommended Next Session'}
+              </p>
+              <p className="font-semibold text-gray-800">
+                {new Date(followUpRecommendation.recommended_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+              </p>
+              {followUpRecommendation.notes && (
+                <p className="text-xs text-gray-500 mt-0.5">{followUpRecommendation.notes}</p>
+              )}
+            </div>
           </div>
         </Card>
       )}
