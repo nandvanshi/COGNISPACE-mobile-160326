@@ -98,19 +98,27 @@ Hindi (User communicates in Hindi/Hinglish)
 - [x] ClientDashboard: Enhanced follow-up reminder with "Book Your Session" CTA button, overdue/recommended differentiation
 - [x] Testing: 14/14 backend tests pass, all frontend code verified
 
+### March 16, 2026 - Follow-Up Intelligence System (Phase 5) + Automated Reminders
+- [x] Client Journey Timeline: API returns complete history (sessions, assessments, recommendations, reminders), new tab in Client Profile
+- [x] Deep Retention Analytics: Per-client metrics (session count, avg gap, days since last visit) + global averages
+- [x] Follow-Up Reminder Settings: Therapist can toggle Email/WhatsApp reminders on/off via Settings
+- [x] 4 Email Templates: 2-day before, same day, 1-week missed, 30-day re-engagement (warm, positive tone)
+- [x] Automated Scheduler Job: Runs every 30 min, sends Email reminders based on recommendation dates
+- [x] WhatsApp reminder structure ready (pending Twilio template approval)
+- [x] Testing: 21/22 backend tests pass, all frontend code verified
+
 ## Pending Tasks
 
 ### P0 - Critical
-- [ ] Follow-Up System Phase 5: Retention Analytics deep-dive, Client Journey Timeline
 - [ ] Production deployment login fix (blocked - platform issue)
 
 ### P1 - High Priority
-- [ ] Automated follow-up reminders (WhatsApp/Email for unbooked follow-ups)
 - [ ] Profile photo upload (Therapist & Client)
 - [ ] AI-powered SOAP/DAP note generation
 - [ ] N+1 Query in /api/clients (recurring performance issue - 5+ recurrences)
 
 ### P2 - Medium Priority
+- [ ] WhatsApp follow-up templates (awaiting Twilio approval from user)
 - [ ] Usage tracking/rate limiting for AI features
 - [ ] Homework Templates & Resource Library management (Global templates)
 - [ ] Coupon code management backend
