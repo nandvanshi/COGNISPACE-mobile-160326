@@ -115,7 +115,7 @@ Hindi (User communicates in Hindi/Hinglish)
 ### P1 - High Priority
 - [ ] Profile photo upload (Therapist & Client)
 - [ ] AI-powered SOAP/DAP note generation
-- [ ] N+1 Query in /api/clients (recurring performance issue - 5+ recurrences)
+- [ ] N+1 Query in /api/clients - FIXED (batch $in query)
 
 ### P2 - Medium Priority
 - [ ] WhatsApp follow-up templates (awaiting Twilio approval from user)

@@ -194,9 +194,20 @@ async def get_clients(current_user: dict = Depends(require_therapist_or_assistan
     
     profiles = await db.client_profiles.find({"therapist_id": therapist_id}, {"_id": 0}).to_list(1000)
     
+    if not profiles:
+        return []
+    
+    # Single batch query for all users instead of N individual queries
+    user_ids = [p["user_id"] for p in profiles]
+    users = await db.users.find(
+        {"id": {"$in": user_ids}},
+        {"_id": 0, "password_hash": 0}
+    ).to_list(1000)
+    user_map = {u["id"]: u for u in users}
+    
     result = []
     for profile in profiles:
-        user = await db.users.find_one({"id": profile["user_id"]}, {"_id": 0, "password_hash": 0})
+        user = user_map.get(profile["user_id"])
         if user:
             result.append(ClientProfile(
                 id=user["id"],
@@ -248,9 +259,19 @@ async def get_new_registrations(current_user: dict = Depends(require_therapist_o
         "registration_acknowledged": {"$ne": True}
     }, {"_id": 0}).to_list(100)
     
+    if not profiles:
+        return []
+    
+    user_ids = [p["user_id"] for p in profiles]
+    users = await db.users.find(
+        {"id": {"$in": user_ids}},
+        {"_id": 0, "password_hash": 0}
+    ).to_list(100)
+    user_map = {u["id"]: u for u in users}
+    
     result = []
     for profile in profiles:
-        user = await db.users.find_one({"id": profile["user_id"]}, {"_id": 0, "password_hash": 0})
+        user = user_map.get(profile["user_id"])
         if user:
             result.append({
                 "id": user["id"],
