@@ -115,7 +115,12 @@ Hindi (User communicates in Hindi/Hinglish)
 ### P1 - High Priority
 - [ ] Profile photo upload (Therapist & Client)
 - [ ] AI-powered SOAP/DAP note generation
-- [ ] N+1 Query in /api/clients - FIXED (batch $in query)
+### March 16, 2026 - Voice Input (Speech-to-Text) + N+1 Fix
+- [x] Browser-based Whisper STT via @xenova/transformers (free, privacy-first, no API cost)
+- [x] VoiceTextarea drop-in component with mic button on every textarea
+- [x] Integrated in: SessionNotes, CaseHistoryForm, ClientManagement, Assessments, ClientProfileView, SessionCheckInOut
+- [x] Lazy model loading (whisper-tiny, ~40MB, cached after first use)
+- [x] N+1 Query fixed in /api/clients and /api/clients/new-registrations (batch $in query)
 
 ### P2 - Medium Priority
 - [ ] WhatsApp follow-up templates (awaiting Twilio approval from user)
