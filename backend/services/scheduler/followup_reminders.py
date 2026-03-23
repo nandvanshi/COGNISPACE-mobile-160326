@@ -178,13 +178,28 @@ async def check_followup_reminders(db):
                 except Exception as e:
                     logger.error(f"Follow-up email error: {e}")
 
-            # Send WhatsApp if enabled (placeholder - template needs Twilio approval)
+            # Send WhatsApp if enabled using approved Twilio template
             if whatsapp_enabled and client.get("mobile"):
                 try:
-                    from services.whatsapp.service import WhatsAppService
-                    # WhatsApp template sending would go here once approved
-                    # For now, log intent
-                    logger.info(f"WhatsApp follow-up {reminder_type} would be sent to {client.get('mobile')} (template pending approval)")
+                    from services.whatsapp.registry import WhatsAppProviderRegistry
+
+                    provider = WhatsAppProviderRegistry.get_provider("twilio")
+                    if provider and provider.is_available:
+                        result = await provider.send_template_message(
+                            to_mobile=client["mobile"],
+                            content_sid="HX0862a0816754c283b879c246f344c197",
+                            content_variables={
+                                "1": client.get("full_name", ""),
+                                "2": therapist.get("full_name", ""),
+                                "3": rec_date.strftime("%d %B %Y")
+                            }
+                        )
+                        if result.success:
+                            logger.info(f"WhatsApp follow-up reminder sent to {client.get('mobile')}")
+                        else:
+                            logger.warning(f"WhatsApp follow-up failed for {client.get('mobile')}: {result.error}")
+                    else:
+                        logger.debug("WhatsApp provider not available")
                 except Exception as e:
                     logger.error(f"WhatsApp follow-up error: {e}")
 
