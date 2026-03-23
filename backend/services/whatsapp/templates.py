@@ -42,7 +42,7 @@ TEMPLATE_APPOINTMENT_REQUEST = {
 # 6. Therapist - Daily Schedule
 TEMPLATE_DAILY_SCHEDULE = {
     "name": "cogni_t_daysh",
-    "sid": "HX6fe00bbd875b0522c74189f193536",
+    "sid": "HX6fe00bbd875b0522c74189f193536871",
     "variables": ["therapist_name", "date", "schedule_block"],
 }
 
