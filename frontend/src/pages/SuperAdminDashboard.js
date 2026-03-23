@@ -4,7 +4,7 @@ import axios from 'axios';
 import { useAuth, API } from '../App';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
-import { LogOut, Users, UserCheck, UserCog, CreditCard, Tag, Settings as SettingsIcon, MessageSquare, Home, Library } from 'lucide-react';
+import { LogOut, Users, UserCheck, UserCog, CreditCard, Tag, Settings as SettingsIcon, MessageSquare, Home, Library, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 import AdminOverview from '../components/admin/AdminOverview';
 import TherapistApplications from '../components/admin/TherapistApplications';
@@ -14,6 +14,7 @@ import SubscriptionManagement from '../components/admin/SubscriptionManagement';
 import CouponManagement from '../components/admin/CouponManagement';
 import AdminSupportTickets from '../components/admin/AdminSupportTickets';
 import AdminContentLibrary from '../components/admin/AdminContentLibrary';
+import AdminEmailBroadcast from '../components/admin/AdminEmailBroadcast';
 import Settings from '../components/Settings';
 
 const SuperAdminDashboard = () => {
@@ -46,6 +47,7 @@ const SuperAdminDashboard = () => {
     { id: 'coupons', label: 'Coupon Codes', icon: Tag },
     { id: 'support', label: 'Support Tickets', icon: MessageSquare },
     { id: 'content-library', label: 'Content Library', icon: Library },
+    { id: 'email-broadcast', label: 'Email Broadcast', icon: Mail },
   ];
 
   const handleLogout = () => {
@@ -127,6 +129,7 @@ const SuperAdminDashboard = () => {
           {currentView === 'coupons' && <CouponManagement />}
           {currentView === 'support' && <AdminSupportTickets />}
           {currentView === 'content-library' && <AdminContentLibrary />}
+          {currentView === 'email-broadcast' && <AdminEmailBroadcast />}
         </div>
       </main>
 
