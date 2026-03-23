@@ -866,7 +866,7 @@ class NotificationService:
                 client_name = appt.get('client_name', 'Client')
                 appt_time = appt.get('time', 'N/A')
                 schedule_lines.append(f"{idx}. {client_name} - {appt_time}")
-            schedule_block = ", ".join(schedule_lines)
+            schedule_block = " | ".join(schedule_lines)
         
         try:
             result = await WhatsAppService.send_template_message(
