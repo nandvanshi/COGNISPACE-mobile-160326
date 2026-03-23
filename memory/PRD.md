@@ -115,12 +115,15 @@ Hindi (User communicates in Hindi/Hinglish)
 ### P1 - High Priority
 - [ ] Profile photo upload (Therapist & Client)
 - [ ] AI-powered SOAP/DAP note generation
-### March 16, 2026 - Voice Input (Speech-to-Text) + N+1 Fix
-- [x] Browser-based Whisper STT via @xenova/transformers (free, privacy-first, no API cost)
-- [x] VoiceTextarea drop-in component with mic button on every textarea
-- [x] Integrated in: SessionNotes, CaseHistoryForm, ClientManagement, Assessments, ClientProfileView, SessionCheckInOut
-- [x] Lazy model loading (whisper-tiny, ~40MB, cached after first use)
-- [x] N+1 Query fixed in /api/clients and /api/clients/new-registrations (batch $in query)
+### March 23, 2026 - WhatsApp Template Fix + Admin Email Broadcast
+- [x] Fixed WhatsApp daily schedule template SID (was truncated 31→34 chars)
+- [x] Fixed WhatsApp content variables newline issue (pipe-separated format)
+- [x] Integrated approved WhatsApp follow-up template (cogn_shrem)
+- [x] Admin Email Broadcast: AI-powered email composer in Super Admin Panel
+- [x] Recipients: All therapists, All clients, By plan, Specific users
+- [x] AI Draft Generator (Claude) with tone/audience controls
+- [x] Email history tracking with broadcast logs
+- [x] Testing: 16/16 backend tests pass, frontend verified
 
 ### P2 - Medium Priority
 - [ ] WhatsApp follow-up templates (awaiting Twilio approval from user)
