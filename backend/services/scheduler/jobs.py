@@ -23,21 +23,20 @@ async def check_appointment_reminders(db):
     try:
         now = datetime.now(timezone.utc)
         
-        # Time windows for reminders (use format matching database: YYYY-MM-DDTHH:MM:SSZ)
+        # Time windows for reminders
         reminder_60_start = now + timedelta(minutes=55)
         reminder_60_end = now + timedelta(minutes=65)
         reminder_30_start = now + timedelta(minutes=25)
         reminder_30_end = now + timedelta(minutes=35)
         
-        # Format to match database UTC format (without +00:00 offset)
-        fmt = "%Y-%m-%dT%H:%M:%S"
+        # Use .isoformat() to match database storage format (includes +00:00)
         
         # Find appointments needing 60-minute reminder
         appointments_60 = await db.appointments.find({
             "status": "scheduled",
             "start_time": {
-                "$gte": reminder_60_start.strftime(fmt),
-                "$lt": reminder_60_end.strftime(fmt)
+                "$gte": reminder_60_start.isoformat(),
+                "$lt": reminder_60_end.isoformat()
             },
             "reminder_60_sent": {"$ne": True}
         }, {"_id": 0}).to_list(100)
@@ -46,8 +45,8 @@ async def check_appointment_reminders(db):
         appointments_30 = await db.appointments.find({
             "status": "scheduled",
             "start_time": {
-                "$gte": reminder_30_start.strftime(fmt),
-                "$lt": reminder_30_end.strftime(fmt)
+                "$gte": reminder_30_start.isoformat(),
+                "$lt": reminder_30_end.isoformat()
             },
             "reminder_30_sent": {"$ne": True}
         }, {"_id": 0}).to_list(100)
@@ -181,14 +180,11 @@ async def check_pending_session_notes(db):
         # Find completed appointments without notes (completed in last 24 hours)
         twenty_four_hours_ago = now - timedelta(hours=24)
         
-        # Use format matching database UTC format
-        fmt = "%Y-%m-%dT%H:%M:%S"
-        
         completed_appointments = await db.appointments.find({
             "status": "completed",
             "end_time": {
-                "$gte": twenty_four_hours_ago.strftime(fmt),
-                "$lt": one_hour_ago.strftime(fmt)
+                "$gte": twenty_four_hours_ago.isoformat(),
+                "$lt": one_hour_ago.isoformat()
             },
             "note_reminder_sent": {"$ne": True}
         }, {"_id": 0}).to_list(100)
@@ -284,9 +280,6 @@ async def check_subscription_expiry(db):
     try:
         now = datetime.now(timezone.utc)
         
-        # Use format matching database UTC format
-        fmt = "%Y-%m-%dT%H:%M:%S"
-        
         # Define warning windows
         warning_days = [7, 3, 1]
         
@@ -299,8 +292,8 @@ async def check_subscription_expiry(db):
             expiring_subs = await db.subscriptions.find({
                 "status": {"$in": ["trial", "active"]},
                 "end_date": {
-                    "$gte": target_start.strftime(fmt),
-                    "$lte": target_end.strftime(fmt)
+                    "$gte": target_start.isoformat(),
+                    "$lte": target_end.isoformat()
                 },
                 f"expiry_warning_{days}d_sent": {"$ne": True}
             }, {"_id": 0}).to_list(100)
@@ -378,20 +371,15 @@ async def send_morning_schedule_briefing(db):
     logger.info("Running morning daily summary briefing...")
     
     try:
-        # Get today's date in IST for display
-        now_ist = datetime.now(IST)
-        today_start_ist = now_ist.replace(hour=0, minute=0, second=0, microsecond=0)
-        today_end_ist = today_start_ist + timedelta(days=1)
+        from services.date_utils import get_ist_today_range_utc, utc_range_query_strings
         
-        # Convert to UTC for database queries (dates stored in UTC)
-        today_start_utc = today_start_ist.astimezone(timezone.utc)
-        today_end_utc = today_end_ist.astimezone(timezone.utc)
+        # Get today's IST date range converted to UTC
+        today_start_utc, today_end_utc, today_str, today_str_long = get_ist_today_range_utc()
         
-        # Use UTC format matching database format
-        start_str = today_start_utc.strftime("%Y-%m-%dT%H:%M:%S")
-        end_str = today_end_utc.strftime("%Y-%m-%dT%H:%M:%S")
+        # Format for MongoDB queries (matches .isoformat() storage format)
+        start_str, end_str = utc_range_query_strings(today_start_utc, today_end_utc)
         
-        today_str = today_start_ist.strftime("%d/%m/%Y")
+        logger.info(f"Morning briefing: IST today query range UTC [{start_str}] to [{end_str}], display date: {today_str}")
         
         # Get all active therapists
         therapists = await db.users.find({
@@ -444,8 +432,8 @@ async def send_morning_schedule_briefing(db):
             ]
             
             # Get pending session notes (completed appointments without notes in last 7 days)
-            seven_days_ago_utc = (now_ist - timedelta(days=7)).astimezone(timezone.utc)
-            seven_days_str = seven_days_ago_utc.strftime("%Y-%m-%dT%H:%M:%S")
+            from services.date_utils import get_past_days_utc
+            seven_days_str = get_past_days_utc(7)
             
             completed_appts = await db.appointments.find({
                 "therapist_id": therapist_id,
@@ -502,7 +490,7 @@ async def send_morning_schedule_briefing(db):
                     await NotificationService.send_daily_schedule_whatsapp(
                         therapist_mobile=therapist_mobile,
                         therapist_name=therapist.get("full_name", "Therapist"),
-                        date=today_start_ist.strftime("%d %B %Y"),  # e.g., "13 February 2026"
+                        date=today_str_long,
                         appointments=whatsapp_appts
                     )
                 except Exception as e:
@@ -547,21 +535,15 @@ async def send_daily_payment_statement(db):
     logger.info("Running daily payment statement...")
     
     try:
-        # Get today's date in IST for display
-        now_ist = datetime.now(IST)
-        today_start_ist = now_ist.replace(hour=0, minute=0, second=0, microsecond=0)
-        today_end_ist = today_start_ist + timedelta(days=1)
+        from services.date_utils import get_ist_today_range_utc, utc_range_query_strings
         
-        # Convert to UTC for database queries (dates stored in UTC)
-        today_start_utc = today_start_ist.astimezone(timezone.utc)
-        today_end_utc = today_end_ist.astimezone(timezone.utc)
+        # Get today's IST date range converted to UTC
+        today_start_utc, today_end_utc, today_str, _ = get_ist_today_range_utc()
         
-        # Use UTC format matching database format
-        start_str = today_start_utc.strftime("%Y-%m-%dT%H:%M:%S") 
-        end_str = today_end_utc.strftime("%Y-%m-%dT%H:%M:%S")
+        # Format for MongoDB queries (matches .isoformat() storage format)
+        start_str, end_str = utc_range_query_strings(today_start_utc, today_end_utc)
         
-        # Display date in IST
-        today_str = today_start_ist.strftime("%d/%m/%Y")
+        logger.info(f"Payment statement: query range UTC [{start_str}] to [{end_str}], display date: {today_str}")
         
         # Get all active therapists
         therapists = await db.users.find({

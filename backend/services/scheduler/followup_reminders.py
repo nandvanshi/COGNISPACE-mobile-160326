@@ -65,7 +65,7 @@ async def check_followup_reminders(db):
                 "client_id": client_id,
                 "therapist_id": therapist_id,
                 "status": "scheduled",
-                "start_time": {"$gte": now_utc.strftime("%Y-%m-%dT%H:%M:%S")}
+                "start_time": {"$gte": now_utc.isoformat()}
             })
             if upcoming:
                 # Client has booked - mark recommendation as fulfilled

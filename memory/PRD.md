@@ -107,6 +107,13 @@ Hindi (User communicates in Hindi/Hinglish)
 - [x] WhatsApp reminder structure ready (pending Twilio template approval)
 - [x] Testing: 21/22 backend tests pass, all frontend code verified
 
+### March 28, 2026 - Timezone Query Format Fix (Recurring Bug Final Fix)
+- [x] Created centralized `date_utils.py` utility for IST/UTC date range generation
+- [x] Fixed query format mismatch: queries now use `.isoformat()` (with `+00:00`) to match DB storage format
+- [x] Refactored ALL 6 scheduled jobs to use consistent UTC `.isoformat()` format
+- [x] Added diagnostic logging to `send_morning_schedule_briefing`
+- [x] 8/8 unit tests pass for date range, boundary, and display date verification
+
 ## Pending Tasks
 
 ### P0 - Critical
@@ -115,15 +122,6 @@ Hindi (User communicates in Hindi/Hinglish)
 ### P1 - High Priority
 - [ ] Profile photo upload (Therapist & Client)
 - [ ] AI-powered SOAP/DAP note generation
-### March 23, 2026 - WhatsApp Template Fix + Admin Email Broadcast
-- [x] Fixed WhatsApp daily schedule template SID (was truncated 31→34 chars)
-- [x] Fixed WhatsApp content variables newline issue (pipe-separated format)
-- [x] Integrated approved WhatsApp follow-up template (cogn_shrem)
-- [x] Admin Email Broadcast: AI-powered email composer in Super Admin Panel
-- [x] Recipients: All therapists, All clients, By plan, Specific users
-- [x] AI Draft Generator (Claude) with tone/audience controls
-- [x] Email history tracking with broadcast logs
-- [x] Testing: 16/16 backend tests pass, frontend verified
 
 ### P2 - Medium Priority
 - [ ] WhatsApp follow-up templates (awaiting Twilio approval from user)
@@ -133,11 +131,15 @@ Hindi (User communicates in Hindi/Hinglish)
 
 ### Future Tasks
 - [ ] Google Calendar integration for automatic event creation (user deferred)
-- [ ] Voice input (Speech-to-Text) for session notes
 - [ ] Note templates sharing feature
-- [ ] Automated follow-up reminders (WhatsApp/Email)
 
 ## Key Technical Architecture
+
+### Date/Timezone Handling (IMPORTANT)
+- All appointment times stored via `.isoformat()` → format: `"2026-03-28T04:30:00+00:00"`
+- All scheduled job queries MUST use `.isoformat()` for consistent string comparison
+- Centralized utility: `/app/backend/services/date_utils.py`
+- IST timezone: `ZoneInfo("Asia/Kolkata")`, NO manual timedelta offsets
 
 ### Mobile View Pattern
 - `useIsMobile` hook detects viewport < 1024px
@@ -148,6 +150,8 @@ Hindi (User communicates in Hindi/Hinglish)
 - Client context: Passed via `navContext` prop through `location.state`
 
 ### Key Files
+- `/app/backend/services/date_utils.py` - Centralized IST/UTC date utilities
+- `/app/backend/services/scheduler/jobs.py` - All scheduled background jobs
 - `/app/frontend/src/pages/TherapistDashboard.js` - Main dashboard with mobile/desktop switching
 - `/app/frontend/src/components/therapist/MobileTherapistView.js` - Mobile view container
 - `/app/frontend/src/components/ClientProfilePage.js` - Client profile with tabs
@@ -163,4 +167,4 @@ Hindi (User communicates in Hindi/Hinglish)
 - Super Admin: mobile=7275005000, password=Test@123
 
 ---
-Last Updated: March 16, 2026
+Last Updated: March 28, 2026
