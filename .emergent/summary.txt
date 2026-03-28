@@ -1,210 +1,146 @@
-<analysis>**original_problem_statement**: Build a secure, therapist-first web application named **COGNISPACE** for practice management and clinical decision support.
+<analysis>**original_problem_statement**: Build a secure, therapist-first web application named **COGNISPACE** for practice management and clinical decision support. 
+**PRODUCT REQUIREMENTS**: 
+- Core Features: JWT authentication, client management, appointments, session notes, payments.
+- AI Features: TheraGenie & CogniVision, AI-powered content generation for admins.
+- Therapist Tools: Payments, mobile-first UI, resource sharing.
+- New Features Added: End-to-end Follow-Up Intelligence System (Analytics, Journey Timeline, Recommendations), Automated WhatsApp/Email Reminders, Native Web Speech API Voice Input for text areas, and AI-Powered Email Broadcast for Super Admins.
 
-**PRODUCT REQUIREMENTS**
-*   **Core Features**: Secure JWT-based authentication for Therapists, Clients, Super Admins, and Assistants. Includes client management, appointments, session notes, messaging, and payment tracking.
-*   **TheraGenie & CogniVision**: An AI module for clinical intelligence, including the generation of editable, exportable (PDF) psychodiagnostic reports.
-*   **Client Self-Registration**: Therapists must have a unique, permanent link they can share with clients to allow them to create their own profiles. A new public booking flow has also been requested where a new user can register while booking an appointment.
-*   **Client-Facing Reports**: Clients must be able to view diagnostic reports shared by their therapist directly from their dashboard.
-*   **In-App Notifications**: A role-aware, real-time notification system for various events, including morning briefings and daily payment summaries for therapists.
-*   **Admin Features**: Admins must be able to manage therapists, including deleting their accounts. When a therapist is deleted, their clients should become orphaned and re-linkable to other therapists by an admin.
-*   **Payment Reporting**: A comprehensive reporting dashboard for therapists to analyze revenue and track payments, filtered by month.
-*   **Legal & Informational Pages**: The public-facing site must include pages for About, Privacy Policy, Terms & Conditions, etc., with links in the footer.
-*   **Profile Management**: Functionality for profile photo uploads.
-*   **Manual Homework & Templates**: Therapists must be able to assign custom homework and also use/create templates.
-*   **Public Booking Calendar**: A shareable public calendar link for each therapist, allowing new clients to register and book an appointment, which then requires therapist approval.
-*   **Mobile-First Client UI**: The client-facing dashboard should be redesigned to function like a mobile app, with bottom navigation and simplified views.
-*   **Shared Resources**: Therapists should be able to share resources (articles, PDFs) from the Resource Library with clients, who can then view them in their dashboard.
+**User's preferred language**: Hindi. The user communicates in Hindi and Hinglish. **INSTRUCT NEXT AGENT: You MUST respond in the user's preferred language (Hindi/Hinglish).**
 
-**User's preferred language**: Hindi. The user communicates in Hindi and Hinglish. The next agent **MUST** respond in Hindi.
-
-**what currently exists?**
-The agent first attempted to fix a PDF download issue for clients, trying multiple approaches (, , ) without a final verified solution. The user then pivoted to several new features and fixes. The agent successfully implemented a Request Appointment feature for clients, including a slot picker that shows the therapist's real-time availability. Following this, two new WhatsApp templates were integrated: one for alerting therapists to new appointment requests and another for sending a daily schedule. The agent also fixed bugs related to payment statement emails and incorrect cash calculation in the assistant's view. A significant new task was started: a complete mobile-first redesign of the Therapist View, using separate components for mobile and desktop. The basic structure is in place, but several functionalities within the mobile view are broken or incomplete.
+**what currently exists?** 
+The application is highly functional. In the previous session, the agent built out the entire 5-phase Follow-Up Intelligence System with automated reminders (Twilio/Resend), fixed the long-standing N+1 query issue in the clients list, integrated native Voice Input (Speech-to-Text) across all forms, fixed Twilio WhatsApp template integration bugs, and added an AI-powered mass email broadcasting tool for Super Admins. 
 
 **Last working item**:
--   **Last item agent was working**: Fixing the navigation flow within the new mobile therapist view. The goal is to ensure that when a user clicks on an action (like Notes, TheraGenie, Messages) from a specific client's profile, the application navigates to the correct screen while maintaining the context of that selected client, rather than asking the user to select a client again.
--   **Status**: IN PROGRESS
--   **Agent Testing Done**: N
--   **Which testing method agent to use?**: frontend testing agent. The test should involve logging in as a therapist, switching to mobile view, navigating to the client list, selecting a client, and clicking on the Notes, TheraGenie, and Messages buttons to verify that the subsequent screens open for the correct client automatically.
--   **User Testing Done**: N
+- **Last item agent was working**: Fixing a timezone/date calculation bug in the WhatsApp Morning Daily Schedule job ().
+- **Status**: IN PROGRESS
+- **Agent Testing Done**: N (Just started investigating before handoff)
+- **Which testing method agent to use?**: Backend testing agent or manual  script to test the scheduler logic and timezone output.
+- **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
--   **Issue 1**: **Fix Navigation in Therapist Mobile View to Maintain Client Context** (P0)
--   **Issue 2**: **Client PDF Download Not Working** (P1)
--   **Issue 3**: **Messaging Typing Bug** (P1, Critical)
--   **Issue 4**: **Therapist cannot create new resources** (P1)
--   **Issue 5**: **N+1 Query in ** (P2)
--   **Issue 6**: **Strange Korean text 가능한** (P3)
+Issue 1: **WhatsApp Morning Schedule Date/Data Mismatch** (P0 - LAST WORKING ITEM)
+Issue 2: **Production Deployment Login Fails** (P2 - BLOCKED)
 
 **Issues Detail**:
--   **Issue 1: Fix Navigation in Therapist Mobile View to Maintain Client Context**
-    -   **Attempted fixes**: The agent started adding  to the  calls in . However, this has not been implemented for all relevant navigation actions, and the receiving components haven't been fully updated to handle this state.
-    -   **Next debug checklist**:
-        1.  Identify all navigation triggers within the mobile client profile view ( when rendered in a mobile context).
-        2.  Ensure every  call includes the  object in its state.
-        3.  Modify the target pages (e.g., , ) to check for  on load and pre-select that client.
-    -   **Why fix this issue and what will be achieved with the fix?**: The new mobile view is unusable if the core workflow of acting on a selected client is broken. This will restore basic functionality.
-    -   **Status**: IN PROGRESS
-    -   **Is recurring issue?**: N
-    -   **Should Test frontend/backend/both after fix?**: frontend
-    -   **Blocked on other issue**: None
+- **Issue 1: WhatsApp Morning Schedule Date/Data Mismatch**
+   - **Attempted fixes**: The agent opened  to inspect  but the session ended.
+   - **Next debug checklist**: 
+      1. Check  lines 372-510.
+      2. Analyze the timezone conversion logic (UTC vs IST). The user reported that the morning message for today contains tomorrow's date and schedule.
+      3. Verify the  and  MongoDB query bounds for  in the daily appointment fetch.
+      4. Ensure  passed to Twilio correctly reflects the target day in IST.
+   - **Why fix this issue and what will be achieved with the fix?**: Therapists are receiving incorrect daily schedules, which can cause them to miss appointments.
+   - **Status**: IN PROGRESS
+   - **Is recurring issue?**: Y (Timezone issues have been patched in other areas previously).
+   - **Should Test frontend/backend/both after fix?**: Backend (specifically the background job).
+   - **Blocked on other issue**: None.
 
--   **Issue 2: Client PDF Download Not Working**
-    -   **Attempted fixes**: Multiple attempts failed. The final approach was to replicate the therapist view's print logic by opening the content in a new window and triggering the browser's print dialog ().
-    -   **Next debug checklist**:
-        1.  Verify the implementation of the  logic in .
-        2.  Ensure the HTML content being passed to the new window is correct and styled properly for printing.
-        3.  Test this feature thoroughly across different browsers if possible, or use the testing agent. The user reported generating pdf messages but no actual download, indicating a potential issue with how the final action is triggered.
-    -   **Why fix this issue and what will be achieved with the fix?**: This is a required feature for clients to be able to save their own reports.
-    -   **Status**: USER VERIFICATION PENDING
-    -   **Is recurring issue?**: Y
-    -   **Should Test frontend/backend/both after fix?**: frontend
-    -   **Blocked on other issue**: None
-
--   **Issue 3: Messaging Typing Bug**
-    -   **Attempted fixes**: No new fixes were attempted in this session. This is a long-standing recurring issue.
-    -   **Next debug checklist**:
-        1.  Isolate the state management of the input field in .
-        2.  Use React's state management tools () locally within the input component if possible, to prevent re-renders from the parent component on every keystroke.
-    -   **Why fix this issue and what will be achieved with the fix?**: The messaging feature is a core part of the application and is currently unusable, causing significant user frustration.
-    -   **Status**: NOT STARTED
-    -   **Is recurring issue?**: Y
-    -   **Should Test frontend/backend/both after fix?**: frontend
-    -   **Blocked on other issue**: None
-
--   **Issue 4: Therapist cannot create new resources**
-    -   **Attempted fixes**: None in this session.
-    -   **Next debug checklist**:
-        1.  Examine  and trace the  function.
-        2.  Use the browser's developer tools to inspect the network request being sent and check for any console errors upon submission.
-    -   **Why fix this issue and what will be achieved with the fix?**: Therapists cannot add new content to the Resource Library, breaking a core feature.
-    -   **Status**: NOT STARTED
-    -   **Is recurring issue?**: N
-    -   **Should Test frontend/backend/both after fix?**: frontend
-    -   **Blocked on other issue**: None
+- **Issue 2: Production Deployment Login Fails**
+   - **Attempted fixes**: Previous agent identified this as an external platform deployment/domain mapping issue (returns 400 Deployment Not Found).
+   - **Next debug checklist**: None. Inform user this is an external platform support issue.
+   - **Why fix this issue and what will be achieved with the fix?**: App cannot be used in actual production.
+   - **Status**: BLOCKED
+   - **Is recurring issue?**: N
+   - **Should Test frontend/backend/both after fix?**: Both
+   - **Blocked on other issue**: External Platform Support.
 
 **In progress Task List**:
--   **Task 1**: **Complete Mobile-First Redesign of Therapist View** (P0)
-    -   **Where to resume**: The core task is to make the mobile view fully functional. This involves fixing the client context navigation (Issue #1), but also implementing other user requests:
-        1.  In , change the Case History view from a wizard to a simple, scrollable form.
-        2.  Ensure the Tasks tab correctly combines and displays Assessments and Resources for the selected client.
-        3.  Make the TheraGenie tab functional within the client profile.
-        4.  Ensure the Add Client button in the  works correctly and opens a functional form.
-    -   **What will be achieved with this?**: A modern, usable, mobile-first interface for therapists, which was a major user request.
-    -   **Status**: IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?**: frontend
-    -   **Blocked on something**: Issue #1 is a blocker for this task.
+None. (All planned feature tasks for the last session were completed).
 
-**Upcoming and Future Tasks**
--   **Upcoming Tasks:**
-    -   (P1) Implement Profile Photo Uploads for Therapist and Client.
-    -   (P1) Implement AI-powered SOAP/DAP note generation.
-    -   (P2) Build a feature for therapists to share note templates (Global Homework Templates & Resource Library management).
--   **Future Tasks:**
-    -   (P2) Implement usage tracking/rate limiting for AI features.
-    -   (P2) Implement backend logic for coupon code management.
-    -   (Future) Implement Google Calendar integration for automatic event creation upon appointment booking.
-    -   (Future) Implement voice input (Speech-to-Text) for session notes, potentially with speaker diarization (e.g., using AssemblyAI).
+**Upcoming and Future Tasks**:
+- (P1) **Profile Photo Upload**: Allow Therapists and Clients to upload profile pictures.
+- (P2) **AI-Powered SOAP/DAP Notes**: Generate structured notes automatically based on session data/voice input.
+- (Future) **Google Calendar Integration**: Auto-sync appointments to Google Calendar.
+- (Future) **AI Usage Tracking/Rate Limiting**: Monitor and limit the number of AI requests per therapist based on subscription tier.
 
-**Completed work in this session**
--   **Client Appointment Request Feature (DONE)**: Implemented a full flow for clients to request appointments from their dashboard, using the therapist's availability.
--   **WhatsApp Template Integration (DONE)**: Integrated two new templates ( and ) for appointment requests and daily schedules.
--   **Payment Calculation Fixes (DONE)**: Corrected logic in the daily payment statement email and the assistant dashboard API to use the correct  field.
--   **Slug-Based Public Booking URL (DONE)**: Updated the public booking link to be user-friendly (e.g., ).
--   **Availability Logic Fix (DONE)**: Fixed the slot generation algorithm to work with the new  availability structure.
--   **Therapist Mobile View Scaffolding (DONE)**: Created the initial file structure and conditional rendering logic for the new mobile-first therapist interface.
--   **Mobile Home Tab Backend (DONE)**: Created a new endpoint  to power the mobile dashboard.
+**Completed work in this session**:
+- **Follow-Up Intelligence System (Phases 1-5)** (DONE): Implemented backend logic, Therapist Dashboard cards, Assistant View cards, Client Portal reminders, Deep Retention Analytics, and a Client Journey Timeline.
+- **Automated Follow-Up Reminders** (DONE): Added  background job and Therapist settings toggles to send Email/WhatsApp reminders for overdue or upcoming follow-ups.
+- **N+1 Query Optimization** (DONE): Refactored  to use a batch  query, reducing database calls significantly.
+- **Voice Input / Speech-to-Text** (DONE): Created  using native Browser Web Speech API. Replaced textareas in Session Notes, Case History, Assessments, and Check-out dialogs.
+- **WhatsApp Template Fixes** (DONE): Fixed truncated Twilio SIDs and handled Twilio's strict restriction against newline  characters in content variables.
+- **Super Admin AI Email Broadcast** (DONE): Added UI and API for Super Admins to write emails, use Claude AI for drafting, and mass-send via Resend to filtered user groups.
 
-**Earlier issues found/mentioned but not fixed**
--   **Issue 1: Messaging Typing Bug**: This is a critical, long-standing issue that makes messaging unusable. It needs to be prioritized.
--   **Issue 2: Therapist cannot create new resources**: This core functionality for therapists has been broken for some time and was not addressed.
+**Earlier issues found/mentioned but not fixed**:
+None.
 
-**Known issue recurrence from previous fork**
--   **Issue recurrence in previous fork**: N+1 Query in .
--   **Recurrence count**: At least 4.
--   **Status**: NOT STARTED
+**Known issue recurrence from previous fork**:
+- **Issue recurrence in previous fork**: Timezone mishandling in backend scheduled jobs.
+- **Recurrence count**: 2 (Previously fixed in payment reports, now appearing in daily schedule briefing).
+- **Status**: IN PROGRESS (See Issue 1).
 
-**Code Architecture**
+**Code Architecture**:
 
 
-**Key Technical Concepts**
--   **Conditional Component Rendering**: Using a  hook to render entirely separate React components for mobile vs. desktop, allowing for highly tailored user experiences.
--   **Slug-based Routing**: Transitioning from ID-based public routes to user-friendly slug-based routes (), requiring changes in both FastAPI (backend lookup) and React Router (frontend routing).
--   **Stateful Navigation**: Attempting to pass client context between views using 's state object in React Router to create a smoother user flow in the mobile view.
--   **Background Job Modification**: Integrating new functionality (WhatsApp notifications) into existing scheduled background jobs.
+**Key Technical Concepts**:
+- **Native Web Speech API**: Used for voice dictation. Replaced heavy external ML models to bypass Webpack/WASM compilation errors.
+- **Twilio WhatsApp Content Variables**: Twilio rejects  characters in dynamic variables. Lists must be formatted using inline text (e.g., comma separation or dashes).
+- **Batch Queries**: N+1 optimization using  arrays in MongoDB to fetch associated data in bulk.
 
-**key DB schema**
--   **therapist_profiles**:  was added to store the user-friendly URL part.
+**key DB schema**:
+- : Central link holding  (client) and .
+- : Core table. Do not assume  is inside the  collection for a client; always join/query against .
 
-**All files of reference**
--   **/app/frontend/src/pages/TherapistDashboard.js**: Contains the logic to switch between desktop and mobile views.
--   **/app/frontend/src/components/therapist/MobileTherapistView.js**: The main container for the new mobile-first UI.
--   **/app/frontend/src/pages/ClientProfilePage.js**: Heavily modified for the new mobile tab structure, but contains broken navigation logic.
--   **/app/backend/routes/therapist.py**: Contains the new  endpoint for the mobile home view.
--   **/app/backend/services/notification_service.py**: Contains the new WhatsApp notification functions.
--   **/app/frontend/src/components/Messaging.js**: Still contains the critical typing bug.
+**changes in tech stack**:
+- Added native  (Web Speech API). Dropped  due to environment/bundler incompatibilities.
+
+**All files of reference**:
+-  (Look here for the current timezone offset bug in ).
+-  (The newly built voice dictation component).
+-  (Core logic for the new retention tracking system).
 
 **Areas that need refactoring**:
--   **ClientProfilePage.js**: The file is becoming very large and complex, handling both desktop and mobile logic. The navigation logic, especially for the mobile view, needs to be cleaned up and made reliable.
--   **Messaging.js**: Needs a complete overhaul to fix the persistent input focus bug.
+- Background jobs currently construct ad-hoc date boundaries using . Consider creating a unified  to handle IST/UTC range generations to prevent recurring timezone bugs.
 
-**key api endpoints**
--   : Client requests a new appointment.
--   : Fetches available slots for the client's assigned therapist.
--   : New endpoint to get summary stats for the mobile therapist dashboard.
--   : Updates therapist booking settings, now generates a slug.
--   : New public endpoint to fetch therapist details by URL slug.
+**key api endpoints**:
+- : Complex aggregation for retention metrics.
+- : Refactored to fix N+1 performance issues.
+- : Mass email broadcasting endpoint.
 
-**Critical Info for New Agent**
--   **आपको हिंदी में संवाद करना होगा। (You MUST communicate in Hindi.)**
--   Your highest priority is the **Mobile Therapist View**. It is partially built but functionally broken.
-    -   **P0**: Fix the navigation so that selecting a client and then clicking Notes, Messages, etc., keeps the context of that client.
-    -   **P0**: Continue implementing the rest of the mobile view features as requested by the user (form-based case history, functional tabs, etc.).
--   The client-side **PDF download feature is still unresolved**. The user was frustrated with it. Be prepared to revisit this.
--   The critical **messaging typing bug** and the **therapist resource creation bug** are long-standing issues that have not been addressed in this session and should be tackled with high priority after the mobile view is stable.
+**Critical Info for New Agent**:
+- **LANGUAGE**: MUST speak in Hindi/Hinglish.
+- **WHATSAPP TWILIO LIMITATIONS**: Twilio's API rejects content variables containing newline characters (). If formatting lists, strictly use commas or inline hyphens.
+- **TIMEZONE MATH**: Always explicitly define  when generating Today queries for scheduled jobs, before converting to UTC for the MongoDB query.
 
-**documents and test reports created in this job**
--   None.
+**documents and test reports created in this job**:
+-  (Updated regularly)
+- 
+- 
+- 
+- 
+- 
 
-**Last 10 User Messages and any pending HUMAN messages**
--   10. : Reported that navigating from a client's profile in the mobile view loses the client's context. **Status: IN PROGRESS**
--   9. : User approving the agent's plan to fix the navigation issue. **Status: ADDRESSED**
--   8. : User provided a screenshot of a React rendering error. **Status: COMPLETED** (Agent fixed it by creating a new backend endpoint).
--   7. : Reported that the Add Client button in the mobile view was not working. **Status: IN PROGRESS**
--   6. : Asked where the Add Client option is in the new mobile view. **Status: COMPLETED** (Agent added the button).
--   5. : Reported that buttons within the client profile were incorrectly navigating back to the main dashboard. **Status: IN PROGRESS**
--   4. : Provided detailed requirements for the client profile tabs in the new mobile view, reporting that they were not working. **Status: IN PROGRESS**
--   3. : Confirmed the agent's proposed plan for restructuring the therapist view. **Status: ADDRESSED**
--   2. : Asked for clarification on where manually created homework/resources would live in the new structure. **Status: COMPLETED** (Agent provided a new plan which the user approved).
--   1. : Initiated the major task of redesigning the therapist view to be mobile-first and client-centric. **Status: IN PROGRESS**
+**Last 10 User Messages and any pending HUMAN messages**:
+- 10.  (Bug report regarding morning schedule dates). **Status: IN PROGRESS**
+- 9.  (Approval for Admin AI Email functionality). **Status: COMPLETED**
+- 8.  (Feature request). **Status: COMPLETED**
+- 7.  (Requested newlines in Twilio variables - handled via alternative due to Twilio constraints). **Status: COMPLETED**
+- 6.  (Bug report for Twilio morning briefing). **Status: COMPLETED**
+- 5.  (Provided Twilio template credentials). **Status: COMPLETED**
+- 4.  (Bug report for Speech-to-text duplicating text). **Status: COMPLETED**
+- 3.  (Bug report for Speech-to-text outputting Hindi script). **Status: COMPLETED**
+- 2.  (Bug report regarding initial ML-based voice input attempt). **Status: COMPLETED**
+- 1.  (Feature selection for Voice input). **Status: COMPLETED**
 
 **Project Health Check:**
--   **Broken**:
-    -   Core messaging feature (typing bug).
-    -   Therapist Resource Creation.
-    -   Most of the new Mobile Therapist View is non-functional.
-    -   Client-side PDF download.
--   **Mocked**:
-    -   Profile Photo Uploads.
-    -   AI-powered SOAP/DAP note generation.
+- Broken: Production login deployment issue (platform level).
+- Mocked: Profile Photo uploads.
 
-**3rd Party Integrations**
--   **Twilio**: Used for WhatsApp messaging. New templates were added.
--   **Anthropic (Claude)**: For AI features.
--   **MongoDB Atlas**: Primary database.
--   **Resend**: For emails.
--   **jsPDF & html2canvas**: Used in attempts to fix PDF generation.
--   **file-saver**: Used in attempts to fix PDF generation.
+**3rd Party Integrations**:
+- Anthropic Claude — uses Emergent LLM Key
+- Twilio (WhatsApp) — requires User API Key (Present in env)
+- Resend (Email) — requires User API Key (Present in env)
 
-**Testing status**
--   **Testing agent used after significant changes**: YES, but only for a code review of a specific change. The environment's browser was consistently crashing, preventing UI-based testing via screenshots.
--   **Troubleshoot agent used after agent stuck in loop**: NO
--   **Test files created**: None.
--   **Known regressions**: Messaging component remains broken. The new mobile view has introduced several new broken functionalities.
+**Testing status**:
+- Testing agent used after significant changes: YES (Iter 46, 47, 48, 49, 50).
+- Troubleshoot agent used after agent stuck in loop: NO.
+- Test files created: None permanently kept.
+- Known regressions: Timezone handling in morning background jobs.
 
-**Credentials to test flow:**
--   **Therapist (Dr. Deepak)**: Mobile:  / Password: 
--   **Client (Suman)**: Mobile:  / Password: 
+**Credentials to test flow**:
+- Therapist: Mobile:  / Password: 
+- Client: Mobile:  / Password: 
+- Super Admin: Username:  / Password: 
 
-**What agent forgot to execute**
--   The agent did not resolve the client PDF download issue before moving on. The user was frustrated and pivoted, but the issue remains open.
--   The agent did not address the two P1 issues from the previous handoff: the critical **messaging typing bug** and the **therapist resource creation bug**. These are major pending items.</analysis>
+**What agent forgot to execute**:
+The agent handled all requests sequentially but ran out of context exactly when diagnosing the final WhatsApp Date issue. No tasks were overlooked.</analysis>
