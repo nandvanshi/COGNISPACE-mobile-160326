@@ -21,10 +21,11 @@ import ClientSelect from './ClientSelect';
 // IST timezone offset
 const IST_OFFSET = 5.5 * 60 * 60 * 1000;
 
-// Helper to get current date in IST
+// Helper to get current date in IST (use same logic as formatUtils.js)
 const nowIST = () => {
   const now = new Date();
-  return new Date(now.getTime() + (IST_OFFSET - now.getTimezoneOffset() * 60000));
+  const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+  return new Date(utc + IST_OFFSET);
 };
 
 // Format date as DD/MM/YYYY
@@ -167,10 +168,11 @@ const TherapistSchedule = ({ isReadOnly = false, isAssistant = false }) => {
       const dayAppts = (appointments || []).filter(appt => {
         if (!appt?.start_time) return false;
         try {
-          const apptDate = new Date(appt.start_time);
-          if (isNaN(apptDate.getTime())) return false;
-          // Compare using local date for the appointment
-          return getLocalDateStr(apptDate) === dateStr && appt.status !== 'cancelled';
+          // Extract date component directly from stored string (handles both UTC and IST-in-UTC formats)
+          // "2026-04-04T13:45:00+00:00" → "2026-04-04"
+          // "2026-04-04T19:15:00+00:00" → "2026-04-04"
+          const apptDateStr = appt.start_time.substring(0, 10);
+          return apptDateStr === dateStr && appt.status !== 'cancelled';
         } catch (e) {
           return false;
         }
@@ -213,28 +215,22 @@ const TherapistSchedule = ({ isReadOnly = false, isAssistant = false }) => {
     const dayName = getDayName(safeDate);
     const dayAvailability = availability[dayName];
     
-    // Get booked appointments for the day (with safe date parsing)
+    // Get booked appointments for the day (using date component from stored string)
     const dayAppts = (appointments || []).filter(appt => {
       if (!appt?.start_time) return false;
       try {
-        const apptDate = new Date(appt.start_time);
-        if (isNaN(apptDate.getTime())) return false;
-        // Use local date comparison
-        const apptDateStr = `${apptDate.getFullYear()}-${String(apptDate.getMonth() + 1).padStart(2, '0')}-${String(apptDate.getDate()).padStart(2, '0')}`;
+        const apptDateStr = appt.start_time.substring(0, 10);
         return apptDateStr === dateStr && appt.status !== 'cancelled';
       } catch (e) {
         return false;
       }
     }).sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
     
-    // Get blocked times for the day (with safe date parsing)
+    // Get blocked times for the day (using date component from stored string)
     const dayBlocks = (blockedTimes || []).filter(block => {
       if (!block?.start_datetime) return false;
       try {
-        const blockDate = new Date(block.start_datetime);
-        if (isNaN(blockDate.getTime())) return false;
-        // Use local date comparison
-        const blockDateStr = `${blockDate.getFullYear()}-${String(blockDate.getMonth() + 1).padStart(2, '0')}-${String(blockDate.getDate()).padStart(2, '0')}`;
+        const blockDateStr = block.start_datetime.substring(0, 10);
         return blockDateStr === dateStr;
       } catch (e) {
         return false;

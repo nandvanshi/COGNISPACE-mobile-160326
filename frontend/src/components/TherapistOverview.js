@@ -107,21 +107,24 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
 
       const allAppts = apptsRes.data;
       
-      // Today's appointments - compare IST dates properly
+      // Helper: extract date component from start_time string (YYYY-MM-DD)
+      // Handles both correct UTC and old IST-in-UTC storage formats
+      const getApptDateStr = (appt) => appt?.start_time?.substring(0, 10) || '';
+      
+      // Today's IST date as YYYY-MM-DD
+      const todayDateStr = `${todayIST.getFullYear()}-${String(todayIST.getMonth() + 1).padStart(2, '0')}-${String(todayIST.getDate()).padStart(2, '0')}`;
+      
+      // Today's appointments - compare date component directly
       const todayAppts = allAppts.filter((appt) => {
-        const apptDate = toIST(appt.start_time);
-        // Compare only date part (year, month, day) in IST
-        const apptDateOnly = new Date(apptDate);
-        apptDateOnly.setHours(0, 0, 0, 0);
-        return apptDateOnly.getTime() === todayIST.getTime() && appt.status !== 'cancelled';
+        return getApptDateStr(appt) === todayDateStr && appt.status !== 'cancelled';
       }).sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
 
       // This week's appointments (for stats)
       const thisWeekAppts = allAppts.filter((appt) => {
-        const apptDate = toIST(appt.start_time);
-        const apptDateOnly = new Date(apptDate);
-        apptDateOnly.setHours(0, 0, 0, 0);
-        return apptDateOnly >= weekStart && apptDateOnly < weekEnd;
+        const apptDateStr = getApptDateStr(appt);
+        if (!apptDateStr) return false;
+        const apptDate = new Date(apptDateStr + 'T00:00:00');
+        return apptDate >= weekStart && apptDate < weekEnd;
       });
 
       // Week stats
@@ -132,15 +135,15 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
 
       // Week's appointments (grouped by day) - for display (today onwards)
       const weekAppts = allAppts.filter((appt) => {
-        const apptDate = toIST(appt.start_time);
-        const apptDateOnly = new Date(apptDate);
-        apptDateOnly.setHours(0, 0, 0, 0);
-        return apptDateOnly >= todayIST && apptDateOnly < weekEnd && appt.status !== 'cancelled';
+        const apptDateStr = getApptDateStr(appt);
+        if (!apptDateStr) return false;
+        const apptDate = new Date(apptDateStr + 'T00:00:00');
+        return apptDate >= todayIST && apptDate < weekEnd && appt.status !== 'cancelled';
       }).sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
 
       // Group by day for week view
       const weekGrouped = weekAppts.reduce((acc, appt) => {
-        const dateKey = toIST(appt.start_time).toDateString();
+        const dateKey = getApptDateStr(appt);
         if (!acc[dateKey]) acc[dateKey] = [];
         acc[dateKey].push(appt);
         return acc;

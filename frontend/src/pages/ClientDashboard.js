@@ -1124,8 +1124,8 @@ const AppointmentsTab = ({ appointments, payments, onViewReceipt, onRequestAppoi
               <Card key={appt.id} className="p-4 rounded-2xl">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-emerald-100 rounded-xl flex flex-col items-center justify-center">
-                    <span className="text-xs text-emerald-600">{new Date(appt.start_time).toLocaleDateString('en', { month: 'short' })}</span>
-                    <span className="text-lg font-bold text-emerald-700">{new Date(appt.start_time).getDate()}</span>
+                    <span className="text-xs text-emerald-600">{(() => { const parts = (appt.start_time || '').substring(0, 10).split('-'); return parts.length === 3 ? new Date(parts[0], parts[1] - 1, parts[2]).toLocaleDateString('en', { month: 'short' }) : ''; })()}</span>
+                    <span className="text-lg font-bold text-emerald-700">{parseInt((appt.start_time || '').substring(8, 10)) || ''}</span>
                   </div>
                   <div className="flex-1">
                     <p className="font-medium text-gray-800">{formatTime(appt.start_time)}</p>

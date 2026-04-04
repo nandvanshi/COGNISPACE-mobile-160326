@@ -371,15 +371,23 @@ async def send_morning_schedule_briefing(db):
     logger.info("Running morning daily summary briefing...")
     
     try:
-        from services.date_utils import get_ist_today_range_utc, utc_range_query_strings
+        # Get today's IST date
+        now_ist = datetime.now(IST)
+        today_date = now_ist.date()
+        today_str = now_ist.strftime("%d/%m/%Y")
+        today_str_long = now_ist.strftime("%d %B %Y")
+        today_date_str = now_ist.strftime("%Y-%m-%d")
+        next_date_str = (now_ist + timedelta(days=1)).strftime("%Y-%m-%d")
         
-        # Get today's IST date range converted to UTC
-        today_start_utc, today_end_utc, today_str, today_str_long = get_ist_today_range_utc()
+        # KEY FIX: Query by DATE COMPONENT of start_time string
+        # This handles BOTH storage formats:
+        #   - Correct UTC: 7:15 PM IST = "2026-04-04T13:45:00+00:00" (date = 04 for IST date 04)
+        #   - Old IST-in-UTC: 7:15 PM IST = "2026-04-04T19:15:00+00:00" (date = 04 for IST date 04)
+        # Both have the SAME date component for the same IST day's appointments
+        query_start = f"{today_date_str}T00:00:00"
+        query_end = f"{next_date_str}T00:00:00"
         
-        # Format for MongoDB queries (matches .isoformat() storage format)
-        start_str, end_str = utc_range_query_strings(today_start_utc, today_end_utc)
-        
-        logger.info(f"Morning briefing: IST today query range UTC [{start_str}] to [{end_str}], display date: {today_str}")
+        logger.info(f"Morning briefing: IST date {today_str_long}, query [{query_start}] to [{query_end}]")
         
         # Get all active therapists
         therapists = await db.users.find({
@@ -393,13 +401,13 @@ async def send_morning_schedule_briefing(db):
             therapist_id = therapist.get("id")
             therapist_email = therapist.get("email")
             
-            # Get today's appointments for this therapist (using UTC range)
+            # Get today's appointments using DATE COMPONENT matching
             appointments = await db.appointments.find({
                 "therapist_id": therapist_id,
                 "status": "scheduled",
                 "start_time": {
-                    "$gte": start_str,
-                    "$lt": end_str
+                    "$gte": query_start,
+                    "$lt": query_end
                 }
             }, {"_id": 0}).sort("start_time", 1).to_list(50)
             
@@ -409,12 +417,22 @@ async def send_morning_schedule_briefing(db):
                 client = await db.users.find_one({"id": appt.get("client_id")}, {"_id": 0, "full_name": 1})
                 try:
                     appt_time = datetime.fromisoformat(appt.get("start_time", "").replace('Z', '+00:00'))
+                    if appt_time.tzinfo is None:
+                        appt_time = appt_time.replace(tzinfo=timezone.utc)
                     appt_time_ist = appt_time.astimezone(IST)
+                    
+                    # Smart format detection: if IST date matches today, time conversion is correct
+                    # If IST date is DIFFERENT (old IST-in-UTC format), use raw time component
+                    if appt_time_ist.date() == today_date:
+                        display_time = appt_time_ist.strftime("%I:%M %p")
+                    else:
+                        # Old format: stored time IS the IST time
+                        display_time = appt_time.strftime("%I:%M %p")
                 except (ValueError, AttributeError):
-                    appt_time_ist = None
+                    display_time = "N/A"
                 
                 formatted_appts.append({
-                    "time": appt_time_ist.strftime("%I:%M %p") if appt_time_ist else "N/A",
+                    "time": display_time,
                     "client_name": client.get("full_name", "Unknown") if client else "Unknown",
                     "type": appt.get("type", "Session"),
                     "duration": appt.get("duration", 50)

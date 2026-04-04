@@ -10,10 +10,12 @@ import uuid
 from database import db
 from dependencies import get_current_user, log_audit
 from services.notification_service import NotificationService
+from zoneinfo import ZoneInfo
 
 router = APIRouter(prefix="/appointments", tags=["appointments"])
 
-# IST timezone offset
+# IST timezone
+IST_TZ = ZoneInfo("Asia/Kolkata")
 IST_OFFSET = timedelta(hours=5, minutes=30)
 
 def format_datetime_ist(dt_str: str) -> tuple:
@@ -128,19 +130,20 @@ async def get_client_available_slots(date: Optional[str] = None, current_user: d
     )
     session_duration = therapist_profile.get("session_duration", 60) if therapist_profile else 60
     
-    # Parse date
+    # Parse date - treat as IST date (the date the user selected in their IST calendar)
     if date:
         try:
-            start_date = datetime.fromisoformat(date.replace('Z', '+00:00'))
+            # If full ISO string, parse and get the IST date
+            parsed = datetime.fromisoformat(date.replace('Z', '+00:00'))
+            ist_date = parsed.astimezone(IST_TZ).date()
         except ValueError:
-            start_date = datetime.strptime(date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+            # Simple YYYY-MM-DD format
+            ist_date = datetime.strptime(date, "%Y-%m-%d").date()
     else:
-        start_date = datetime.now(timezone.utc)
+        ist_date = datetime.now(IST_TZ).date()
     
-    if start_date.tzinfo is None:
-        start_date = start_date.replace(tzinfo=timezone.utc)
-    
-    end_date = start_date + timedelta(days=1)  # Only for that day
+    # Create IST midnight for this date (availability hours are in IST)
+    start_date_ist = datetime(ist_date.year, ist_date.month, ist_date.day, tzinfo=IST_TZ)
     
     # Get therapist's availability settings
     availability = await db.therapist_availability.find_one(
@@ -151,10 +154,12 @@ async def get_client_available_slots(date: Optional[str] = None, current_user: d
     if not availability:
         return {"slots": [], "message": "No availability configured"}
     
-    # Get existing appointments to exclude
+    # Get existing appointments to exclude (broad range to handle both old IST-in-UTC and new correct UTC formats)
+    broad_start = (start_date_ist - timedelta(hours=6)).astimezone(timezone.utc)
+    broad_end = (start_date_ist + timedelta(days=1, hours=6)).astimezone(timezone.utc)
     existing_appts = await db.appointments.find({
         "therapist_id": therapist_id,
-        "start_time": {"$gte": start_date.isoformat(), "$lt": end_date.isoformat()},
+        "start_time": {"$gte": broad_start.isoformat(), "$lt": broad_end.isoformat()},
         "status": {"$nin": ["cancelled", "no_show"]}
     }, {"_id": 0, "start_time": 1, "end_time": 1}).to_list(100)
     
@@ -162,7 +167,7 @@ async def get_client_available_slots(date: Optional[str] = None, current_user: d
     
     # Generate available slots
     available_slots = []
-    day_name = start_date.strftime("%A").lower()
+    day_name = start_date_ist.strftime("%A").lower()
     
     # Support both formats: weekly_schedule.{day} or direct {day} key
     day_availability = availability.get("weekly_schedule", {}).get(day_name)
@@ -182,13 +187,12 @@ async def get_client_available_slots(date: Optional[str] = None, current_user: d
                 start_hour, start_min = map(int, start_time.split(":"))
                 end_hour, end_min = map(int, end_time.split(":"))
                 
-                slot_start = start_date.replace(hour=start_hour, minute=start_min, second=0, microsecond=0)
-                if slot_start.tzinfo is None:
-                    slot_start = slot_start.replace(tzinfo=timezone.utc)
+                # Availability hours are IST - create IST datetime then convert to UTC
+                slot_start_ist = start_date_ist.replace(hour=start_hour, minute=start_min, second=0, microsecond=0)
+                slot_start = slot_start_ist.astimezone(timezone.utc)
                 
-                slot_end_limit = start_date.replace(hour=end_hour, minute=end_min, second=0, microsecond=0)
-                if slot_end_limit.tzinfo is None:
-                    slot_end_limit = slot_end_limit.replace(tzinfo=timezone.utc)
+                slot_end_limit_ist = start_date_ist.replace(hour=end_hour, minute=end_min, second=0, microsecond=0)
+                slot_end_limit = slot_end_limit_ist.astimezone(timezone.utc)
                 
                 while slot_start < slot_end_limit:
                     slot_end = slot_start + timedelta(minutes=session_duration)
@@ -207,7 +211,7 @@ async def get_client_available_slots(date: Optional[str] = None, current_user: d
                             available_slots.append({
                                 "start_time": slot_start.isoformat(),
                                 "end_time": slot_end.isoformat(),
-                                "display_time": slot_start.strftime("%H:%M")
+                                "display_time": slot_start.astimezone(IST_TZ).strftime("%H:%M")
                             })
                     
                     slot_start = slot_end
@@ -216,13 +220,12 @@ async def get_client_available_slots(date: Optional[str] = None, current_user: d
             start_hour, start_min = map(int, day_availability.get("start", "09:00").split(":"))
             end_hour, end_min = map(int, day_availability.get("end", "18:00").split(":"))
             
-            slot_start = start_date.replace(hour=start_hour, minute=start_min, second=0, microsecond=0)
-            if slot_start.tzinfo is None:
-                slot_start = slot_start.replace(tzinfo=timezone.utc)
+            # Availability hours are IST
+            slot_start_ist = start_date_ist.replace(hour=start_hour, minute=start_min, second=0, microsecond=0)
+            slot_start = slot_start_ist.astimezone(timezone.utc)
             
-            slot_end_limit = start_date.replace(hour=end_hour, minute=end_min, second=0, microsecond=0)
-            if slot_end_limit.tzinfo is None:
-                slot_end_limit = slot_end_limit.replace(tzinfo=timezone.utc)
+            slot_end_limit_ist = start_date_ist.replace(hour=end_hour, minute=end_min, second=0, microsecond=0)
+            slot_end_limit = slot_end_limit_ist.astimezone(timezone.utc)
             
             while slot_start < slot_end_limit:
                 slot_end = slot_start + timedelta(minutes=session_duration)
@@ -241,7 +244,7 @@ async def get_client_available_slots(date: Optional[str] = None, current_user: d
                         available_slots.append({
                             "start_time": slot_start.isoformat(),
                             "end_time": slot_end.isoformat(),
-                            "display_time": slot_start.strftime("%H:%M")
+                            "display_time": slot_start.astimezone(IST_TZ).strftime("%H:%M")
                         })
                 
                 slot_start = slot_end
