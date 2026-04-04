@@ -114,6 +114,27 @@ Hindi (User communicates in Hindi/Hinglish)
 - [x] Added diagnostic logging to `send_morning_schedule_briefing`
 - [x] 8/8 unit tests pass for date range, boundary, and display date verification
 
+### April 4, 2026 - Root Cause Timezone Fix (3 bugs, 1 root cause)
+**Bugs fixed:**
+1. WhatsApp morning schedule showed NEXT DAY date and appointments instead of today
+2. Email daily summary also showed wrong date
+3. Calendar highlighted next day instead of today
+4. Backend slot API generated IST hours tagged as UTC (7:15 PM IST → stored as 19:15 UTC instead of 13:45 UTC)
+
+**Root causes identified:**
+- Backend `/api/appointments/available-slots`: IST availability hours (19:15) were applied directly to UTC date objects → stored as 19:15 UTC instead of 13:45 UTC
+- Morning briefing: UTC range query excluded IST-in-UTC evening appointments from correct day
+- Frontend `nowIST()` in TherapistSchedule.js: Formula `IST_OFFSET - getTimezoneOffset()` added 11 hours for IST browsers instead of 0
+
+**Fixes applied:**
+- [x] Backend: Slot generation now creates IST datetime first, then converts to UTC (`start_date_ist.replace(hour=h).astimezone(timezone.utc)`)
+- [x] Backend: Morning briefing uses DATE COMPONENT matching (`start_time[:10]`) instead of UTC range comparison — handles both old and new storage formats
+- [x] Backend: Smart time display detection for both formats (correct UTC vs old IST-in-UTC)
+- [x] Frontend: TherapistSchedule.js `nowIST()` fixed to use same formula as formatUtils.js
+- [x] Frontend: Calendar day matching uses `appt.start_time.substring(0, 10)` instead of `new Date().getDate()`
+- [x] Frontend: TherapistOverview.js todaySchedule filter uses date component matching
+- [x] Testing: 11/11 backend tests passed, frontend code review verified
+
 ## Pending Tasks
 
 ### P0 - Critical
@@ -135,9 +156,13 @@ Hindi (User communicates in Hindi/Hinglish)
 
 ## Key Technical Architecture
 
-### Date/Timezone Handling (IMPORTANT)
-- All appointment times stored via `.isoformat()` → format: `"2026-03-28T04:30:00+00:00"`
-- All scheduled job queries MUST use `.isoformat()` for consistent string comparison
+### Date/Timezone Handling (CRITICAL - UPDATED April 4, 2026)
+- **Slot Generation**: IST availability hours → create IST datetime → `.astimezone(timezone.utc)` → `.isoformat()` for storage
+- **Old appointments** may have IST hours stored as UTC (e.g., "19:15+00:00" for 7:15 PM IST)
+- **New appointments** have correct UTC (e.g., "13:45+00:00" for 7:15 PM IST)
+- **Query Strategy**: Use DATE COMPONENT matching (`start_time[:10]`) for queries — works with BOTH formats
+- **Display Strategy**: Convert to IST; if resulting date ≠ expected date, use raw time (old format)
+- **Frontend Date Matching**: Always use `appt.start_time.substring(0, 10)` instead of `new Date(appt.start_time).getDate()`
 - Centralized utility: `/app/backend/services/date_utils.py`
 - IST timezone: `ZoneInfo("Asia/Kolkata")`, NO manual timedelta offsets
 
@@ -167,4 +192,4 @@ Hindi (User communicates in Hindi/Hinglish)
 - Super Admin: mobile=7275005000, password=Test@123
 
 ---
-Last Updated: March 28, 2026
+Last Updated: April 4, 2026
