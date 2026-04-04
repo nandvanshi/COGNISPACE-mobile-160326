@@ -6,7 +6,7 @@ import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { 
   Users, UserCheck, UserX, CreditCard, AlertTriangle, Clock,
-  MessageSquare, ChevronRight, RefreshCw, TrendingUp, Shield
+  MessageSquare, ChevronRight, RefreshCw, TrendingUp, Shield, Wrench
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDate } from '../../utils/formatUtils';
@@ -14,6 +14,8 @@ import { formatDate } from '../../utils/formatUtils';
 const AdminOverview = ({ onNavigate }) => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [migrationResult, setMigrationResult] = useState(null);
+  const [migrating, setMigrating] = useState(false);
 
   useEffect(() => {
     fetchStats();
@@ -34,6 +36,23 @@ const AdminOverview = ({ onNavigate }) => {
     if (!dateStr) return '';
     const date = new Date(dateStr);
     return date.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
+
+  const runMigration = async (apply = false) => {
+    setMigrating(true);
+    try {
+      const res = await axios.post(`${API}/scheduler/migrate-appointment-timezone${apply ? '?apply=true' : ''}`);
+      setMigrationResult(res.data);
+      if (apply && res.data.fixed > 0) {
+        toast.success(`${res.data.fixed} appointments fixed successfully!`);
+      } else if (apply && res.data.fixed === 0) {
+        toast.info('No appointments needed fixing.');
+      }
+    } catch (error) {
+      toast.error('Migration failed: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setMigrating(false);
+    }
   };
 
   if (loading) {
@@ -289,6 +308,75 @@ const AdminOverview = ({ onNavigate }) => {
             <span className="text-sm">Manage Therapists</span>
           </Button>
         </div>
+      </Card>
+      {/* Migration Tool */}
+      <Card className="p-6 border-amber-200 bg-amber-50/50">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
+            <Wrench size={20} className="text-amber-700" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-foreground">Appointment Timezone Migration</h3>
+            <p className="text-sm text-muted-foreground">Fix old appointments stored in wrong timezone format</p>
+          </div>
+        </div>
+        
+        <div className="flex gap-3 mb-4">
+          <Button 
+            variant="outline" 
+            onClick={() => runMigration(false)} 
+            disabled={migrating}
+            data-testid="migration-dry-run-btn"
+            className="border-amber-300"
+          >
+            {migrating ? <RefreshCw size={16} className="animate-spin mr-2" /> : null}
+            Check (Dry Run)
+          </Button>
+          <Button 
+            variant="default" 
+            onClick={() => {
+              if (window.confirm('Are you sure? This will modify appointment data. A backup will be created automatically.')) {
+                runMigration(true);
+              }
+            }} 
+            disabled={migrating}
+            data-testid="migration-apply-btn"
+            className="bg-amber-600 hover:bg-amber-700"
+          >
+            {migrating ? <RefreshCw size={16} className="animate-spin mr-2" /> : null}
+            Apply Fix
+          </Button>
+        </div>
+
+        {migrationResult && (
+          <div className="bg-white rounded-lg p-4 border border-amber-200 text-sm space-y-2">
+            <div className="flex gap-6">
+              <span>Total: <strong>{migrationResult.total}</strong></span>
+              <span className="text-green-600">Correct: <strong>{migrationResult.already_correct}</strong></span>
+              <span className="text-amber-600">Need Fix: <strong>{migrationResult.fixed}</strong></span>
+              {migrationResult.errors > 0 && <span className="text-red-600">Errors: <strong>{migrationResult.errors}</strong></span>}
+            </div>
+            {migrationResult.details?.length > 0 && (
+              <div className="mt-3 space-y-2 max-h-60 overflow-y-auto">
+                <p className="font-medium text-muted-foreground">Details:</p>
+                {migrationResult.details.map((item, i) => (
+                  <div key={i} className="flex items-center gap-2 p-2 bg-amber-50 rounded text-xs">
+                    <Badge variant="outline" className="text-xs">{item.status}</Badge>
+                    <span className="font-medium">{item.client_name}</span>
+                    <span className="text-muted-foreground">|</span>
+                    <span className="text-red-500 line-through">{item.old_start?.substring(11, 16)} UTC</span>
+                    <span>→</span>
+                    <span className="text-green-600">{item.new_start?.substring(11, 16)} UTC</span>
+                    <span className="text-muted-foreground ml-auto">({item.reason})</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {migrationResult.details?.length === 0 && migrationResult.total > 0 && (
+              <p className="text-green-600 font-medium">All appointments are in correct format!</p>
+            )}
+          </div>
+        )}
       </Card>
     </div>
   );
