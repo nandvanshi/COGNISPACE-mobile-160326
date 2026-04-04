@@ -182,10 +182,20 @@ async def assign_resource(resource_id: str, client_id: str, notes: Optional[str]
     """Assign a resource to a client"""
     therapist_id = current_user["id"]
     
-    # Verify resource exists
+    # Verify resource exists - check both resources AND admin_content collections
     resource = await _db.resources.find_one({"id": resource_id}, {"_id": 0})
     if not resource:
-        raise HTTPException(status_code=404, detail="Resource not found")
+        # Check admin_content collection (admin-created resources)
+        admin_resource = await _db.admin_content.find_one({"id": resource_id, "type": "resource"}, {"_id": 0})
+        if not admin_resource:
+            raise HTTPException(status_code=404, detail="Resource not found")
+        # Use admin resource data
+        resource = {
+            "id": admin_resource["id"],
+            "title": admin_resource.get("title", ""),
+            "category": admin_resource.get("category", "general"),
+            "content": admin_resource.get("description", "") or admin_resource.get("content", {}).get("text", ""),
+        }
     
     # Verify client belongs to therapist
     client_profile = await _db.client_profiles.find_one(
@@ -241,12 +251,21 @@ async def get_resource_assignments(client_id: Optional[str] = None, current_user
     # Enrich with resource content for clients
     enriched_assignments = []
     for a in assignments:
-        # Get resource details
+        # Get resource details - check both collections
         resource = await _db.resources.find_one({"id": a.get("resource_id")}, {"_id": 0})
+        if not resource:
+            # Check admin_content
+            admin_res = await _db.admin_content.find_one({"id": a.get("resource_id"), "type": "resource"}, {"_id": 0})
+            if admin_res:
+                resource = {
+                    "content": admin_res.get("description", "") or admin_res.get("content", {}).get("text", ""),
+                    "category": admin_res.get("category", "general"),
+                    "url": admin_res.get("url"),
+                }
         if resource:
             a["resource_content"] = resource.get("content")
             a["resource_category"] = resource.get("category")
-            a["resource_url"] = resource.get("url")  # If external URL
+            a["resource_url"] = resource.get("url")
             a["resource_type"] = resource.get("category", "worksheet")
         enriched_assignments.append(a)
     
