@@ -65,3 +65,23 @@ async def get_scheduler_logs(
     ).sort("executed_at", -1).limit(limit).to_list(limit)
     
     return logs
+
+
+
+@router.post("/migrate-appointment-timezone")
+async def migrate_appointment_timezone(
+    apply: bool = False,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Migrate old IST-in-UTC appointments to correct UTC format.
+    - Default: DRY-RUN mode (shows what would change)
+    - Pass apply=true to actually fix the data
+    - Super admin only
+    """
+    if current_user["role"] != "super_admin":
+        raise HTTPException(status_code=403, detail="Super admin access required")
+    
+    from scripts.migrate_appointment_timezone import run_migration
+    result = await run_migration(dry_run=not apply)
+    return result

@@ -193,3 +193,9 @@ Hindi (User communicates in Hindi/Hinglish)
 
 ---
 Last Updated: April 4, 2026
+
+### Migration Script (April 4, 2026)
+- Script: `/app/backend/scripts/migrate_appointment_timezone.py`
+- API: `POST /api/scheduler/migrate-appointment-timezone` (Super Admin only)
+- DRY-RUN default, pass `?apply=true` to fix
+- Creates backup in `appointment_backups` collection before modifying
