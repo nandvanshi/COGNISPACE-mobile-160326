@@ -15,7 +15,7 @@ import requests
 import os
 from datetime import datetime, timedelta
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://voice-notes-beta.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://cogni-deploy.preview.emergentagent.com').rstrip('/')
 
 # IST offset for verification
 IST_OFFSET = timedelta(hours=5, minutes=30)
