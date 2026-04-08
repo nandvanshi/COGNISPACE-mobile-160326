@@ -119,21 +119,21 @@ Hindi (User communicates in Hindi/Hinglish)
 1. WhatsApp morning schedule showed NEXT DAY date and appointments instead of today
 2. Email daily summary also showed wrong date
 3. Calendar highlighted next day instead of today
-4. Backend slot API generated IST hours tagged as UTC (7:15 PM IST → stored as 19:15 UTC instead of 13:45 UTC)
-
-**Root causes identified:**
-- Backend `/api/appointments/available-slots`: IST availability hours (19:15) were applied directly to UTC date objects → stored as 19:15 UTC instead of 13:45 UTC
-- Morning briefing: UTC range query excluded IST-in-UTC evening appointments from correct day
-- Frontend `nowIST()` in TherapistSchedule.js: Formula `IST_OFFSET - getTimezoneOffset()` added 11 hours for IST browsers instead of 0
+4. Backend slot API generated IST hours tagged as UTC (7:15 PM IST stored as 19:15 UTC instead of 13:45 UTC)
 
 **Fixes applied:**
-- [x] Backend: Slot generation now creates IST datetime first, then converts to UTC (`start_date_ist.replace(hour=h).astimezone(timezone.utc)`)
-- [x] Backend: Morning briefing uses DATE COMPONENT matching (`start_time[:10]`) instead of UTC range comparison — handles both old and new storage formats
-- [x] Backend: Smart time display detection for both formats (correct UTC vs old IST-in-UTC)
-- [x] Frontend: TherapistSchedule.js `nowIST()` fixed to use same formula as formatUtils.js
-- [x] Frontend: Calendar day matching uses `appt.start_time.substring(0, 10)` instead of `new Date().getDate()`
+- [x] Backend: Slot generation now creates IST datetime first, then converts to UTC
+- [x] Backend: Morning briefing uses DATE COMPONENT matching instead of UTC range comparison
+- [x] Backend: Smart time display detection for both formats
+- [x] Frontend: TherapistSchedule.js `nowIST()` fixed
+- [x] Frontend: Calendar day matching uses date component matching
 - [x] Frontend: TherapistOverview.js todaySchedule filter uses date component matching
 - [x] Testing: 11/11 backend tests passed, frontend code review verified
+
+### April 8, 2026 - Super Admin All Users View
+- [x] **Backend**: `GET /api/admin/all-users` API with role filter, text search, pagination
+- [x] **Frontend**: New `AllUsers.js` component in Super Admin sidebar with role tabs, search, copy-to-clipboard
+- [x] **Testing**: API tested via curl, frontend verified via screenshot
 
 ## Pending Tasks
 
@@ -185,14 +185,15 @@ Hindi (User communicates in Hindi/Hinglish)
 - `/app/frontend/src/components/ai-clinical/index.js` - TheraGenie AI (accepts navContext)
 - `/app/frontend/src/components/FollowUpDashboard.js` - Follow-up dashboard with analytics
 - `/app/backend/routes/follow_ups.py` - Follow-up Intelligence System APIs
+- `/app/frontend/src/components/admin/AllUsers.js` - All Users view for Super Admin
 
 ### Test Credentials
 - Therapist: mobile=7275005007, password=Test@123
 - Client: mobile=9235555549, password=Test@123
-- Super Admin: mobile=7275005000, password=Test@123
+- Super Admin: username=admin, password=admin123
 
 ---
-Last Updated: April 4, 2026
+Last Updated: April 8, 2026
 
 ### Migration Script (April 4, 2026)
 - Script: `/app/backend/scripts/migrate_appointment_timezone.py`

@@ -955,3 +955,53 @@ async def update_client_admin(client_id: str, data: ClientAdminUpdate, current_u
         "profile_photo": profile.get("profile_photo") if profile else None,
         "created_at": updated_user["created_at"]
     }
+
+
+
+# ============= ALL USERS LIST (Super Admin) =============
+
+@router.get("/all-users")
+async def get_all_users(
+    role: Optional[str] = None,
+    search: Optional[str] = None,
+    page: int = Query(1, ge=1),
+    limit: int = Query(50, ge=1, le=200),
+    current_user: dict = Depends(require_super_admin)
+):
+    """Get all users with filtering, search, and pagination"""
+    query = {}
+    
+    if role and role != "all":
+        query["role"] = role
+    
+    if search:
+        query["$or"] = [
+            {"full_name": {"$regex": search, "$options": "i"}},
+            {"mobile": {"$regex": search, "$options": "i"}},
+            {"email": {"$regex": search, "$options": "i"}},
+        ]
+    
+    total = await db.users.count_documents(query)
+    skip = (page - 1) * limit
+    
+    users = await db.users.find(
+        query, 
+        {"_id": 0, "password": 0}
+    ).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    
+    # Get role-wise counts
+    counts = {
+        "all": await db.users.count_documents({}),
+        "therapist": await db.users.count_documents({"role": "therapist"}),
+        "client": await db.users.count_documents({"role": "client"}),
+        "assistant": await db.users.count_documents({"role": "assistant"}),
+    }
+    
+    return {
+        "users": users,
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "total_pages": (total + limit - 1) // limit,
+        "counts": counts
+    }
