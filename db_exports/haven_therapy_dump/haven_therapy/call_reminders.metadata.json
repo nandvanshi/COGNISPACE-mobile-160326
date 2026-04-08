@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"}],"uuid":"dbc994f373c043609b566918e0b43920","collectionName":"call_reminders","type":"collection"}

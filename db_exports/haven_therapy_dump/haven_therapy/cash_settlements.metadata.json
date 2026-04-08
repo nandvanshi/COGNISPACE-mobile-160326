@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"}],"uuid":"501e8f7173a04529844d67e04829fd12","collectionName":"cash_settlements","type":"collection"}

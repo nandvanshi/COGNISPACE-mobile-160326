@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"}],"uuid":"493f8597104b426eabb79f7bf616f53a","collectionName":"therapist_applications","type":"collection"}
