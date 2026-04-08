@@ -1005,3 +1005,29 @@ async def get_all_users(
         "total_pages": (total + limit - 1) // limit,
         "counts": counts
     }
+
+
+
+# ============= SYSTEM CONFIG / ENV VARIABLES (Super Admin) =============
+
+@router.get("/system-config")
+async def get_system_config(current_user: dict = Depends(require_super_admin)):
+    """Return all backend .env variables for Super Admin"""
+    import os
+    from pathlib import Path
+    
+    env_vars = []
+    env_path = Path(__file__).parent.parent / ".env"
+    
+    if env_path.exists():
+        with open(env_path, "r") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                if "=" in line:
+                    key, _, value = line.partition("=")
+                    value = value.strip().strip('"').strip("'")
+                    env_vars.append({"key": key.strip(), "value": value})
+    
+    return {"variables": env_vars, "count": len(env_vars)}
