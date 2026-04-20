@@ -116,7 +116,7 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
       
       // Today's appointments - compare date component directly
       const todayAppts = allAppts.filter((appt) => {
-        return getApptDateStr(appt) === todayDateStr && appt.status !== 'cancelled';
+        return getApptDateStr(appt) === todayDateStr && !['cancelled', 'declined'].includes(appt.status);
       }).sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
 
       // This week's appointments (for stats)
@@ -138,7 +138,7 @@ const TherapistOverview = ({ isReadOnly = false, onNavigate }) => {
         const apptDateStr = getApptDateStr(appt);
         if (!apptDateStr) return false;
         const apptDate = new Date(apptDateStr + 'T00:00:00');
-        return apptDate >= todayIST && apptDate < weekEnd && appt.status !== 'cancelled';
+        return apptDate >= todayIST && apptDate < weekEnd && !['cancelled', 'declined'].includes(appt.status);
       }).sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
 
       // Group by day for week view

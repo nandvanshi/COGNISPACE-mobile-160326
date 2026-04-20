@@ -205,7 +205,7 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
     
     const todayAppointments = profileData.appointments.filter(a => {
       const apptDate = new Date(a.start_time);
-      return apptDate >= today && apptDate < tomorrow && a.status !== 'cancelled';
+      return apptDate >= today && apptDate < tomorrow && !['cancelled', 'declined'].includes(a.status);
     });
 
     if (todayAppointments.length === 0) {
@@ -420,7 +420,7 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
   const completedSessions = profileData.appointments.filter(a => a.status === 'completed').length;
   const inProgressSessions = profileData.appointments.filter(a => a.status === 'in_progress').length;
   const upcomingAppointments = profileData.appointments.filter(a => 
-    new Date(a.start_time) > new Date() && a.status !== 'cancelled' && a.status !== 'completed'
+    new Date(a.start_time) > new Date() && a.status !== 'cancelled' && a.status !== 'completed' && a.status !== 'declined'
   ).sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
   const nextAppointment = upcomingAppointments[0];
   const pastAppointments = profileData.appointments.filter(a => 
@@ -1511,7 +1511,7 @@ const ClientProfileView = ({ client, isOpen, onClose, isReadOnly = false, onRefr
                     <SelectContent>
                       <SelectItem value="none">No appointment</SelectItem>
                       {profileData.appointments
-                        .filter(a => a.status !== 'cancelled')
+                        .filter(a => !['cancelled', 'declined'].includes(a.status))
                         .sort((a, b) => new Date(b.start_time) - new Date(a.start_time))
                         .slice(0, 10)
                         .map(appt => (

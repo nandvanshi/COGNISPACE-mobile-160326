@@ -172,7 +172,7 @@ const TherapistSchedule = ({ isReadOnly = false, isAssistant = false }) => {
           // "2026-04-04T13:45:00+00:00" → "2026-04-04"
           // "2026-04-04T19:15:00+00:00" → "2026-04-04"
           const apptDateStr = appt.start_time.substring(0, 10);
-          return apptDateStr === dateStr && appt.status !== 'cancelled';
+          return apptDateStr === dateStr && !['cancelled', 'declined'].includes(appt.status);
         } catch (e) {
           return false;
         }
@@ -220,7 +220,7 @@ const TherapistSchedule = ({ isReadOnly = false, isAssistant = false }) => {
       if (!appt?.start_time) return false;
       try {
         const apptDateStr = appt.start_time.substring(0, 10);
-        return apptDateStr === dateStr && appt.status !== 'cancelled';
+        return apptDateStr === dateStr && !['cancelled', 'declined'].includes(appt.status);
       } catch (e) {
         return false;
       }

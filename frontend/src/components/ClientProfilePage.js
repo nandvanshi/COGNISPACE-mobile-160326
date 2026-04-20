@@ -579,12 +579,12 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
                 <h3 className="font-semibold mb-4 flex items-center gap-2">
                   <Calendar size={18} /> Upcoming Appointments
                 </h3>
-                {appointments.filter(a => new Date(a.start_time) > new Date() && a.status !== 'cancelled').length === 0 ? (
+                {appointments.filter(a => new Date(a.start_time) > new Date() && !['cancelled', 'declined'].includes(a.status)).length === 0 ? (
                   <p className="text-muted-foreground text-sm">No upcoming appointments</p>
                 ) : (
                   <div className="space-y-3">
                     {appointments
-                      .filter(a => new Date(a.start_time) > new Date() && a.status !== 'cancelled')
+                      .filter(a => new Date(a.start_time) > new Date() && !['cancelled', 'declined'].includes(a.status))
                       .slice(0, 3)
                       .map(appt => (
                         <div key={appt.id} className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
@@ -661,7 +661,7 @@ const ClientProfilePage = ({ clientIdProp, isReadOnly = false, isAssistant = fal
                 {isAssistant ? (
                   <>
                     <Card className="p-4 text-center">
-                      <p className="text-2xl font-bold text-primary">{appointments.filter(a => new Date(a.start_time) > new Date() && a.status !== 'cancelled').length}</p>
+                      <p className="text-2xl font-bold text-primary">{appointments.filter(a => new Date(a.start_time) > new Date() && !['cancelled', 'declined'].includes(a.status)).length}</p>
                       <p className="text-sm text-muted-foreground">Upcoming</p>
                     </Card>
                     <Card className="p-4 text-center">

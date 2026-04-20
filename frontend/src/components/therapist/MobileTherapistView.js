@@ -393,7 +393,7 @@ const MobileTherapistView = ({
       if (Array.isArray(appointmentsData)) {
         const now = new Date();
         const upcoming = appointmentsData
-          .filter(a => a && new Date(a.start_time) >= now && a.status !== 'cancelled')
+          .filter(a => a && new Date(a.start_time) >= now && !['cancelled', 'declined'].includes(a.status))
           .sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
         setUpcomingAppointments(upcoming);
       } else {
