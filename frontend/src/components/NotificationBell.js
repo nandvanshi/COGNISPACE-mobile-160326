@@ -143,14 +143,15 @@ const NotificationBell = ({ onNavigate }) => {
       
       // Update app badge
       notificationService.setUnreadCount(newCount);
-      
-      // Navigate if link provided
-      if (link && onNavigate) {
-        setIsOpen(false);
-        onNavigate(link);
-      }
     } catch (error) {
+      // Silently handle - don't show error to user
       console.error('Failed to mark as read:', error);
+    }
+    
+    // Navigate even if marking as read fails
+    if (link && onNavigate) {
+      setIsOpen(false);
+      onNavigate(link);
     }
   };
 

@@ -299,19 +299,9 @@ async def get_unread_count(current_user: dict = Depends(get_current_user)):
     return {"count": count}
 
 
-@router.patch("/{notification_id}/read")
-async def mark_as_read(notification_id: str, current_user: dict = Depends(get_current_user)):
-    """Mark a notification as read"""
-    result = await db.notifications.update_one(
-        {"id": notification_id, "user_id": current_user["id"]},
-        {"$set": {"is_read": True, "read_at": datetime.now(timezone.utc).isoformat()}}
-    )
-    
-    if result.modified_count == 0:
-        raise HTTPException(status_code=404, detail="Notification not found")
-    
-    return {"success": True}
 
+# NOTE: Static routes MUST come before dynamic {notification_id} routes
+# Otherwise FastAPI treats "clear-all" / "mark-all-read" as notification_id
 
 @router.patch("/mark-all-read")
 async def mark_all_as_read(current_user: dict = Depends(get_current_user)):
@@ -322,6 +312,30 @@ async def mark_all_as_read(current_user: dict = Depends(get_current_user)):
     )
     
     return {"marked_read": result.modified_count}
+
+
+@router.delete("/clear-all")
+async def clear_all_notifications(current_user: dict = Depends(get_current_user)):
+    """Clear all notifications for current user"""
+    result = await db.notifications.delete_many({"user_id": current_user["id"]})
+    return {"deleted": result.deleted_count}
+
+
+@router.patch("/{notification_id}/read")
+async def mark_as_read(notification_id: str, current_user: dict = Depends(get_current_user)):
+    """Mark a notification as read"""
+    result = await db.notifications.update_one(
+        {"id": notification_id, "user_id": current_user["id"]},
+        {"$set": {"is_read": True, "read_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    if result.modified_count == 0:
+        # Don't error if already read
+        existing = await db.notifications.find_one({"id": notification_id, "user_id": current_user["id"]})
+        if not existing:
+            raise HTTPException(status_code=404, detail="Notification not found")
+    
+    return {"success": True}
 
 
 @router.delete("/{notification_id}")
@@ -336,13 +350,6 @@ async def delete_notification(notification_id: str, current_user: dict = Depends
         raise HTTPException(status_code=404, detail="Notification not found")
     
     return {"success": True}
-
-
-@router.delete("/clear-all")
-async def clear_all_notifications(current_user: dict = Depends(get_current_user)):
-    """Clear all notifications for current user"""
-    result = await db.notifications.delete_many({"user_id": current_user["id"]})
-    return {"deleted": result.deleted_count}
 
 
 # ============= USER NOTIFICATION PREFERENCES (Sound & Badge) =============
