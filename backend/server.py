@@ -1224,6 +1224,21 @@ async def get_build_info():
                 info[key.strip().lower()] = val.strip()
     return info
 
+
+@app.get("/api/update-log")
+async def get_update_log():
+    """Return full update log with timestamps"""
+    log_file = Path(__file__).parent / "update_log.txt"
+    entries = []
+    if log_file.exists():
+        for line in log_file.read_text().strip().splitlines():
+            line = line.strip()
+            if not line or "|" not in line:
+                continue
+            timestamp, _, note = line.partition("|")
+            entries.append({"timestamp": timestamp.strip(), "note": note.strip()})
+    return {"entries": entries, "total": len(entries)}
+
 @app.on_event("startup")
 async def startup_event():
     """Run on application startup - migrate therapists without subscriptions"""

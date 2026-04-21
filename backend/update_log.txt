@@ -1,0 +1,16 @@
+2026-04-20T16:46:00+05:30 | Notification fix: Clear All & Mark All Read route ordering fixed
+2026-04-20T16:30:00+05:30 | Declined appointments hidden from Schedule, Calendar, Dashboard views
+2026-04-20T16:00:00+05:30 | All Users view added in Super Admin with role filters & search
+2026-04-20T15:45:00+05:30 | System Config page: View all .env variables with reveal/copy
+2026-04-20T15:30:00+05:30 | Build timestamp added to Admin sidebar
+2026-04-20T15:00:00+05:30 | Debug Morning Briefing API for VPS troubleshooting
+2026-04-04T18:00:00+05:30 | Root cause timezone fix: Slot generation, morning briefing, calendar
+2026-04-04T14:00:00+05:30 | Appointment timezone migration tool for Super Admin
+2026-04-04T12:00:00+05:30 | Admin resource sharing fix (admin_content collection)
+2026-03-28T10:00:00+05:30 | Centralized date_utils.py for IST/UTC handling
+2026-03-16T18:00:00+05:30 | Follow-Up Intelligence System (Phase 1-5) + Automated Reminders
+2026-03-16T12:00:00+05:30 | Admin Content Library with 5 content types
+2026-03-08T10:00:00+05:30 | Scheduler timezone & UTC date fix for all cron jobs
+2026-03-06T16:00:00+05:30 | Mobile Therapist View P0 fixes + Messaging typing bug
+2026-03-06T12:00:00+05:30 | Client PDF download + Resource creation safeguard
+2026-02-06T10:00:00+05:30 | Initial COGNISPACE launch: Auth, Clients, Appointments, Payments, AI
