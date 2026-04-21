@@ -25,6 +25,12 @@ const SuperAdminDashboard = () => {
   const location = useLocation();
   const [currentView, setCurrentView] = useState('overview');
   const [showSettings, setShowSettings] = useState(false);
+  const [buildInfo, setBuildInfo] = useState(null);
+
+  // Fetch build info
+  useEffect(() => {
+    axios.get(`${API}/build-info`).then(r => setBuildInfo(r.data)).catch(() => {});
+  }, []);
 
   // Sync currentView with URL hash for browser back button support
   useEffect(() => {
@@ -101,6 +107,15 @@ const SuperAdminDashboard = () => {
         </nav>
 
         <div className="p-4 border-t border-border space-y-2">
+          {buildInfo?.build_timestamp && (
+            <div className="px-3 py-2 bg-muted/50 rounded-lg mb-2" data-testid="build-info">
+              <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-wide">Last Update</p>
+              <p className="text-xs font-semibold text-primary">{buildInfo.build_timestamp}</p>
+              {buildInfo.build_note && (
+                <p className="text-[10px] text-muted-foreground mt-0.5 truncate" title={buildInfo.build_note}>{buildInfo.build_note}</p>
+              )}
+            </div>
+          )}
           <Button
             onClick={() => setShowSettings(true)}
             variant="ghost"

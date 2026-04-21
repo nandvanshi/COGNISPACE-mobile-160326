@@ -1211,6 +1211,19 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
+@app.get("/api/build-info")
+async def get_build_info():
+    """Return build timestamp for version comparison between deployed and testing"""
+    info = {"build_timestamp": None, "build_note": None}
+    build_file = Path(__file__).parent / "build_info.txt"
+    if build_file.exists():
+        for line in build_file.read_text().strip().splitlines():
+            if "=" in line:
+                key, _, val = line.partition("=")
+                info[key.strip().lower()] = val.strip()
+    return info
+
 @app.on_event("startup")
 async def startup_event():
     """Run on application startup - migrate therapists without subscriptions"""
