@@ -1241,8 +1241,23 @@ async def get_update_log():
 
 @app.on_event("startup")
 async def startup_event():
-    """Run on application startup - migrate therapists without subscriptions"""
+    """Run on application startup"""
     logger.info("Running startup migration for therapists without subscriptions...")
+    
+    # Auto-update build timestamp on every server start
+    try:
+        build_file = Path(__file__).parent / "build_info.txt"
+        now_ist = datetime.now(ZoneInfo("Asia/Kolkata")).strftime("%Y-%m-%dT%H:%M:%S+05:30")
+        # Read existing note or set default
+        existing_note = "Server restarted"
+        if build_file.exists():
+            for line in build_file.read_text().strip().splitlines():
+                if line.startswith("BUILD_NOTE="):
+                    existing_note = line.split("=", 1)[1].strip()
+        build_file.write_text(f"BUILD_TIMESTAMP={now_ist}\nBUILD_NOTE={existing_note}\n")
+        logger.info(f"Build timestamp updated: {now_ist}")
+    except Exception as e:
+        logger.error(f"Failed to update build timestamp: {e}")
     
     # Initialize Email and WhatsApp services
     try:
