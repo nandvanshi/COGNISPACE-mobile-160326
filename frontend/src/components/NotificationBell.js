@@ -41,6 +41,13 @@ const formatNotificationTime = (dateStr) => {
   return `${day}/${month}/${year} ${hours}:${mins}`;
 };
 
+// Safely render a value that should be a string (guards against accidental objects in DB)
+const safeText = (val) => {
+  if (val == null) return '';
+  if (typeof val === 'string' || typeof val === 'number') return val;
+  try { return JSON.stringify(val); } catch { return ''; }
+};
+
 // Get icon based on notification type
 const getNotificationIcon = (type) => {
   switch (type) {
@@ -290,14 +297,14 @@ const NotificationBell = ({ onNavigate }) => {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2">
                             <p className={`text-sm ${!notification.is_read ? 'font-semibold text-gray-900' : 'text-gray-700'}`}>
-                              {notification.title}
+                              {safeText(notification.title)}
                             </p>
                             {!notification.is_read && (
                               <span className="w-2 h-2 bg-primary rounded-full flex-shrink-0 mt-1.5" />
                             )}
                           </div>
                           <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">
-                            {notification.message}
+                            {safeText(notification.message)}
                           </p>
                           <div className="flex items-center justify-between mt-1.5">
                             <span className="text-xs text-gray-400 flex items-center gap-1">

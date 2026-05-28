@@ -352,10 +352,12 @@ async def create_public_booking(booking: PublicBookingRequest):
     notification_doc = {
         "id": str(uuid.uuid4()),
         "user_id": booking.therapist_id,
+        "role": "therapist",
         "type": "booking_request",
         "title": "New Booking Request",
         "message": f"New appointment request from {client_name} for {booking.slot_start[:10]}",
-        "data": {"appointment_id": appointment_id, "client_id": client_id},
+        "link": "appointments",
+        "metadata": {"appointment_id": appointment_id, "client_id": client_id},
         "is_read": False,
         "created_at": datetime.now(timezone.utc).isoformat()
     }

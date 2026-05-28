@@ -317,11 +317,12 @@ async def client_request_appointment(appt_data: ClientAppointmentRequest, curren
         from routes.notifications import create_notification
         formatted_date, formatted_time = format_datetime_ist(appointment_doc["start_time"])
         await create_notification(
-            therapist_id,
-            "appointment_request",
-            f"New appointment request from {current_user['full_name']}",
-            f"Requested for {formatted_date} at {formatted_time}. Please review and approve.",
-            {"appointment_id": appointment_id, "client_id": current_user["id"]}
+            user_id=therapist_id,
+            role="therapist",
+            notification_type="appointment_request",
+            title=f"New appointment request from {current_user['full_name']}",
+            message=f"Requested for {formatted_date} at {formatted_time}. Please review and approve.",
+            metadata={"appointment_id": appointment_id, "client_id": current_user["id"]}
         )
     except Exception as e:
         print(f"Failed to send therapist in-app notification: {e}")
@@ -343,11 +344,12 @@ async def client_request_appointment(appt_data: ClientAppointmentRequest, curren
         from routes.notifications import create_notification
         formatted_date, formatted_time = format_datetime_ist(appointment_doc["start_time"])
         await create_notification(
-            current_user["id"],
-            "appointment_pending",
-            "Appointment Request Submitted",
-            f"Your request for {formatted_date} at {formatted_time} with {therapist_name} has been submitted. Waiting for approval.",
-            {"appointment_id": appointment_id}
+            user_id=current_user["id"],
+            role="client",
+            notification_type="appointment_pending",
+            title="Appointment Request Submitted",
+            message=f"Your request for {formatted_date} at {formatted_time} with {therapist_name} has been submitted. Waiting for approval.",
+            metadata={"appointment_id": appointment_id}
         )
     except Exception as e:
         print(f"Failed to send client notification: {e}")
@@ -898,10 +900,12 @@ async def approve_appointment(appointment_id: str, current_user: dict = Depends(
     notification_doc = {
         "id": str(uuid.uuid4()),
         "user_id": appointment["client_id"],
+        "role": "client",
         "type": "booking_approved",
         "title": "Appointment Confirmed",
         "message": f"Your appointment with {therapist['full_name']} on {appointment['start_time'][:10]} has been approved",
-        "data": {"appointment_id": appointment_id},
+        "link": "appointments",
+        "metadata": {"appointment_id": appointment_id},
         "is_read": False,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
@@ -968,10 +972,12 @@ async def decline_appointment(
     notification_doc = {
         "id": str(uuid.uuid4()),
         "user_id": appointment["client_id"],
+        "role": "client",
         "type": "booking_declined",
         "title": "Appointment Declined",
         "message": decline_message,
-        "data": {"appointment_id": appointment_id},
+        "link": "appointments",
+        "metadata": {"appointment_id": appointment_id},
         "is_read": False,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
