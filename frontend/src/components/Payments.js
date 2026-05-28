@@ -6,15 +6,17 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from './ui/dialog';
 import { toast } from 'sonner';
-import { Plus, IndianRupee, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
+import { Plus, IndianRupee, ArrowUpCircle, ArrowDownCircle, Trash2 } from 'lucide-react';
 import { formatCurrency, formatDate } from '../utils/formatUtils';
 
 const Payments = ({ isReadOnly = false }) => {
   const [payments, setPayments] = useState([]);
   const [clients, setClients] = useState([]);
   const [showDialog, setShowDialog] = useState(false);
+  const [paymentToDelete, setPaymentToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   const [newPayment, setNewPayment] = useState({
     client_id: '',
     amount: '',
@@ -77,6 +79,25 @@ const Payments = ({ isReadOnly = false }) => {
   const filteredPayments = filterClient
     ? payments.filter((p) => p.client_id === filterClient)
     : payments;
+
+  const handleDeletePayment = async () => {
+    if (!paymentToDelete) return;
+    setDeleting(true);
+    try {
+      await axios.delete(`${API}/payments/${paymentToDelete.id}`);
+      toast.success(
+        paymentToDelete.transaction_type === 'debit'
+          ? 'Refund record deleted'
+          : 'Payment record deleted'
+      );
+      setPaymentToDelete(null);
+      fetchData();
+    } catch (error) {
+      toast.error(error?.response?.data?.detail || 'Failed to delete payment');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   // Filter by selected month
   const monthFilteredPayments = filteredPayments.filter(p => {
@@ -200,12 +221,15 @@ const Payments = ({ isReadOnly = false }) => {
                 <th className="px-6 py-4 text-left text-sm font-medium text-foreground">Amount</th>
                 <th className="px-6 py-4 text-left text-sm font-medium text-foreground">Method</th>
                 <th className="px-6 py-4 text-left text-sm font-medium text-foreground">Notes</th>
+                {!isReadOnly && (
+                  <th className="px-6 py-4 text-right text-sm font-medium text-foreground">Action</th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {monthFilteredPayments.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="px-6 py-12 text-center text-muted-foreground">
+                  <td colSpan={isReadOnly ? 6 : 7} className="px-6 py-12 text-center text-muted-foreground">
                     No payments found for {getMonthDisplayName()}
                   </td>
                 </tr>
@@ -240,6 +264,21 @@ const Payments = ({ isReadOnly = false }) => {
                   <td className="px-6 py-4 text-sm text-muted-foreground">
                     {payment.notes || '-'}
                   </td>
+                  {!isReadOnly && (
+                    <td className="px-6 py-4 text-right">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                        onClick={() => setPaymentToDelete(payment)}
+                        data-testid={`delete-payment-${payment.id}`}
+                        title="Delete record"
+                      >
+                        <Trash2 size={18} />
+                      </Button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -371,6 +410,46 @@ const Payments = ({ isReadOnly = false }) => {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={!!paymentToDelete} onOpenChange={(open) => !open && setPaymentToDelete(null)}>
+        <DialogContent data-testid="delete-payment-dialog">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-serif text-primary">Delete Payment Record?</DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. The {paymentToDelete?.transaction_type === 'debit' ? 'refund/debit' : 'payment'} record will be permanently removed.
+            </DialogDescription>
+          </DialogHeader>
+          {paymentToDelete && (
+            <div className="bg-surface/60 rounded-lg p-4 text-sm space-y-1">
+              <div><span className="text-muted-foreground">Client:</span> <span className="font-medium">{paymentToDelete.client_name}</span></div>
+              <div><span className="text-muted-foreground">Amount:</span> <span className={`font-medium ${paymentToDelete.transaction_type === 'debit' ? 'text-red-600' : 'text-green-600'}`}>{paymentToDelete.transaction_type === 'debit' ? '-' : ''}{formatCurrency(paymentToDelete.amount)}</span></div>
+              <div><span className="text-muted-foreground">Date:</span> <span className="font-medium">{formatDate(paymentToDelete.created_at)}</span></div>
+              {paymentToDelete.bill_number && (
+                <div><span className="text-muted-foreground">Bill No:</span> <span className="font-medium">{paymentToDelete.bill_number}</span></div>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setPaymentToDelete(null)}
+              disabled={deleting}
+              data-testid="cancel-delete-payment-button"
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={handleDeletePayment}
+              disabled={deleting}
+              data-testid="confirm-delete-payment-button"
+            >
+              {deleting ? 'Deleting...' : 'Delete Record'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

@@ -1,146 +1,141 @@
-<analysis>**original_problem_statement**: Build a secure, therapist-first web application named **COGNISPACE** for practice management and clinical decision support. 
+<analysis>**original_problem_statement**: Build a secure, therapist-first web application named **COGNISPACE** for practice management and clinical decision support.
 **PRODUCT REQUIREMENTS**: 
 - Core Features: JWT authentication, client management, appointments, session notes, payments.
 - AI Features: TheraGenie & CogniVision, AI-powered content generation for admins.
 - Therapist Tools: Payments, mobile-first UI, resource sharing.
-- New Features Added: End-to-end Follow-Up Intelligence System (Analytics, Journey Timeline, Recommendations), Automated WhatsApp/Email Reminders, Native Web Speech API Voice Input for text areas, and AI-Powered Email Broadcast for Super Admins.
 
-**User's preferred language**: Hindi. The user communicates in Hindi and Hinglish. **INSTRUCT NEXT AGENT: You MUST respond in the user's preferred language (Hindi/Hinglish).**
+**User's preferred language**: Hindi/Hinglish (You MUST automatically detect the user's primary language from their messages inside the <trajectory> tag and INSTRUCT next agent to respond in the user's preferred language only).
 
 **what currently exists?** 
-The application is highly functional. In the previous session, the agent built out the entire 5-phase Follow-Up Intelligence System with automated reminders (Twilio/Resend), fixed the long-standing N+1 query issue in the clients list, integrated native Voice Input (Speech-to-Text) across all forms, fixed Twilio WhatsApp template integration bugs, and added an AI-powered mass email broadcasting tool for Super Admins. 
+A highly functional practice management platform. In this session, the agent built several Super Admin management tools (All Users view, System Config for  secrets, Update Log timeline), implemented auto-updating build timestamps, fixed a frontend bug showing Declined appointments, fixed notification routing/clearing bugs, provided Nginx/VPS setup guidance, and generated a comprehensive Master Documentation Markdown file for the entire application.
 
-**Last working item**:
-- **Last item agent was working**: Fixing a timezone/date calculation bug in the WhatsApp Morning Daily Schedule job ().
-- **Status**: IN PROGRESS
-- **Agent Testing Done**: N (Just started investigating before handoff)
-- **Which testing method agent to use?**: Backend testing agent or manual  script to test the scheduler logic and timezone output.
-- **User Testing Done**: N
+**Last working item**: 
+    - Last item agent was working: Generating a complete, comprehensive documentation file for the app () covering features, pages, DB structure, roles, and workflows based on the user's request.
+    - Status: COMPLETED
+    - Agent Testing Done: Y
+    - Which testing method agent to use?: NA (File generation)
+    - User Testing Done: N
 
-**All Pending/In progress Issue list**:
-Issue 1: **WhatsApp Morning Schedule Date/Data Mismatch** (P0 - LAST WORKING ITEM)
-Issue 2: **Production Deployment Login Fails** (P2 - BLOCKED)
+**All Pending/In progress Issue list**: 
+  Issue 1: Morning Briefing Email showing 0 appointments/payments on VPS (P1)
+     - Attempted fixes: The user reported the morning email summary had 0s despite having data. The agent created a debug API () for the user to run on their VPS to check if the issue is a data format mismatch or missing data entirely. 
+     - Next debug checklist: Wait for the user to share the output of the curl command against the debug API on their VPS. Analyze if  vs  are mismatching, or if the  format is wrong.
+     - Why fix this issue and what will be achieved with the fix?: Ensures therapists receive accurate daily summaries of their schedule and earnings.
+     - Status: USER VERIFICATION PENDING
+     - Is recurring issue? Y (Timezone/Scheduler data matching issues have occurred previously)
+     - Should Test frontend/backend/both after fix?: Backend
+     - Blocked on other issue: Waiting on user's debug API output.
 
-**Issues Detail**:
-- **Issue 1: WhatsApp Morning Schedule Date/Data Mismatch**
-   - **Attempted fixes**: The agent opened  to inspect  but the session ended.
-   - **Next debug checklist**: 
-      1. Check  lines 372-510.
-      2. Analyze the timezone conversion logic (UTC vs IST). The user reported that the morning message for today contains tomorrow's date and schedule.
-      3. Verify the  and  MongoDB query bounds for  in the daily appointment fetch.
-      4. Ensure  passed to Twilio correctly reflects the target day in IST.
-   - **Why fix this issue and what will be achieved with the fix?**: Therapists are receiving incorrect daily schedules, which can cause them to miss appointments.
-   - **Status**: IN PROGRESS
-   - **Is recurring issue?**: Y (Timezone issues have been patched in other areas previously).
-   - **Should Test frontend/backend/both after fix?**: Backend (specifically the background job).
-   - **Blocked on other issue**: None.
+  Issue 2: Accessing the Live Deployed Database Data for VPS Migration (P1)
+     - Attempted fixes: The user wanted to migrate their real data to their VPS. The agent exported the local  database to a tar.gz file (), but the user needs the data from the Emergent deployed app (). The agent provided instructions on how to check Emergent platform env variables or use the new  tab if they re-deploy.
+     - Next debug checklist: Check if the user managed to get their live  via the Emergent dashboard or the new System Config UI.
+     - Why fix this issue and what will be achieved with the fix?: User needs their real live data migrated to their new self-hosted VPS.
+     - Status: BLOCKED (Waiting on user action)
+     - Is recurring issue? N
+     - Should Test frontend/backend/both after fix?: NA
 
-- **Issue 2: Production Deployment Login Fails**
-   - **Attempted fixes**: Previous agent identified this as an external platform deployment/domain mapping issue (returns 400 Deployment Not Found).
-   - **Next debug checklist**: None. Inform user this is an external platform support issue.
-   - **Why fix this issue and what will be achieved with the fix?**: App cannot be used in actual production.
-   - **Status**: BLOCKED
-   - **Is recurring issue?**: N
-   - **Should Test frontend/backend/both after fix?**: Both
-   - **Blocked on other issue**: External Platform Support.
-
-**In progress Task List**:
-None. (All planned feature tasks for the last session were completed).
+**In progress Task List**: 
+None
 
 **Upcoming and Future Tasks**:
-- (P1) **Profile Photo Upload**: Allow Therapists and Clients to upload profile pictures.
-- (P2) **AI-Powered SOAP/DAP Notes**: Generate structured notes automatically based on session data/voice input.
-- (Future) **Google Calendar Integration**: Auto-sync appointments to Google Calendar.
-- (Future) **AI Usage Tracking/Rate Limiting**: Monitor and limit the number of AI requests per therapist based on subscription tier.
+  Upcoming Tasks:
+    - (P1) Profile Photo Upload: Allow Therapists and Clients to upload profile pictures.
+    - (P1) AI-Powered SOAP/DAP Notes: Generate structured notes automatically based on session data/voice input.
+  Future Tasks:
+    - Google Calendar Integration: Auto-sync appointments to Google Calendar.
+    - AI Usage Tracking/Rate Limiting: Monitor and limit the number of AI requests per therapist based on subscription tier.
+    - Coupon Code Management.
 
-**Completed work in this session**:
-- **Follow-Up Intelligence System (Phases 1-5)** (DONE): Implemented backend logic, Therapist Dashboard cards, Assistant View cards, Client Portal reminders, Deep Retention Analytics, and a Client Journey Timeline.
-- **Automated Follow-Up Reminders** (DONE): Added  background job and Therapist settings toggles to send Email/WhatsApp reminders for overdue or upcoming follow-ups.
-- **N+1 Query Optimization** (DONE): Refactored  to use a batch  query, reducing database calls significantly.
-- **Voice Input / Speech-to-Text** (DONE): Created  using native Browser Web Speech API. Replaced textareas in Session Notes, Case History, Assessments, and Check-out dialogs.
-- **WhatsApp Template Fixes** (DONE): Fixed truncated Twilio SIDs and handled Twilio's strict restriction against newline  characters in content variables.
-- **Super Admin AI Email Broadcast** (DONE): Added UI and API for Super Admins to write emails, use Claude AI for drafting, and mass-send via Resend to filtered user groups.
+**Completed work in this session**
+- Nginx & VPS deployment CORS guidance (DONE)
+- Exported local database for VPS migration () (DONE)
+- All Users list view for Super Admin ( & ) (DONE)
+- System Config view for Super Admin to view  vars securely ( & ) (DONE)
+- Fixed Declined appointments appearing in calendar and schedule views (DONE)
+- Fixed Notification bugs (Clear All 404 error via route ordering, and click navigation errors) in  &  (DONE)
+- Added Update Log and Auto-updating Build Timestamp on backend server startup (DONE)
+- Created Master Documentation file () (DONE)
 
-**Earlier issues found/mentioned but not fixed**:
-None.
+**Earlier issues found/mentioned but not fixed**
+None
 
-**Known issue recurrence from previous fork**:
-- **Issue recurrence in previous fork**: Timezone mishandling in backend scheduled jobs.
-- **Recurrence count**: 2 (Previously fixed in payment reports, now appearing in daily schedule briefing).
-- **Status**: IN PROGRESS (See Issue 1).
+**Known issue recurrence from previous fork**
+  - Issue recurrence in previous fork: Scheduler matching incorrect dates/data due to timezone offsets.
+  - Recurrence count: 4
+  - Status: TESTING PENDING (Waiting on user to debug via the new API on their VPS).
 
-**Code Architecture**:
+**Code Architecture**
 
 
-**Key Technical Concepts**:
-- **Native Web Speech API**: Used for voice dictation. Replaced heavy external ML models to bypass Webpack/WASM compilation errors.
-- **Twilio WhatsApp Content Variables**: Twilio rejects  characters in dynamic variables. Lists must be formatted using inline text (e.g., comma separation or dashes).
-- **Batch Queries**: N+1 optimization using  arrays in MongoDB to fetch associated data in bulk.
+**Key Technical Concepts**
+- FASTAPI Backend, React Frontend, MongoDB (Atlas Cloud vs Local Mongo routing), Nginx Reverse Proxy routing.
 
-**key DB schema**:
-- : Central link holding  (client) and .
-- : Core table. Do not assume  is inside the  collection for a client; always join/query against .
+**key DB schema**
+  - : ['id', 'subject', 'recipient_type', 'plan_filter', 'total_recipients', 'created_at']
+  - : ['id', 'type', 'title', 'description', 'category', 'content', 'tags', 'source', 'created_by']
+  - : ['id', 'user_id', 'role', 'type', 'title', 'message', 'link', 'is_read']
 
-**changes in tech stack**:
-- Added native  (Web Speech API). Dropped  due to environment/bundler incompatibilities.
+**changes in tech stack**
+None
 
-**All files of reference**:
--  (Look here for the current timezone offset bug in ).
--  (The newly built voice dictation component).
--  (Core logic for the new retention tracking system).
+**All files of reference**
+-  (Complete reference documentation for the entire app).
+-  (Local Database backup for user to migrate to VPS).
+-  (UI to view environment variables).
+-  (UI for Super Admin to see all registered users across roles).
+-  (Contains the new debug API for the morning briefing).
 
-**Areas that need refactoring**:
-- Background jobs currently construct ad-hoc date boundaries using . Consider creating a unified  to handle IST/UTC range generations to prevent recurring timezone bugs.
+**Areas that need refactoring**
+None currently, though the user's confusion between local preview databases, Atlas DBs, and their deployed DB caused significant debugging time. 
 
-**key api endpoints**:
-- : Complex aggregation for retention metrics.
-- : Refactored to fix N+1 performance issues.
-- : Mass email broadcasting endpoint.
+**key api endpoints**
+- : Returns paginated list of all users across roles.
+- : Returns masked  variables for the Super Admin dashboard.
+- : Returns the auto-updated backend build timestamp.
+- : Diagnostic route for debugging scheduler missing appointments.
+- : Deletes all notifications for the current user.
 
-**Critical Info for New Agent**:
-- **LANGUAGE**: MUST speak in Hindi/Hinglish.
-- **WHATSAPP TWILIO LIMITATIONS**: Twilio's API rejects content variables containing newline characters (). If formatting lists, strictly use commas or inline hyphens.
-- **TIMEZONE MATH**: Always explicitly define  when generating Today queries for scheduled jobs, before converting to UTC for the MongoDB query.
+**Critical Info for New Agent**
+- You MUST communicate in Hindi/Hinglish.
+- The user is in the process of self-hosting the app on an Oracle Cloud VPS (ARM64). They have been given instructions for Nginx proxy setup and  package installation.
+- The app updates a  timestamp automatically when the FastAPI backend starts, which is displayed in the Admin panel to help the user distinguish between the Preview App and their Deployed App versions.
 
-**documents and test reports created in this job**:
--  (Updated regularly)
-- 
-- 
-- 
-- 
-- 
+**documents and test reports created in this job**
+  - /app/COGNISPACE_DOCUMENTATION.md
+  - /app/memory/PRD.md
+  - /app/haven_therapy_backup.tar.gz
 
-**Last 10 User Messages and any pending HUMAN messages**:
-- 10.  (Bug report regarding morning schedule dates). **Status: IN PROGRESS**
-- 9.  (Approval for Admin AI Email functionality). **Status: COMPLETED**
-- 8.  (Feature request). **Status: COMPLETED**
-- 7.  (Requested newlines in Twilio variables - handled via alternative due to Twilio constraints). **Status: COMPLETED**
-- 6.  (Bug report for Twilio morning briefing). **Status: COMPLETED**
-- 5.  (Provided Twilio template credentials). **Status: COMPLETED**
-- 4.  (Bug report for Speech-to-text duplicating text). **Status: COMPLETED**
-- 3.  (Bug report for Speech-to-text outputting Hindi script). **Status: COMPLETED**
-- 2.  (Bug report regarding initial ML-based voice input attempt). **Status: COMPLETED**
-- 1.  (Feature selection for Voice input). **Status: COMPLETED**
+**Last 10 User Messages and any pending HUMAN messages** 
+ -  (Requested comprehensive documentation). **Status: COMPLETED**
+ -  (Asked if timestamp is working). **Status: COMPLETED (Made it auto-update on server startup)**
+ -  (Asked for integration package command). **Status: COMPLETED**
+ -  (Requested Update Log page). **Status: COMPLETED**
+ -  (Requested last update timestamp visible in admin panel). **Status: COMPLETED**
+ -  (Reported notification bugs). **Status: COMPLETED (Fixed)**
+ -  (Reported Declined appointments showing in calendar). **Status: COMPLETED (Filtered out)**
+ -  (Clarified the buggy email came from VPS). **Status: USER VERIFICATION PENDING (Built debug API)**
+ -  (Mentioned VPS has latest code). **Status: COMPLETED**
+ -  (Reported bug in morning summary). **Status: COMPLETED**
 
 **Project Health Check:**
-- Broken: Production login deployment issue (platform level).
+- Broken: Direct access to the old deployed app database for migration.
 - Mocked: Profile Photo uploads.
 
-**3rd Party Integrations**:
+**3rd Party Integrations**
 - Anthropic Claude — uses Emergent LLM Key
-- Twilio (WhatsApp) — requires User API Key (Present in env)
-- Resend (Email) — requires User API Key (Present in env)
+- Twilio (WhatsApp) — requires User API Key
+- Resend (Email) — requires User API Key
 
-**Testing status**:
-- Testing agent used after significant changes: YES (Iter 46, 47, 48, 49, 50).
-- Troubleshoot agent used after agent stuck in loop: NO.
-- Test files created: None permanently kept.
-- Known regressions: Timezone handling in morning background jobs.
+**Testing status**
+  - Testing agent used after significant changes: NO (Relied on Screenshot Tool smoke testing due to minor UI additions)
+  - Troubleshoot agent used after agent stuck in loop: NO
+  - Test files created: None
+  - Known regressions: None
 
-**Credentials to test flow**:
+**Credentials to test flow:**
+- Super Admin: Username:  / Password: 
 - Therapist: Mobile:  / Password: 
 - Client: Mobile:  / Password: 
-- Super Admin: Username:  / Password: 
 
-**What agent forgot to execute**:
-The agent handled all requests sequentially but ran out of context exactly when diagnosing the final WhatsApp Date issue. No tasks were overlooked.</analysis>
+**What agent forgot to execute**
+Nothing was forgotten. Documentation generation was successfully fulfilled. Waiting on user for the VPS debug API output.</analysis>

@@ -101,6 +101,7 @@ Hindi/Hinglish
 - [x] Declined appointments filtered from all schedule/calendar views
 - [x] Notification Clear All + Mark All Read route ordering fix
 - [x] Build timestamp auto-update on server start
+- [x] Delete Payment Record option for therapist/assistant (with confirmation dialog) — Feb 2026
 
 ## Pending Tasks
 
